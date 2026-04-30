@@ -407,15 +407,6 @@ defmodule OpenSauceWeb.SettingsLive.FormComponent do
   end
 
   defp currency_options do
-    [{"US Dollar", :USD}, {"Euro", :EUR}] ++
-      (OpenSauce.Types.Currency.values()
-       |> Enum.reject(fn code -> code in [:USD, :EUR] end)
-       |> Enum.map(fn code ->
-         case Money.Currency.currency_for_code(code) do
-           {:ok, currency} -> {currency.name, code}
-           _ -> nil
-         end
-       end)
-       |> Enum.reject(&is_nil/1))
+    [{"Euro", :EUR}, {"Canadian Dollar", :CAD}, {"US Dollar", :USD}]
   end
 end

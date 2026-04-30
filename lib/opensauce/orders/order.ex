@@ -234,9 +234,13 @@ defmodule OpenSauce.Orders.Order do
   attributes do
     uuid_primary_key :id
 
+    # TODO: Remove per-order currency. All monetary values must be stored as
+    # Decimal in the Settings base currency. When an order is paid in a foreign
+    # currency, convert at that day's spot rate and write the converted Decimal
+    # back before persisting — never store or calculate with the foreign amount.
     attribute :currency, OpenSauce.Types.Currency do
       allow_nil? false
-      default :USD
+      default :CAD
     end
 
     attribute :reference, :string do

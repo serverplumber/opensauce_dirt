@@ -66,7 +66,7 @@ defmodule OpenSauce.Settings.Settings do
     attribute :currency, OpenSauce.Types.Currency do
       public? true
       allow_nil? false
-      default :USD
+      default :CAD
     end
 
     # Tax configuration

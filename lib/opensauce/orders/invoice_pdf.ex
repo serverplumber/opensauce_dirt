@@ -83,10 +83,12 @@ defmodule OpenSauce.Orders.InvoicePdf do
   defp format_datetime(%Date{} = d), do: format_date(d)
   defp format_datetime(_), do: ""
 
+  # TODO: Amounts should be stored and displayed in the Settings base currency.
+  # When an order is paid in a foreign currency, convert at that day's spot rate
+  # and persist the converted Decimal before generating any invoice output.
   defp format_money(currency, %D{} = amount) do
-    currency |> Money.new(amount) |> Money.to_string!()
+    "#{currency} #{D.to_string(D.round(amount, 2))}"
   end
 
-  defp format_money(_currency, %Money{} = money), do: Money.to_string!(money)
   defp format_money(currency, _), do: format_money(currency, D.new(0))
 end

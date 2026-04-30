@@ -160,7 +160,7 @@ defmodule OpenSauce.Production.BatchSheet do
   defp format_datetime(_), do: ""
 
   defp format_money(currency, %D{} = amount) do
-    currency |> Money.new(amount) |> Money.to_string!()
+    "#{currency} #{D.to_string(D.round(amount, 2))}"
   end
 
   defp format_money(currency, _), do: format_money(currency, D.new(0))

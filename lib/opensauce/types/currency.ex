@@ -1,5 +1,4 @@
 defmodule OpenSauce.Types.Currency do
   @moduledoc false
-  use Ash.Type.Enum,
-    values: Money.Currency.known_current_currencies()
+  use Ash.Type.Enum, values: [:EUR, :CAD, :USD]
 end

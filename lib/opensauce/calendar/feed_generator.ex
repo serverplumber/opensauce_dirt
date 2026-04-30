@@ -20,7 +20,7 @@ defmodule OpenSauce.Calendar.FeedGenerator do
     order_events = build_order_events(actor, date_start, date_end)
     batch_events = build_batch_events(actor, date_start, date_end)
 
-    ICalendar.to_ics(%ICalendar{events: order_events ++ batch_events})
+    to_ics(order_events ++ batch_events)
   end
 
   defp build_order_events(actor, date_start, date_end) do
@@ -50,11 +50,11 @@ defmodule OpenSauce.Calendar.FeedGenerator do
           "Unknown"
       end
 
-    %ICalendar.Event{
+    %{
       summary: "Order #{order.reference} - #{customer_name}",
       dtstart: order.delivery_date,
       dtend: order.delivery_date,
-      uid: "order-#{order.id}@craftplan",
+      uid: "order-#{order.id}@opensauce",
       description: "Status: #{order.status}"
     }
   end
@@ -92,12 +92,40 @@ defmodule OpenSauce.Calendar.FeedGenerator do
     dtstart = batch.started_at || batch.completed_at
     dtend = batch.completed_at || batch.started_at
 
-    %ICalendar.Event{
+    %{
       summary: "Batch #{batch.batch_code} - #{product_name}",
       dtstart: dtstart,
       dtend: dtend,
-      uid: "batch-#{batch.id}@craftplan",
+      uid: "batch-#{batch.id}@opensauce",
       description: "Status: #{batch.status}, Planned: #{batch.planned_qty}"
     }
+  end
+
+  defp to_ics(events) do
+    lines =
+      Enum.flat_map(events, fn event ->
+        [
+          "BEGIN:VEVENT",
+          "UID:#{event.uid}",
+          "SUMMARY:#{event.summary}",
+          "DESCRIPTION:#{event.description}",
+          "DTSTART:#{format_dt(event.dtstart)}",
+          "DTEND:#{format_dt(event.dtend)}",
+          "END:VEVENT"
+        ]
+      end)
+
+    (["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//OpenSauce//EN"] ++ lines ++ ["END:VCALENDAR"])
+    |> Enum.join("\r\n")
+  end
+
+  defp format_dt(nil), do: ""
+
+  defp format_dt(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%Y%m%dT%H%M%SZ")
+  end
+
+  defp format_dt(%Date{} = d) do
+    Calendar.strftime(d, "%Y%m%d")
   end
 end

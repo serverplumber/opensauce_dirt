@@ -241,38 +241,30 @@ defmodule OpenSauceWeb.HtmlHelpers do
   defp pluralize(n, word), do: "#{n} #{word}s"
 
   @doc """
-  Formats numeric or decimal values as currency.
+  Formats a Decimal amount as a currency string using the Settings base currency code.
 
-  Accepts existing `Money` structs, `Decimal`, integers, floats, or numeric strings.
-  Pass `format: :string` to return a rendered string.
+  All monetary values are stored as Decimal in the base currency. Forex conversion
+  (spot rate on payment date → base currency Decimal) happens before values reach
+  this function.
   """
-  @spec format_currency(atom(), Decimal.t() | Money.t() | number() | nil, Keyword.t()) ::
-          Money.t() | String.t()
+  # TODO: Accept the Settings currency atom from context rather than passing it
+  # at every call site. Once forex conversion writes back a base-currency Decimal
+  # on payment, callers won't need to know the currency at all.
+  @spec format_currency(atom(), Decimal.t() | number() | nil, Keyword.t()) :: String.t()
   def format_currency(currency, amount, opts \\ [])
 
   def format_currency(currency, nil, opts), do: format_currency(currency, Decimal.new(0), opts)
 
-  def format_currency(_currency, %Money{} = money, opts) do
-    if Keyword.get(opts, :format) == :string do
-      Money.to_string!(money, opts)
-    else
-      money
-    end
-  end
-
-  def format_currency(currency, %Decimal{} = amount, opts) do
-    money = Money.new(currency, amount)
-    format_currency(currency, money, opts)
+  def format_currency(currency, %Decimal{} = amount, _opts) do
+    "#{currency} #{Decimal.to_string(Decimal.round(amount, 2))}"
   end
 
   def format_currency(currency, amount, opts) when is_integer(amount) do
-    decimal = Decimal.new(amount)
-    format_currency(currency, decimal, opts)
+    format_currency(currency, Decimal.new(amount), opts)
   end
 
   def format_currency(currency, amount, opts) when is_float(amount) do
-    decimal = Decimal.from_float(amount)
-    format_currency(currency, decimal, opts)
+    format_currency(currency, Decimal.from_float(amount), opts)
   end
 
   def format_currency(currency, amount, opts) when is_binary(amount) do
@@ -297,18 +289,14 @@ defmodule OpenSauceWeb.HtmlHelpers do
     value |> Decimal.mult(100) |> Decimal.round(places)
   end
 
-  @spec format_money(atom(), Decimal.t() | Money.t() | number() | nil, Keyword.t()) ::
-          Money.t() | String.t()
+  @spec format_money(atom(), Decimal.t() | number() | nil, Keyword.t()) :: String.t()
   def format_money(currency, amount, opts \\ []) do
     format_currency(currency, amount, opts)
   end
 
-  @spec format_amount(atom(), Decimal.t() | Money.t() | number() | nil) :: String.t()
+  @spec format_amount(atom(), Decimal.t() | number() | nil) :: String.t()
   def format_amount(unit, nil), do: format_amount(unit, Decimal.new(0))
   def format_amount(unit, %Decimal{} = amount), do: format_amount(unit, Decimal.to_float(amount))
-
-  def format_amount(unit, %Money{} = amount) when is_atom(unit), do: "#{amount}/#{Unit.abbreviation(unit)}"
-
   def format_amount(unit, amount) when is_number(amount), do: Unit.abbreviation(unit, amount)
 
   @spec format_label(atom() | String.t(), String.t()) :: String.t()
