@@ -1,47 +1,50 @@
-# The directory Mix will write compiled artifacts to.
+# Elixir / Erlang
 /_build/
-
-# If you run "mix test --cover", coverage assets end up here.
 /cover/
-
-# The directory Mix downloads your dependencies sources to.
 /deps/
-
-# Where 3rd-party dependencies like ExDoc output generated docs.
 /doc/
-
-# Ignore .fetch files in case you like to edit your project deps locally.
 /.fetch
-
-# If the VM crashes, it generates a dump, let's ignore it too.
-erl_crash.dump
-
-# Also ignore archive artifacts (built via "mix archive.build").
-*.ez
-
-# Temporary files, for example, from tests.
 /tmp/
+*.ez
+erl_crash.dump
+opensauce-*.tar
 
-# Ignore package tarball (built via "mix hex.build").
-craftplan-*.tar
-
-# Ignore assets that are produced by build tools.
+# Phoenix / Mix
 /priv/static/assets/
-
-# Ignore uploads.
 /priv/static/uploads/
-
-# Ignore digested assets cache.
 /priv/static/cache_manifest.json
 
-# In case you use Node.js/npm, you want to ignore these.
-npm-debug.log
+# Node.js
 /assets/node_modules/
+npm-debug.log
 
+# Dev services (Docker volumes)
 .minio
 .postgres
+
+# Language servers
 .elixir_ls
 .lexical
 .mix_complete.cache
+
+# macOS
 *.DS_Store
+
+# JetBrains / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# VS Code
+.vscode/
+
+# Claude Code
 .claude/worktrees/
+todo/
