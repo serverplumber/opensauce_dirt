@@ -64,7 +64,7 @@ WORKDIR /app
 RUN chown nobody /app
 ENV MIX_ENV=prod
 
-COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/craftplan ./
+COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/opensauce ./
 
 USER nobody
 

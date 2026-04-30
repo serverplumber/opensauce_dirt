@@ -15,8 +15,8 @@ config :ash,
   known_types: [AshMoney.Types.Money],
   custom_types: [
     money: Money,
-    currency: Craftplan.Types.Currency,
-    unit: Craftplan.Types.Unit
+    currency: OpenSauce.Types.Currency,
+    unit: OpenSauce.Types.Unit
   ]
 
 # Configures the mailer
@@ -26,29 +26,29 @@ config :ash,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :craftplan, Craftplan.Mailer, adapter: Swoosh.Adapters.Local
+config :opensauce, OpenSauce.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configures the endpoint
-config :craftplan, CraftplanWeb.Endpoint,
+config :opensauce, OpenSauceWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: CraftplanWeb.ErrorHTML, json: CraftplanWeb.ErrorJSON],
+    formats: [html: OpenSauceWeb.ErrorHTML, json: OpenSauceWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Craftplan.PubSub,
+  pubsub_server: OpenSauce.PubSub,
   live_view: [signing_salt: "vNk6HzXn"]
 
-config :craftplan,
-  ecto_repos: [Craftplan.Repo],
+config :opensauce,
+  ecto_repos: [OpenSauce.Repo],
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [
-    Craftplan.Settings,
-    Craftplan.CRM,
-    Craftplan.Orders,
-    Craftplan.Inventory,
-    Craftplan.Catalog,
-    Craftplan.Accounts
+    OpenSauce.Settings,
+    OpenSauce.CRM,
+    OpenSauce.Orders,
+    OpenSauce.Inventory,
+    OpenSauce.Catalog,
+    OpenSauce.Accounts
   ]
 
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
@@ -62,7 +62,7 @@ config :esbuild,
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
-config :ex_cldr, default_backend: Craftplan.Cldr
+config :ex_cldr, default_backend: OpenSauce.Cldr
 
 # Configures Elixir's Logger
 config :logger, :console,

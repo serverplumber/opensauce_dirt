@@ -1,12 +1,12 @@
 # seeds.exs
 
-alias Craftplan.Accounts
-alias Craftplan.Catalog
-alias Craftplan.CRM
-alias Craftplan.Inventory
-alias Craftplan.Orders
-alias Craftplan.Repo
-alias Craftplan.Settings
+alias OpenSauce.Accounts
+alias OpenSauce.Catalog
+alias OpenSauce.CRM
+alias OpenSauce.Inventory
+alias OpenSauce.Orders
+alias OpenSauce.Repo
+alias OpenSauce.Settings
 
 require Ash.Query
 
@@ -1485,7 +1485,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
   # Some completed items may have been created without triggering the status transition
   # hook. Toggle status to re-run costing & batch assignment.
   missing_batch_items =
-    Craftplan.Orders.OrderItem
+    OpenSauce.Orders.OrderItem
     |> Ash.Query.new()
     |> Ash.Query.filter(status == :done and is_nil(batch_code))
     |> Ash.read!(authorize?: false)

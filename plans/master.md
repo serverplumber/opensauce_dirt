@@ -1,4 +1,4 @@
-# Craftplan Product Plan -- Bakery ERP Roadmap
+# OpenSauce Product Plan -- Bakery ERP Roadmap
 
 Last updated: 2025-11-09 (Overview nav + planner polish)
 
@@ -107,7 +107,7 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 - [x] Remove legacy Recipe model usage in domain and UI
   - [x] Switch Product label ingredients to BOM components (fallback not required)
   - [x] Replace product financial calculations to prefer active BOM unit cost; remove recipe-based cost calcs
-  - [x] Remove `Catalog.Recipe` and `Catalog.RecipeMaterial` resources from `Craftplan.Catalog`
+  - [x] Remove `Catalog.Recipe` and `Catalog.RecipeMaterial` resources from `OpenSauce.Catalog`
   - [x] Drop `catalog_recipes` and `catalog_recipe_materials` tables via migration
 - [x] Replace `Material <-> Recipe` relationships with `Material <-> BOM` through `BOMComponent`
 - [x] Update planner/forecasting to load from BOMs instead of Recipes
@@ -138,8 +138,8 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 - [x] Replace Recipe editor internals with BOM-backed component while preserving DOM ids, events, and layout
   - Keep route and tab labels the same for now (e.g., "Recipe") to avoid UX regression
   - Files migrated:
-    - `lib/craftplan_web/live/manage/product_live/form_component_recipe.ex`
-    - `lib/craftplan_web/live/manage/product_live/show.ex`
+    - `lib/opensauce_web/live/manage/product_live/form_component_recipe.ex`
+    - `lib/opensauce_web/live/manage/product_live/show.ex`
   - Form mapping
     - Materials list -> BOM components (`component_type: :material`)
     - Optional sub-assembly picker (`component_type: :product`)
@@ -200,11 +200,11 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 
 **Domain**
 
-- [x] Add `Inventory.Lot` (lot_code, supplier_id, expiry_date, received_at, material_id, quantity_on_hand). (see `lib/craftplan/inventory/lot.ex` + `priv/repo/migrations/20251101201014_lots_and_batches.exs`)
-- [x] Extend `Inventory.Movement` to reference `lot_id` when applicable; default FIFO on consumption. (see `lib/craftplan/inventory/movement.ex` create `:adjust_stock` and `Orders.Consumption.allocate_material/5`)
-- [x] Add `ProductionBatch` (batch_code, product_id, bom_id, produced_at) to group order-item completions. (see `lib/craftplan/orders/production_batch.ex`)
-- [x] Track `OrderItemLot` allocation (order_item_id, lot_id, quantity_used) during consumption. (see `lib/craftplan/orders/order_item_lot.ex` + `Orders.Consumption.apply_lot_consumption/5`)
-- [x] Ensure components_map guides lot allocations for nested sub-assemblies (aggregate per material). (see `lib/craftplan/orders/consumption.ex` leveraging `catalog_bom_rollups.components_map`)
+- [x] Add `Inventory.Lot` (lot_code, supplier_id, expiry_date, received_at, material_id, quantity_on_hand). (see `lib/opensauce/inventory/lot.ex` + `priv/repo/migrations/20251101201014_lots_and_batches.exs`)
+- [x] Extend `Inventory.Movement` to reference `lot_id` when applicable; default FIFO on consumption. (see `lib/opensauce/inventory/movement.ex` create `:adjust_stock` and `Orders.Consumption.allocate_material/5`)
+- [x] Add `ProductionBatch` (batch_code, product_id, bom_id, produced_at) to group order-item completions. (see `lib/opensauce/orders/production_batch.ex`)
+- [x] Track `OrderItemLot` allocation (order_item_id, lot_id, quantity_used) during consumption. (see `lib/opensauce/orders/order_item_lot.ex` + `Orders.Consumption.apply_lot_consumption/5`)
+- [x] Ensure components_map guides lot allocations for nested sub-assemblies (aggregate per material). (see `lib/opensauce/orders/consumption.ex` leveraging `catalog_bom_rollups.components_map`)
 
 **UI**
 
@@ -221,7 +221,7 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 
 - [x] Migrations for Lot, ProductionBatch, and join records; indexes on lot_code, batch_code, FKs. (see `priv/repo/migrations/20251101201014_lots_and_batches.exs`)
 - [x] Seeds include example lots and batch flows. (see `priv/repo/seeds.exs` lot seeding helpers)
-- [x] Batch detail view linking orders, materials, and printable compliance sheet (see `CraftplanWeb.ProductionBatchLive.Show` and new `/manage/production/batches/:batch_code` route).
+- [x] Batch detail view linking orders, materials, and printable compliance sheet (see `OpenSauceWeb.ProductionBatchLive.Show` and new `/manage/production/batches/:batch_code` route).
 - [ ] Warnings in planner when scheduled production will use expiring lots.
 
 ### Acceptance Criteria
@@ -312,7 +312,7 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 
 ### User Stories
 
-- As a bakery owner, I receive order messages via WhatsApp and convert them to Craftplan orders with validation
+- As a bakery owner, I receive order messages via WhatsApp and convert them to OpenSauce orders with validation
 - As a customer service rep, I share product catalogs and availability directly in WhatsApp threads
 - As an operator, I send order confirmations and ready-for-pickup notifications through WhatsApp
 
@@ -342,7 +342,7 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 
 ### Acceptance Criteria
 
-- Incoming WhatsApp order converts to Craftplan order draft with capacity/availability validation
+- Incoming WhatsApp order converts to OpenSauce order draft with capacity/availability validation
 - Catalog sync updates WhatsApp within sync cycle when products change
 - Message templates render correctly with order-specific data (items, totals, pickup time)
 - Failed messages surface in admin UI with retry options
@@ -376,7 +376,7 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 
 **Data**
 
-- [ ] New `Craftplan.Insights` context aggregating orders, batch costs, inventory adjustments.
+- [ ] New `OpenSauce.Insights` context aggregating orders, batch costs, inventory adjustments.
 - [ ] GAAP/IRS-compliant COGS calculations with configurable costing method (FIFO/rolling average).
 - [ ] Alert engine for margin thresholds and over-capacity warnings.
 
@@ -460,7 +460,7 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 
 **Future User Stories:**
 
-- As a seller, I sync orders from Shopify/Etsy into Craftplan and keep inventory levels aligned
+- As a seller, I sync orders from Shopify/Etsy into OpenSauce and keep inventory levels aligned
 - As an operator, I receive marketplace orders alongside WhatsApp/manual orders in unified queue
 - As a multi-channel seller, I see inventory automatically reserved across all channels
 
@@ -471,9 +471,9 @@ Last updated: 2025-11-09 (Overview nav + planner polish)
 - Keep `PLAN.md` milestone checkboxes in sync with progress; update "Last updated" date per change.
 - Run `mix ash_postgres.generate_migrations` after domain changes and commit snapshots.
 - Tests to add as features land:
-  - BOM cost calculator edge cases (`test/craftplan/catalog`).
-  - Traceability recall flow (`test/craftplan/traceability`).
-  - Reorder suggestion algorithm (`test/craftplan/inventory`).
+  - BOM cost calculator edge cases (`test/opensauce/catalog`).
+  - Traceability recall flow (`test/opensauce/traceability`).
+  - Reorder suggestion algorithm (`test/opensauce/inventory`).
   - WhatsApp integration adapters (mock API clients).
   - Insights dashboard LiveView tests using fixtures.
 - Documentation touchpoints: update README feature matrix + guides after each milestone.

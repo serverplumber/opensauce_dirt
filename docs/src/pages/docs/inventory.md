@@ -10,7 +10,7 @@ The Inventory module tracks raw materials from receiving through consumption, wi
 
 Navigate to **Manage → Inventory → Materials** to see all raw materials. Each material record includes:
 
-![Inventory List](/craftplan/screenshots/inventory-reorder-planner.webp)
+![Inventory List](/opensauce/screenshots/inventory-reorder-planner.webp)
 
 - Name, SKU, and unit of measure
 - Buy price (used for BOM cost calculations)
@@ -44,13 +44,13 @@ The movement history provides a full audit trail for each material.
 - Materials can be tagged with allergens (e.g., gluten, dairy, nuts). These propagate up through BOMs so that products automatically show aggregated allergen information.
 - Nutritional facts (calories, protein, fat, carbs, etc.) are defined per material unit. When a BOM references the material, the product's nutritional facts are calculated from the component quantities.
 
-![Nutritional Facts](/craftplan/screenshots/nutrition.webp)
+![Nutritional Facts](/opensauce/screenshots/nutrition.webp)
 
 ## Forecasting & Reorder Planning
 
-The inventory forecasting module (`Craftplan.InventoryForecasting`) predicts material demand based on upcoming orders:
+The inventory forecasting module (`OpenSauce.InventoryForecasting`) predicts material demand based on upcoming orders:
 
-![Inventory Forecast](/craftplan/screenshots/inventory-forecast.webp)
+![Inventory Forecast](/opensauce/screenshots/inventory-forecast.webp)
 
 - Looks at confirmed orders and their delivery dates
 - Calculates required material quantities from product BOMs

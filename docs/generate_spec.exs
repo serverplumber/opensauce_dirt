@@ -1,9 +1,9 @@
-domains = CraftplanWeb.JsonApiRouter.domains()
+domains = OpenSauceWeb.JsonApiRouter.domains()
 
 spec =
   AshJsonApi.OpenApi.spec(
     domains: domains,
-    open_api_title: "Craftplan API",
+    open_api_title: "OpenSauce API",
     open_api_version: "0.1.0"
   )
 

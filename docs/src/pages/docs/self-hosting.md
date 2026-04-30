@@ -1,17 +1,17 @@
 ---
 layout: ../../layouts/DocsLayout.astro
 title: Self-Hosting
-description: Deploy Craftplan with Docker on your own server
+description: Deploy OpenSauce with Docker on your own server
 ---
 
 ## Quick Start
 
-Deploy Craftplan without cloning the repo. Just download the Compose file and start:
+Deploy OpenSauce without cloning the repo. Just download the Compose file and start:
 
 ```bash
 # 1. Download the Compose file and env template
-curl -O https://raw.githubusercontent.com/puemos/craftplan/main/docker-compose.yml
-curl -O https://raw.githubusercontent.com/puemos/craftplan/main/.env.example
+curl -O https://raw.githubusercontent.com/puemos/opensauce/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/puemos/opensauce/main/.env.example
 
 # 2. Create your environment file and fill in secrets (see below)
 cp .env.example .env
@@ -20,53 +20,53 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Craftplan will be available at `http://localhost:4000` (or the `PORT` you configured). Migrations run automatically on startup.
+OpenSauce will be available at `http://localhost:4000` (or the `PORT` you configured). Migrations run automatically on startup.
 
 ### First-time setup
 
-On first launch, Craftplan shows a setup screen where you create your **admin account**. Once signed in, invite additional team members from **Settings → Members** — choose Staff or Admin role for each.
+On first launch, OpenSauce shows a setup screen where you create your **admin account**. Once signed in, invite additional team members from **Settings → Members** — choose Staff or Admin role for each.
 
 ---
 
 ## Single Container (`docker run`)
 
-If you already have a PostgreSQL database and S3-compatible storage, you can run Craftplan as a single container:
+If you already have a PostgreSQL database and S3-compatible storage, you can run OpenSauce as a single container:
 
 ```bash
 docker run -d \
-  --name craftplan \
+  --name opensauce \
   -p 4000:4000 \
   -e SECRET_KEY_BASE="your-secret-key-base" \
   -e TOKEN_SIGNING_SECRET="your-token-signing-secret" \
   -e CLOAK_KEY="your-cloak-key" \
-  -e DATABASE_URL="ecto://postgres:password@your-db-host/craftplan" \
+  -e DATABASE_URL="ecto://postgres:password@your-db-host/opensauce" \
   -e HOST="localhost" \
   -e PORT="4000" \
   -e AWS_ACCESS_KEY_ID="your-access-key" \
   -e AWS_SECRET_ACCESS_KEY="your-secret-key" \
-  -e AWS_S3_BUCKET="craftplan" \
+  -e AWS_S3_BUCKET="opensauce" \
   -e AWS_S3_SCHEME="https://" \
   -e AWS_S3_HOST="s3.amazonaws.com" \
   -e AWS_REGION="us-east-1" \
-  ghcr.io/puemos/craftplan:latest
+  ghcr.io/puemos/opensauce:latest
 ```
 
 Or with an env file:
 
 ```bash
 docker run -d \
-  --name craftplan \
+  --name opensauce \
   --env-file .env \
-  -e DATABASE_URL="ecto://postgres:password@your-db-host/craftplan" \
+  -e DATABASE_URL="ecto://postgres:password@your-db-host/opensauce" \
   -p 4000:4000 \
-  ghcr.io/puemos/craftplan:latest
+  ghcr.io/puemos/opensauce:latest
 ```
 
 ---
 
 ## Deploy on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/craftplan)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/opensauce)
 
 Railway provisions a PostgreSQL database automatically. After deploying:
 
@@ -138,7 +138,7 @@ The bundled MinIO container works out of the box. Override these to use an exter
 |---|---|---|
 | `MINIO_ROOT_USER` | `minioadmin` | MinIO access key |
 | `MINIO_ROOT_PASSWORD` | `minioadmin` | MinIO secret key |
-| `AWS_S3_BUCKET` | `craftplan` | S3 bucket name |
+| `AWS_S3_BUCKET` | `opensauce` | S3 bucket name |
 | `AWS_S3_SCHEME` | `https://` | S3 endpoint scheme (`http://` for MinIO) |
 | `AWS_ACCESS_KEY_ID` | - | External S3 access key |
 | `AWS_SECRET_ACCESS_KEY` | - | External S3 secret key |
@@ -168,7 +168,7 @@ Email is primarily configured from the **Settings UI** inside the app. Environme
 
 ### Bundled MinIO
 
-The default `docker-compose.yml` includes a MinIO container that provides S3-compatible object storage. It creates a `craftplan` bucket automatically and requires no additional configuration.
+The default `docker-compose.yml` includes a MinIO container that provides S3-compatible object storage. It creates a `opensauce` bucket automatically and requires no additional configuration.
 
 The MinIO console is available at `http://localhost:9001` with the credentials from your `.env`.
 
@@ -180,10 +180,10 @@ To use AWS S3 or another S3-compatible provider, set the `AWS_*` variables in yo
 
 ## Reverse Proxy
 
-For production deployments, place Craftplan behind a reverse proxy that handles TLS. Here's an example nginx configuration:
+For production deployments, place OpenSauce behind a reverse proxy that handles TLS. Here's an example nginx configuration:
 
 ```nginx
-upstream craftplan {
+upstream opensauce {
     server 127.0.0.1:4000;
 }
 
@@ -195,7 +195,7 @@ server {
     ssl_certificate_key /path/to/key.pem;
 
     location / {
-        proxy_pass http://craftplan;
+        proxy_pass http://opensauce;
 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -227,11 +227,11 @@ Migrations run automatically on each startup via the `bin/server` entrypoint.
 
 ## Building from Source
 
-If you are contributing to Craftplan or need a custom build, use the build-from-source Compose file:
+If you are contributing to OpenSauce or need a custom build, use the build-from-source Compose file:
 
 ```bash
-git clone https://github.com/puemos/craftplan.git
-cd craftplan
+git clone https://github.com/puemos/opensauce.git
+cd opensauce
 cp .env.example .env   # fill in secrets
 docker compose -f docker-compose.prod.yml up -d
 ```
@@ -239,7 +239,7 @@ docker compose -f docker-compose.prod.yml up -d
 Or build the image manually:
 
 ```bash
-docker build -t craftplan .
+docker build -t opensauce .
 ```
 
 See `docker-compose.prod.yml` for the full build-from-source configuration.

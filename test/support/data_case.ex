@@ -1,4 +1,4 @@
-defmodule Craftplan.DataCase do
+defmodule OpenSauce.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -10,29 +10,29 @@ defmodule Craftplan.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use Craftplan.DataCase, async: true`, although
+  by setting `use OpenSauce.DataCase, async: true`, although
   this option is not recommended for other databases.
   """
 
   use ExUnit.CaseTemplate
 
   alias AshAuthentication.Strategy.Password
-  alias Craftplan.Accounts.User
+  alias OpenSauce.Accounts.User
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
     quote do
-      import Craftplan.DataCase
+      import OpenSauce.DataCase
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
 
-      alias Craftplan.Repo
+      alias OpenSauce.Repo
     end
   end
 
   setup tags do
-    Craftplan.DataCase.setup_sandbox(tags)
+    OpenSauce.DataCase.setup_sandbox(tags)
     :ok
   end
 
@@ -40,7 +40,7 @@ defmodule Craftplan.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    pid = Sandbox.start_owner!(Craftplan.Repo, shared: not tags[:async])
+    pid = Sandbox.start_owner!(OpenSauce.Repo, shared: not tags[:async])
     on_exit(fn -> Sandbox.stop_owner(pid) end)
   end
 

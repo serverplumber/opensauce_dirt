@@ -1,4 +1,4 @@
-defmodule Craftplan.Test.Mailpit do
+defmodule OpenSauce.Test.Mailpit do
   @moduledoc """
   Helper for interacting with Mailpit's REST API during e2e tests.
 
@@ -13,7 +13,7 @@ defmodule Craftplan.Test.Mailpit do
   Call this in your test setup.
   """
   def setup_smtp! do
-    Application.put_env(:craftplan, Craftplan.Mailer,
+    Application.put_env(:opensauce, OpenSauce.Mailer,
       adapter: Swoosh.Adapters.SMTP,
       relay: "localhost",
       port: 1025,

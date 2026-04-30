@@ -4,7 +4,7 @@ Last updated: 2025-11-09
 
 ## Objective
 
-Move Craftplan to true batch‑centric production and a single Plan page for operators to select pending items (past → today), create/add batches, and track batches by status — with Ash-first actions, validations, and LiveView tests.
+Move OpenSauce to true batch‑centric production and a single Plan page for operators to select pending items (past → today), create/add batches, and track batches by status — with Ash-first actions, validations, and LiveView tests.
 
 ## Milestones
 

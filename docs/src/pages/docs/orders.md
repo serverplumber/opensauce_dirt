@@ -31,7 +31,7 @@ Items are allocated to production batches from the planner's day-view kanban boa
 
 The order calendar provides a visual timeline of upcoming deliveries. Use it to:
 
-![Orders Calendar](/craftplan/screenshots/orders.webp)
+![Orders Calendar](/opensauce/screenshots/orders.webp)
 
 - See delivery commitments by day and week
 - Identify capacity conflicts

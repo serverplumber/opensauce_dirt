@@ -1,6 +1,6 @@
-defmodule Craftplan do
+defmodule OpenSauce do
   @moduledoc """
-  Craftplan keeps the contexts that define your domain
+  OpenSauce keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

@@ -1,12 +1,12 @@
-defmodule CraftplanWeb do
+defmodule OpenSauceWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, components, channels, and so on.
 
   This can be used in your application as:
 
-      use CraftplanWeb, :controller
-      use CraftplanWeb, :html
+      use OpenSauceWeb, :controller
+      use OpenSauceWeb, :html
 
   The definitions below will be executed for every controller,
   component, etc, so keep them short and clean, focused
@@ -41,9 +41,9 @@ defmodule CraftplanWeb do
     quote do
       use Phoenix.Controller,
         formats: [:html, :json],
-        layouts: [html: CraftplanWeb.Layouts]
+        layouts: [html: OpenSauceWeb.Layouts]
 
-      use Gettext, backend: CraftplanWeb.Gettext
+      use Gettext, backend: OpenSauceWeb.Gettext
 
       import Plug.Conn
 
@@ -54,9 +54,9 @@ defmodule CraftplanWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {CraftplanWeb.Layouts, :app}
+        layout: {OpenSauceWeb.Layouts, :app}
 
-      alias CraftplanWeb.Navigation
+      alias OpenSauceWeb.Navigation
 
       unquote(html_helpers())
     end
@@ -94,10 +94,10 @@ defmodule CraftplanWeb do
   defp html_helpers do
     quote do
       # Translation
-      use Gettext, backend: CraftplanWeb.Gettext
-      use CraftplanWeb.Components
+      use Gettext, backend: OpenSauceWeb.Gettext
+      use OpenSauceWeb.Components
 
-      import CraftplanWeb.HtmlHelpers
+      import OpenSauceWeb.HtmlHelpers
 
       # HTML escaping functionality
       import Phoenix.HTML
@@ -114,9 +114,9 @@ defmodule CraftplanWeb do
   def verified_routes do
     quote do
       use Phoenix.VerifiedRoutes,
-        endpoint: CraftplanWeb.Endpoint,
-        router: CraftplanWeb.Router,
-        statics: CraftplanWeb.static_paths()
+        endpoint: OpenSauceWeb.Endpoint,
+        router: OpenSauceWeb.Router,
+        statics: OpenSauceWeb.static_paths()
     end
   end
 

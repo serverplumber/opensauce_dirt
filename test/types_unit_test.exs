@@ -1,7 +1,7 @@
-defmodule Craftplan.Types.UnitTest do
+defmodule OpenSauce.Types.UnitTest do
   use ExUnit.Case, async: true
 
-  alias Craftplan.Types.Unit
+  alias OpenSauce.Types.Unit
 
   test "gram to kg and mg conversions" do
     assert Unit.abbreviation(:gram, 1000) =~ "kg"

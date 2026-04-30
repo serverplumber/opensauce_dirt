@@ -19,18 +19,18 @@ docker-compose up -d   # Start PostgreSQL 16 + MinIO (S3-compatible storage)
 
 ## Architecture
 
-Craftplan is an ERP for small-scale manufacturers built on **Ash Framework + Phoenix LiveView + PostgreSQL**.
+Open sauce is a complete rewrite of OpenSauce. It is an ERP for small-scale manufacturers built on **Ash Framework + Phoenix LiveView + PostgreSQL**.
 
 ### Domain Structure (Ash Domains)
 
 Each domain is an `Ash.Domain` containing related `Ash.Resource` modules:
 
-- **Craftplan.Accounts** — Users, authentication (AshAuthentication)
-- **Craftplan.Catalog** — Products, BOMs (Bill of Materials), BOM components, labor steps, BOM rollups
-- **Craftplan.Orders** — Orders, OrderItems, ProductionBatches, batch allocations, consumption workflow
-- **Craftplan.Inventory** — Materials, Lots, Movements (consume/receive/adjust), forecasting
-- **Craftplan.CRM** — Customers, suppliers
-- **Craftplan.Settings** — App configuration
+- **OpenSauce.Accounts** — Users, authentication (AshAuthentication)
+- **OpenSauce.Catalog** — Products, BOMs (Bill of Materials), BOM components, labor steps, BOM rollups
+- **OpenSauce.Orders** — Orders, OrderItems, ProductionBatches, batch allocations, consumption workflow
+- **OpenSauce.Inventory** — Materials, Lots, Movements (consume/receive/adjust), forecasting
+- **OpenSauce.CRM** — Customers, suppliers
+- **OpenSauce.Settings** — App configuration
 
 ### Resource Pattern
 
@@ -38,16 +38,16 @@ All domain entities are Ash Resources using `AshPostgres.DataLayer` with `Ash.Po
 
 ### Web Layer
 
-- **Router**: `lib/craftplan_web/router.ex`
-- **LiveViews**: `lib/craftplan_web/live/manage/` — main app pages (overview, products, orders, inventory, batches, etc.)
-- **Components**: `lib/craftplan_web/components/` — reusable UI (core, forms, data_vis, page, layouts)
+- **Router**: `lib/opensauce_web/router.ex`
+- **LiveViews**: `lib/opensauce_web/live/manage/` — main app pages (overview, products, orders, inventory, batches, etc.)
+- **Components**: `lib/opensauce_web/components/` — reusable UI (core, forms, data_vis, page, layouts)
 - Auth via `on_mount` hooks using AshAuthenticationPhoenix
 
 ### Key Business Flows
 
 - **Production Batching**: Orders → OrderItems allocated to ProductionBatches → consume materials from Lots → complete with produced qty and cost snapshot
 - **BOM Versioning**: Edit latest version only; older versions are read-only
-- **Inventory Forecasting**: `Craftplan.InventoryForecasting` predicts material demand from upcoming orders
+- **Inventory Forecasting**: `OpenSauce.InventoryForecasting` predicts material demand from upcoming orders
 
 ## Testing
 

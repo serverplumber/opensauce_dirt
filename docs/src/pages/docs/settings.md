@@ -4,11 +4,11 @@ title: Settings
 description: General configuration, markup, allergens, nutritional facts, calendar feed, CSV import/export, email, and member management
 ---
 
-The Settings area at **Manage → Settings** controls global configuration for your Craftplan instance.
+The Settings area at **Manage → Settings** controls global configuration for your OpenSauce instance.
 
 ## General Settings
 
-![General Settings](/craftplan/screenshots/settings.webp)
+![General Settings](/opensauce/screenshots/settings.webp)
 
 - **Hourly rate** — Default labor rate used in BOM labor step calculations. Individual steps can override this value.
 - **Overhead percentage** — Applied on top of labor costs during BOM rollup calculations.
@@ -34,7 +34,7 @@ Configure which nutritional fact fields are tracked (calories, protein, fat, car
 
 ## Calendar Feed
 
-Subscribe to your Craftplan schedule in Google Calendar, Apple Calendar, or any app that supports iCal feeds. Navigate to **Settings → Calendar Feed** to manage subscriptions.
+Subscribe to your OpenSauce schedule in Google Calendar, Apple Calendar, or any app that supports iCal feeds. Navigate to **Settings → Calendar Feed** to manage subscriptions.
 
 - **Generate Calendar Feed** — Creates a new API key with read-only access to orders, customers, and production batches, and displays a subscription URL. Copy the URL immediately; the full key is only shown once.
 - **Feed list** — All active calendar feeds are listed with their name, masked URL, creation date, and last-used timestamp.
@@ -57,7 +57,7 @@ The feed endpoint is at `/api/calendar/feed.ics?key=<your-key>`. Calendar apps r
 
 ## Members
 
-Manage team members who can access the Craftplan management interface. Navigate to **Settings → Members**.
+Manage team members who can access the OpenSauce management interface. Navigate to **Settings → Members**.
 
 - **Invite Member** — Enter an email and choose a role (Staff or Admin). The user is created with a temporary password; they should use the password reset flow to set their own.
 - **Edit** — Change a member's role between Staff and Admin.
@@ -79,7 +79,7 @@ Only Staff and Admin users appear in this list. Customer-role users (created via
 
 Settings provides bulk data operations:
 
-![Import Export](/craftplan/screenshots/import-export.webp)
+![Import Export](/opensauce/screenshots/import-export.webp)
 
 - **Export orders** — Download order data as CSV
 - **Export customers** — Download customer records as CSV
@@ -93,14 +93,14 @@ These exports are useful for external reporting, accounting integration, or data
 
 Configure who outgoing emails appear to come from:
 
-- **Sender name** — Display name shown in email clients (default: "Craftplan")
-- **Sender address** — From address on outgoing emails (default: "noreply@craftplan.app")
+- **Sender name** — Display name shown in email clients (default: "OpenSauce")
+- **Sender address** — From address on outgoing emails (default: "noreply@opensauce.app")
 
-These settings apply to all transactional emails sent by Craftplan (order confirmations, password resets, etc.).
+These settings apply to all transactional emails sent by OpenSauce (order confirmations, password resets, etc.).
 
 ### Email Provider
 
-Craftplan supports multiple email delivery providers. Select a provider from the **Provider** dropdown in Settings and fill in the required credentials. Once saved, the new provider is active immediately, no restart required.
+OpenSauce supports multiple email delivery providers. Select a provider from the **Provider** dropdown in Settings and fill in the required credentials. Once saved, the new provider is active immediately, no restart required.
 
 | Provider | Required Fields |
 |----------|-----------------|
@@ -123,7 +123,7 @@ The default provider. Configure your own mail server or a third-party SMTP relay
 - **Password** — SMTP authentication password
 - **TLS** — Transport security mode: `if_available` (default), `always`, or `never`
 
-When credentials (username and password) are left blank, Craftplan connects without authentication.
+When credentials (username and password) are left blank, OpenSauce connects without authentication.
 
 #### SendGrid / Postmark / Brevo
 
@@ -149,7 +149,7 @@ You can also configure the email provider via environment variables at deploy ti
 | `EMAIL_API_DOMAIN` | Sending domain (Mailgun only) |
 | `EMAIL_API_REGION` | AWS region (Amazon SES only, default: `us-east-1`) |
 
-For backward compatibility, if `EMAIL_PROVIDER` is not set but `SMTP_HOST` is present, Craftplan uses the SMTP adapter with the legacy variables:
+For backward compatibility, if `EMAIL_PROVIDER` is not set but `SMTP_HOST` is present, OpenSauce uses the SMTP adapter with the legacy variables:
 
 | Variable | Description |
 |----------|-------------|

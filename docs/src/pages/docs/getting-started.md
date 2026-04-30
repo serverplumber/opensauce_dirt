@@ -1,14 +1,14 @@
 ---
 layout: ../../layouts/DocsLayout.astro
 title: Development Setup
-description: Set up a local development environment for contributing to Craftplan
+description: Set up a local development environment for contributing to OpenSauce
 ---
 
-> **Looking to run Craftplan?** See the [Self-Hosting guide](/craftplan/docs/self-hosting/). This page is for developers who want to contribute.
+> **Looking to run OpenSauce?** See the [Self-Hosting guide](/opensauce/docs/self-hosting/). This page is for developers who want to contribute.
 
 ## Prerequisites
 
-Before setting up Craftplan, make sure you have the following installed:
+Before setting up OpenSauce, make sure you have the following installed:
 
 - **Elixir** 1.18 or later
 - **Erlang/OTP** 25 or later
@@ -31,8 +31,8 @@ This starts PostgreSQL 16 on the default port and MinIO for file storage.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/puemos/craftplan.git
-   cd craftplan
+   git clone https://github.com/puemos/opensauce.git
+   cd opensauce
    ```
 
 2. Run the full setup (installs deps, runs migrations, builds assets, seeds data):
@@ -67,4 +67,4 @@ This starts PostgreSQL 16 on the default port and MinIO for file storage.
 
 ## What's Next
 
-After signing in, you land on **Manage → Overview**. Read the [Overview & Planner](/craftplan/docs/overview/) guide to learn how the main workspace is organized.
+After signing in, you land on **Manage → Overview**. Read the [Overview & Planner](/opensauce/docs/overview/) guide to learn how the main workspace is organized.

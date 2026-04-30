@@ -1,11 +1,11 @@
-defmodule Craftplan.Test.AuthHelpers do
+defmodule OpenSauce.Test.AuthHelpers do
   @moduledoc """
   Test-only helpers for registering users with tokens and signing in connections.
   Compatible with AshAuthentication when `require_token_presence_for_authentication?` is true.
   """
 
   alias AshAuthentication.Strategy.Password
-  alias Craftplan.Accounts.User
+  alias OpenSauce.Accounts.User
 
   @default_password "Passw0rd!!"
 

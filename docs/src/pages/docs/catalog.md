@@ -11,11 +11,11 @@ The Catalog area centralizes product setup, cost rollups, and pricing guidance. 
 1. Go to **Manage → Catalog → Products**.
 2. Select any product. The **Details** tab shows pricing guidance; the **Recipe** tab opens the BOM editor.
 
-![BOM Editor](/craftplan/screenshots/catalog-recipe.webp)
+![BOM Editor](/opensauce/screenshots/catalog-recipe.webp)
 
 ## BOM Versioning
 
-Craftplan uses a simple versioning model:
+OpenSauce uses a simple versioning model:
 
 - The header shows the current `vN` with a "Latest" chip. Older versions display a gold banner with a **Go to latest** shortcut and switch all inputs to read-only.
 - **Show version history** opens a modal listing each version, its status, published timestamp, and unit cost from the cached rollup. Use **View** to jump to a specific version.
@@ -46,7 +46,7 @@ Craftplan uses a simple versioning model:
 
 - The **Details** tab includes a **Suggested Prices** card with retail and wholesale recommendations. These use the current BOM unit cost and the markup mode/value pairs configured in settings (percent or fixed).
 
-![Pricing Guidance](/craftplan/screenshots/catalog-pricing.webp)
+![Pricing Guidance](/opensauce/screenshots/catalog-pricing.webp)
 
 - Materials, labor, and overhead costs are persisted in `catalog_bom_rollups`. The planner, invoices, and insights features read from the rollup, so keeping BOMs current is important.
 - Batch completions copy the BOM costs onto each finished order item. These power the **Completion Snapshot** in the planner and future COGS reports.

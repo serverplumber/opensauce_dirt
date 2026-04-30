@@ -1,10 +1,10 @@
-defmodule Craftplan.Test.AshHelpers do
+defmodule OpenSauce.Test.AshHelpers do
   @moduledoc """
   Thin wrappers around Ash actions to consistently pass `actor` and optional loads.
   """
 
   def ash_create!(resource_or_record, action, attrs, opts \\ []) do
-    actor = Keyword.get(opts, :actor, Craftplan.DataCase.staff_actor())
+    actor = Keyword.get(opts, :actor, OpenSauce.DataCase.staff_actor())
 
     resource_or_record
     |> Ash.Changeset.for_create(action, attrs)
@@ -12,7 +12,7 @@ defmodule Craftplan.Test.AshHelpers do
   end
 
   def ash_update!(record, action, attrs, opts \\ []) do
-    actor = Keyword.get(opts, :actor, Craftplan.DataCase.staff_actor())
+    actor = Keyword.get(opts, :actor, OpenSauce.DataCase.staff_actor())
 
     record
     |> Ash.Changeset.for_update(action, attrs)
@@ -20,7 +20,7 @@ defmodule Craftplan.Test.AshHelpers do
   end
 
   def ash_read!(resource, action, args \\ %{}, opts \\ []) do
-    actor = Keyword.get(opts, :actor, Craftplan.DataCase.staff_actor())
+    actor = Keyword.get(opts, :actor, OpenSauce.DataCase.staff_actor())
     load = Keyword.get(opts, :load, [])
 
     resource

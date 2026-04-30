@@ -1,0 +1,80 @@
+defmodule OpenSauce.Catalog.BOMRollup do
+  @moduledoc false
+  use Ash.Resource,
+    otp_app: :opensauce,
+    domain: OpenSauce.Catalog,
+    data_layer: AshPostgres.DataLayer
+
+  postgres do
+    table "catalog_bom_rollups"
+    repo OpenSauce.Repo
+  end
+
+  actions do
+    defaults [:read]
+
+    create :create do
+      primary? true
+
+      accept [
+        :bom_id,
+        :product_id,
+        :material_cost,
+        :labor_cost,
+        :overhead_cost,
+        :unit_cost,
+        :components_map
+      ]
+    end
+
+    update :update do
+      accept [:material_cost, :labor_cost, :overhead_cost, :unit_cost, :components_map]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :material_cost, :decimal do
+      allow_nil? false
+      default 0
+    end
+
+    attribute :labor_cost, :decimal do
+      allow_nil? false
+      default 0
+    end
+
+    attribute :overhead_cost, :decimal do
+      allow_nil? false
+      default 0
+    end
+
+    attribute :unit_cost, :decimal do
+      allow_nil? false
+      default 0
+    end
+
+    # Flattened materials used per unit (JSONB map: material_id => quantity as string)
+    attribute :components_map, :map do
+      allow_nil? false
+      default %{}
+    end
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :bom, OpenSauce.Catalog.BOM do
+      allow_nil? false
+    end
+
+    belongs_to :product, OpenSauce.Catalog.Product do
+      allow_nil? false
+    end
+  end
+
+  identities do
+    identity :unique_bom, [:bom_id]
+  end
+end

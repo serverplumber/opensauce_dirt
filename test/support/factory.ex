@@ -1,18 +1,18 @@
-defmodule Craftplan.Test.Factory do
+defmodule OpenSauce.Test.Factory do
   @moduledoc """
   Minimal factories for common domain entities used in tests.
   Uses Ash actions and passes a default staff actor when needed.
   """
 
-  alias Craftplan.Catalog.BOM
-  alias Craftplan.Catalog.Product
-  alias Craftplan.CRM.Customer
-  alias Craftplan.Inventory.Allergen
-  alias Craftplan.Inventory.Material
-  alias Craftplan.Inventory.MaterialAllergen
-  alias Craftplan.Orders.Order
+  alias OpenSauce.Catalog.BOM
+  alias OpenSauce.Catalog.Product
+  alias OpenSauce.CRM.Customer
+  alias OpenSauce.Inventory.Allergen
+  alias OpenSauce.Inventory.Material
+  alias OpenSauce.Inventory.MaterialAllergen
+  alias OpenSauce.Orders.Order
 
-  defp staff_actor, do: Craftplan.DataCase.staff_actor()
+  defp staff_actor, do: OpenSauce.DataCase.staff_actor()
 
   # Products
   def create_product!(attrs \\ %{}, actor \\ staff_actor()) do
@@ -111,7 +111,7 @@ defmodule Craftplan.Test.Factory do
   # API Keys
   def create_api_key!(scopes \\ %{}, actor \\ admin_actor()) do
     {:ok, api_key} =
-      Craftplan.Accounts.create_api_key(
+      OpenSauce.Accounts.create_api_key(
         %{name: "test-key-#{System.unique_integer([:positive])}", scopes: scopes},
         actor: actor
       )
@@ -119,7 +119,7 @@ defmodule Craftplan.Test.Factory do
     {Map.get(api_key, :__raw_key__), api_key}
   end
 
-  defp admin_actor, do: Craftplan.DataCase.admin_actor()
+  defp admin_actor, do: OpenSauce.DataCase.admin_actor()
 
   defp unique_code(prefix), do: String.downcase(prefix) <> "-" <> Ecto.UUID.generate()
 end

@@ -1,6 +1,6 @@
 import Config
 
-config :craftplan, Craftplan.Repo,
+config :opensauce, OpenSauce.Repo,
   # For development, we disable any cache and enable
   # debugging and code reloading.
   #
@@ -12,19 +12,19 @@ config :craftplan, Craftplan.Repo,
   # Watch static and templates for browser reloading.
   password: "postgres",
   hostname: "localhost",
-  database: "craftplan_dev",
+  database: "opensauce_dev",
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
-config :craftplan, Craftplan.Vault,
+config :opensauce, OpenSauce.Vault,
   ciphers: [
     default:
       {Cloak.Ciphers.AES.GCM, tag: "AES.GCM.V1", key: Base.decode64!("dVBPc3k5cExja3A2aGR6bmFiY2RlZjAxMjM0NTY3ODk=")}
   ]
 
-config :craftplan, CraftplanWeb.Endpoint,
+config :opensauce, OpenSauceWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4000],
   check_origin: false,
   # ## SSL Support
@@ -48,11 +48,11 @@ config :craftplan, CraftplanWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "NlbIq9/9aO9+5xxg8ESxxFI7ay172FlEI5IVJvhLx50ZcZbWLjV1L1ito7aZ0fiM",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:craftplan, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:craftplan, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:opensauce, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:opensauce, ~w(--watch)]}
   ]
 
-config :craftplan, CraftplanWeb.Endpoint,
+config :opensauce, OpenSauceWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
@@ -76,7 +76,7 @@ config :craftplan, CraftplanWeb.Endpoint,
 # configured to run both http and https servers on
 #
 # different ports.
-config :craftplan, dev_routes: true, token_signing_secret: "1Y4H7uJJNzu5KtTktCIrtiyGZ+A0eBS9"
+config :opensauce, dev_routes: true, token_signing_secret: "1Y4H7uJJNzu5KtTktCIrtiyGZ+A0eBS9"
 
 config :ex_aws,
   json_codec: Jason,

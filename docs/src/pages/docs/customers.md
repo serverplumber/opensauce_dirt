@@ -10,7 +10,7 @@ The CRM module provides a customer database integrated with orders and billing.
 
 Navigate to **Manage → Customers** to see all customers. Each customer record includes:
 
-![Customers List](/craftplan/screenshots/customers.webp)
+![Customers List](/opensauce/screenshots/customers.webp)
 
 - Name and contact information
 - Company name (optional)

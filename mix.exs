@@ -1,9 +1,9 @@
-defmodule Craftplan.MixProject do
+defmodule Opensauce.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :craftplan,
+      app: :opensauce,
       version: "0.4.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule Craftplan.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Craftplan.Application, []},
+      mod: {Opensauce.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -106,10 +106,10 @@ defmodule Craftplan.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ash.setup --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind craftplan", "esbuild craftplan"],
+      "assets.build": ["tailwind opensauce", "esbuild opensauce"],
       "assets.deploy": [
-        "tailwind craftplan --minify",
-        "esbuild craftplan --minify",
+        "tailwind opensauce --minify",
+        "esbuild opensauce --minify",
         "phx.digest"
       ]
     ]

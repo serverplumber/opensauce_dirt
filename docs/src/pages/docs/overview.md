@@ -6,11 +6,11 @@ description: The Manage Overview landing page with kanban board, schedule, make 
 
 The planner lives at **Manage → Overview** (`/manage/overview`). It is the first page you see after signing in and keeps the plan-make-stock loop in one place.
 
-![Craftplan Planner](/craftplan/screenshots/plan.webp)
+![OpenSauce Planner](/opensauce/screenshots/plan.webp)
 
 ## Global Search (Command Palette)
 
-Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) anywhere in Craftplan to open the command palette. It provides instant fuzzy search across all your data:
+Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) anywhere in OpenSauce to open the command palette. It provides instant fuzzy search across all your data:
 
 - **Products** — Jump to any product by name or SKU
 - **Materials** — Find raw materials and ingredients
@@ -20,7 +20,7 @@ Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) anywhere in Craftplan to open th
 
 Use arrow keys to navigate results and Enter to select. Press Escape to close.
 
-![Global Search Command Palette](/craftplan/screenshots/search.webp)
+![Global Search Command Palette](/opensauce/screenshots/search.webp)
 
 ## Layout & Tabs
 

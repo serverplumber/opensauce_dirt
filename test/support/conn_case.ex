@@ -1,4 +1,4 @@
-defmodule CraftplanWeb.ConnCase do
+defmodule OpenSauceWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -11,32 +11,32 @@ defmodule CraftplanWeb.ConnCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use CraftplanWeb.ConnCase, async: true`, although
+  by setting `use OpenSauceWeb.ConnCase, async: true`, although
   this option is not recommended for other databases.
   """
 
   use ExUnit.CaseTemplate
 
-  alias Craftplan.Test.AuthHelpers
+  alias OpenSauce.Test.AuthHelpers
 
   using do
     quote do
-      use CraftplanWeb, :verified_routes
+      use OpenSauceWeb, :verified_routes
 
-      import CraftplanWeb.ConnCase
+      import OpenSauceWeb.ConnCase
       import Phoenix.ConnTest
       import Plug.Conn
       # The default endpoint for testing
-      @endpoint CraftplanWeb.Endpoint
+      @endpoint OpenSauceWeb.Endpoint
 
       # Import conveniences for testing with connections
     end
   end
 
   setup tags do
-    Craftplan.DataCase.setup_sandbox(tags)
+    OpenSauce.DataCase.setup_sandbox(tags)
     conn = Phoenix.ConnTest.build_conn()
-    metadata = Phoenix.Ecto.SQL.Sandbox.metadata_for(Craftplan.Repo, self())
+    metadata = Phoenix.Ecto.SQL.Sandbox.metadata_for(OpenSauce.Repo, self())
 
     conn =
       conn
