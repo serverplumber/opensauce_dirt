@@ -589,8 +589,7 @@ defmodule OpenSauceWeb.Layouts do
   defp shop_links do
     [
       %{label: "Home", navigate: ~p"/", icon: :home, exact: "/"},
-      %{label: "Log in", navigate: ~p"/sign-in", icon: :login, exact: "/sign-in"},
-      %{label: "Reset password", navigate: ~p"/reset", icon: :settings, exact: "/reset"}
+      %{label: "Log in", navigate: ~p"/sign-in", icon: :login, exact: "/sign-in"}
     ]
   end
 

@@ -14,30 +14,6 @@ defmodule OpenSauceWeb.AuthOverrides do
     set :root_class, "grid h-screen place-items-center dark:bg-stone-50"
   end
 
-  override AshAuthentication.Phoenix.ResetLive do
-    set :root_class, "grid h-screen place-items-center dark:bg-stone-50"
-  end
-
-  override AshAuthentication.Phoenix.Components.Reset do
-    set :root_class, """
-    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
-    lg:px-20 xl:px-24
-    """
-
-    set :strategy_class, "mx-auto w-full max-w-sm lg:w-96"
-  end
-
-  override AshAuthentication.Phoenix.Components.Reset.Form do
-    set :root_class, nil
-
-    set :label_class,
-        "mt-2 mb-4 text-2xl tracking-tight font-bold text-stone-900 dark:text-stone-900"
-
-    set :form_class, nil
-    set :spacer_class, "py-1"
-    set :disable_button_text, "Changing password ..."
-  end
-
   override AshAuthentication.Phoenix.Components.SignIn do
     set :root_class, """
     flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
@@ -87,86 +63,6 @@ defmodule OpenSauceWeb.AuthOverrides do
         "If this user exists in our database you will contacted with a sign-in link shortly."
 
     set :disable_button_text, "Requesting ..."
-  end
-
-  override AshAuthentication.Phoenix.Components.Password do
-    set :root_class, "mt-4 mb-4"
-    set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
-    set :toggler_class, "flex-none text-stone-500 hover:text-stone-600 px-2 first:pl-0 last:pr-0"
-    set :sign_in_toggle_text, "Already have an account?"
-    set :register_toggle_text, "Need an account?"
-    set :reset_toggle_text, "Forgot your password?"
-    set :show_first, :sign_in
-    set :hide_class, "hidden"
-  end
-
-  override AshAuthentication.Phoenix.Components.Password.SignInForm do
-    set :root_class, nil
-
-    set :label_class,
-        "mt-2 mb-4 text-2xl tracking-tight font-bold text-stone-900 dark:text-stone-900"
-
-    set :form_class, nil
-    set :slot_class, "my-4"
-    set :disable_button_text, "Signing in ..."
-  end
-
-  override AshAuthentication.Phoenix.Components.Password.RegisterForm do
-    set :root_class, nil
-
-    set :label_class,
-        "mt-2 mb-4 text-2xl tracking-tight font-bold text-stone-900 dark:text-stone-900"
-
-    set :form_class, nil
-    set :slot_class, "my-4"
-    set :disable_button_text, "Registering ..."
-  end
-
-  override AshAuthentication.Phoenix.Components.Password.ResetForm do
-    set :root_class, nil
-
-    set :label_class,
-        "mt-2 mb-4 text-2xl tracking-tight font-bold text-stone-900 dark:text-stone-900"
-
-    set :form_class, nil
-    set :slot_class, "my-4"
-
-    set :reset_flash_text,
-        "If this user exists in our system, you will be contacted with reset instructions shortly."
-
-    set :disable_button_text, "Requesting ..."
-  end
-
-  override AshAuthentication.Phoenix.Components.Password.Input do
-    set :field_class, "mt-2 mb-2 dark:text-stone-900"
-    set :label_class, "block text-sm font-medium text-stone-700 mb-1 dark:text-stone-900"
-
-    set :input_class, """
-    appearance-none block w-full px-3 py-2 border border-stone-300 rounded-md
-    placeholder-stone-400 focus:outline-none focus:ring-blue-pale-500
-    focus:border-blue-pale-500 sm:text-sm dark:text-black
-    """
-
-    set :input_class_with_error, """
-    appearance-none block w-full px-3 py-2 border border-stone-300 rounded-md
-    placeholder-stone-400 focus:outline-none border-red-400 sm:text-sm
-    dark:text-black
-    """
-
-    set :submit_class, """
-    inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm
-    font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-300
-    disabled:pointer-events-none disabled:opacity-50 border border-stone-300 bg-stone-200/50
-    hover:bg-stone-200 hover:text-gray-800 h-9 px-4 py-2
-    """
-
-    set :password_input_label, "Password"
-    set :password_confirmation_input_label, "Password Confirmation"
-    set :identity_input_label, "Email"
-    set :identity_input_placeholder, nil
-    set :error_ul, "text-red-400 font-light my-3 italic text-sm"
-    set :error_li, nil
-    set :input_debounce, 350
   end
 
   override AshAuthentication.Phoenix.Components.OAuth2 do

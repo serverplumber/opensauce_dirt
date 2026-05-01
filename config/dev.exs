@@ -57,7 +57,7 @@ config :opensauce, OpenSauceWeb.Endpoint,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/craftplan_web/(controllers|live|components)/.*(ex|heex)$",
+      ~r"lib/opensauce_web/(controllers|live|components)/.*(ex|heex)$",
       ~r"storybook/.*(exs)$"
     ]
 
@@ -105,8 +105,8 @@ config :swoosh, :api_client, false
 
 config :waffle,
   storage: Waffle.Storage.S3,
-  bucket: "craftplan",
-  asset_host: "http://localhost:9000/craftplan"
+  bucket: "opensauce",
+  asset_host: "http://localhost:9000/opensauce"
 
 # Set a higher stacktrace during development. Avoid configuring such
 # Disable swoosh api client as it is only required for production adapters.

@@ -65,12 +65,17 @@ defmodule OpenSauceWeb.Router do
     live "/setup", SetupLive, :index
 
     # Authentication Routes
+    magic_sign_in_route(OpenSauce.Accounts.User, :magic_link,
+      auth_routes_prefix: "/auth",
+      overrides: [OpenSauceWeb.AuthOverrides, Default],
+      path: "/auth/user/magic_link",
+      token_as_route_param?: false
+    )
+
     auth_routes AuthController, OpenSauce.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
-    sign_in_route register_path: "/register",
-                  reset_path: "/reset",
-                  auth_routes_prefix: "/auth",
+    sign_in_route auth_routes_prefix: "/auth",
                   on_mount: [
                     OpenSauceWeb.LiveCurrentPath,
                     {OpenSauceWeb.LiveUserAuth, :live_no_user}
@@ -79,12 +84,21 @@ defmodule OpenSauceWeb.Router do
                     OpenSauceWeb.AuthOverrides,
                     Default
                   ]
+  end
 
-    reset_route auth_routes_prefix: "/auth",
-                overrides: [
-                  OpenSauceWeb.AuthOverrides,
-                  Default
-                ]
+  #
+  # Org Picker Routes (authenticated user, no org selected yet)
+  #
+
+  scope "/org", OpenSauceWeb do
+    pipe_through :browser
+
+    get "/pick/:id", OrgController, :pick
+
+    ash_authentication_live_session :org_routes,
+      on_mount: [{OpenSauceWeb.LiveUserAuth, :live_user_required}] do
+      live "/pick", OrgPickLive, :index
+    end
   end
 
   #
@@ -94,14 +108,14 @@ defmodule OpenSauceWeb.Router do
   scope "/", OpenSauceWeb do
     pipe_through :browser
 
-    # Admin Routes
+    # Manager Routes
     ash_authentication_live_session :admin_routes,
       on_mount: [
         OpenSauceWeb.LiveCurrentPath,
         OpenSauceWeb.LiveNav,
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette,
-        {OpenSauceWeb.LiveUserAuth, :live_admin_required}
+        {OpenSauceWeb.LiveUserAuth, :live_manager_required}
       ] do
       # Settings Routes
       live "/manage/settings", SettingsLive.Index, :index

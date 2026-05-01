@@ -3,11 +3,13 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
   use OpenSauceWeb, :live_component
 
   alias OpenSauce.Accounts
+  alias OpenSauce.Accounts.OrganisationMember.Types.Role
 
   @role_colors [
-    admin: "bg-purple-100 text-purple-700 border-purple-300",
+    owner: "bg-purple-100 text-purple-700 border-purple-300",
+    manager: "bg-indigo-100 text-indigo-700 border-indigo-300",
     staff: "bg-blue-100 text-blue-700 border-blue-300",
-    customer: "bg-stone-100 text-stone-700 border-stone-300"
+    readonly: "bg-stone-100 text-stone-700 border-stone-300"
   ]
 
   @impl true
@@ -35,44 +37,25 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
       <div class="rounded-md border border-gray-200 bg-white">
         <div class="p-4">
           <.table id="members" rows={@members} wrapper_class="mt-0">
-            <:col :let={member} label="Email">{member.email}</:col>
-            <:col :let={member} label="Role">
-              <.badge text={member.role} colors={role_colors()} />
+            <:col :let={m} label="Email">{m.user.email}</:col>
+            <:col :let={m} label="Role">
+              <.badge text={m.role} colors={role_colors()} />
             </:col>
-            <:col :let={member} label="Status">
-              <span
-                :if={member.confirmed_at}
-                class="ring-green-600/20 inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset"
-              >
-                Active
-              </span>
-              <span
-                :if={is_nil(member.confirmed_at)}
-                class="ring-yellow-600/20 inline-flex items-center rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset"
-              >
-                Pending
-              </span>
-            </:col>
-            <:col :let={member} label="Joined">
-              {if Map.get(member, :confirmed_at),
-                do: Calendar.strftime(member.confirmed_at, "%Y-%m-%d"),
-                else: "—"}
-            </:col>
-            <:action :let={member}>
+            <:action :let={m}>
               <.button
-                :if={member.id != @current_user.id}
+                :if={m.id != @current_member.id}
                 size={:sm}
                 variant={:secondary}
-                phx-click={JS.push("show_edit_modal", value: %{id: member.id}, target: @myself)}
+                phx-click={JS.push("show_edit_modal", value: %{id: m.id}, target: @myself)}
               >
                 Edit
               </.button>
               <.button
-                :if={member.id != @current_user.id}
+                :if={m.id != @current_member.id}
                 size={:sm}
                 variant={:danger}
-                phx-click={JS.push("remove_member", value: %{id: member.id}, target: @myself)}
-                data-confirm="Are you sure you want to remove this member? This action cannot be undone."
+                phx-click={JS.push("remove_member", value: %{id: m.id}, target: @myself)}
+                data-confirm="Remove this member? This cannot be undone."
               >
                 Remove
               </.button>
@@ -91,7 +74,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
         id="invite-member-modal"
         show
         title="Invite Member"
-        description="Send an invitation to a new team member"
+        description="Add a new team member by email"
         on_cancel={JS.push("hide_invite_modal", target: @myself)}
       >
         <.simple_form
@@ -101,20 +84,14 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
           phx-change="validate_invite"
           phx-submit="invite_member"
         >
-          <.input
-            field={@invite_form[:email]}
-            type="email"
-            label="Email"
-            placeholder="member@example.com"
-          />
+          <.input field={@invite_form[:email]} type="email" label="Email" placeholder="member@example.com" />
           <.input
             field={@invite_form[:role]}
             type="radiogroup"
             label="Role"
-            options={[{"Staff", :staff}, {"Admin", :admin}]}
+            options={role_options()}
             value={@invite_form[:role].value || :staff}
           />
-
           <:actions>
             <.button variant={:primary} phx-disable-with="Sending...">Send Invite</.button>
           </:actions>
@@ -126,7 +103,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
         id="edit-role-modal"
         show
         title="Edit Role"
-        description={"Change role for #{@editing_member && @editing_member.email}"}
+        description={"Change role for #{@editing_member && @editing_member.user.email}"}
         on_cancel={JS.push("hide_edit_modal", target: @myself)}
       >
         <.simple_form
@@ -140,10 +117,9 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
             field={@role_form[:role]}
             type="radiogroup"
             label="Role"
-            options={[{"Staff", :staff}, {"Admin", :admin}]}
+            options={role_options()}
             value={@role_form[:role].value}
           />
-
           <:actions>
             <.button variant={:primary} phx-disable-with="Updating...">Update Role</.button>
           </:actions>
@@ -155,7 +131,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
 
   @impl true
   def update(assigns, socket) do
-    members = load_members(assigns.current_user)
+    members = load_members(assigns.current_member)
 
     {:ok,
      socket
@@ -181,12 +157,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
   @impl true
   def handle_event("show_edit_modal", %{"id" => id}, socket) do
     member = Enum.find(socket.assigns.members, &(&1.id == id))
-
-    {:noreply,
-     socket
-     |> assign(:show_edit_modal, true)
-     |> assign(:editing_member, member)
-     |> assign(:role_form, role_form(member.role))}
+    {:noreply, socket |> assign(:show_edit_modal, true) |> assign(:editing_member, member) |> assign(:role_form, role_form(member.role))}
   end
 
   @impl true
@@ -206,67 +177,75 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
 
   @impl true
   def handle_event("invite_member", %{"invite" => params}, socket) do
-    invite_params = %{
-      email: params["email"],
-      role: params["role"] || "staff"
-    }
+    actor = socket.assigns.current_member
+    org_id = actor.organisation_id
 
-    case Accounts.invite_member(invite_params, actor: socket.assigns.current_user) do
-      {:ok, _user} ->
-        members = load_members(socket.assigns.current_user)
+    user_result =
+      case Accounts.get_user_by_email(params["email"]) do
+        {:ok, user} -> {:ok, user}
+        _ -> Accounts.create_user(%{email: params["email"]}, authorize?: false)
+      end
 
+    result =
+      with {:ok, user} <- user_result do
+        Accounts.create_organisation_member(
+          %{user_id: user.id, organisation_id: org_id, role: params["role"] || "staff"},
+          authorize?: false
+        )
+      end
+
+    case result do
+      {:ok, _} ->
         {:noreply,
          socket
-         |> assign(:members, members)
+         |> assign(:members, load_members(actor))
          |> assign(:show_invite_modal, false)
          |> assign(:invite_form, invite_form())
          |> put_flash(:info, "Member invited successfully")}
 
-      {:error, _error} ->
+      {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to invite member. The email may already be in use.")}
     end
   end
 
   @impl true
   def handle_event("update_role", %{"role_edit" => params}, socket) do
+    actor = socket.assigns.current_member
     member = socket.assigns.editing_member
 
-    case Accounts.update_user_role(member, %{role: params["role"]}, actor: socket.assigns.current_user) do
-      {:ok, _updated} ->
-        members = load_members(socket.assigns.current_user)
-
+    case Accounts.update_organisation_member(member, %{role: params["role"]}, authorize?: false) do
+      {:ok, _} ->
         {:noreply,
          socket
-         |> assign(:members, members)
+         |> assign(:members, load_members(actor))
          |> assign(:show_edit_modal, false)
          |> assign(:editing_member, nil)
-         |> put_flash(:info, "Role updated successfully")}
+         |> put_flash(:info, "Role updated")}
 
-      {:error, _error} ->
+      {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to update role.")}
     end
   end
 
   @impl true
   def handle_event("remove_member", %{"id" => id}, socket) do
+    actor = socket.assigns.current_member
     member = Enum.find(socket.assigns.members, &(&1.id == id))
 
-    case Accounts.remove_member(member, actor: socket.assigns.current_user) do
+    case Accounts.delete_organisation_member(member, authorize?: false) do
       :ok ->
-        members = load_members(socket.assigns.current_user)
-
         {:noreply,
          socket
-         |> assign(:members, members)
-         |> put_flash(:info, "Member removed successfully")}
+         |> assign(:members, load_members(actor))
+         |> put_flash(:info, "Member removed")}
 
-      {:error, _error} ->
+      {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to remove member.")}
     end
   end
 
-  defp load_members(user) do
-    Accounts.list_members!(actor: user)
+  defp load_members(member) do
+    Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
   end
 
   defp invite_form(params \\ %{}) do
@@ -275,6 +254,10 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
 
   defp role_form(role) do
     to_form(%{"role" => to_string(role)}, as: "role_edit")
+  end
+
+  defp role_options do
+    Role.values() |> Enum.map(&{&1 |> to_string() |> String.capitalize(), &1})
   end
 
   defp role_colors, do: @role_colors

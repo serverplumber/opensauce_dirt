@@ -12,9 +12,7 @@ config :ash,
   show_keysets_for_all_actions?: false,
   default_page_type: :keyset,
   policies: [no_filter_static_forbidden_reads?: false],
-  known_types: [AshMoney.Types.Money],
   custom_types: [
-    money: Money,
     currency: OpenSauce.Types.Currency,
     unit: OpenSauce.Types.Unit
   ]
@@ -48,7 +46,8 @@ config :opensauce,
     OpenSauce.Orders,
     OpenSauce.Inventory,
     OpenSauce.Catalog,
-    OpenSauce.Accounts
+    OpenSauce.Accounts,
+    OpenSauce.Operations
   ]
 
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
@@ -56,13 +55,11 @@ config :elixir, :time_zone_database, Tz.TimeZoneDatabase
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.0",
-  craftplan: [
+  opensauce: [
     args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
-
-config :ex_cldr, default_backend: OpenSauce.Cldr
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -113,7 +110,7 @@ config :spark,
 
 config :tailwind,
   version: "4.1.3",
-  craftplan: [
+  opensauce: [
     args: ~w(
         --input=assets/css/app.css
         --output=priv/static/assets/app.css

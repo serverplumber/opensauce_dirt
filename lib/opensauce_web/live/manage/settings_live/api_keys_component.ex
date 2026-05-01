@@ -243,7 +243,7 @@ defmodule OpenSauceWeb.SettingsLive.ApiKeysComponent do
   end
 
   defp load_api_keys(user) do
-    case Accounts.list_api_keys_for_user(%{user_id: user.id}, actor: user) do
+    case Accounts.list_api_keys_for_organisation(actor: user) do
       {:ok, keys} -> keys
       _ -> []
     end

@@ -1,0 +1,66 @@
+defmodule OpenSauce.Accounts.OrganisationMember do
+  @moduledoc false
+  use Ash.Resource,
+    otp_app: :opensauce,
+    domain: OpenSauce.Accounts,
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
+
+  alias OpenSauce.Accounts.OrganisationMember.Types.Role
+
+  postgres do
+    table "accounts_organisation_members"
+    repo OpenSauce.Repo
+  end
+
+  actions do
+    defaults [:read, :destroy, create: [:role, :user_id, :organisation_id], update: [:role]]
+
+    read :get_by_user_and_organisation do
+      argument :user_id, :uuid, allow_nil?: false
+      argument :organisation_id, :uuid, allow_nil?: false
+      get? true
+      filter expr(user_id == ^arg(:user_id) and organisation_id == ^arg(:organisation_id))
+    end
+
+    read :list_for_user do
+      argument :user_id, :uuid, allow_nil?: false
+      filter expr(user_id == ^arg(:user_id))
+      prepare build(load: [:organisation])
+    end
+
+    read :list_for_organisation do
+      argument :organisation_id, :uuid, allow_nil?: false
+      filter expr(organisation_id == ^arg(:organisation_id))
+      prepare build(load: [:user])
+    end
+  end
+
+  policies do
+    # TODO: owners and managers can manage members; staff/readonly can read own membership
+    policy always() do
+      authorize_if always()
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :role, Role do
+      allow_nil? false
+      public? true
+      default :staff
+    end
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :user, OpenSauce.Accounts.User, allow_nil?: false
+    belongs_to :organisation, OpenSauce.Accounts.Organisation, allow_nil?: false
+  end
+
+  identities do
+    identity :unique_membership, [:user_id, :organisation_id]
+  end
+end

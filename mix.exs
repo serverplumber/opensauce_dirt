@@ -1,4 +1,4 @@
-defmodule Opensauce.MixProject do
+defmodule OpenSauce.MixProject do
   use Mix.Project
 
   def project do
@@ -20,7 +20,7 @@ defmodule Opensauce.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Opensauce.Application, []},
+      mod: {OpenSauce.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

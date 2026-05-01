@@ -206,7 +206,7 @@ defmodule OpenSauceWeb.SettingsLive.CalendarFeedComponent do
   end
 
   defp load_suitable_keys(user) do
-    case Accounts.list_api_keys_for_user(%{user_id: user.id}, actor: user) do
+    case Accounts.list_api_keys_for_organisation(actor: user) do
       {:ok, keys} ->
         keys
         |> Enum.reject(& &1.revoked_at)

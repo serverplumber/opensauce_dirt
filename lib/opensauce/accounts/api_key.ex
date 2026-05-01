@@ -4,7 +4,8 @@ defmodule OpenSauce.Accounts.ApiKey do
     otp_app: :opensauce,
     domain: OpenSauce.Accounts,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.Accounts.ApiKey.Changes.GenerateKey
 
@@ -31,9 +32,7 @@ defmodule OpenSauce.Accounts.ApiKey do
       change set_attribute(:last_used_at, &DateTime.utc_now/0)
     end
 
-    read :list_for_user do
-      argument :user_id, :uuid, allow_nil?: false
-      filter expr(user_id == ^arg(:user_id))
+    read :list_for_organisation do
       prepare build(sort: [inserted_at: :desc])
     end
 
@@ -101,11 +100,6 @@ defmodule OpenSauce.Accounts.ApiKey do
     timestamps()
   end
 
-  relationships do
-    belongs_to :user, OpenSauce.Accounts.User do
-      allow_nil? false
-    end
-  end
 
   identities do
     identity :key_hash, [:key_hash]

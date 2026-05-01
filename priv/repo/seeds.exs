@@ -90,8 +90,9 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
   Repo.delete_all(Catalog.BOMComponent)
   Repo.delete_all(Catalog.LaborStep)
   Repo.delete_all(Catalog.BOM)
+  Repo.delete_all(Orders.ProductionBatch)
 
-  # Clear products (after BOM cleanup)
+  # Clear products (after BOM and batch cleanup)
   Repo.delete_all(Catalog.Product)
   Repo.delete_all(Inventory.Movement)
   Repo.delete_all(Inventory.Lot)
@@ -102,10 +103,11 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
   Repo.delete_all(Inventory.PurchaseOrderItem)
   Repo.delete_all(Inventory.PurchaseOrder)
   Repo.delete_all(Inventory.Supplier)
-  Repo.delete_all(Orders.ProductionBatch)
   Repo.delete_all(Inventory.Material)
   Repo.delete_all(Inventory.Allergen)
   Repo.delete_all(CRM.Customer)
+  Repo.delete_all(Accounts.OrganisationMember)
+  Repo.delete_all(Accounts.Organisation)
   Repo.delete_all(Accounts.User)
   Repo.delete_all(Settings.Settings)
 
@@ -113,22 +115,11 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
   # 3. Seed necessary data
   # ------------------------------------------------------------------------------
 
-  seed_user = fn email, role ->
-    {:ok, user} =
-      Accounts.User
-      |> Ash.Changeset.for_create(:register_with_password, %{
-        email: email,
-        password: "Aa123123123123",
-        password_confirmation: "Aa123123123123",
-        role: role
-      })
-      |> Ash.create(
-        context: %{
-          strategy: AshAuthentication.Strategy.Password,
-          private: %{ash_authentication?: true}
-        }
-      )
+  {:ok, demo_org} = Accounts.create_organisation(%{name: "Demo Bakery", slug: "demo-bakery"}, authorize?: false)
 
+  seed_user = fn email, role ->
+    {:ok, user} = Accounts.create_user(%{email: email}, authorize?: false)
+    {:ok, _} = Accounts.create_organisation_member(%{user_id: user.id, organisation_id: demo_org.id, role: role}, authorize?: false)
     user
   end
 
@@ -314,9 +305,8 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
   end
 
   # -- 3.1 Create users
-  _admin_user = seed_user.("test@test.com", :admin)
-  _staff_user = seed_user.("staff@staff.com", :staff)
-  _customer_user = seed_user.("customer@customer.com", :customer)
+  _owner_user = seed_user.("owner@demo.test", :owner)
+  _staff_user = seed_user.("staff@demo.test", :staff)
 
   # -- 3.2 Set up global bakery settings
   Ash.Seed.seed!(Settings.Settings, %{
@@ -436,7 +426,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
 
   # -- 3.8.1 Suppliers and Purchase Orders
   suppliers = %{
-    miller: seed_supplier.("Miller & Co.", "hello@miller.test"),
+    miller: seed_supplier.("Miller Co.", "hello@miller.test"),
     dairy: seed_supplier.("Fresh Dairy Ltd.", "sales@dairy.test")
   }
 
@@ -806,7 +796,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
           units_per_run: Decimal.new("48")
         },
         %{
-          name: "Sheet & cut",
+          name: "Sheet and cut",
           duration_minutes: Decimal.new("8"),
           units_per_run: Decimal.new("48")
         },
@@ -894,7 +884,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
       [
         %{name: "Mix batter", duration_minutes: Decimal.new("15")},
         %{name: "Bake layers", duration_minutes: Decimal.new("40")},
-        %{name: "Frost & finish", duration_minutes: Decimal.new("12")}
+        %{name: "Frost and finish", duration_minutes: Decimal.new("12")}
       ],
       status: :active,
       name: "Chocolate Cake BOM v1"
@@ -915,7 +905,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
       ],
       [
         %{
-          name: "Mix & knead",
+          name: "Mix and knead",
           duration_minutes: Decimal.new("15"),
           units_per_run: Decimal.new("12")
         },
@@ -1125,7 +1115,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
           units_per_run: Decimal.new("1")
         },
         %{
-          name: "Frost & decorate",
+          name: "Frost and decorate",
           duration_minutes: Decimal.new("10"),
           rate_override: Decimal.new("22"),
           units_per_run: Decimal.new("1")
@@ -1168,7 +1158,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
       ],
       [
         %{
-          name: "Cream butter & sugar",
+          name: "Cream butter and sugar",
           duration_minutes: Decimal.new("6"),
           units_per_run: Decimal.new("48")
         },

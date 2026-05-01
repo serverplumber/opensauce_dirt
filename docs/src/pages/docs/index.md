@@ -13,17 +13,6 @@ It is a complete rewrite of Craftplan, built on:
 - [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) — real-time UI
 - PostgreSQL 16
 
-## Domains
-
-| Domain | Responsibility |
-|---|---|
-| `Accounts` | Users, authentication, API keys |
-| `Catalog` | Products, BOMs, labor steps, rollups |
-| `Orders` | Orders, order items, production batches |
-| `Inventory` | Materials, lots, movements, forecasting |
-| `CRM` | Customers, suppliers |
-| `Settings` | App-wide configuration |
-
 ## Quick start
 
 ```bash

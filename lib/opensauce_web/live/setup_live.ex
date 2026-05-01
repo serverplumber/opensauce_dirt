@@ -93,8 +93,9 @@ defmodule OpenSauceWeb.SetupLive do
   end
 
   defp admin_exists? do
-    [authorize?: false]
-    |> OpenSauce.Accounts.list_admin_users!()
-    |> Enum.any?()
+    case OpenSauce.Accounts.list_organisations(authorize?: false) do
+      {:ok, [_ | _]} -> true
+      _ -> false
+    end
   end
 end

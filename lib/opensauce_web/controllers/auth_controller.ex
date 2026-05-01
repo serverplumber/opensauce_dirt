@@ -2,54 +2,45 @@ defmodule OpenSauceWeb.AuthController do
   use OpenSauceWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  def success(conn, activity, user, _token) do
-    return_to = get_session(conn, :return_to) || ~p"/manage/overview"
+  alias OpenSauce.Accounts
 
-    message =
-      case activity do
-        {:confirm_new_user, :confirm} -> "Your email address has now been confirmed"
-        {:password, :reset} -> "Your password has successfully been reset"
-        _ -> "You are now signed in"
-      end
+  def success(conn, _activity, user, _token) do
+    conn = store_in_session(conn, user)
 
-    conn
-    |> delete_session(:return_to)
-    |> store_in_session(user)
-    # If your resource has a different name, update the assign name here (i.e :current_admin)
-    |> assign(:current_user, user)
-    |> put_flash(:info, message)
-    |> redirect(to: return_to)
+    case Accounts.list_memberships_for_user(user.id, authorize?: false) do
+      {:ok, []} ->
+        conn
+        |> put_flash(:info, "Welcome — let's get your organisation set up.")
+        |> redirect(to: ~p"/setup")
+
+      {:ok, [membership]} ->
+        conn
+        |> put_session("organisation_id", membership.organisation_id)
+        |> put_flash(:info, "You are now signed in")
+        |> redirect(to: ~p"/manage/overview")
+
+      {:ok, _many} ->
+        conn
+        |> put_flash(:info, "You are now signed in")
+        |> redirect(to: ~p"/org/pick")
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Something went wrong loading your account")
+        |> redirect(to: ~p"/sign-in")
+    end
   end
 
-  def failure(conn, activity, reason) do
-    message =
-      case {activity, reason} do
-        {{:magic_link, _},
-         %AshAuthentication.Errors.AuthenticationFailed{
-           caused_by: %Ash.Error.Forbidden{
-             errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
-           }
-         }} ->
-          """
-          You have already signed in another way, but have not confirmed your account.
-          You can confirm your account using the link we sent to you, or by resetting your password.
-          """
-
-        _ ->
-          "Incorrect email or password"
-      end
-
+  def failure(conn, _activity, _reason) do
     conn
-    |> put_flash(:error, message)
+    |> put_flash(:error, "Invalid or expired sign-in link")
     |> redirect(to: ~p"/sign-in")
   end
 
   def sign_out(conn, _params) do
-    return_to = get_session(conn, :return_to) || ~p"/"
-
     conn
     |> clear_session(:opensauce)
     |> put_flash(:info, "You are now signed out")
-    |> redirect(to: return_to)
+    |> redirect(to: ~p"/")
   end
 end
