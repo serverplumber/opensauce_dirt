@@ -16,14 +16,14 @@ defmodule OpenSauce.Operations.Venue do
     defaults [
       :read,
       :destroy,
-      create: [:name, :address, :timezone, :type, :organisation_id],
-      update: [:name, :address, :timezone, :type]
+      create: [:name, :address, :organisation_id],
+      update: [:name, :address]
     ]
   end
 
   policies do
     policy always() do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 
@@ -37,19 +37,6 @@ defmodule OpenSauce.Operations.Venue do
 
     attribute :address, :string do
       public? true
-    end
-
-    attribute :timezone, :string do
-      allow_nil? false
-      public? true
-      default "UTC"
-    end
-
-    attribute :type, :atom do
-      allow_nil? false
-      public? true
-      default :kitchen
-      constraints one_of: [:kitchen, :warehouse, :other]
     end
 
     timestamps()

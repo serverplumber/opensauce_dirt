@@ -22,6 +22,7 @@ defmodule OpenSauceWeb.Navigation do
           | :inventory
           | :purchasing
           | :customers
+          | :venues
           | :settings
           | :production
           | :overview
@@ -53,6 +54,9 @@ defmodule OpenSauceWeb.Navigation do
   # Purchasing nav helpers
   def purchasing_orders_active?(socket), do: socket.view in [Index, Show]
   def purchasing_suppliers_active?(socket), do: socket.view == Suppliers
+
+  # Venues nav helpers
+  def venues_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/venues")
 
   # Settings nav helpers
   defp settings_active?(:general, socket), do: live_action(socket) in [:index, :general]
@@ -240,6 +244,14 @@ defmodule OpenSauceWeb.Navigation do
           customer: &__MODULE__.crumb_customer/1,
           customer_orders: &__MODULE__.crumb_customer_orders/1,
           customer_statistics: &__MODULE__.crumb_customer_statistics/1
+        },
+        sub_links: []
+      },
+      venues: %{
+        label: "Venues",
+        path: "/manage/venues",
+        pages: %{
+          new_venue: %{label: "New Venue", path: "/manage/venues/new"}
         },
         sub_links: []
       },

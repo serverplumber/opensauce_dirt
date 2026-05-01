@@ -362,6 +362,15 @@ defmodule OpenSauceWeb.Layouts do
             d="M17 20h5v-1a6 6 0 00-9-5.197M9 20H4v-1a6 6 0 0112 0v1zm3-9a4 4 0 100-8 4 4 0 000 8z"
           />
         </svg>
+      <% :venues -> %>
+        <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+          />
+        </svg>
       <% :settings -> %>
         <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -575,6 +584,13 @@ defmodule OpenSauceWeb.Layouts do
         icon: :customers,
         nav_section: :customers,
         prefix: "/manage/customers"
+      },
+      %{
+        label: "Venues",
+        navigate: ~p"/manage/venues",
+        icon: :venues,
+        nav_section: :venues,
+        prefix: "/manage/venues"
       },
       %{
         label: "Settings",

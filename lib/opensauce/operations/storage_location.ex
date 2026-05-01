@@ -22,11 +22,16 @@ defmodule OpenSauce.Operations.StorageLocation do
       create: [:name, :venue_id, :organisation_id],
       update: [:name]
     ]
+
+    read :list_for_venue do
+      argument :venue_id, :uuid, allow_nil?: false
+      filter expr(venue_id == ^arg(:venue_id))
+    end
   end
 
   policies do
     policy always() do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

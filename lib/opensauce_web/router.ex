@@ -117,6 +117,12 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveCommandPalette,
         {OpenSauceWeb.LiveUserAuth, :live_manager_required}
       ] do
+      # Venue Routes
+      live "/manage/venues", VenueLive.Index, :index
+      live "/manage/venues/new", VenueLive.Index, :new
+      live "/manage/venues/:id", VenueLive.Show, :show
+      live "/manage/venues/:id/edit", VenueLive.Show, :edit
+
       # Settings Routes
       live "/manage/settings", SettingsLive.Index, :index
       live "/manage/settings/general", SettingsLive.Index, :general
