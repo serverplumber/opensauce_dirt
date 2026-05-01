@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/DocsLayout.astro
-title: PLACEHOLDER
+title: Domains
 ---
 
-_Documentation coming soon._
+_Documentation in progress._
