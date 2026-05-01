@@ -138,7 +138,7 @@ defmodule OpenSauceWeb.SettingsLive.FormComponent do
                 field={@form[:email_from_address]}
                 type="email"
                 label="Sender email"
-                placeholder="noreply@craftplan.app"
+                placeholder="noreply@example.com"
               />
             </div>
           </section>
@@ -368,7 +368,7 @@ defmodule OpenSauceWeb.SettingsLive.FormComponent do
     form =
       AshPhoenix.Form.for_update(settings, :update,
         as: "settings",
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member
       )
 
     assign(socket, form: to_form(form))

@@ -23,7 +23,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
               <.live_component
                 module={OpenSauceWeb.SettingsLive.FormComponent}
                 id="settings-form"
-                current_user={@current_user}
+                current_member={@current_member}
                 title={@page_title}
                 action={@live_action}
                 settings={@settings}
