@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.Accounts
   alias OpenSauce.Inventory
   alias OpenSauce.Settings
   alias OpenSauceWeb.Navigation
@@ -17,7 +18,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
     <div class="mt-4 space-y-6">
       <div :if={@live_action in [:general, :index]}>
         <div class="flex flex-col gap-6 lg:flex-row">
-          <div class="grow">
+          <div class="grow space-y-6">
             <div class="rounded-md border border-gray-200 bg-white p-6">
               <.live_component
                 module={OpenSauceWeb.SettingsLive.FormComponent}
@@ -27,6 +28,14 @@ defmodule OpenSauceWeb.SettingsLive.Index do
                 action={@live_action}
                 settings={@settings}
                 patch={~p"/manage/settings/general"}
+              />
+            </div>
+            <div class="rounded-md border border-gray-200 bg-white p-6">
+              <.live_component
+                module={OpenSauceWeb.SettingsLive.OrgFormComponent}
+                id="org-form"
+                current_member={@current_member}
+                organisation={@organisation}
               />
             </div>
           </div>
@@ -185,12 +194,14 @@ defmodule OpenSauceWeb.SettingsLive.Index do
     settings = Settings.get_by_id!(socket.assigns.settings.id)
     allergens = Inventory.list_allergens!()
     nutritional_facts = Inventory.list_nutritional_facts!()
+    organisation = Accounts.get_organisation!(socket.assigns.current_member.organisation_id, authorize?: false)
 
     socket =
       socket
       |> assign(:settings, settings)
       |> assign(:allergens, allergens)
       |> assign(:nutritional_facts, nutritional_facts)
+      |> assign(:organisation, organisation)
       |> assign(:csv_form, to_form(%{}))
       |> assign(:csv_export_form, to_form(%{}))
       |> assign(:show_mapping_modal, false)
@@ -312,6 +323,11 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   @impl true
   def handle_info({OpenSauceWeb.SettingsLive.FormComponent, {:saved, settings}}, socket) do
     {:noreply, assign(socket, :settings, settings)}
+  end
+
+  @impl true
+  def handle_info({OpenSauceWeb.SettingsLive.OrgFormComponent, {:saved, organisation}}, socket) do
+    {:noreply, assign(socket, :organisation, organisation)}
   end
 
   @impl true
