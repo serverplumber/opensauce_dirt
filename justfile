@@ -21,6 +21,9 @@ dev:
     mix setup
     mix phx.server
 
+server:
+    mix phx.server
+
 # Stop dev services and wipe all local data
 down:
     podman stop opensauce-postgres 2>/dev/null || true

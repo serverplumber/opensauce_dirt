@@ -42,7 +42,7 @@ defmodule OpenSauceWeb.LiveUserAuth do
     end
   end
 
-  # Staff, managers, and owners — excludes :readonly.
+  # Staff, managers, and owners.
   def on_mount(:live_staff_required, _params, session, socket) do
     case load_member(socket, session) do
       {:ok, %{role: role} = member} when role in [:staff, :manager, :owner] ->

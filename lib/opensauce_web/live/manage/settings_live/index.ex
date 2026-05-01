@@ -82,7 +82,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           <.live_component
             module={OpenSauceWeb.SettingsLive.MembersComponent}
             id="members-component"
-            current_user={@current_user}
+            current_member={@current_member}
           />
         </div>
       </div>
