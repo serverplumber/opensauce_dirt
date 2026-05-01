@@ -16,4 +16,9 @@ defmodule OpenSauce.Concerns.Multitenanted do
       domain: OpenSauce.Accounts,
       allow_nil?: false
   end
+
+  changes do
+    change OpenSauce.Concerns.Multitenanted.SetOrganisationFromActor,
+      on: [:create]
+  end
 end

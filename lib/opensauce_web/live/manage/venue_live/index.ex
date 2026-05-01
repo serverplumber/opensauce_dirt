@@ -111,13 +111,11 @@ defmodule OpenSauceWeb.VenueLive.Index do
 
   @impl true
   def handle_event("save", %{"venue" => params}, socket) do
-    org_id = socket.assigns.current_member.organisation_id
-
     result =
       if venue = socket.assigns.editing_venue do
         Operations.update_venue(venue, params, opts(socket))
       else
-        Operations.create_venue(Map.put(params, "organisation_id", org_id), opts(socket))
+        Operations.create_venue(params, opts(socket))
       end
 
     case result do

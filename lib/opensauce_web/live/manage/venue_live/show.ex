@@ -4,11 +4,11 @@ defmodule OpenSauceWeb.VenueLive.Show do
 
   alias OpenSauce.Operations
   alias OpenSauceWeb.Navigation
+  alias OpenSauceWeb.StorageLocationLive.FormComponent, as: LocationForm
+  alias OpenSauceWeb.VenueLive.FormComponent, as: VenueForm
 
   @impl true
   def render(assigns) do
-    assigns = assign_new(assigns, :nav_sub_links, fn -> [] end)
-
     ~H"""
     <div class="space-y-6">
       <.header>
@@ -56,57 +56,54 @@ defmodule OpenSauceWeb.VenueLive.Show do
     </div>
 
     <.modal
-      :if={@show_venue_modal}
+      :if={@active_modal == :venue}
       id="edit-venue-modal"
       show
       title="Edit Venue"
-      on_cancel={JS.push("close_venue_modal")}
+      on_cancel={JS.push("close_modal")}
     >
-      <.simple_form for={@venue_form} id="venue-form" phx-change="validate_venue" phx-submit="save_venue">
-        <.input field={@venue_form[:name]} type="text" label="Name" />
-        <.input field={@venue_form[:address]} type="text" label="Address" />
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save</.button>
-        </:actions>
-      </.simple_form>
+      <.live_component
+        module={VenueForm}
+        id={"venue-#{@venue.id}"}
+        venue={@venue}
+        opts={@opts}
+      />
     </.modal>
 
     <.modal
-      :if={@show_location_modal}
+      :if={@active_modal == :location}
       id="location-modal"
       show
-      title={if @editing_location, do: "Edit Location", else: "New Location"}
-      on_cancel={JS.push("close_location_modal")}
+      title={if @location_action == :edit, do: "Edit Location", else: "New Location"}
+      on_cancel={JS.push("close_modal")}
     >
-      <.simple_form
-        for={@location_form}
-        id="location-form"
-        phx-change="validate_location"
-        phx-submit="save_location"
-      >
-        <.input field={@location_form[:name]} type="text" label="Name" placeholder="Walk-in Fridge" />
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save</.button>
-        </:actions>
-      </.simple_form>
+      <.live_component
+        module={LocationForm}
+        id={"location-form"}
+        action={@location_action}
+        location={@editing_location}
+        venue={@venue}
+        opts={@opts}
+      />
     </.modal>
     """
   end
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    venue = Operations.get_venue!(id, opts(socket))
-    locations = Operations.list_storage_locations_for_venue!(id, opts(socket))
+    opts = build_opts(socket)
+    venue = Operations.get_venue!(id, opts)
+    locations = Operations.list_storage_locations_for_venue!(id, opts)
 
     {:ok,
      socket
      |> assign(:venue, venue)
      |> assign(:storage_locations, locations)
-     |> assign(:show_venue_modal, false)
-     |> assign(:show_location_modal, false)
+     |> assign(:opts, opts)
+     |> assign(:active_modal, nil)
+     |> assign(:location_action, nil)
      |> assign(:editing_location, nil)
-     |> assign(:venue_form, venue_form(venue))
-     |> assign(:location_form, empty_location_form())}
+     |> assign(:nav_sub_links, [])}
   end
 
   @impl true
@@ -120,114 +117,86 @@ defmodule OpenSauceWeb.VenueLive.Show do
   end
 
   @impl true
-  def handle_event("edit_venue", _, socket) do
-    {:noreply, assign(socket, :show_venue_modal, true)}
-  end
-
-  @impl true
-  def handle_event("close_venue_modal", _, socket) do
-    {:noreply, assign(socket, :show_venue_modal, false)}
-  end
-
-  @impl true
-  def handle_event("validate_venue", %{"venue" => params}, socket) do
-    {:noreply, assign(socket, :venue_form, to_form(params, as: "venue"))}
-  end
-
-  @impl true
-  def handle_event("save_venue", %{"venue" => params}, socket) do
-    case Operations.update_venue(socket.assigns.venue, params, opts(socket)) do
-      {:ok, venue} ->
-        {:noreply,
-         socket
-         |> assign(:venue, venue)
-         |> assign(:venue_form, venue_form(venue))
-         |> assign(:show_venue_modal, false)
-         |> put_flash(:info, "Venue updated.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not update venue.")}
-    end
-  end
+  def handle_event("edit_venue", _, socket),
+    do: {:noreply, assign(socket, :active_modal, :venue)}
 
   @impl true
   def handle_event("new_location", _, socket) do
     {:noreply,
      socket
-     |> assign(:show_location_modal, true)
-     |> assign(:editing_location, nil)
-     |> assign(:location_form, empty_location_form())}
+     |> assign(:active_modal, :location)
+     |> assign(:location_action, :new)
+     |> assign(:editing_location, nil)}
   end
 
   @impl true
   def handle_event("edit_location", %{"id" => id}, socket) do
-    loc = Enum.find(socket.assigns.storage_locations, &(&1.id == id))
+    case Enum.find(socket.assigns.storage_locations, &(&1.id == id)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Location not found.")}
 
-    {:noreply,
-     socket
-     |> assign(:show_location_modal, true)
-     |> assign(:editing_location, loc)
-     |> assign(:location_form, location_form(loc))}
-  end
-
-  @impl true
-  def handle_event("close_location_modal", _, socket) do
-    {:noreply, assign(socket, show_location_modal: false, editing_location: nil)}
-  end
-
-  @impl true
-  def handle_event("validate_location", %{"storage_location" => params}, socket) do
-    {:noreply, assign(socket, :location_form, to_form(params, as: "storage_location"))}
-  end
-
-  @impl true
-  def handle_event("save_location", %{"storage_location" => params}, socket) do
-    result =
-      if loc = socket.assigns.editing_location do
-        Operations.update_storage_location(loc, params, opts(socket))
-      else
-        Operations.create_storage_location(
-          params
-          |> Map.put("venue_id", socket.assigns.venue.id)
-          |> Map.put("organisation_id", socket.assigns.current_member.organisation_id),
-          opts(socket)
-        )
-      end
-
-    case result do
-      {:ok, _} ->
-        locations = Operations.list_storage_locations_for_venue!(socket.assigns.venue.id, opts(socket))
-
+      loc ->
         {:noreply,
          socket
-         |> assign(:storage_locations, locations)
-         |> assign(:show_location_modal, false)
-         |> assign(:editing_location, nil)
-         |> assign(:location_form, empty_location_form())
-         |> put_flash(:info, "Location saved.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not save location.")}
+         |> assign(:active_modal, :location)
+         |> assign(:location_action, :edit)
+         |> assign(:editing_location, loc)}
     end
   end
 
   @impl true
-  def handle_event("delete_location", %{"id" => id}, socket) do
-    loc = Enum.find(socket.assigns.storage_locations, &(&1.id == id))
-    Operations.delete_storage_location!(loc, opts(socket))
-    locations = Operations.list_storage_locations_for_venue!(socket.assigns.venue.id, opts(socket))
-
+  def handle_event("close_modal", _, socket) do
     {:noreply,
      socket
-     |> assign(:storage_locations, locations)
-     |> put_flash(:info, "Location deleted.")}
+     |> assign(:active_modal, nil)
+     |> assign(:location_action, nil)
+     |> assign(:editing_location, nil)}
   end
 
-  defp venue_form(v), do: to_form(%{"name" => v.name, "address" => v.address || ""}, as: "venue")
-  defp empty_location_form, do: to_form(%{"name" => ""}, as: "storage_location")
-  defp location_form(loc), do: to_form(%{"name" => loc.name}, as: "storage_location")
+  @impl true
+  def handle_event("delete_location", %{"id" => id}, socket) do
+    case Enum.find(socket.assigns.storage_locations, &(&1.id == id)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Location not found.")}
 
-  defp opts(socket) do
-    [actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id]
+      loc ->
+        Operations.delete_storage_location!(loc, socket.assigns.opts)
+        {:noreply,
+         socket
+         |> reload_locations()
+         |> put_flash(:info, "Location deleted.")}
+    end
+  end
+
+  @impl true
+  def handle_info({VenueForm, {:venue_saved, venue}}, socket) do
+    {:noreply,
+     socket
+     |> assign(:venue, venue)
+     |> assign(:active_modal, nil)
+     |> put_flash(:info, "Venue updated.")}
+  end
+
+  @impl true
+  def handle_info({LocationForm, {:location_saved, _loc}}, socket) do
+    {:noreply,
+     socket
+     |> reload_locations()
+     |> assign(:active_modal, nil)
+     |> assign(:location_action, nil)
+     |> assign(:editing_location, nil)
+     |> put_flash(:info, "Location saved.")}
+  end
+
+  defp reload_locations(socket) do
+    locations =
+      Operations.list_storage_locations_for_venue!(socket.assigns.venue.id, socket.assigns.opts)
+
+    assign(socket, :storage_locations, locations)
+  end
+
+  defp build_opts(socket) do
+    member = socket.assigns.current_member
+    [actor: member, tenant: member.organisation_id]
   end
 end
