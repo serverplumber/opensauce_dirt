@@ -12,7 +12,7 @@ import Config
 # If you use `mix release`, you need to explicitly enable the server
 # by passing the PHX_SERVER=true when you start it:
 #
-#     PHX_SERVER=true bin/craftplan start
+#     PHX_SERVER=true bin/opensauce start
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
@@ -81,24 +81,9 @@ if config_env() == :prod do
       System.get_env("TOKEN_SIGNING_SECRET") ||
         raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
-  # S3 / Waffle (product photo uploads)
-  if System.get_env("AWS_ACCESS_KEY_ID") do
-    config :ex_aws,
-      json_codec: Jason,
-      access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
-      secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
-      region: System.get_env("AWS_REGION") || "us-east-1",
-      s3: [
-        scheme: System.get_env("AWS_S3_SCHEME") || "https://",
-        host: System.get_env("AWS_S3_HOST") || "s3.amazonaws.com",
-        region: System.get_env("AWS_REGION") || "us-east-1"
-      ]
-
-    config :waffle,
-      storage: Waffle.Storage.S3,
-      bucket: System.get_env("AWS_S3_BUCKET"),
-      asset_host: System.get_env("AWS_ASSET_HOST")
-  end
+  config :waffle,
+    storage: Waffle.Storage.Local,
+    storage_dir: System.get_env("UPLOAD_DIR") || "/var/lib/opensauce/uploads"
 
   # Cloak encryption vault
   cloak_key =
