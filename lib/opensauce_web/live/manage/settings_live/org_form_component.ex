@@ -2,14 +2,13 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
-  alias OpenSauce.Accounts
   alias OpenSauce.Accounts.Roles
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div :if={Roles.owner?(@current_member)}>
-      <.simple_form
+    <div>
+      <.simple_form :if={Roles.owner?(@current_member)}
         for={@form}
         id="org-form"
         phx-target={@myself}

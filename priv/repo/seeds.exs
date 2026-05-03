@@ -305,8 +305,9 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
   end
 
   # -- 3.1 Create users
-  _owner_user = seed_user.("owner@demo.test", :owner)
-  _staff_user = seed_user.("staff@demo.test", :staff)
+  _admin_user = seed_user.("admin@sauce", :owner)
+  _owner_user = seed_user.("owner@sauce", :owner)
+  _staff_user = seed_user.("staff@sauce", :staff)
 
   # -- 3.2 Set up global bakery settings
   Ash.Seed.seed!(Settings.Settings, %{

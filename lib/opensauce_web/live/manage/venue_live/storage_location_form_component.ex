@@ -50,8 +50,10 @@ defmodule OpenSauceWeb.StorageLocationLive.FormComponent do
         notify_parent({:location_saved, loc})
         {:noreply, socket}
 
-      {:error, _} ->
-        {:noreply, socket}
+      {:error, error} ->
+        require Logger
+        Logger.error("create_storage_location failed: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, "Could not save location.")}
     end
   end
 
@@ -61,8 +63,10 @@ defmodule OpenSauceWeb.StorageLocationLive.FormComponent do
         notify_parent({:location_saved, loc})
         {:noreply, socket}
 
-      {:error, _} ->
-        {:noreply, socket}
+      {:error, error} ->
+        require Logger
+        Logger.error("update_storage_location failed: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, "Could not save location.")}
     end
   end
 

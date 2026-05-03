@@ -51,6 +51,28 @@ This starts PostgreSQL 16 on the default port and MinIO for file storage.
 
 4. Open [localhost:4000](http://localhost:4000) in your browser.
 
+## Dev Accounts
+
+The seed data creates three accounts in the **Demo Bakery** organisation:
+
+| Email | Role |
+|-------|------|
+| `admin@sauce` | Owner |
+| `owner@sauce` | Owner |
+| `staff@sauce` | Staff |
+
+Authentication uses **magic links** — there are no passwords. On the sign-in page, enter one of the emails above and submit. The link is printed directly to your server terminal (stdout) rather than sent by email:
+
+```
+┌─ MAGIC LINK ──────────────────────────────────────────────────┐
+│  http://localhost:4000/auth/user/magic_link?token=...
+└───────────────────────────────────────────────────────────────┘
+```
+
+Copy and paste the URL into your browser to sign in.
+
+> **Note:** If you change seed accounts and re-seed without a full `mix ash.reset`, stale token records can cause magic links to silently fail (no link printed, no error shown). `mix ash.reset` is the fix.
+
 ## Common Commands
 
 | Command | Purpose |
