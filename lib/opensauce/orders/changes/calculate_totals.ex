@@ -14,7 +14,7 @@ defmodule OpenSauce.Orders.Changes.CalculateTotals do
   alias OpenSauce.DecimalHelpers
 
   @impl true
-  def change(changeset, _opts, _context) do
+  def change(changeset, _opts, context) do
     import Ash.Changeset
 
     items_arg = get_argument(changeset, :items)
@@ -41,7 +41,7 @@ defmodule OpenSauce.Orders.Changes.CalculateTotals do
       end
 
     # Compute discount and tax based on settings & attributes
-    settings = safe_get_settings()
+    settings = safe_get_settings(changeset, context)
 
     discount_total =
       case get_attribute(changeset, :discount_type) || :none do
@@ -110,8 +110,9 @@ defmodule OpenSauce.Orders.Changes.CalculateTotals do
     end)
   end
 
-  defp safe_get_settings do
-    OpenSauce.Settings.get_settings!()
+  defp safe_get_settings(changeset, context) do
+    tenant = changeset.tenant || context.tenant
+    OpenSauce.Settings.get_settings!(tenant: tenant, authorize?: false)
   rescue
     _ -> %{tax_mode: :exclusive, tax_rate: Decimal.new(0)}
   end

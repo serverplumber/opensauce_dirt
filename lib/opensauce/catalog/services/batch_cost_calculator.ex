@@ -197,8 +197,9 @@ defmodule OpenSauce.Catalog.Services.BatchCostCalculator do
   defp fetch_settings(opts) do
     authorize? = Keyword.get(opts, :authorize?, true)
     actor = Keyword.get(opts, :actor)
+    tenant = Keyword.get(opts, :tenant)
 
-    case Settings.get_settings(actor: actor, authorize?: authorize?) do
+    case Settings.get_settings(actor: actor, tenant: tenant, authorize?: authorize?) do
       {:ok, nil} ->
         default_settings()
 

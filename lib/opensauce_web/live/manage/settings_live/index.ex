@@ -49,7 +49,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           <.live_component
             module={OpenSauceWeb.SettingsLive.AllergensComponent}
             id="allergens-component"
-            current_user={@current_user}
+            current_member={@current_member}
             allergens={@allergens}
           />
         </div>
@@ -60,7 +60,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           <.live_component
             module={OpenSauceWeb.SettingsLive.NutritionalFactsComponent}
             id="nutritional-facts-component"
-            current_user={@current_user}
+            current_member={@current_member}
             nutritional_facts={@nutritional_facts}
           />
         </div>
@@ -71,7 +71,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           <.live_component
             module={OpenSauceWeb.SettingsLive.ApiKeysComponent}
             id="api-keys-component"
-            current_user={@current_user}
+            current_member={@current_member}
           />
         </div>
       </div>
@@ -81,7 +81,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           <.live_component
             module={OpenSauceWeb.SettingsLive.CalendarFeedComponent}
             id="calendar-feed-component"
-            current_user={@current_user}
+            current_member={@current_member}
           />
         </div>
       </div>
@@ -182,7 +182,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           id="csv-mapping-modal"
           show={@show_mapping_modal}
           entity={@selected_entity}
-          current_user={@current_user}
+          current_member={@current_member}
         />
       </div>
     </div>
@@ -191,7 +191,8 @@ defmodule OpenSauceWeb.SettingsLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    settings = Settings.get_by_id!(socket.assigns.settings.id)
+    member = socket.assigns.current_member
+    settings = Settings.get_by_id!(socket.assigns.settings.id, actor: member, tenant: member.organisation_id)
     allergens = Inventory.list_allergens!()
     nutritional_facts = Inventory.list_nutritional_facts!()
     organisation = Accounts.get_organisation!(socket.assigns.current_member.organisation_id, authorize?: false)
@@ -206,7 +207,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
       |> assign(:csv_export_form, to_form(%{}))
       |> assign(:show_mapping_modal, false)
       |> assign(:selected_entity, nil)
-      |> assign_new(:current_user, fn -> nil end)
+      |> assign_new(:current_member, fn -> nil end)
 
     # Always configure CSV upload; harmless on other tabs and avoids missing @uploads
     socket =

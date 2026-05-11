@@ -67,7 +67,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
       <.live_component
         module={OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent}
         id="po-item-form"
-        current_user={@current_user}
+        current_member={@current_member}
         materials={@materials}
         po_id={@po.id}
         purchase_order_item={nil}
@@ -83,13 +83,13 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    materials = Inventory.list_materials!(actor: socket.assigns[:current_user])
+    materials = Inventory.list_materials!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
     {:ok, assign(socket, materials: materials, purchasing_tab: :purchase_orders)}
   end
 
   @impl true
   def handle_params(%{"po_ref" => ref}, _uri, socket) do
-    opts = [actor: socket.assigns[:current_user], load: [:supplier, items: [material: [:unit]]]]
+    opts = [actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id, load: [:supplier, items: [material: [:unit]]]]
 
     case Inventory.get_purchase_order_by_reference(ref, opts) do
       {:ok, nil} ->
@@ -131,7 +131,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
   @impl true
   def handle_event("receive", %{"id" => id}, socket) do
-    _ = Receiving.receive_po(id, actor: socket.assigns.current_user)
+    _ = Receiving.receive_po(id, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
     {:noreply, push_navigate(socket, to: ~p"/manage/purchasing/#{socket.assigns.po.reference}")}
   end
 
@@ -139,7 +139,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   def handle_info({:po_item_saved, _item}, socket) do
     po =
       Inventory.get_purchase_order_by_reference!(socket.assigns.po.reference,
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [:supplier, items: [material: [:unit]]]
       )
 

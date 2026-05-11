@@ -788,18 +788,18 @@ defmodule OpenSauceWeb.ProductLive.FormComponentRecipe do
   @impl true
   def handle_event("save", %{"recipe" => recipe_params}, socket) do
     # simple mode: saving creates a new version and makes it active
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
     product = socket.assigns.product
 
     # Demote existing active to archived (if any)
     case Catalog.get_active_bom_for_product(%{product_id: product.id},
-           actor: actor,
+           actor: actor, tenant: actor.organisation_id,
            authorize?: false
          ) do
       {:ok, %Catalog.BOM{} = active} ->
         _ =
           Catalog.update_bom(active, %{status: :archived},
-            actor: actor,
+            actor: actor, tenant: actor.organisation_id,
             authorize?: false
           )
 
@@ -821,7 +821,7 @@ defmodule OpenSauceWeb.ProductLive.FormComponentRecipe do
           components: components,
           labor_steps: labor_steps
         },
-        actor: actor,
+        actor: actor, tenant: actor.organisation_id,
         authorize?: false
       )
 
@@ -1012,12 +1012,12 @@ defmodule OpenSauceWeb.ProductLive.FormComponentRecipe do
   end
 
   defp assign_form(socket) do
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
     bom = select_bom(socket, actor)
 
     bom =
       if bom && bom.id do
-        Ash.load!(bom, [:rollup, labor_steps: []], actor: actor, authorize?: false)
+        Ash.load!(bom, [:rollup, labor_steps: []], actor: actor, tenant: actor.organisation_id, authorize?: false)
       else
         bom
       end
@@ -1108,14 +1108,14 @@ defmodule OpenSauceWeb.ProductLive.FormComponentRecipe do
   end
 
   defp assign_lists(socket) do
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
 
     case Catalog.list_boms_for_product(%{product_id: socket.assigns.product.id},
-           actor: actor,
+           actor: actor, tenant: actor.organisation_id,
            authorize?: false
          ) do
       {:ok, boms} ->
-        boms = Ash.load!(boms, [:rollup, labor_steps: []], actor: actor, authorize?: false)
+        boms = Ash.load!(boms, [:rollup, labor_steps: []], actor: actor, tenant: actor.organisation_id, authorize?: false)
         assign(socket, :boms, boms)
 
       _ ->
@@ -1130,26 +1130,26 @@ defmodule OpenSauceWeb.ProductLive.FormComponentRecipe do
 
     if is_integer(selected) do
       case Catalog.list_boms_for_product(%{product_id: socket.assigns.product.id},
-             actor: actor,
+             actor: actor, tenant: actor.organisation_id,
              authorize?: false
            ) do
         {:ok, [first | _] = boms} ->
           bom = Enum.find(boms, first, fn b -> b.version == selected end)
 
           Ash.load!(bom, [components: [:material, :product], labor_steps: []],
-            actor: actor,
+            actor: actor, tenant: actor.organisation_id,
             authorize?: false
           )
 
         _ ->
           BOMRecipeSync.load_bom_for_product(socket.assigns.product,
-            actor: actor,
+            actor: actor, tenant: actor.organisation_id,
             authorize?: false
           )
       end
     else
       BOMRecipeSync.load_bom_for_product(socket.assigns.product,
-        actor: actor,
+        actor: actor, tenant: actor.organisation_id,
         authorize?: false
       )
     end
@@ -1175,7 +1175,7 @@ defmodule OpenSauceWeb.ProductLive.FormComponentRecipe do
 
     base_opts = [
       as: "recipe",
-      actor: actor,
+      actor: actor, tenant: actor.organisation_id,
       forms: nested_forms
     ]
 

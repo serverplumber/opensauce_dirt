@@ -50,7 +50,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentAllergens do
       |> assign(assigns)
       |> assign(:allergens_map, allergens_map)
 
-    form = build_form(socket.assigns.material, socket.assigns.current_user)
+    form = build_form(socket.assigns.material, socket.assigns.current_member)
 
     selected_allergen_ids = Enum.map(socket.assigns.material.allergens, & &1.id)
 
@@ -98,11 +98,11 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentAllergens do
   end
 
   defp build_form(material, actor) do
-    material_with_allergens = Ash.load!(material, :allergens, actor: actor)
+    material_with_allergens = Ash.load!(material, :allergens, actor: actor, tenant: actor.organisation_id)
 
     material_with_allergens
     |> Form.for_update(:update_allergens,
-      actor: actor,
+      actor: actor, tenant: actor.organisation_id,
       as: "material"
     )
     |> to_form()

@@ -98,7 +98,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     customer =
       CRM.get_customer_by_reference!(
         reference,
-        actor: socket.assigns.current_user,
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :full_name,
           :total_orders_value,

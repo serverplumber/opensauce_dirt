@@ -257,7 +257,7 @@ defmodule OpenSauceWeb.InventoryLive.ReorderPlanner do
   @impl true
   def mount(_params, session, socket) do
     today = Date.utc_today()
-    settings = safe_get_settings()
+    settings = safe_get_settings(socket.assigns.current_member)
 
     socket =
       socket
@@ -296,8 +296,8 @@ defmodule OpenSauceWeb.InventoryLive.ReorderPlanner do
   defp safe_decimal_to_float(value, _default) when is_integer(value), do: value * 1.0
   defp safe_decimal_to_float(_, default), do: default
 
-  defp safe_get_settings do
-    Settings.get_settings!()
+  defp safe_get_settings(member) do
+    Settings.get_settings!(actor: member, tenant: member.organisation_id)
   rescue
     _ ->
       %{
@@ -422,7 +422,7 @@ defmodule OpenSauceWeb.InventoryLive.ReorderPlanner do
 
   defp load_metrics(socket) do
     days_range = build_days_range(socket.assigns.today, socket.assigns.horizon_days)
-    actor = socket.assigns[:current_user]
+    actor = socket.assigns[:current_member]
 
     socket = assign(socket, :metrics_loaded?, false)
 

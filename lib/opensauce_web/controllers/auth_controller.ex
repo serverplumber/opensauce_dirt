@@ -10,8 +10,8 @@ defmodule OpenSauceWeb.AuthController do
     case Accounts.list_memberships_for_user(user.id, authorize?: false) do
       {:ok, []} ->
         conn
-        |> put_flash(:info, "Welcome — let's get your organisation set up.")
-        |> redirect(to: ~p"/setup")
+        |> put_flash(:info, "Welcome — let's set up your organisation.")
+        |> redirect(to: ~p"/org/new")
 
       {:ok, [membership]} ->
         conn

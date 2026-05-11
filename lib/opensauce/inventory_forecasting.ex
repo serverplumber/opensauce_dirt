@@ -45,7 +45,7 @@ defmodule OpenSauce.InventoryForecasting do
 
     Orders.Order
     |> Ash.Query.for_read(:for_forecast, %{start_date: start_date, end_date: end_date}, actor: actor)
-    |> Ash.read!()
+    |> Ash.read!(tenant: tenant_from(actor))
   end
 
   @doc """
@@ -195,7 +195,7 @@ defmodule OpenSauce.InventoryForecasting do
   Builds rich forecast rows ready for owner metrics consumption.
   """
   def owner_grid_rows(days_range, opts \\ [], actor \\ nil) when is_list(days_range) do
-    settings = safe_get_settings()
+    settings = safe_get_settings(Keyword.get(opts, :tenant))
 
     service_level =
       Keyword.get(opts, :service_level) ||
@@ -293,7 +293,7 @@ defmodule OpenSauce.InventoryForecasting do
   defp open_purchase_orders_by_material(actor) do
     PurchaseOrderItem
     |> Ash.Query.load(:purchase_order)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: tenant_from(actor))
     |> Enum.filter(fn item ->
       case item.purchase_order do
         %{status: :received} -> false
@@ -311,8 +311,8 @@ defmodule OpenSauce.InventoryForecasting do
     end)
   end
 
-  defp safe_get_settings do
-    Settings.get_settings!()
+  defp safe_get_settings(tenant) do
+    Settings.get_settings!(tenant: tenant, authorize?: false)
   rescue
     _ ->
       %{
@@ -357,7 +357,7 @@ defmodule OpenSauce.InventoryForecasting do
       %NotLoaded{} ->
         if actor do
           bom =
-            Ash.load!(bom, [components: [material: [:name, :unit, :current_stock]]], actor: actor)
+            Ash.load!(bom, [components: [material: [:name, :unit, :current_stock]]], actor: actor, tenant: tenant_from(actor))
 
           {:ok, Map.get(bom, :components, [])}
         else
@@ -386,13 +386,13 @@ defmodule OpenSauce.InventoryForecasting do
 
   defp latest_bom(product_id, actor) do
     %{product_id: product_id}
-    |> OpenSauce.Catalog.list_boms_for_product!(actor: actor)
+    |> OpenSauce.Catalog.list_boms_for_product!(actor: actor, tenant: tenant_from(actor))
     |> List.first()
   end
 
   defp ensure_components_loaded(%{components: %NotLoaded{}} = bom, actor) do
     bom
-    |> Ash.load!([components: [material: [:name, :unit, :current_stock]]], actor: actor)
+    |> Ash.load!([components: [material: [:name, :unit, :current_stock]]], actor: actor, tenant: tenant_from(actor))
     |> Map.get(:components, [])
   end
 
@@ -406,9 +406,12 @@ defmodule OpenSauce.InventoryForecasting do
     Material
     |> Ash.Query.filter(expr(id in ^ids))
     |> Ash.Query.load([:name, :unit, :current_stock])
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: tenant_from(actor))
     |> Map.new(&{&1.id, &1})
   end
+
+  defp tenant_from(nil), do: nil
+  defp tenant_from(%{organisation_id: org_id}), do: org_id
 
   defp find_day_index(quantities, date) do
     case Enum.find_index(quantities, fn {_, d} -> Date.compare(d, date) == :eq end) do

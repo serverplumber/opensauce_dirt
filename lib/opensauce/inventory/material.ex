@@ -5,7 +5,8 @@ defmodule OpenSauce.Inventory.Material do
     domain: OpenSauce.Inventory,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshJsonApi.Resource, AshGraphql.Resource]
+    extensions: [AshJsonApi.Resource, AshGraphql.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.Inventory.MaterialAllergen
   alias OpenSauce.Inventory.MaterialNutritionalFact
@@ -116,7 +117,7 @@ defmodule OpenSauce.Inventory.Material do
     end
 
     policy action_type([:create, :update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

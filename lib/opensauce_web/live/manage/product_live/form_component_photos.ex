@@ -360,7 +360,7 @@ defmodule OpenSauceWeb.ProductLive.FormComponentPhotos do
     form =
       AshPhoenix.Form.for_update(product, :update,
         as: "product",
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     assign(socket, form: to_form(form))

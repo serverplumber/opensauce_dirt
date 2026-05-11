@@ -107,7 +107,7 @@ defmodule OpenSauceWeb.ProductLive.Show do
           module={OpenSauceWeb.ProductLive.FormComponentRecipe}
           id="material-form"
           product={@product}
-          current_user={@current_user}
+          current_member={@current_member}
           settings={@settings}
           materials={@materials_available}
           products={@products_available}
@@ -136,7 +136,7 @@ defmodule OpenSauceWeb.ProductLive.Show do
           id={@product.id}
           title={@page_title}
           action={@live_action}
-          current_user={@current_user}
+          current_member={@current_member}
           product={@product}
           settings={@settings}
           patch={~p"/manage/products/#{@product.sku}"}
@@ -157,7 +157,7 @@ defmodule OpenSauceWeb.ProductLive.Show do
         id={@product.id}
         title={@page_title}
         action={@live_action}
-        current_user={@current_user}
+        current_member={@current_member}
         product={@product}
         settings={@settings}
         patch={~p"/manage/products/#{@product.sku}/details"}
@@ -272,7 +272,7 @@ defmodule OpenSauceWeb.ProductLive.Show do
           :bom_unit_cost,
           active_bom: [components: [:material, :product], labor_steps: []]
         ],
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     {:noreply,
@@ -293,7 +293,7 @@ defmodule OpenSauceWeb.ProductLive.Show do
           :allergens,
           :bom_unit_cost
         ],
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     {:noreply,
@@ -304,7 +304,7 @@ defmodule OpenSauceWeb.ProductLive.Show do
 
   @impl true
   def handle_event("product-status-change", %{"_target" => ["status"], "status" => status}, socket) do
-    case Catalog.update_product(socket.assigns.product, %{status: status}, actor: socket.assigns.current_user) do
+    case Catalog.update_product(socket.assigns.product, %{status: status}, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id) do
       {:ok, product} ->
         {:noreply,
          socket

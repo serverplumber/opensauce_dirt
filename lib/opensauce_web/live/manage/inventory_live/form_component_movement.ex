@@ -13,7 +13,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
      |> assign(assigns)
      |> assign_new(:mode, fn -> :add end)
      |> assign_new(:calculated_new_total, fn -> nil end)
-     |> assign_new(:form, fn -> build_form(assigns.current_user) end)}
+     |> assign_new(:form, fn -> build_form(assigns.current_member) end)}
   end
 
   @impl true
@@ -163,11 +163,11 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
     format_amount(unit, D.to_float(value))
   end
 
-  defp build_form(current_user) do
+  defp build_form(current_member) do
     Inventory.Movement
     |> Form.for_create(:adjust_stock,
       as: "movement",
-      actor: current_user
+      actor: current_member, tenant: current_member.organisation_id
     )
     |> to_form()
   end

@@ -17,8 +17,8 @@ defmodule OpenSauce.Orders.Changes.ValidateConstraints do
   alias OpenSauce.Orders.OrderItem
 
   @impl true
-  def change(changeset, _opts, _ctx) do
-    settings = safe_get_settings()
+  def change(changeset, _opts, ctx) do
+    settings = safe_get_settings(changeset, ctx)
 
     case get_delivery_datetime(changeset) do
       {:ok, delivery_dt} ->
@@ -225,8 +225,9 @@ defmodule OpenSauce.Orders.Changes.ValidateConstraints do
     end)
   end
 
-  defp safe_get_settings do
-    OpenSauce.Settings.get_settings!()
+  defp safe_get_settings(changeset, ctx) do
+    tenant = changeset.tenant || ctx.tenant
+    OpenSauce.Settings.get_settings!(tenant: tenant, authorize?: false)
   rescue
     _ -> %{lead_time_days: 0, daily_capacity: 0}
   end

@@ -49,7 +49,7 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
       <.live_component
         module={OpenSauceWeb.PurchasingLive.SupplierFormComponent}
         id={(@supplier && @supplier.id) || :new}
-        current_user={@current_user}
+        current_member={@current_member}
         supplier={@supplier}
         patch={~p"/manage/purchasing/suppliers"}
       />
@@ -59,7 +59,7 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
 
   @impl true
   def mount(_params, _session, socket) do
-    suppliers = Inventory.list_suppliers!(actor: socket.assigns[:current_user])
+    suppliers = Inventory.list_suppliers!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     {:ok, assign(socket, suppliers: suppliers, supplier: nil, purchasing_tab: :suppliers)}
   end
@@ -71,7 +71,7 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
     socket =
       case socket.assigns.live_action do
         :edit ->
-          sup = Inventory.get_supplier_by_id!(params["id"], actor: socket.assigns.current_user)
+          sup = Inventory.get_supplier_by_id!(params["id"], actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
           assign(socket, :supplier, sup)
 
         :new ->
@@ -88,7 +88,7 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
   def handle_info({:supplier_saved, _sup}, socket) do
     {:noreply,
      socket
-     |> assign(:suppliers, Inventory.list_suppliers!(actor: socket.assigns.current_user))
+     |> assign(:suppliers, Inventory.list_suppliers!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id))
      |> put_flash(:info, "Supplier saved")
      |> push_event("close-modal", %{id: "supplier-modal"})}
   end

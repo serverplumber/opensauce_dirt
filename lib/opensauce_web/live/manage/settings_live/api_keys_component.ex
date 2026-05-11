@@ -171,8 +171,8 @@ defmodule OpenSauceWeb.SettingsLive.ApiKeysComponent do
 
   @impl true
   def update(assigns, socket) do
-    api_keys = load_api_keys(assigns.current_user)
-    form = new_api_key_form(assigns.current_user)
+    api_keys = load_api_keys(assigns.current_member)
+    form = new_api_key_form(assigns.current_member)
 
     {:ok,
      socket
@@ -213,12 +213,12 @@ defmodule OpenSauceWeb.SettingsLive.ApiKeysComponent do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, api_key} ->
         raw_key = Map.get(api_key, :__raw_key__)
-        api_keys = load_api_keys(socket.assigns.current_user)
+        api_keys = load_api_keys(socket.assigns.current_member)
 
         {:noreply,
          socket
          |> assign(:api_keys, api_keys)
-         |> assign(:form, new_api_key_form(socket.assigns.current_user))
+         |> assign(:form, new_api_key_form(socket.assigns.current_member))
          |> assign(:show_create_modal, false)
          |> assign(:raw_key, raw_key)
          |> assign(:scope_selections, %{})
@@ -232,9 +232,9 @@ defmodule OpenSauceWeb.SettingsLive.ApiKeysComponent do
   @impl true
   def handle_event("revoke_key", %{"id" => id}, socket) do
     api_key = Accounts.get_api_key_by_id!(id, authorize?: false)
-    Accounts.revoke_api_key(api_key, actor: socket.assigns.current_user)
+    Accounts.revoke_api_key(api_key, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
-    api_keys = load_api_keys(socket.assigns.current_user)
+    api_keys = load_api_keys(socket.assigns.current_member)
 
     {:noreply,
      socket

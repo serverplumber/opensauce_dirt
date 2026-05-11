@@ -368,7 +368,8 @@ defmodule OpenSauceWeb.SettingsLive.FormComponent do
     form =
       AshPhoenix.Form.for_update(settings, :update,
         as: "settings",
-        actor: socket.assigns.current_member
+        actor: socket.assigns.current_member,
+        tenant: socket.assigns.current_member.organisation_id
       )
 
     assign(socket, form: to_form(form))

@@ -91,7 +91,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
           module={OpenSauceWeb.InventoryLive.FormComponentAllergens}
           id="material-allergens-form"
           material={@material}
-          current_user={@current_user}
+          current_member={@current_member}
           settings={@settings}
           patch={~p"/manage/inventory/#{@material.sku}/allergens"}
           allergens={@allergens_available}
@@ -103,7 +103,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
           module={OpenSauceWeb.InventoryLive.FormComponentNutritionalFacts}
           id="material-nutritional-facts-form"
           material={@material}
-          current_user={@current_user}
+          current_member={@current_member}
           settings={@settings}
           patch={~p"/manage/inventory/#{@material.sku}/nutritional_facts"}
           nutritional_facts={@nutritional_facts_available}
@@ -146,7 +146,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         id={@material.id}
         title={@page_title}
         action={@live_action}
-        current_user={@current_user}
+        current_member={@current_member}
         material={@material}
         settings={@settings}
         patch={~p"/manage/inventory/#{@material.sku}/details"}
@@ -163,7 +163,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         module={OpenSauceWeb.InventoryLive.FormComponentMovement}
         id={@material.id}
         material={@material}
-        current_user={@current_user}
+        current_member={@current_member}
         settings={@settings}
         patch={~p"/manage/inventory/#{@material.sku}/stock"}
       />
@@ -177,11 +177,11 @@ defmodule OpenSauceWeb.InventoryLive.Show do
      socket
      |> assign(
        :allergens_available,
-       Inventory.list_allergens!(actor: socket.assigns[:current_user])
+       Inventory.list_allergens!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
      )
      |> assign(
        :nutritional_facts_available,
-       Inventory.list_nutritional_facts!(actor: socket.assigns[:current_user])
+       Inventory.list_nutritional_facts!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
      )}
   end
 
@@ -189,7 +189,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   def handle_params(%{"sku" => sku}, _, socket) do
     material =
       Inventory.get_material_by_sku!(sku,
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :current_stock,
           :movements,
@@ -203,7 +203,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
     open_po_items =
       Inventory.list_open_po_items_for_material!(
         %{material_id: material.id},
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     live_action = socket.assigns.live_action
@@ -247,7 +247,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   def handle_info({:saved_nutritional_facts, material_id}, socket) do
     material =
       Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :current_stock,
           :movements,
@@ -265,7 +265,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   def handle_info({:saved_allergens, material_id}, socket) do
     material =
       Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :current_stock,
           :movements,
@@ -283,7 +283,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   def handle_info({:saved, %Inventory.Movement{material_id: material_id}}, socket) do
     material =
       Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :current_stock,
           :movements,
@@ -301,7 +301,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   def handle_info({:saved, %Inventory.Material{id: material_id}}, socket) do
     material =
       Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :current_stock,
           :movements,

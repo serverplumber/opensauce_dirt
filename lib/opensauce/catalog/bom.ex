@@ -4,7 +4,8 @@ defmodule OpenSauce.Catalog.BOM do
     otp_app: :opensauce,
     domain: OpenSauce.Catalog,
     data_layer: AshPostgres.DataLayer,
-    extensions: [AshJsonApi.Resource, AshGraphql.Resource]
+    extensions: [AshJsonApi.Resource, AshGraphql.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.Catalog.Changes.AssignBOMVersion
   alias OpenSauce.Catalog.Services.BOMRollup

@@ -5,7 +5,8 @@ defmodule OpenSauce.Orders.Order do
     domain: OpenSauce.Orders,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshJsonApi.Resource, AshGraphql.Resource]
+    extensions: [AshJsonApi.Resource, AshGraphql.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.Orders.Changes.CalculateTotals
   alias OpenSauce.Orders.Changes.ValidateConstraints
@@ -218,16 +219,16 @@ defmodule OpenSauce.Orders.Order do
 
     # Staff/admin only for forecasting
     policy action(:for_forecast) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
     # Other reads/writes restricted to staff/admin
     policy action_type(:read) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
     policy action_type([:create, :update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

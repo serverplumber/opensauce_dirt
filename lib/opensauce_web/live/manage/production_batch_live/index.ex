@@ -14,7 +14,7 @@ defmodule OpenSauceWeb.ProductionBatchLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    products = Catalog.list_products!(actor: socket.assigns[:current_user])
+    products = Catalog.list_products!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     {:ok,
      socket
@@ -30,10 +30,10 @@ defmodule OpenSauceWeb.ProductionBatchLive.Index do
   end
 
   defp load_batches(socket) do
-    actor = socket.assigns[:current_user]
+    actor = socket.assigns[:current_member]
     filters = parse_filters(socket.assigns.filters)
 
-    batches = Production.list_batches(filters, actor: actor)
+    batches = Production.list_batches(filters, actor: actor, tenant: actor.organisation_id)
 
     socket
     |> assign(:batches, batches)

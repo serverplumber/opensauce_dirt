@@ -97,7 +97,7 @@ defmodule OpenSauceWeb.ProductLive.Index do
         title={@page_title}
         action={@live_action}
         product={@product}
-        current_user={@current_user}
+        current_member={@current_member}
         settings={@settings}
         patch={~p"/manage/products"}
       />
@@ -109,7 +109,7 @@ defmodule OpenSauceWeb.ProductLive.Index do
   def mount(_params, _session, socket) do
     products =
       Catalog.list_products!(
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         page: [limit: 100],
         load: [
           :materials_cost,
@@ -156,8 +156,8 @@ defmodule OpenSauceWeb.ProductLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     case id
-         |> Catalog.get_product_by_id!(actor: socket.assigns.current_user)
-         |> Catalog.destroy_product(actor: socket.assigns.current_user) do
+         |> Catalog.get_product_by_id!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
+         |> Catalog.destroy_product(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id) do
       :ok ->
         {:noreply,
          socket
@@ -173,7 +173,7 @@ defmodule OpenSauceWeb.ProductLive.Index do
   def handle_info({OpenSauceWeb.ProductLive.FormComponent, {:saved, product}}, socket) do
     product =
       Ash.load!(product, [:materials_cost, :bom_unit_cost, :markup_percentage, :gross_profit],
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     {:noreply, stream_insert(socket, :products, product)}

@@ -64,12 +64,6 @@ defmodule OpenSauce.Accounts.Emails do
   end
 
   defp email_sender do
-    case OpenSauce.Settings.get_settings() do
-      {:ok, settings} ->
-        {settings.email_from_name || "OpenSauce", settings.email_from_address || "noreply@craftplan.app"}
-
-      _ ->
-        {"OpenSauce", "noreply@craftplan.app"}
-    end
+    {"OpenSauce", "noreply@opensauce.app"}
   end
 end

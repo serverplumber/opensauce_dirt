@@ -5,7 +5,8 @@ defmodule OpenSauce.Inventory.Movement do
     domain: OpenSauce.Inventory,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshJsonApi.Resource, AshGraphql.Resource]
+    extensions: [AshJsonApi.Resource, AshGraphql.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   json_api do
     type "movement"
@@ -48,11 +49,11 @@ defmodule OpenSauce.Inventory.Movement do
     end
 
     policy action_type(:read) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
     policy action_type([:create, :update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

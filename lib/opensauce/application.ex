@@ -33,10 +33,8 @@ defmodule OpenSauce.Application do
   end
 
   defp apply_smtp_from_settings do
-    case OpenSauce.Settings.get_settings() do
-      {:ok, settings} -> OpenSauce.Mailer.apply_settings(settings)
-      _ -> :ok
-    end
+    # Settings are now per-organisation — no single row to load at startup.
+    :ok
   end
 
   # Tell Phoenix to update the endpoint configuration

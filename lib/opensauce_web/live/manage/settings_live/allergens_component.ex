@@ -118,7 +118,7 @@ defmodule OpenSauceWeb.SettingsLive.AllergensComponent do
   @impl true
   def update(assigns, socket) do
     allergens = Inventory.list_allergens!()
-    form = new_allergen_form(assigns.current_user)
+    form = new_allergen_form(assigns.current_member)
     search_query = Map.get(socket.assigns, :search_query, "")
 
     {:ok,
@@ -148,7 +148,7 @@ defmodule OpenSauceWeb.SettingsLive.AllergensComponent do
 
         socket =
           socket
-          |> assign(:form, new_allergen_form(socket.assigns.current_user))
+          |> assign(:form, new_allergen_form(socket.assigns.current_member))
           |> assign(:show_modal, false)
           |> assign(:allergens, allergens)
           |> assign_filtered_allergens(socket.assigns.search_query)
@@ -163,7 +163,7 @@ defmodule OpenSauceWeb.SettingsLive.AllergensComponent do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     allergen = Inventory.get_allergen_by_id!(id)
-    :ok = Inventory.destroy_allergen!(allergen, actor: socket.assigns.current_user)
+    :ok = Inventory.destroy_allergen!(allergen, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     # Notify parent to reload allergens
     send(self(), {:saved_allergens, nil})

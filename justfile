@@ -28,4 +28,5 @@ server:
 down:
     podman stop opensauce-postgres 2>/dev/null || true
     podman rm   opensauce-postgres 2>/dev/null || true
-    rm -rf {{postgres_dir}}
+    podman unshare rm -rf {{postgres_dir}}
+    mkdir -p {{postgres_dir}}

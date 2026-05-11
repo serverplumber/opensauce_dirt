@@ -156,7 +156,7 @@ defmodule OpenSauceWeb.SettingsLive.CalendarFeedComponent do
 
   @impl true
   def update(assigns, socket) do
-    suitable_keys = load_suitable_keys(assigns.current_user)
+    suitable_keys = load_suitable_keys(assigns.current_member)
 
     {:ok,
      socket
@@ -167,7 +167,7 @@ defmodule OpenSauceWeb.SettingsLive.CalendarFeedComponent do
 
   @impl true
   def handle_event("generate_calendar_feed", _params, socket) do
-    user = socket.assigns.current_user
+    user = socket.assigns.current_member
 
     case create_calendar_key(user) do
       {:ok, api_key} ->
@@ -187,9 +187,9 @@ defmodule OpenSauceWeb.SettingsLive.CalendarFeedComponent do
 
   def handle_event("revoke_calendar_key", %{"id" => id}, socket) do
     api_key = Accounts.get_api_key_by_id!(id, authorize?: false)
-    Accounts.revoke_api_key(api_key, actor: socket.assigns.current_user)
+    Accounts.revoke_api_key(api_key, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
-    suitable_keys = load_suitable_keys(socket.assigns.current_user)
+    suitable_keys = load_suitable_keys(socket.assigns.current_member)
 
     {:noreply,
      socket

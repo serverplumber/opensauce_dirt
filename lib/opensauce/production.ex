@@ -77,8 +77,7 @@ defmodule OpenSauce.Production do
 
     Orders.list_orders!(
       %{delivery_date_start: start_dt, delivery_date_end: end_dt},
-      load: Keyword.get(opts, :load, default_load),
-      actor: Keyword.get(opts, :actor)
+      Keyword.put_new(opts, :load, default_load)
     )
   end
 
@@ -225,6 +224,7 @@ defmodule OpenSauce.Production do
       Orders.list_orders!(
         %{delivery_date_start: start_dt, delivery_date_end: end_dt},
         actor: actor,
+        tenant: tenant_from(actor),
         load: [
           :reference,
           items: [
@@ -274,7 +274,7 @@ defmodule OpenSauce.Production do
     |> Ash.Query.sort(inserted_at: :desc)
     |> Ash.Query.select([:batch_code])
     |> Ash.Query.limit(search_limit)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: Keyword.get(opts, :tenant, tenant_from(actor)))
     |> Enum.reduce_while({[], MapSet.new()}, fn item, {acc, seen} ->
       code = item.batch_code
 
@@ -502,7 +502,7 @@ defmodule OpenSauce.Production do
     |> Ash.Query.filter(expr(batch_code == ^batch_code))
     |> Ash.Query.load(@batch_item_load)
     |> Ash.Query.sort(inserted_at: :asc)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: tenant_from(actor))
   end
 
   defp batch_order_items_by_allocation(nil, _actor), do: []
@@ -512,7 +512,7 @@ defmodule OpenSauce.Production do
       OrderItemBatchAllocation
       |> Ash.Query.filter(production_batch_id == ^production_batch.id)
       |> Ash.Query.select([:order_item_id])
-      |> Ash.read!(actor: actor)
+      |> Ash.read!(actor: actor, tenant: tenant_from(actor))
       |> Enum.map(& &1.order_item_id)
 
     case allocation_item_ids do
@@ -524,13 +524,14 @@ defmodule OpenSauce.Production do
         |> Ash.Query.filter(expr(id in ^ids))
         |> Ash.Query.load(@batch_item_load)
         |> Ash.Query.sort(inserted_at: :asc)
-        |> Ash.read!(actor: actor)
+        |> Ash.read!(actor: actor, tenant: tenant_from(actor))
     end
   end
 
   defp maybe_load_production_batch(batch_code, actor) do
     case Orders.get_production_batch_by_code(%{batch_code: batch_code},
            actor: actor,
+           tenant: tenant_from(actor),
            load: [:product, :bom]
          ) do
       {:ok, %{} = batch} -> batch
@@ -577,7 +578,7 @@ defmodule OpenSauce.Production do
     ProductionBatch
     |> Ash.Query.filter(batch_code in ^batch_codes)
     |> Ash.Query.load([:product])
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: tenant_from(actor))
     |> Map.new(fn b -> {b.batch_code, b} end)
   end
 
@@ -592,7 +593,7 @@ defmodule OpenSauce.Production do
       OrderItemBatchAllocation
       |> Ash.Query.filter(order_item_id in ^item_ids)
       |> Ash.Query.load([:production_batch])
-      |> Ash.read!(actor: actor)
+      |> Ash.read!(actor: actor, tenant: tenant_from(actor))
 
     Map.new(allocations, fn a ->
       batch = a.production_batch
@@ -610,4 +611,7 @@ defmodule OpenSauce.Production do
   defp total_quantity(items) do
     Enum.reduce(items, D.new(0), fn item, acc -> D.add(acc, item.quantity) end)
   end
+
+  defp tenant_from(nil), do: nil
+  defp tenant_from(%{organisation_id: org_id}), do: org_id
 end

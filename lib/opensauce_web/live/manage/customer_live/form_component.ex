@@ -102,7 +102,7 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
       if customer do
         AshPhoenix.Form.for_update(customer, :update,
           as: "customer",
-          actor: socket.assigns.current_user,
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
           forms: [
             billing_address: [
               data: customer.billing_address || %{},
@@ -119,7 +119,7 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
       else
         AshPhoenix.Form.for_create(OpenSauce.CRM.Customer, :create,
           as: "customer",
-          actor: socket.assigns.current_user,
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
           forms: [
             billing_address: [
               data: %{},

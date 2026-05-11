@@ -5,7 +5,8 @@ defmodule OpenSauce.CRM.Customer do
     domain: OpenSauce.CRM,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshJsonApi.Resource, AshGraphql.Resource]
+    extensions: [AshJsonApi.Resource, AshGraphql.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.CRM.Address
 
@@ -79,7 +80,7 @@ defmodule OpenSauce.CRM.Customer do
     end
 
     # Admin can do anything
-    bypass expr(^actor(:role) == :admin) do
+    bypass expr(^actor(:role) == :owner) do
       authorize_if always()
     end
 
@@ -95,11 +96,11 @@ defmodule OpenSauce.CRM.Customer do
 
     # Other reads/destroys restricted to staff/admin
     policy action_type(:read) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
     policy action_type(:destroy) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

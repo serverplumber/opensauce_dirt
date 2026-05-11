@@ -62,7 +62,6 @@ defmodule OpenSauceWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    live "/setup", SetupLive, :index
 
     # Authentication Routes
     magic_sign_in_route(OpenSauce.Accounts.User, :magic_link,
@@ -98,6 +97,7 @@ defmodule OpenSauceWeb.Router do
     ash_authentication_live_session :org_routes,
       on_mount: [{OpenSauceWeb.LiveUserAuth, :live_user_required}] do
       live "/pick", OrgPickLive, :index
+      live "/new", OrgNewLive, :index
     end
   end
 
@@ -111,11 +111,11 @@ defmodule OpenSauceWeb.Router do
     # Manager Routes
     ash_authentication_live_session :admin_routes,
       on_mount: [
+        {OpenSauceWeb.LiveUserAuth, :live_manager_required},
         OpenSauceWeb.LiveCurrentPath,
         OpenSauceWeb.LiveNav,
         OpenSauceWeb.LiveSettings,
-        OpenSauceWeb.LiveCommandPalette,
-        {OpenSauceWeb.LiveUserAuth, :live_manager_required}
+        OpenSauceWeb.LiveCommandPalette
       ] do
       # Venue Routes
       live "/manage/venues", VenueLive.Index, :index
@@ -144,11 +144,11 @@ defmodule OpenSauceWeb.Router do
     # Staff Routes
     ash_authentication_live_session :manage_routes,
       on_mount: [
+        {OpenSauceWeb.LiveUserAuth, :live_staff_required},
         OpenSauceWeb.LiveCurrentPath,
         OpenSauceWeb.LiveNav,
         OpenSauceWeb.LiveSettings,
-        OpenSauceWeb.LiveCommandPalette,
-        {OpenSauceWeb.LiveUserAuth, :live_staff_required}
+        OpenSauceWeb.LiveCommandPalette
       ] do
       # Products
       live "/manage/products", ProductLive.Index, :index
@@ -211,17 +211,6 @@ defmodule OpenSauceWeb.Router do
       live "/manage/production/materials", OverviewLive, :materials
       live "/manage/production/batches", ProductionBatchLive.Index, :index
       live "/manage/production/batches/:batch_code", ProductionBatchLive.Show, :show
-
-      # in each liveview, add one of the following at the top of the module:
-      #
-      # If an authenticated user must be present:
-      # on_mount {OpenSauceWeb.LiveUserAuth, :live_user_required}
-      #
-      # If an authenticated user *may* be present:
-      # on_mount {OpenSauceWeb.LiveUserAuth, :live_user_optional}
-      #
-      # If an authenticated user must *not* be present:
-      # on_mount {OpenSauceWeb.LiveUserAuth, :live_no_user}
     end
   end
 

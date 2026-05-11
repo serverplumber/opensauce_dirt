@@ -32,9 +32,9 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
 
   @impl true
   def handle_params(%{"batch_code" => batch_code}, _url, socket) do
-    actor = socket.assigns[:current_user]
+    actor = socket.assigns[:current_member]
 
-    report = Production.batch_report!(batch_code, actor: actor)
+    report = Production.batch_report!(batch_code, actor: actor, tenant: actor.organisation_id)
 
     socket =
       socket
@@ -403,10 +403,10 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
 
   @impl true
   def handle_event("start_batch", _params, socket) do
-    actor = socket.assigns[:current_user]
+    actor = socket.assigns[:current_member]
     batch = socket.assigns.production_batch
 
-    case Orders.start_batch(batch, %{}, actor: actor) do
+    case Orders.start_batch(batch, %{}, actor: actor, tenant: actor.organisation_id) do
       {:ok, _} -> refresh_and_flash(socket, "Batch started")
       {:error, err} -> {:noreply, put_flash(socket, :error, "Start failed: #{inspect(err)}")}
     end
@@ -419,7 +419,7 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
 
   @impl true
   def handle_event("complete_batch", %{"produced_qty" => produced_qty} = params, socket) do
-    actor = socket.assigns[:current_user]
+    actor = socket.assigns[:current_member]
     batch = socket.assigns.production_batch
     duration = Map.get(params, "duration_minutes", "")
     completed_map = parse_completed_map(params)
@@ -433,7 +433,7 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
             duration
           )
 
-        case Orders.complete_batch(batch, complete_params, actor: actor) do
+        case Orders.complete_batch(batch, complete_params, actor: actor, tenant: actor.organisation_id) do
           {:ok, _} ->
             refresh_and_flash(socket, "Batch completed")
 
@@ -497,8 +497,8 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
   end
 
   defp refresh_and_flash(socket, message) do
-    actor = socket.assigns[:current_user]
-    report = Production.batch_report!(socket.assigns.batch_code, actor: actor)
+    actor = socket.assigns[:current_member]
+    report = Production.batch_report!(socket.assigns.batch_code, actor: actor, tenant: actor.organisation_id)
 
     socket =
       socket
@@ -530,11 +530,11 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
       components_map
       |> Enum.map(fn {material_id, per_unit_str} ->
         material =
-          OpenSauce.Inventory.get_material_by_id!(material_id, actor: actor)
+          OpenSauce.Inventory.get_material_by_id!(material_id, actor: actor, tenant: actor.organisation_id)
 
         lots =
           %{material_id: material_id}
-          |> OpenSauce.Inventory.list_available_lots_for_material!(actor: actor)
+          |> OpenSauce.Inventory.list_available_lots_for_material!(actor: actor, tenant: actor.organisation_id)
           |> Enum.map(fn lot ->
             %{
               lot_id: lot.id,
@@ -561,7 +561,7 @@ defmodule OpenSauceWeb.ProductionBatchLive.Show do
 
   defp build_allocations_for_complete(batch, actor) do
     %{production_batch_id: batch.id}
-    |> Orders.list_allocations_for_batch!(actor: actor)
+    |> Orders.list_allocations_for_batch!(actor: actor, tenant: actor.organisation_id)
     |> Enum.map(fn alloc ->
       %{
         order_item_id: alloc.order_item_id,

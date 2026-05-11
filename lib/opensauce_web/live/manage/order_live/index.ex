@@ -342,7 +342,7 @@ defmodule OpenSauceWeb.OrderLive.Index do
       <.live_component
         module={OpenSauceWeb.OrderLive.FormComponent}
         id={(@order && @order.id) || :new}
-        current_user={@current_user}
+        current_member={@current_member}
         title={@page_title}
         action={@live_action}
         order={@order}
@@ -560,9 +560,9 @@ defmodule OpenSauceWeb.OrderLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    order = Orders.get_order_by_id!(id, actor: socket.assigns[:current_user])
+    order = Orders.get_order_by_id!(id, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
-    case Orders.destroy_order(order, actor: socket.assigns[:current_user]) do
+    case Orders.destroy_order(order, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id) do
       :ok ->
         {:noreply,
          socket
@@ -611,7 +611,7 @@ defmodule OpenSauceWeb.OrderLive.Index do
   @impl true
   def handle_info({OpenSauceWeb.OrderLive.FormComponent, {:saved, order}}, socket) do
     order =
-      Ash.load!(order, [:items, :total_cost, customer: [:full_name]], actor: socket.assigns[:current_user])
+      Ash.load!(order, [:items, :total_cost, customer: [:full_name]], actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     orders = [order | socket.assigns.orders || []]
     calendar_events = create_calendar_events(orders, @calendar_event_duration)
@@ -628,8 +628,8 @@ defmodule OpenSauceWeb.OrderLive.Index do
   defp load_initial_data(socket, filter_opts) do
     orders_for_calendar = load_orders_for_calendar(socket, filter_opts)
     streamed_orders = load_streamed_orders(socket, filter_opts)
-    products = Catalog.list_products!(actor: socket.assigns[:current_user])
-    customers = CRM.list_customers!(actor: socket.assigns[:current_user], load: [:full_name])
+    products = Catalog.list_products!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
+    customers = CRM.list_customers!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id, load: [:full_name])
     days_range = calculate_days_range()
 
     socket
@@ -651,7 +651,7 @@ defmodule OpenSauceWeb.OrderLive.Index do
   defp load_orders_for_calendar(socket, filter_opts) do
     Orders.list_orders!(
       filter_opts,
-      actor: socket.assigns[:current_user],
+      actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
       load: [:items, :total_cost, customer: [:full_name], items: [product: [:name]]]
     )
   end
@@ -659,7 +659,7 @@ defmodule OpenSauceWeb.OrderLive.Index do
   defp load_streamed_orders(socket, filter_opts) do
     Orders.list_orders!(
       filter_opts,
-      actor: socket.assigns[:current_user],
+      actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
       stream?: true,
       load: [:items, :total_cost, customer: [:full_name], items: [product: [:name]]]
     )

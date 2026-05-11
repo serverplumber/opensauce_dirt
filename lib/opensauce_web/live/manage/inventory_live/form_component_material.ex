@@ -85,12 +85,12 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
       if material do
         Form.for_update(material, :update,
           as: "material",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       else
         Form.for_create(Inventory.Material, :create,
           as: "material",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       end
 

@@ -218,7 +218,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
       <.live_component
         module={OpenSauceWeb.OrderLive.FormComponent}
         id={(@order && @order.id) || :new}
-        current_user={@current_user}
+        current_member={@current_member}
         title={@page_title}
         action={@live_action}
         order={@order}
@@ -269,10 +269,10 @@ defmodule OpenSauceWeb.OrderLive.Show do
   @impl true
   def mount(_params, _session, socket) do
     products =
-      Catalog.list_products!(actor: socket.assigns[:current_user])
+      Catalog.list_products!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     customers =
-      CRM.list_customers!(actor: socket.assigns[:current_user], load: [:full_name])
+      CRM.list_customers!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id, load: [:full_name])
 
     {:ok,
      assign(socket,
@@ -292,7 +292,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
     order =
       Orders.get_order_by_reference!(reference,
         load: @default_order_load,
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     live_action = socket.assigns.live_action
@@ -330,16 +330,16 @@ defmodule OpenSauceWeb.OrderLive.Show do
 
   @impl true
   def handle_event("open_add_to_batch", %{"item_id" => item_id}, socket) do
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
 
     item =
       Orders.get_order_item_by_id!(item_id,
-        actor: actor,
+        actor: actor, tenant: actor.organisation_id,
         load: [:quantity, :planned_qty_sum, product: [:name, :sku]]
       )
 
     open_batches =
-      Orders.list_open_batches_for_product!(%{product_id: item.product_id}, actor: actor)
+      Orders.list_open_batches_for_product!(%{product_id: item.product_id}, actor: actor, tenant: actor.organisation_id)
 
     remaining = Decimal.sub(item.quantity, item.planned_qty_sum || Decimal.new(0))
 
@@ -361,7 +361,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
 
   @impl true
   def handle_event("save_add_to_batch", %{"batch_id" => batch_id, "planned_qty" => planned_qty}, socket) do
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
     item = socket.assigns.add_to_batch_item
     qty = Decimal.new(planned_qty)
 
@@ -369,7 +369,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
       OrderItemBatchAllocation
       |> Ash.Query.new()
       |> Ash.Query.filter(expr(order_item_id == ^item.id and production_batch_id == ^batch_id))
-      |> Ash.read_one(actor: actor)
+      |> Ash.read_one(actor: actor, tenant: actor.organisation_id)
 
     case existing do
       {:ok, %{} = alloc} ->
@@ -377,7 +377,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
           Orders.update_order_item_batch_allocation!(
             alloc,
             %{planned_qty: Decimal.add(alloc.planned_qty || Decimal.new(0), qty)},
-            actor: actor
+            actor: actor, tenant: actor.organisation_id
           )
 
         :ok
@@ -391,7 +391,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
               planned_qty: qty,
               completed_qty: Decimal.new(0)
             },
-            actor: actor
+            actor: actor, tenant: actor.organisation_id
           )
 
         :ok
@@ -400,7 +400,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
     order =
       Orders.get_order_by_id!(socket.assigns.order.id,
         load: @default_order_load,
-        actor: actor
+        actor: actor, tenant: actor.organisation_id
       )
 
     {:noreply,
@@ -429,7 +429,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
     order =
       Orders.get_order_by_id!(socket.assigns.order.id,
         load: @default_order_load,
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     {:noreply,
@@ -444,7 +444,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
     order =
       Orders.get_order_by_id!(socket.assigns.order.id,
         load: @default_order_load,
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     {:noreply,

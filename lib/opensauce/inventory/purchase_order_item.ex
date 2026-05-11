@@ -45,11 +45,11 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
 
   policies do
     policy action_type(:read) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
     policy action_type([:create, :update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

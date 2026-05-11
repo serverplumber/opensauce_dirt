@@ -70,7 +70,7 @@ defmodule OpenSauceWeb.OrderLive.Invoice do
           customer: [:full_name, shipping_address: [:full_address]],
           items: [:cost, :unit_price, product: [:name]]
         ],
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     {:ok,

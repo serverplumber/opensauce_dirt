@@ -390,7 +390,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
         <.live_component
           module={OpenSauceWeb.InventoryLive.FormComponentMaterial}
           id={(@material && @material.id) || :new}
-          current_user={@current_user}
+          current_member={@current_member}
           title={@page_title}
           action={@live_action}
           material={@material}
@@ -500,7 +500,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
     # Reload materials when returning to index
     materials =
       Inventory.list_materials!(
-        actor: socket.assigns[:current_user],
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         stream?: true,
         load: [:current_stock]
       )
@@ -528,7 +528,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
     material =
       Inventory.get_material_by_id!(id,
         load: [:current_stock],
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     socket
@@ -539,7 +539,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   @impl true
   def handle_event("view_material_details", %{"date" => date_str, "material" => material_id}, socket) do
     date = Date.from_iso8601!(date_str)
-    material = Inventory.get_material_by_id!(material_id, actor: socket.assigns.current_user)
+    material = Inventory.get_material_by_id!(material_id, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     # Get material day quantity
     {day_quantity, day_balance} =
@@ -556,7 +556,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
     orders =
       Orders.list_orders!(
         %{delivery_date_start: start_time, delivery_date_end: end_time},
-        actor: socket.assigns.current_user,
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :reference,
           items: [
@@ -570,7 +570,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
       InventoryForecasting.get_material_usage_details(
         material,
         orders,
-        socket.assigns.current_user
+        socket.assigns.current_member
       )
 
     {:noreply,
@@ -625,8 +625,8 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     case id
-         |> Inventory.get_material_by_id!(actor: socket.assigns.current_user)
-         |> Inventory.destroy_material(actor: socket.assigns.current_user) do
+         |> Inventory.get_material_by_id!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
+         |> Inventory.destroy_material(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id) do
       :ok ->
         {:noreply,
          socket
@@ -640,7 +640,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
 
   @impl true
   def handle_info({:saved, material}, socket) do
-    material = Ash.load!(material, :current_stock, actor: socket.assigns.current_user)
+    material = Ash.load!(material, :current_stock, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     {:noreply, stream_insert(socket, :materials, material)}
   end
@@ -700,6 +700,6 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   defp inventory_trail(_assigns), do: [Navigation.root(:inventory)]
 
   defp prepare_materials_requirements(socket, days_range) do
-    InventoryForecasting.prepare_materials_requirements(days_range, socket.assigns.current_user)
+    InventoryForecasting.prepare_materials_requirements(days_range, socket.assigns.current_member)
   end
 end

@@ -60,12 +60,12 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
       if supplier do
         Form.for_update(supplier, :update,
           as: "supplier",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       else
         Form.for_create(Inventory.Supplier, :create,
           as: "supplier",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       end
 

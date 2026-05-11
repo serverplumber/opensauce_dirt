@@ -19,10 +19,16 @@ defmodule OpenSauceWeb.LiveSettings do
   end
 
   defp load_settings(socket) do
+    member = socket.assigns.current_member
+    opts = [actor: member, tenant: member.organisation_id]
+
     settings =
-      case OpenSauce.Settings.get_settings() do
-        {:ok, settings} -> settings
-        {:error, _error} -> OpenSauce.Settings.init!()
+      case OpenSauce.Settings.get_settings(opts) do
+        {:ok, settings} ->
+          settings
+
+        {:error, _} ->
+          OpenSauce.Settings.init!(opts)
       end
 
     assign(socket, :settings, settings)

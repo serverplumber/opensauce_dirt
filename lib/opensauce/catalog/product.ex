@@ -5,7 +5,8 @@ defmodule OpenSauce.Catalog.Product do
     domain: OpenSauce.Catalog,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshJsonApi.Resource, AshGraphql.Resource]
+    extensions: [AshJsonApi.Resource, AshGraphql.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.Catalog.BOM
 
@@ -99,19 +100,19 @@ defmodule OpenSauce.Catalog.Product do
     end
 
     # Admin can do anything
-    bypass expr(^actor(:role) == :admin) do
+    bypass expr(^actor(:role) == :owner) do
       authorize_if always()
     end
 
     # Public read for active/available products; staff/admin read everything
     policy action_type(:read) do
       authorize_if expr(status == :active or selling_availability != :off)
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
     # Writes restricted to staff/admin
     policy action_type([:create, :update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:staff, :admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

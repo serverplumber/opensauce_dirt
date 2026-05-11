@@ -190,7 +190,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentNutritionalFacts do
 
   @impl true
   def update(%{material: material} = assigns, socket) do
-    form = build_form(material, assigns.current_user)
+    form = build_form(material, assigns.current_member)
 
     # Store the existing facts as a separate attribute for recovery if needed
     existing_facts =
@@ -312,12 +312,12 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentNutritionalFacts do
           :nutritional_facts,
           material_nutritional_facts: [:nutritional_fact]
         ],
-        actor: actor
+        actor: actor, tenant: actor.organisation_id
       )
 
     material_with_nutritional_facts
     |> Form.for_update(:update_nutritional_facts,
-      actor: actor,
+      actor: actor, tenant: actor.organisation_id,
       as: "material",
       forms: [
         material_nutritional_facts: [

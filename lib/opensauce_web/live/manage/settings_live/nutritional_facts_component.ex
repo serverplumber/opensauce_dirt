@@ -123,7 +123,7 @@ defmodule OpenSauceWeb.SettingsLive.NutritionalFactsComponent do
   @impl true
   def update(assigns, socket) do
     nutritional_facts = Inventory.list_nutritional_facts!()
-    form = new_nutritional_fact_form(assigns.current_user)
+    form = new_nutritional_fact_form(assigns.current_member)
     search_query = Map.get(socket.assigns, :search_query, "")
 
     {:ok,
@@ -153,7 +153,7 @@ defmodule OpenSauceWeb.SettingsLive.NutritionalFactsComponent do
 
         socket =
           socket
-          |> assign(:form, new_nutritional_fact_form(socket.assigns.current_user))
+          |> assign(:form, new_nutritional_fact_form(socket.assigns.current_member))
           |> assign(:show_modal, false)
           |> assign(:nutritional_facts, nutritional_facts)
           |> assign_filtered_facts(socket.assigns.search_query)
@@ -170,7 +170,7 @@ defmodule OpenSauceWeb.SettingsLive.NutritionalFactsComponent do
     nutritional_fact = Inventory.get_nutritional_fact_by_id!(id)
 
     :ok =
-      Inventory.destroy_nutritional_fact!(nutritional_fact, actor: socket.assigns.current_user)
+      Inventory.destroy_nutritional_fact!(nutritional_fact, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     # Notify parent to reload nutritional facts
     send(self(), {:saved_nutritional_facts, nil})

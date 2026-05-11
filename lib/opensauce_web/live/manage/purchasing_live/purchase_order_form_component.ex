@@ -71,12 +71,12 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderFormComponent do
       if po do
         Form.for_update(po, :update,
           as: "purchase_order",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       else
         Form.for_create(Inventory.PurchaseOrder, :create,
           as: "purchase_order",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       end
 

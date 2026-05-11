@@ -55,7 +55,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
       <.live_component
         module={OpenSauceWeb.PurchasingLive.PurchaseOrderFormComponent}
         id="po-form"
-        current_user={@current_user}
+        current_member={@current_member}
         suppliers={@suppliers}
         purchase_order={nil}
         patch={~p"/manage/purchasing"}
@@ -72,7 +72,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
       <.live_component
         module={OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent}
         id="po-item-form"
-        current_user={@current_user}
+        current_member={@current_member}
         materials={@materials}
         po_id={@selected_po && @selected_po.id}
         purchase_order_item={nil}
@@ -84,8 +84,8 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    suppliers = Inventory.list_suppliers!(actor: socket.assigns[:current_user])
-    materials = Inventory.list_materials!(actor: socket.assigns[:current_user])
+    suppliers = Inventory.list_suppliers!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
+    materials = Inventory.list_materials!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
     pos = load_purchase_orders(socket)
 
     {:ok,
@@ -108,7 +108,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
           po =
             Inventory.get_purchase_order_by_reference!(params["po_ref"],
               load: [:supplier],
-              actor: socket.assigns.current_user
+              actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
             )
 
           assign(socket, :selected_po, po)
@@ -122,7 +122,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
 
   @impl true
   def handle_event("receive", %{"id" => id}, socket) do
-    _ = Receiving.receive_po(id, actor: socket.assigns.current_user)
+    _ = Receiving.receive_po(id, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
     {:noreply, assign(socket, :purchase_orders, load_purchase_orders(socket))}
   end
 
@@ -152,6 +152,6 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
   defp purchasing_trail(_), do: [Navigation.root(:purchasing)]
 
   defp load_purchase_orders(socket) do
-    Inventory.list_purchase_orders!(actor: socket.assigns[:current_user], load: [:supplier])
+    Inventory.list_purchase_orders!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id, load: [:supplier])
   end
 end

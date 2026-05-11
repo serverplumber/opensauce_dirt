@@ -265,7 +265,7 @@ defmodule OpenSauceWeb.OrderLive.FormComponent do
       if order do
         Form.for_update(order, :update,
           as: "order",
-          actor: socket.assigns.current_user,
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
           forms: [
             items: [
               type: :list,
@@ -279,7 +279,7 @@ defmodule OpenSauceWeb.OrderLive.FormComponent do
       else
         Form.for_create(Orders.Order, :create,
           as: "order",
-          actor: socket.assigns.current_user,
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
           forms: [
             items: [
               type: :list,

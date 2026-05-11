@@ -545,7 +545,7 @@ defmodule OpenSauceWeb.OverviewLive do
 
   @impl true
   def handle_event("create_batch", %{"date" => date_iso, "product_id" => product_id}, socket) do
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
     {:ok, day} = Date.from_iso8601(date_iso)
     product = find_product(socket, product_id)
 
@@ -557,7 +557,7 @@ defmodule OpenSauceWeb.OverviewLive do
         full =
           Orders.get_order_item_by_id!(item.id,
             load: [:quantity, :planned_qty_sum],
-            actor: actor
+            actor: actor, tenant: actor.organisation_id
           )
 
         planned = full.planned_qty_sum || Decimal.new(0)
@@ -583,7 +583,7 @@ defmodule OpenSauceWeb.OverviewLive do
                    %{order_item_id: id, planned_qty: r}
                  end)
              },
-             actor: actor
+             actor: actor, tenant: actor.organisation_id
            ) do
         {:ok, batch} ->
           {:noreply,
@@ -600,11 +600,11 @@ defmodule OpenSauceWeb.OverviewLive do
 
   @impl true
   def handle_event("start_batch", %{"batch-code" => batch_code}, socket) do
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
 
-    case Orders.get_production_batch_by_code(%{batch_code: batch_code}, actor: actor) do
+    case Orders.get_production_batch_by_code(%{batch_code: batch_code}, actor: actor, tenant: actor.organisation_id) do
       {:ok, batch} ->
-        case Orders.start_batch(batch, %{}, actor: actor) do
+        case Orders.start_batch(batch, %{}, actor: actor, tenant: actor.organisation_id) do
           {:ok, _} ->
             {:noreply,
              socket
@@ -698,9 +698,9 @@ defmodule OpenSauceWeb.OverviewLive do
     batch_code = params["batch-code"] || params["batch_code"]
     produced_qty = params["produced_qty"]
     duration_minutes = params["duration_minutes"]
-    actor = socket.assigns.current_user
+    actor = socket.assigns.current_member
 
-    case Orders.get_production_batch_by_code(%{batch_code: batch_code}, actor: actor) do
+    case Orders.get_production_batch_by_code(%{batch_code: batch_code}, actor: actor, tenant: actor.organisation_id) do
       {:ok, batch} ->
         update_params =
           then(%{produced_qty: produced_qty}, fn p ->
@@ -709,7 +709,7 @@ defmodule OpenSauceWeb.OverviewLive do
               else: p
           end)
 
-        case Orders.complete_batch(batch, update_params, actor: actor) do
+        case Orders.complete_batch(batch, update_params, actor: actor, tenant: actor.organisation_id) do
           {:ok, _} ->
             {:noreply,
              socket
@@ -1264,13 +1264,13 @@ defmodule OpenSauceWeb.OverviewLive do
 
   defp load_production_items(socket, days_range) do
     orders =
-      Production.fetch_orders_in_range(socket.assigns.time_zone, days_range, actor: socket.assigns.current_user)
+      Production.fetch_orders_in_range(socket.assigns.time_zone, days_range, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
 
     Production.build_production_items(orders)
   end
 
   defp prepare_materials_requirements(socket, days_range) do
-    InventoryForecasting.prepare_materials_requirements(days_range, socket.assigns.current_user)
+    InventoryForecasting.prepare_materials_requirements(days_range, socket.assigns.current_member)
   end
 
   defp get_items_for_day(day, production_items) do
@@ -1298,7 +1298,7 @@ defmodule OpenSauceWeb.OverviewLive do
   end
 
   defp find_product(socket, product_id) do
-    Catalog.get_product_by_id!(product_id, actor: socket.assigns.current_user)
+    Catalog.get_product_by_id!(product_id, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
   end
 
   defp total_quantity(items) do
@@ -1348,7 +1348,7 @@ defmodule OpenSauceWeb.OverviewLive do
   end
 
   defp find_material(socket, material_id) do
-    Inventory.get_material_by_id!(material_id, actor: socket.assigns.current_user)
+    Inventory.get_material_by_id!(material_id, actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
   end
 
   defp get_material_day_info(socket, material, date) do
@@ -1374,7 +1374,7 @@ defmodule OpenSauceWeb.OverviewLive do
           delivery_date_start: start_datetime,
           delivery_date_end: end_datetime
         },
-        actor: socket.assigns.current_user,
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [
           :reference,
           items: [
@@ -1390,7 +1390,7 @@ defmodule OpenSauceWeb.OverviewLive do
     InventoryForecasting.get_material_usage_details(
       material,
       orders,
-      socket.assigns.current_user
+      socket.assigns.current_member
     )
   end
 
@@ -1642,7 +1642,7 @@ defmodule OpenSauceWeb.OverviewLive do
       |> Enum.flat_map(fn {_, _, items} -> items end)
       |> Enum.map(& &1.id)
 
-    allocation_map = Production.allocation_map_for_items(item_ids, socket.assigns.current_user)
+    allocation_map = Production.allocation_map_for_items(item_ids, socket.assigns.current_member)
 
     week_metrics =
       compute_week_metrics(socket, days_range, production_items, materials_requirements)
@@ -1681,7 +1681,7 @@ defmodule OpenSauceWeb.OverviewLive do
     orders =
       Orders.list_orders!(
         %{delivery_date_start: start_dt, delivery_date_end: end_dt},
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     orders_by_day_counts =
@@ -1697,7 +1697,7 @@ defmodule OpenSauceWeb.OverviewLive do
       %{delivery_date_start: today_start, delivery_date_end: today_end}
       |> Orders.list_orders!(
         load: [:total_cost, :reference, customer: [:full_name]],
-        actor: socket.assigns.current_user
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
       |> Enum.map(fn o ->
         %{reference: o.reference, customer: o.customer.full_name, total: o.total_cost}

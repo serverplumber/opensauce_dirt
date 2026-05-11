@@ -53,7 +53,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
       <.live_component
         module={OpenSauceWeb.CustomerLive.FormComponent}
         id={(@customer && @customer.id) || :new}
-        current_user={@current_user}
+        current_member={@current_member}
         title={@page_title}
         action={@live_action}
         customer={@customer}
@@ -71,11 +71,11 @@ defmodule OpenSauceWeb.CustomerLive.Index do
      |> stream(
        :customers,
        OpenSauce.CRM.list_customers!(
-         actor: socket.assigns[:current_user],
+         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
          load: [:billing_address, :shipping_address, :full_name]
        )
      )
-     |> assign_new(:current_user, fn -> nil end)}
+     |> assign_new(:current_member, fn -> nil end)}
   end
 
   @impl true
@@ -91,7 +91,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
     |> assign(
       :customer,
       OpenSauce.CRM.get_customer_by_id!(id,
-        actor: socket.assigns.current_user,
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [:billing_address, :shipping_address]
       )
     )
@@ -103,7 +103,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
     |> assign(
       :customer,
       OpenSauce.CRM.get_customer_by_reference!(reference,
-        actor: socket.assigns.current_user,
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
         load: [:billing_address, :shipping_address]
       )
     )
@@ -137,8 +137,8 @@ defmodule OpenSauceWeb.CustomerLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     case id
-         |> OpenSauce.CRM.get_customer_by_id!(actor: socket.assigns.current_user)
-         |> OpenSauce.CRM.destroy_customer(actor: socket.assigns.current_user) do
+         |> OpenSauce.CRM.get_customer_by_id!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
+         |> OpenSauce.CRM.destroy_customer(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id) do
       :ok ->
         {:noreply,
          socket

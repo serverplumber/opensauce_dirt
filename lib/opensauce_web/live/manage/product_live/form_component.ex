@@ -61,7 +61,7 @@ defmodule OpenSauceWeb.ProductLive.FormComponent do
 
   @impl true
   def update(assigns, socket) do
-    materials = Inventory.list_materials!(actor: socket.assigns[:current_user])
+    materials = Inventory.list_materials!(actor: assigns.current_member, tenant: assigns.current_member.organisation_id)
     {:ok, socket |> assign(assigns) |> assign(:materials, materials) |> assign_form()}
   end
 
@@ -90,12 +90,12 @@ defmodule OpenSauceWeb.ProductLive.FormComponent do
       if product do
         AshPhoenix.Form.for_update(product, :update,
           as: "product",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       else
         AshPhoenix.Form.for_create(OpenSauce.Catalog.Product, :create,
           as: "product",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
         )
       end
 

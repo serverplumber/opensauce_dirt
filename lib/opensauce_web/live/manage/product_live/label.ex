@@ -58,7 +58,7 @@ defmodule OpenSauceWeb.ProductLive.Label do
           :allergens,
           active_bom: [components: [:component_type, material: [:name]]]
         ],
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
       )
 
     bom_for_label =
@@ -68,7 +68,7 @@ defmodule OpenSauceWeb.ProductLive.Label do
 
         nil ->
           %{product_id: product.id}
-          |> Catalog.list_boms_for_product!(actor: socket.assigns[:current_user])
+          |> Catalog.list_boms_for_product!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
           |> List.first()
 
         bom ->
@@ -82,7 +82,7 @@ defmodule OpenSauceWeb.ProductLive.Label do
 
         b ->
           Ash.load!(b, [components: [:component_type, material: [:name, allergens: [:name]]]],
-            actor: socket.assigns[:current_user]
+            actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
           )
       end
 

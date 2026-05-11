@@ -46,7 +46,8 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
     form =
       AshPhoenix.Form.for_update(assigns.organisation, :update,
         as: "organisation",
-        actor: assigns.current_member
+        actor: assigns.current_member,
+        tenant: assigns.current_member.organisation_id
       )
 
     {:ok, socket |> assign(assigns) |> assign(:form, to_form(form))}

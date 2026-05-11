@@ -5,7 +5,8 @@ defmodule OpenSauce.Settings.Settings do
     domain: OpenSauce.Settings,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshJsonApi.Resource]
+    extensions: [AshJsonApi.Resource],
+    fragments: [OpenSauce.Concerns.Multitenanted]
 
   alias OpenSauce.Types.EncryptedBinary
 
@@ -56,7 +57,7 @@ defmodule OpenSauce.Settings.Settings do
 
     # Restrict updates/deletes to admin
     policy action_type([:update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:admin])
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
   end
 

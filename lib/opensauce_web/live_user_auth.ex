@@ -29,10 +29,6 @@ defmodule OpenSauceWeb.LiveUserAuth do
     end
   end
 
-  def on_mount(:live_user_optional, _params, _session, socket) do
-    {:cont, assign_member_if_possible(socket, nil)}
-  end
-
   # Any authenticated member regardless of role.
   def on_mount(:live_member_required, _params, session, socket) do
     case load_member(socket, session) do
@@ -87,9 +83,5 @@ defmodule OpenSauceWeb.LiveUserAuth do
       _ ->
         if socket.assigns[:current_user], do: :no_org, else: :error
     end
-  end
-
-  defp assign_member_if_possible(socket, default) do
-    assign(socket, :current_member, default)
   end
 end
