@@ -1,4 +1,6 @@
 defmodule OpenSauce.CRM.Customer do
+  # TODO_polish: destroy action should be owner-only. Non-owners should only be able
+  # to hide a customer via an `active` flag, keeping the record intact for order history.
   @moduledoc false
   use Ash.Resource,
     otp_app: :opensauce,
@@ -7,8 +9,6 @@ defmodule OpenSauce.CRM.Customer do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshJsonApi.Resource, AshGraphql.Resource],
     fragments: [OpenSauce.Concerns.Multitenanted]
-
-  alias OpenSauce.CRM.Address
 
   require Ash.Resource.Preparation.Builtins
 
@@ -47,7 +47,82 @@ defmodule OpenSauce.CRM.Customer do
 
   actions do
     default_accept :*
-    defaults [:read, :create, :update, :destroy]
+    defaults [:read, :destroy]
+
+    create :create do
+      argument :billing_address, :map, allow_nil?: true
+      argument :garden_addresses, {:array, :map}, allow_nil?: true, default: []
+
+      change manage_relationship(:billing_address,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
+
+      change manage_relationship(:garden_addresses,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
+
+      validate fn changeset, _ ->
+        cond do
+          Ash.Changeset.get_argument(changeset, :garden_addresses) == [] ->
+            {:error, field: :garden_addresses, message: "at least one garden address is required"}
+
+          Ash.Changeset.get_attribute(changeset, :type) == :company and
+              is_nil(Ash.Changeset.get_attribute(changeset, :company_name_nickname)) ->
+            {:error, field: :company_name_nickname, message: "is required for companies"}
+
+          true ->
+            :ok
+        end
+      end
+    end
+
+    update :update do
+      require_atomic? false
+
+      argument :billing_address, :map, allow_nil?: true
+      argument :garden_addresses, {:array, :map}, allow_nil?: true
+
+      change manage_relationship(:billing_address,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
+
+      change manage_relationship(:garden_addresses,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
+
+      validate fn changeset, _ ->
+        type =
+          Ash.Changeset.get_attribute(changeset, :type) ||
+            Map.get(changeset.data, :type)
+
+        company_name_nickname =
+          Ash.Changeset.get_attribute(changeset, :company_name_nickname) ||
+            Map.get(changeset.data, :company_name_nickname)
+
+        cond do
+          Ash.Changeset.get_argument(changeset, :garden_addresses) == [] ->
+            {:error, field: :garden_addresses, message: "at least one garden address is required"}
+
+          type == :company and is_nil(company_name_nickname) ->
+            {:error, field: :company_name_nickname, message: "is required for companies"}
+
+          true ->
+            :ok
+        end
+      end
+    end
 
     # Narrow read used by checkout
     read :get_by_email do
@@ -111,19 +186,19 @@ defmodule OpenSauce.CRM.Customer do
       writable? false
 
       default fn ->
-        random_str =
-          12
-          |> :crypto.strong_rand_bytes()
-          |> Base.encode32(padding: false, case: :upper)
-          |> String.slice(0..11)
+        hex =
+          (:rand.uniform(0x1000) - 1)
+          |> Integer.to_string(16)
+          |> String.downcase()
+          |> String.pad_leading(3, "0")
 
-        "CUS_#{random_str}"
+        "cst_#{hex}"
       end
 
       allow_nil? false
       generated? true
 
-      constraints match: ~r/^CUS_[A-Z0-9]{12}$/,
+      constraints match: ~r/^cst_[0-9a-f]{3}$/,
                   allow_empty?: false
     end
 
@@ -131,6 +206,12 @@ defmodule OpenSauce.CRM.Customer do
       allow_nil? false
       public? true
       constraints one_of: [:individual, :company]
+    end
+
+    attribute :company_name_nickname, :string do
+      allow_nil? true
+      public? true
+      constraints min_length: 1
     end
 
     attribute :first_name, :string do
@@ -157,18 +238,29 @@ defmodule OpenSauce.CRM.Customer do
       constraints max_length: 15
     end
 
-    attribute :billing_address, Address do
-      public? true
-    end
-
-    attribute :shipping_address, Address do
-      public? true
-    end
-
     timestamps()
   end
 
   relationships do
+    has_many :addresses, OpenSauce.CRM.Address do
+      public? true
+    end
+
+    has_one :billing_address, OpenSauce.CRM.Address do
+      filter expr(is_billing == true)
+      public? true
+    end
+
+    has_many :garden_addresses, OpenSauce.CRM.Address do
+      filter expr(is_garden == true)
+      public? true
+    end
+
+    has_many :indoor_addresses, OpenSauce.CRM.Address do
+      filter expr(is_indoor == true)
+      public? true
+    end
+    
     has_many :orders, OpenSauce.Orders.Order
   end
 

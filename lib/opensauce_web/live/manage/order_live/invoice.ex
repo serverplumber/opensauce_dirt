@@ -21,7 +21,7 @@ defmodule OpenSauceWeb.OrderLive.Invoice do
           <div class="font-medium">Customer</div>
           <div>{@order.customer.full_name}</div>
           <div>
-            {@order.customer.shipping_address && @order.customer.shipping_address.full_address}
+            {@order.customer.billing_address && @order.customer.billing_address.full_address}
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@ defmodule OpenSauceWeb.OrderLive.Invoice do
           :tax_total,
           :discount_total,
           :total,
-          customer: [:full_name, shipping_address: [:full_address]],
+          customer: [:full_name, billing_address: [:full_address]],
           items: [:cost, :unit_price, product: [:name]]
         ],
         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id

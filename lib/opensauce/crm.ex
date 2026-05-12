@@ -11,6 +11,12 @@ defmodule OpenSauce.CRM do
   end
 
   resources do
+    resource OpenSauce.CRM.Address do
+      define :create_address, action: :create
+      define :update_address, action: :update
+      define :destroy_address, action: :destroy
+    end
+
     resource OpenSauce.CRM.Customer do
       define :get_customer_by_id, action: :read, get_by: [:id]
       define :get_customer_by_reference, action: :read, get_by: [:reference]

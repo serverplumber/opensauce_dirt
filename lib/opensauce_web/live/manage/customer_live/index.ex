@@ -29,16 +29,14 @@ defmodule OpenSauceWeb.CustomerLive.Index do
           </span>
         </div>
       </:empty>
-      <:col :let={{_id, customer}} label="Name">{customer.full_name}</:col>
-      <:col :let={{_id, customer}} label="Reference">
-        <.kbd>
-          {format_reference(customer.reference)}
-        </.kbd>
-      </:col>
+      <:col :let={{_id, customer}} label="Name">{customer.company_name_nickname}</:col>
       <:col :let={{_id, customer}} label="Email">{customer.email}</:col>
       <:col :let={{_id, customer}} label="Phone">{customer.phone}</:col>
-      <:col :let={{_id, customer}} label="Type">
-        <.badge text={customer.type} />
+      <:col :let={{_id, customer}} label="Gardens">
+        <div :for={addr <- customer.garden_addresses} class="text-sm leading-snug">
+          <span class="font-medium">{addr.name}</span>
+          <span :if={addr.short_address} class="text-stone-500">: {addr.short_address}</span>
+        </div>
       </:col>
     </.table>
 
@@ -72,7 +70,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
        :customers,
        OpenSauce.CRM.list_customers!(
          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-         load: [:billing_address, :shipping_address, :full_name]
+         load: [:full_name, garden_addresses: [:short_address]]
        )
      )
      |> assign_new(:current_member, fn -> nil end)}
@@ -92,7 +90,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
       :customer,
       OpenSauce.CRM.get_customer_by_id!(id,
         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [:billing_address, :shipping_address]
+        load: [:billing_address, :garden_addresses]
       )
     )
   end
@@ -104,7 +102,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
       :customer,
       OpenSauce.CRM.get_customer_by_reference!(reference,
         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [:billing_address, :shipping_address]
+        load: [:billing_address, :garden_addresses]
       )
     )
   end

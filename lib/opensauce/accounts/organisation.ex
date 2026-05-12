@@ -12,7 +12,20 @@ defmodule OpenSauce.Accounts.Organisation do
   end
 
   actions do
-    defaults [:read, :destroy, create: [:name, :slug], update: [:name]]
+    defaults [:read, :destroy, create: [:name, :slug]]
+
+    update :update do
+      accept [:name]
+
+      argument :address, :map, allow_nil?: true
+
+      change manage_relationship(:address,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
+    end
   end
 
   policies do
@@ -39,6 +52,12 @@ defmodule OpenSauce.Accounts.Organisation do
   end
 
   relationships do
+    has_one :address, OpenSauce.CRM.Address do
+      public? true
+      domain OpenSauce.CRM
+      destination_attribute :organisation_id
+    end
+
     has_many :members, OpenSauce.Accounts.OrganisationMember
   end
 

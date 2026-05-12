@@ -25,11 +25,23 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
               Organisation
             </h3>
             <p class="mt-1 text-sm text-stone-600">
-              Your organisation's display name shown across the app.
+              Your organisation's display name and address.
             </p>
           </div>
           <div class="space-y-4 p-4">
-            <.input field={@form[:name]} type="text" label="Name" placeholder="Acme Bakery" />
+            <.input field={@form[:name]} type="text" label="Name" placeholder="Acme Nursery" />
+
+            <.inputs_for :let={f_addr} field={@form[:address]}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                  <.input field={f_addr[:street]} type="text" label="Street" placeholder="123 Garden Way" />
+                </div>
+                <.input field={f_addr[:city]} type="text" label="City" />
+                <.input field={f_addr[:province]} type="text" label="Province" />
+                <.input field={f_addr[:zip]} type="text" label="Postal Code" />
+                <.input field={f_addr[:country]} type="text" label="Country" />
+              </div>
+            </.inputs_for>
           </div>
         </section>
 
@@ -47,7 +59,14 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
       AshPhoenix.Form.for_update(assigns.organisation, :update,
         as: "organisation",
         actor: assigns.current_member,
-        tenant: assigns.current_member.organisation_id
+        forms: [
+          address: [
+            data: assigns.organisation.address,
+            resource: OpenSauce.CRM.Address,
+            create_action: :create,
+            update_action: :update
+          ]
+        ]
       )
 
     {:ok, socket |> assign(assigns) |> assign(:form, to_form(form))}

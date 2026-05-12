@@ -44,6 +44,11 @@ defmodule OpenSauceWeb.OrderLive.Index do
     <Page.page>
       <.header>
         Orders
+        <:actions>
+          <.link patch={~p"/manage/orders/new"}>
+            <.button variant={:primary}>New order</.button>
+          </.link>
+        </:actions>
       </.header>
 
       <Page.surface>

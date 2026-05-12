@@ -28,7 +28,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
       :unit_cost,
       product: [:name, :sku]
     ],
-    customer: [:full_name, shipping_address: [:full_address]]
+    customer: [:full_name, billing_address: [:full_address]]
   ]
 
   @impl true
@@ -78,9 +78,9 @@ defmodule OpenSauceWeb.OrderLive.Show do
               {@order.customer.full_name}
             </.link>
           </:item>
-          <:item title="Shipping Address">
-            {if @order.customer.shipping_address do
-              @order.customer.shipping_address.full_address
+          <:item title="Billing Address">
+            {if @order.customer.billing_address do
+              @order.customer.billing_address.full_address
             else
               "N/A"
             end}

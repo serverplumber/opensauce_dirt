@@ -311,13 +311,7 @@ defmodule OpenSauceWeb.HtmlHelpers do
   """
   def format_reference(nil), do: "N/A"
 
-  def format_reference(reference) when is_binary(reference) do
-    if String.length(reference) > 8 do
-      "#{String.slice(reference, 0, 4)}...#{String.slice(reference, -4, 4)}"
-    else
-      reference
-    end
-  end
+  def format_reference(reference) when is_binary(reference), do: reference
 
   def format_reference(reference), do: format_label(reference, "-")
 

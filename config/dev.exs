@@ -12,7 +12,7 @@ config :opensauce, OpenSauce.Repo,
   # Watch static and templates for browser reloading.
   password: "postgres",
   hostname: "localhost",
-  database: "opensauce_dev",
+  database: "opensauce_dirt_dev",
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

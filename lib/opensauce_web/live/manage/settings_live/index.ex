@@ -195,7 +195,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
     settings = Settings.get_by_id!(socket.assigns.settings.id, actor: member, tenant: member.organisation_id)
     allergens = Inventory.list_allergens!()
     nutritional_facts = Inventory.list_nutritional_facts!()
-    organisation = Accounts.get_organisation!(socket.assigns.current_member.organisation_id, authorize?: false)
+    organisation = Accounts.get_organisation!(socket.assigns.current_member.organisation_id, authorize?: false, load: [:address])
 
     socket =
       socket
