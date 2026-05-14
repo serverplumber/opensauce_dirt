@@ -38,6 +38,23 @@ defmodule OpenSauce.Inventory do
       define :update_supplier, action: :update
     end
 
+    resource OpenSauce.Inventory.SupplierCatalogue do
+      define :list_supplier_catalogues, action: :list
+      define :get_supplier_catalogue_by_id, action: :read, get_by: [:id]
+      define :create_supplier_catalogue, action: :create
+      define :update_supplier_catalogue, action: :update
+      define :delete_supplier_catalogue, action: :destroy
+    end
+
+    resource OpenSauce.Inventory.SupplierCatalogueItem do
+      define :list_supplier_catalogue_items, action: :list
+      define :search_supplier_catalogue_items, action: :search, args: [:query]
+      define :get_supplier_catalogue_item_by_id, action: :read, get_by: [:id]
+      define :create_supplier_catalogue_item, action: :create
+      define :update_supplier_catalogue_item, action: :update
+      define :delete_supplier_catalogue_item, action: :destroy
+    end
+
     resource OpenSauce.Inventory.PurchaseOrder do
       define :get_purchase_order_by_id, action: :read, get_by: [:id]
       define :get_purchase_order_by_reference, action: :read, get_by: [:reference]

@@ -35,11 +35,33 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
 
     create :create do
       primary? true
-      accept [:purchase_order_id, :material_id, :quantity, :unit_price]
+
+      accept [
+        :purchase_order_id,
+        :supplier_catalogue_item_id,
+        :material_id,
+        :supplier_sku,
+        :quantity,
+        :unit_price,
+        :is_reservation
+      ]
     end
 
     update :update do
-      accept [:quantity, :unit_price]
+      accept [:quantity, :unit_price, :is_reservation, :material_id]
+    end
+
+    # Called when supplier confirms availability and sets items aside.
+    # confirmed_qty may be less than quantity if they are short.
+    update :confirm do
+      accept [:confirmed_qty, :unit_price]
+    end
+
+    # Called at pickup/receipt. received_qty reflects cherry-pick outcome —
+    # she may take fewer than confirmed (passed on a specimen) or a damaged
+    # one at a negotiated price.
+    update :receive do
+      accept [:received_qty, :unit_price]
     end
   end
 
@@ -56,13 +78,49 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
   attributes do
     uuid_primary_key :id
 
+    # Supplier's SKU, copied from catalogue item at PO build time so it is
+    # stable even if the catalogue entry changes later.
+    attribute :supplier_sku, :string do
+      allow_nil? false
+      public? true
+      constraints min_length: 1
+    end
+
+    # Requested quantity on the PO as sent to the supplier.
     attribute :quantity, :decimal do
       allow_nil? false
-      default 0
+      default 1
+      constraints min: 0
+    end
+
+    # Quantity supplier confirmed they have and set aside.
+    # Nil until supplier responds. May be less than quantity.
+    attribute :confirmed_qty, :decimal do
+      allow_nil? true
+      public? true
+      constraints min: 0
+    end
+
+    # Quantity actually taken at pickup after cherry-picking.
+    # Nil until received. May be less than confirmed_qty.
+    attribute :received_qty, :decimal do
+      allow_nil? true
+      public? true
+      constraints min: 0
     end
 
     attribute :unit_price, :decimal do
       allow_nil? true
+      public? true
+      constraints min: 0
+    end
+
+    # True for show plants she intends to inspect and cherry-pick individually.
+    # Commodity items (false) are taken as-is in the requested quantity.
+    attribute :is_reservation, :boolean do
+      allow_nil? false
+      public? true
+      default false
     end
 
     timestamps()
@@ -73,8 +131,17 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
       allow_nil? false
     end
 
+    belongs_to :supplier_catalogue_item, OpenSauce.Inventory.SupplierCatalogueItem do
+      allow_nil? true
+      public? true
+      attribute_writable? true
+    end
+
+    # Nullable: may not exist in Material catalog yet when PO is built.
+    # Gets linked when she receives and logs the stock.
     belongs_to :material, OpenSauce.Inventory.Material do
-      allow_nil? false
+      allow_nil? true
+      attribute_writable? true
     end
   end
 end

@@ -118,6 +118,12 @@ defmodule OpenSauce.Settings.Settings do
       default 0
     end
 
+    # TODO(polish): workshop labor is a period cost, not tracked per plant. Hours
+    # are spent tending all stock at a venue collectively, not per batch or per
+    # plant. Proper model: use Shift hours per venue, amortize total shift cost
+    # (hours × rate) across all lots at that venue in the period — same pattern
+    # as electricity. Current BOM labor steps assume discrete per-batch attribution
+    # which doesn't match this workflow.
     attribute :labor_hourly_rate, :decimal do
       public? true
       allow_nil? false
@@ -126,6 +132,11 @@ defmodule OpenSauce.Settings.Settings do
       description "Default hourly labor rate used for cost calculations."
     end
 
+    # TODO(polish): electricity is a period cost, not a variable input — workshop
+    # lights run continuously regardless of active labor, so it doesn't scale with
+    # hours. Proper model: add `electricity_monthly` here and at batch cost-snapshot
+    # time amortize it (month's electricity ÷ total batches that month). For now it
+    # is folded into labor_overhead_percent as an approximation.
     attribute :labor_overhead_percent, :decimal do
       public? true
       allow_nil? false

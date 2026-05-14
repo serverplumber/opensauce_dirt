@@ -1,4 +1,4 @@
 defmodule OpenSauce.Inventory.PurchaseOrder.Types.Status do
   @moduledoc false
-  use Ash.Type.Enum, values: [:draft, :ordered, :received]
+  use Ash.Type.Enum, values: [:draft, :ordered, :confirmed, :received]
 end

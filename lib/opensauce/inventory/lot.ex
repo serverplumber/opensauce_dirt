@@ -6,7 +6,7 @@ defmodule OpenSauce.Inventory.Lot do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshJsonApi.Resource, AshGraphql.Resource],
-    fragments: [OpenSauce.Concerns.Multitenanted]
+    fragments: [OpenSauce.Concerns.Multitenanted, OpenSauce.Concerns.Venued]
 
   json_api do
     type "lot"
@@ -42,8 +42,8 @@ defmodule OpenSauce.Inventory.Lot do
     defaults [
       :read,
       :destroy,
-      create: [:lot_code, :expiry_date, :received_at, :material_id, :supplier_id],
-      update: [:lot_code, :expiry_date, :received_at, :supplier_id]
+      create: [:lot_code, :expiry_date, :received_at, :material_id, :supplier_id, :venue_id],
+      update: [:lot_code, :expiry_date, :received_at, :supplier_id, :venue_id]
     ]
 
     read :available_for_material do
