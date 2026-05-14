@@ -51,6 +51,27 @@ defmodule OpenSauce.Orders do
       define :list_allocations_for_batch, action: :for_batch
     end
 
+    resource OpenSauce.Orders.Job do
+      define :list_jobs, action: :list
+      define :list_upcoming_jobs, action: :upcoming
+      define :get_job_by_id, action: :read, get_by: [:id]
+      define :create_job, action: :create
+      define :update_job, action: :update
+      define :destroy_job, action: :destroy
+    end
+
+    resource OpenSauce.Orders.JobEvent do
+      define :log_job_event, action: :log
+      define :list_job_events, action: :for_job, args: [:job_id]
+    end
+
+    resource OpenSauce.Orders.JobMaterial do
+      define :list_job_materials, action: :read
+      define :create_job_material, action: :create
+      define :update_job_material, action: :update
+      define :destroy_job_material, action: :destroy
+    end
+
     resource OpenSauce.Orders.ProductionBatchLot do
       define :create_production_batch_lot, action: :create
       define :list_production_batch_lots, action: :read
