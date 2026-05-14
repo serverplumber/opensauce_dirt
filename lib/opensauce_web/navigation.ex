@@ -62,8 +62,6 @@ defmodule OpenSauceWeb.Navigation do
   defp settings_active?(:general, socket), do: live_action(socket) in [:index, :general]
   defp settings_active?(slug, socket), do: live_action(socket) == slug
   def settings_general_active?(socket), do: settings_active?(:general, socket)
-  def settings_allergens_active?(socket), do: settings_active?(:allergens, socket)
-  def settings_nutrition_active?(socket), do: settings_active?(:nutritional_facts, socket)
   def settings_csv_active?(socket), do: settings_active?(:csv, socket)
   def settings_api_keys_active?(socket), do: settings_active?(:api_keys, socket)
   def settings_calendar_feed_active?(socket), do: settings_active?(:calendar_feed, socket)
@@ -98,13 +96,6 @@ defmodule OpenSauceWeb.Navigation do
     %{label: name, path: ~p"/manage/inventory/#{sku}"}
   end
 
-  def crumb_material_allergens(material) do
-    %{label: "Allergens", path: ~p"/manage/inventory/#{material.sku}/allergens"}
-  end
-
-  def crumb_material_nutrition(material) do
-    %{label: "Nutrition", path: ~p"/manage/inventory/#{material.sku}/nutritional_facts"}
-  end
 
   def crumb_material_stock(material) do
     %{label: "Stock", path: ~p"/manage/inventory/#{material.sku}/stock"}
@@ -183,8 +174,6 @@ defmodule OpenSauceWeb.Navigation do
           forecast: %{label: "Usage Forecast", path: "/manage/inventory/forecast"},
           reorder: %{label: "Reorder Planner", path: "/manage/inventory/forecast/reorder"},
           material: &__MODULE__.crumb_material/1,
-          material_allergens: &__MODULE__.crumb_material_allergens/1,
-          material_nutrition: &__MODULE__.crumb_material_nutrition/1,
           material_stock: &__MODULE__.crumb_material_stock/1
         },
         sub_links: [
@@ -260,11 +249,6 @@ defmodule OpenSauceWeb.Navigation do
         path: "/manage/settings",
         pages: %{
           general: %{label: "General Settings", path: "/manage/settings/general"},
-          allergens: %{label: "Allergens", path: "/manage/settings/allergens"},
-          nutritional_facts: %{
-            label: "Nutritional Facts",
-            path: "/manage/settings/nutritional_facts"
-          },
           csv: %{label: "Import & Export", path: "/manage/settings/csv"},
           api_keys: %{label: "API Keys", path: "/manage/settings/api_keys"},
           calendar_feed: %{label: "Calendar Feed", path: "/manage/settings/calendar"},
@@ -276,18 +260,6 @@ defmodule OpenSauceWeb.Navigation do
             label: "General",
             navigate: "/manage/settings/general",
             active?: &__MODULE__.settings_general_active?/1
-          },
-          %{
-            key: :allergens,
-            label: "Allergens",
-            navigate: "/manage/settings/allergens",
-            active?: &__MODULE__.settings_allergens_active?/1
-          },
-          %{
-            key: :nutritional_facts,
-            label: "Nutritional Facts",
-            navigate: "/manage/settings/nutritional_facts",
-            active?: &__MODULE__.settings_nutrition_active?/1
           },
           %{
             key: :csv,

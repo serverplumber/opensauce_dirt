@@ -126,8 +126,6 @@ defmodule OpenSauceWeb.Router do
       # Settings Routes
       live "/manage/settings", SettingsLive.Index, :index
       live "/manage/settings/general", SettingsLive.Index, :general
-      live "/manage/settings/allergens", SettingsLive.Index, :allergens
-      live "/manage/settings/nutritional_facts", SettingsLive.Index, :nutritional_facts
       live "/manage/settings/csv", SettingsLive.Index, :csv
       live "/manage/settings/api_keys", SettingsLive.Index, :api_keys
       live "/manage/settings/calendar", SettingsLive.Index, :calendar_feed
@@ -156,7 +154,6 @@ defmodule OpenSauceWeb.Router do
       live "/manage/products/:sku", ProductLive.Show, :show
       live "/manage/products/:sku/details", ProductLive.Show, :details
       live "/manage/products/:sku/recipe", ProductLive.Show, :recipe
-      live "/manage/products/:sku/nutrition", ProductLive.Show, :nutrition
       live "/manage/products/:sku/photos", ProductLive.Show, :photos
       live "/manage/products/:sku/edit", ProductLive.Show, :edit
       live "/manage/products/:sku/label", ProductLive.Label, :label
@@ -168,8 +165,6 @@ defmodule OpenSauceWeb.Router do
       live "/manage/inventory/new", InventoryLive.Index, :new
       live "/manage/inventory/:sku", InventoryLive.Show, :show
       live "/manage/inventory/:sku/details", InventoryLive.Show, :details
-      live "/manage/inventory/:sku/allergens", InventoryLive.Show, :allergens
-      live "/manage/inventory/:sku/nutritional_facts", InventoryLive.Show, :nutritional_facts
       live "/manage/inventory/:sku/stock", InventoryLive.Show, :stock
       live "/manage/inventory/:sku/edit", InventoryLive.Show, :edit
       live "/manage/inventory/:sku/adjust", InventoryLive.Show, :adjust

@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Accounts
-  alias OpenSauce.Inventory
   alias OpenSauce.Settings
   alias OpenSauceWeb.Navigation
 
@@ -41,28 +40,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
           </div>
 
           <aside class="lg:w-64"></aside>
-        </div>
-      </div>
-
-      <div :if={@live_action == :allergens}>
-        <div>
-          <.live_component
-            module={OpenSauceWeb.SettingsLive.AllergensComponent}
-            id="allergens-component"
-            current_member={@current_member}
-            allergens={@allergens}
-          />
-        </div>
-      </div>
-
-      <div :if={@live_action == :nutritional_facts}>
-        <div>
-          <.live_component
-            module={OpenSauceWeb.SettingsLive.NutritionalFactsComponent}
-            id="nutritional-facts-component"
-            current_member={@current_member}
-            nutritional_facts={@nutritional_facts}
-          />
         </div>
       </div>
 
@@ -193,15 +170,11 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   def mount(_params, _session, socket) do
     member = socket.assigns.current_member
     settings = Settings.get_by_id!(socket.assigns.settings.id, actor: member, tenant: member.organisation_id)
-    allergens = Inventory.list_allergens!()
-    nutritional_facts = Inventory.list_nutritional_facts!()
     organisation = Accounts.get_organisation!(socket.assigns.current_member.organisation_id, authorize?: false, load: [:address])
 
     socket =
       socket
       |> assign(:settings, settings)
-      |> assign(:allergens, allergens)
-      |> assign(:nutritional_facts, nutritional_facts)
       |> assign(:organisation, organisation)
       |> assign(:csv_form, to_form(%{}))
       |> assign(:csv_export_form, to_form(%{}))
@@ -248,14 +221,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
     assign(socket, :page_title, "General Settings")
   end
 
-  defp apply_action(socket, :allergens, _params) do
-    assign(socket, :page_title, "Allergens Settings")
-  end
-
-  defp apply_action(socket, :nutritional_facts, _params) do
-    assign(socket, :page_title, "Nutritional Facts Settings")
-  end
-
   defp apply_action(socket, :csv, _params) do
     assign(socket, :page_title, "Import & Export")
   end
@@ -279,14 +244,14 @@ defmodule OpenSauceWeb.SettingsLive.Index do
         label: "Products",
         icon: "hero-cube-solid",
         description: "Import product SKUs, base pricing, and default production info.",
-        includes: "Names, SKUs, pricing, packaging, allergens"
+        includes: "Names, SKUs, pricing, packaging, packaging"
       },
       %{
         value: "materials",
         label: "Materials",
         icon: "hero-archive-box-solid",
         description: "Bulk load raw materials so recipes and inventory stay accurate.",
-        includes: "Names, suppliers, units, cost, allergen tags"
+        includes: "Names, suppliers, units, cost, units, cost"
       },
       %{
         value: "customers",
@@ -299,11 +264,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   end
 
   defp settings_trail(:general), do: [Navigation.root(:settings), Navigation.page(:settings, :general)]
-
-  defp settings_trail(:allergens), do: [Navigation.root(:settings), Navigation.page(:settings, :allergens)]
-
-  defp settings_trail(:nutritional_facts),
-    do: [Navigation.root(:settings), Navigation.page(:settings, :nutritional_facts)]
 
   defp settings_trail(:csv), do: [Navigation.root(:settings), Navigation.page(:settings, :csv)]
 
@@ -329,18 +289,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   @impl true
   def handle_info({OpenSauceWeb.SettingsLive.OrgFormComponent, {:saved, organisation}}, socket) do
     {:noreply, assign(socket, :organisation, organisation)}
-  end
-
-  @impl true
-  def handle_info({:saved_allergens, _id}, socket) do
-    allergens = Inventory.list_allergens!()
-    {:noreply, assign(socket, :allergens, allergens)}
-  end
-
-  @impl true
-  def handle_info({:saved_nutritional_facts, _id}, socket) do
-    nutritional_facts = Inventory.list_nutritional_facts!()
-    {:noreply, assign(socket, :nutritional_facts, nutritional_facts)}
   end
 
   @impl true

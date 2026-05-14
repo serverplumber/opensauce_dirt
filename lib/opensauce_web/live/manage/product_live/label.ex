@@ -33,13 +33,6 @@ defmodule OpenSauceWeb.ProductLive.Label do
         </ul>
       </div>
 
-      <div :if={@allergens != []} class="mb-4">
-        <div class="mb-1 text-sm font-medium text-stone-700">Allergens</div>
-        <div class="flex flex-wrap gap-2 text-sm">
-          <.badge :for={a <- @allergens} text={a.name} />
-        </div>
-      </div>
-
       <div class="mt-6 flex justify-end print:hidden">
         <.button variant={:primary} onclick="window.print()">Print</.button>
       </div>
@@ -55,7 +48,6 @@ defmodule OpenSauceWeb.ProductLive.Label do
         load: [
           :name,
           :sku,
-          :allergens,
           active_bom: [components: [:component_type, material: [:name]]]
         ],
         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
@@ -81,7 +73,7 @@ defmodule OpenSauceWeb.ProductLive.Label do
           nil
 
         b ->
-          Ash.load!(b, [components: [:component_type, material: [:name, allergens: [:name]]]],
+          Ash.load!(b, [components: [:component_type, material: [:name]]],
             actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
           )
       end
@@ -101,16 +93,6 @@ defmodule OpenSauceWeb.ProductLive.Label do
      socket
      |> assign(:product, product)
      |> assign(:ingredients, ingredients)
-     |> assign(
-       :allergens,
-       (product.allergens != [] && product.allergens) ||
-         (bom_for_label &&
-            bom_for_label.components
-            |> Enum.filter(&(&1.component_type == :material))
-            |> Enum.flat_map(fn c -> Map.get(c.material, :allergens, []) end)
-            |> Enum.uniq_by(& &1.name)
-            |> Enum.sort_by(& &1.name)) || []
-     )
      |> assign(:today, Date.utc_today())}
   end
 

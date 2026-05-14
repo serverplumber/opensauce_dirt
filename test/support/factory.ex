@@ -7,9 +7,7 @@ defmodule OpenSauce.Test.Factory do
   alias OpenSauce.Catalog.BOM
   alias OpenSauce.Catalog.Product
   alias OpenSauce.CRM.Customer
-  alias OpenSauce.Inventory.Allergen
   alias OpenSauce.Inventory.Material
-  alias OpenSauce.Inventory.MaterialAllergen
   alias OpenSauce.Orders.Order
 
   defp staff_actor, do: OpenSauce.DataCase.staff_actor()
@@ -46,17 +44,6 @@ defmodule OpenSauce.Test.Factory do
     |> Ash.create!(actor: actor)
   end
 
-  def add_allergen!(material, name \\ "Gluten", actor \\ staff_actor()) do
-    allergen =
-      Allergen |> Ash.Changeset.for_create(:create, %{name: name}) |> Ash.create!(actor: actor)
-
-    _ =
-      MaterialAllergen
-      |> Ash.Changeset.for_create(:create, %{material_id: material.id, allergen_id: allergen.id})
-      |> Ash.create!(actor: actor)
-
-    Ash.reload!(material, load: [:allergens])
-  end
 
   # Legacy name kept for compatibility: creates a BOM instead
   def create_recipe!(product, components, actor \\ staff_actor()) do

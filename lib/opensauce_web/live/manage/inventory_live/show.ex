@@ -39,21 +39,6 @@ defmodule OpenSauceWeb.InventoryLive.Show do
           <:item title="Price">
             {format_money(@settings.currency, @material.price)}
           </:item>
-          <:item title="Allergens">
-            <div class="flex-inline items-center space-x-1">
-              <.badge :for={allergen <- Enum.map(@material.allergens, & &1.name)} text={allergen} />
-              <span :if={Enum.empty?(@material.allergens)}>None</span>
-            </div>
-          </:item>
-          <:item title="Nutrition">
-            <div class="flex-inline items-center space-x-1">
-              <.badge
-                :for={fact <- @material.material_nutritional_facts}
-                text={"#{fact.nutritional_fact.name}: #{fact.amount} #{fact.unit}"}
-              />
-              <span :if={Enum.empty?(@material.material_nutritional_facts)}>None</span>
-            </div>
-          </:item>
           <:item title="Current Stock">
             {format_amount(@material.unit, @material.current_stock)}
           </:item>
@@ -84,30 +69,6 @@ defmodule OpenSauceWeb.InventoryLive.Show do
             <:col :let={poi} label="Status">{poi.purchase_order.status}</:col>
           </.table>
         </div>
-      </.tabs_content>
-
-      <.tabs_content :if={@live_action == :allergens}>
-        <.live_component
-          module={OpenSauceWeb.InventoryLive.FormComponentAllergens}
-          id="material-allergens-form"
-          material={@material}
-          current_member={@current_member}
-          settings={@settings}
-          patch={~p"/manage/inventory/#{@material.sku}/allergens"}
-          allergens={@allergens_available}
-        />
-      </.tabs_content>
-
-      <.tabs_content :if={@live_action == :nutritional_facts}>
-        <.live_component
-          module={OpenSauceWeb.InventoryLive.FormComponentNutritionalFacts}
-          id="material-nutritional-facts-form"
-          material={@material}
-          current_member={@current_member}
-          settings={@settings}
-          patch={~p"/manage/inventory/#{@material.sku}/nutritional_facts"}
-          nutritional_facts={@nutritional_facts_available}
-        />
       </.tabs_content>
 
       <.tabs_content :if={@live_action == :stock}>
@@ -172,38 +133,19 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   end
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(
-       :allergens_available,
-       Inventory.list_allergens!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
-     )
-     |> assign(
-       :nutritional_facts_available,
-       Inventory.list_nutritional_facts!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
-     )}
-  end
-
-  @impl true
   def handle_params(%{"sku" => sku}, _, socket) do
     material =
       Inventory.get_material_by_sku!(sku,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [
-          :current_stock,
-          :movements,
-          :allergens,
-          :material_allergens,
-          :nutritional_facts,
-          material_nutritional_facts: [:nutritional_fact]
-        ]
+        actor: socket.assigns.current_member,
+        tenant: socket.assigns.current_member.organisation_id,
+        load: [:current_stock, :movements]
       )
 
     open_po_items =
       Inventory.list_open_po_items_for_material!(
         %{material_id: material.id},
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
+        actor: socket.assigns.current_member,
+        tenant: socket.assigns.current_member.organisation_id
       )
 
     live_action = socket.assigns.live_action
@@ -213,16 +155,6 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         label: "Details",
         navigate: ~p"/manage/inventory/#{material.sku}/details",
         active: live_action in [:details, :show]
-      },
-      %{
-        label: "Allergens",
-        navigate: ~p"/manage/inventory/#{material.sku}/allergens",
-        active: live_action == :allergens
-      },
-      %{
-        label: "Nutrition",
-        navigate: ~p"/manage/inventory/#{material.sku}/nutritional_facts",
-        active: live_action == :nutritional_facts
       },
       %{
         label: "Stock",
@@ -241,103 +173,29 @@ defmodule OpenSauceWeb.InventoryLive.Show do
     {:noreply, Navigation.assign(socket, :inventory, material_trail(material, live_action))}
   end
 
-  # helper functions removed; calls now pass actor explicitly in mount
-
-  @impl true
-  def handle_info({:saved_nutritional_facts, material_id}, socket) do
-    material =
-      Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [
-          :current_stock,
-          :movements,
-          :allergens,
-          :material_allergens,
-          :nutritional_facts,
-          material_nutritional_facts: [:nutritional_fact]
-        ]
-      )
-
-    {:noreply, assign(socket, :material, material)}
-  end
-
-  @impl true
-  def handle_info({:saved_allergens, material_id}, socket) do
-    material =
-      Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [
-          :current_stock,
-          :movements,
-          :allergens,
-          :material_allergens,
-          :nutritional_facts,
-          material_nutritional_facts: [:nutritional_fact]
-        ]
-      )
-
-    {:noreply, assign(socket, :material, material)}
-  end
-
   @impl true
   def handle_info({:saved, %Inventory.Movement{material_id: material_id}}, socket) do
-    material =
-      Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [
-          :current_stock,
-          :movements,
-          :allergens,
-          :material_allergens,
-          :nutritional_facts,
-          material_nutritional_facts: [:nutritional_fact]
-        ]
-      )
-
-    {:noreply, assign(socket, :material, material)}
+    {:noreply, assign(socket, :material, reload_material(material_id, socket))}
   end
 
   @impl true
   def handle_info({:saved, %Inventory.Material{id: material_id}}, socket) do
-    material =
-      Inventory.get_material_by_id!(material_id,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [
-          :current_stock,
-          :movements,
-          :allergens,
-          :material_allergens,
-          :nutritional_facts,
-          material_nutritional_facts: [:nutritional_fact]
-        ]
-      )
+    {:noreply, assign(socket, :material, reload_material(material_id, socket))}
+  end
 
-    {:noreply, assign(socket, :material, material)}
+  defp reload_material(material_id, socket) do
+    Inventory.get_material_by_id!(material_id,
+      actor: socket.assigns.current_member,
+      tenant: socket.assigns.current_member.organisation_id,
+      load: [:current_stock, :movements]
+    )
   end
 
   defp page_title(:show), do: "Show Material"
   defp page_title(:adjust), do: "Adjust Material"
   defp page_title(:edit), do: "Edit Material"
   defp page_title(:details), do: "Material Details"
-  defp page_title(:allergens), do: "Material Allergens"
-  defp page_title(:nutritional_facts), do: "Material Nutrition"
   defp page_title(:stock), do: "Material Stock"
-
-  defp material_trail(material, :allergens) do
-    [
-      Navigation.root(:inventory),
-      Navigation.resource(:material, material),
-      Navigation.page(:inventory, :material_allergens, material)
-    ]
-  end
-
-  defp material_trail(material, :nutritional_facts) do
-    [
-      Navigation.root(:inventory),
-      Navigation.resource(:material, material),
-      Navigation.page(:inventory, :material_nutrition, material)
-    ]
-  end
 
   defp material_trail(material, :stock) do
     [

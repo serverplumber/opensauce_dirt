@@ -8,9 +8,6 @@ defmodule OpenSauce.Inventory.Material do
     extensions: [AshJsonApi.Resource, AshGraphql.Resource],
     fragments: [OpenSauce.Concerns.Multitenanted]
 
-  alias OpenSauce.Inventory.MaterialAllergen
-  alias OpenSauce.Inventory.MaterialNutritionalFact
-
   json_api do
     type "material"
 
@@ -70,22 +67,6 @@ defmodule OpenSauce.Inventory.Material do
       ]
 
       change OpenSauce.Inventory.Changes.RefreshAffectedBomRollups
-    end
-
-    update :update_allergens do
-      require_atomic? false
-
-      argument :material_allergens, {:array, :map}
-
-      change manage_relationship(:material_allergens, type: :direct_control)
-    end
-
-    update :update_nutritional_facts do
-      require_atomic? false
-
-      argument :material_nutritional_facts, {:array, :map}
-
-      change manage_relationship(:material_nutritional_facts, type: :direct_control)
     end
 
     read :list do
@@ -166,13 +147,6 @@ defmodule OpenSauce.Inventory.Material do
 
   relationships do
     has_many :movements, OpenSauce.Inventory.Movement
-    has_many :material_allergens, MaterialAllergen
-    has_many :material_nutritional_facts, MaterialNutritionalFact
-    # Recipes removed
-
-    many_to_many :allergens, OpenSauce.Inventory.Allergen, through: MaterialAllergen
-
-    many_to_many :nutritional_facts, OpenSauce.Inventory.NutritionalFact, through: MaterialNutritionalFact
   end
 
   aggregates do

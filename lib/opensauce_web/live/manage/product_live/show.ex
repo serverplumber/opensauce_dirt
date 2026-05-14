@@ -47,13 +47,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
             </.kbd>
           </:item>
 
-          <:item title="Allergens">
-            <div class="flex-inline items-center space-x-1">
-              <.badge :for={allergen <- Enum.map(@product.allergens, & &1.name)} text={allergen} />
-              <span :if={Enum.empty?(@product.allergens)}>None</span>
-            </div>
-          </:item>
-
           <:item title="Price">
             {format_money(@settings.currency, @product.price)}
           </:item>
@@ -117,19 +110,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
         />
       </.tabs_content>
 
-      <.tabs_content :if={@live_action == :nutrition}>
-        <div>
-          <h3 class="my-4 text-lg font-medium">Nutritional Facts</h3>
-          <p class="mb-4 text-sm text-stone-500">
-            The nutritional information is automatically calculated from your recipe components.
-          </p>
-        </div>
-        <.table id="nutritional-facts" rows={@product.nutritional_facts}>
-          <:col :let={fact} label="Nutrient">{fact.name}</:col>
-          <:col :let={fact} label="Amount">{format_amount(fact.unit, fact.amount)}</:col>
-        </.table>
-      </.tabs_content>
-
       <.tabs_content :if={@live_action == :photos}>
         <.live_component
           module={OpenSauceWeb.ProductLive.FormComponentPhotos}
@@ -183,8 +163,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
           :markup_percentage,
           :gross_profit,
           :materials_cost,
-          :allergens,
-          :nutritional_facts,
           :bom_unit_cost,
           active_bom: [:rollup, components: [:material, :product], labor_steps: []]
         ]
@@ -216,11 +194,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
         active: live_action == :recipe
       },
       %{
-        label: "Nutrition",
-        navigate: ~p"/manage/products/#{product.sku}/nutrition",
-        active: live_action == :nutrition
-      },
-      %{
         label: "Photos",
         navigate: ~p"/manage/products/#{product.sku}/photos",
         active: live_action == :photos
@@ -247,7 +220,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
           :markup_percentage,
           :materials_cost,
           :gross_profit,
-          :nutritional_facts,
           :bom_unit_cost,
           active_bom: [components: [:material, :product], labor_steps: []]
         ]
@@ -267,8 +239,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
           :markup_percentage,
           :materials_cost,
           :gross_profit,
-          :nutritional_facts,
-          :allergens,
           :bom_unit_cost,
           active_bom: [components: [:material, :product], labor_steps: []]
         ],
@@ -289,8 +259,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
           :markup_percentage,
           :materials_cost,
           :gross_profit,
-          :nutritional_facts,
-          :allergens,
           :bom_unit_cost
         ],
         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
@@ -338,16 +306,6 @@ defmodule OpenSauceWeb.ProductLive.Show do
         base ++
           [
             %{label: "Recipe", path: ~p"/manage/products/#{product.sku}/recipe", current?: true}
-          ]
-
-      :nutrition ->
-        base ++
-          [
-            %{
-              label: "Nutrition",
-              path: ~p"/manage/products/#{product.sku}/nutrition",
-              current?: true
-            }
           ]
 
       :photos ->

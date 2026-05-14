@@ -203,11 +203,6 @@ defmodule OpenSauce.Catalog.Product do
       description "The profit amount calculated as selling price minus unit cost"
     end
 
-    calculate :allergens, :vector, OpenSauce.Catalog.Product.Calculations.Allergens
-
-    calculate :nutritional_facts,
-              :vector,
-              OpenSauce.Catalog.Product.Calculations.NutritionalFacts
   end
 
   identities do
