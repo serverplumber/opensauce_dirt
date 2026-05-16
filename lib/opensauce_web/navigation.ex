@@ -55,6 +55,9 @@ defmodule OpenSauceWeb.Navigation do
   def purchasing_orders_active?(socket), do: socket.view in [Index, Show]
   def purchasing_suppliers_active?(socket), do: socket.view == Suppliers
 
+  # Jobs nav helpers
+  def jobs_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/jobs")
+
   # Venues nav helpers
   def venues_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/venues")
 
@@ -224,6 +227,14 @@ defmodule OpenSauceWeb.Navigation do
             active?: &__MODULE__.purchasing_suppliers_active?/1
           }
         ]
+      },
+      jobs: %{
+        label: "Jobs",
+        path: "/manage/jobs",
+        pages: %{
+          new_job: %{label: "New Job", path: "/manage/jobs/new"}
+        },
+        sub_links: []
       },
       customers: %{
         label: "Customers",

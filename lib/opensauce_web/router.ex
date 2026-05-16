@@ -117,6 +117,11 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette
       ] do
+      # Job Routes
+      live "/manage/jobs", JobLive.Index, :index
+      live "/manage/jobs/new", JobLive.Index, :new
+      live "/manage/jobs/:id/edit", JobLive.Index, :edit
+
       # Venue Routes
       live "/manage/venues", VenueLive.Index, :index
       live "/manage/venues/new", VenueLive.Index, :new

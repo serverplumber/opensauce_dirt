@@ -353,6 +353,15 @@ defmodule OpenSauceWeb.Layouts do
             d="M9 12l2 2 4-4m4 10H5a2 2 0 01-2-2V6a2 2 0 012-2h11l4 4v12a2 2 0 01-2 2z"
           />
         </svg>
+      <% :jobs -> %>
+        <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
       <% :customers -> %>
         <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -577,6 +586,13 @@ defmodule OpenSauceWeb.Layouts do
         icon: :orders,
         nav_section: :orders,
         prefix: "/manage/orders"
+      },
+      %{
+        label: "Jobs",
+        navigate: ~p"/manage/jobs",
+        icon: :jobs,
+        nav_section: :jobs,
+        prefix: "/manage/jobs"
       },
       %{
         label: "Customers",

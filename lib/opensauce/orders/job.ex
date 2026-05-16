@@ -51,6 +51,7 @@ defmodule OpenSauce.Orders.Job do
         :scheduled_at,
         :estimated_duration_minutes,
         :status,
+        :invoiced,
         :notes
       ]
     end
@@ -92,6 +93,12 @@ defmodule OpenSauce.Orders.Job do
       public? true
       default :scheduled
       constraints one_of: [:scheduled, :completed, :cancelled]
+    end
+
+    attribute :invoiced, :boolean do
+      allow_nil? false
+      public? true
+      default false
     end
 
     attribute :notes, :string do
