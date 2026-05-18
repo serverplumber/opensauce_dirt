@@ -56,14 +56,22 @@ defmodule OpenSauceWeb.JobLive.Index do
       </:col>
 
       <:col :let={job} label="Status">
-        <.badge
-          text={job.status}
-          colors={[
-            {:scheduled, "text-blue-700 bg-blue-50"},
-            {:completed, "text-green-700 bg-green-50"},
-            {:cancelled, "text-stone-500 bg-stone-100"}
-          ]}
-        />
+        <button
+          phx-click="open_event_log"
+          phx-value-id={job.id}
+          class="cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+          title="Log event or change status"
+        >
+          <.badge
+            text={job.status}
+            colors={[
+              {:scheduled, "text-blue-700 bg-blue-50"},
+              {:in_progress, "text-amber-700 bg-amber-50"},
+              {:completed, "text-green-700 bg-green-50"},
+              {:cancelled, "text-stone-500 bg-stone-100"}
+            ]}
+          />
+        </button>
       </:col>
 
       <:col :let={job} label="Invoiced">
@@ -98,12 +106,28 @@ defmodule OpenSauceWeb.JobLive.Index do
         patch={~p"/manage/jobs"}
       />
     </.modal>
+
+    <.modal
+      :if={@event_log_job != nil}
+      id="event-log-modal"
+      title={"Log event — #{event_log_title(@event_log_job)}"}
+      show
+      on_cancel={JS.push("close_event_log")}
+    >
+      <.live_component
+        module={OpenSauceWeb.JobLive.EventLogComponent}
+        id={"event-log-#{@event_log_job.id}"}
+        job={@event_log_job}
+        events={@event_log_events}
+        current_member={@current_member}
+      />
+    </.modal>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, load_jobs(socket)}
+    {:ok, socket |> assign(event_log_job: nil, event_log_events: []) |> load_jobs()}
   end
 
   @impl true
@@ -147,6 +171,51 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
+  def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:event_logged, event}}, socket) do
+    member = socket.assigns.current_member
+    job = socket.assigns.event_log_job
+
+    if event.data.type == :arrival && job.status == :scheduled do
+      Orders.mark_job_in_progress(job, actor: member, tenant: member.organisation_id)
+    end
+
+    {:noreply, socket |> assign(event_log_job: nil, event_log_events: []) |> load_jobs()}
+  end
+
+  @impl true
+  def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:status_changed, status}}, socket) do
+    member = socket.assigns.current_member
+    job = socket.assigns.event_log_job
+    opts = [actor: member, tenant: member.organisation_id]
+
+    case status do
+      :completed -> Orders.complete_job(job, opts)
+      :cancelled -> Orders.cancel_job(job, opts)
+    end
+
+    {:noreply, socket |> assign(event_log_job: nil, event_log_events: []) |> load_jobs()}
+  end
+
+  @impl true
+  def handle_event("open_event_log", %{"id" => id}, socket) do
+    member = socket.assigns.current_member
+    job = Enum.find(socket.assigns.jobs, &(&1.id == id))
+
+    events =
+      Orders.list_job_events!(job.id,
+        actor: member,
+        tenant: member.organisation_id
+      )
+
+    {:noreply, assign(socket, event_log_job: job, event_log_events: events)}
+  end
+
+  @impl true
+  def handle_event("close_event_log", _params, socket) do
+    {:noreply, assign(socket, event_log_job: nil, event_log_events: [])}
+  end
+
+  @impl true
   def handle_event("toggle_invoiced", %{"id" => id}, socket) do
     member = socket.assigns.current_member
 
@@ -172,10 +241,16 @@ defmodule OpenSauceWeb.JobLive.Index do
       Orders.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
-        load: [:customer, :address]
+        load: [:customer, :address, :actual_duration_minutes]
       )
 
     assign(socket, :jobs, jobs)
+  end
+
+  defp event_log_title(job) do
+    site = site_label(job)
+    customer = customer_label(job.customer)
+    if customer == "", do: site, else: "#{site} · #{customer}"
   end
 
   defp site_label(%{address: nil}), do: "No site set"
@@ -191,15 +266,18 @@ defmodule OpenSauceWeb.JobLive.Index do
       else: "#{c.first_name} #{c.last_name}"
   end
 
-  # Planned (scheduled): shown in parentheses like accounting negative
-  defp job_duration(%{status: :scheduled, estimated_duration_minutes: nil}), do: "—"
-  defp job_duration(%{status: :scheduled, estimated_duration_minutes: min}) do
+  # Actual duration from events always wins when available (any status).
+  defp job_duration(%{actual_duration_minutes: actual}) when is_integer(actual) do
+    format_minutes(actual)
+  end
+
+  # Planned estimate: parenthesised for scheduled (accounting-negative style).
+  defp job_duration(%{status: :scheduled, estimated_duration_minutes: min}) when is_integer(min) do
     "(#{format_minutes(min)})"
   end
 
-  # Completed: show estimated duration as positive (actual from events comes later)
-  defp job_duration(%{status: :completed, estimated_duration_minutes: nil}), do: "—"
-  defp job_duration(%{status: :completed, estimated_duration_minutes: min}) do
+  # Non-scheduled with only an estimate and no actual events yet.
+  defp job_duration(%{estimated_duration_minutes: min}) when is_integer(min) do
     format_minutes(min)
   end
 

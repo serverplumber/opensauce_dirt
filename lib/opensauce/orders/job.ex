@@ -55,6 +55,23 @@ defmodule OpenSauce.Orders.Job do
         :notes
       ]
     end
+
+    # Decoupled status transitions — safe to call from any context.
+    # Arrival events drive mark_in_progress; departure does not auto-complete.
+    update :mark_in_progress do
+      accept []
+      change set_attribute(:status, :in_progress)
+    end
+
+    update :complete do
+      accept []
+      change set_attribute(:status, :completed)
+    end
+
+    update :cancel do
+      accept []
+      change set_attribute(:status, :cancelled)
+    end
   end
 
   policies do
@@ -88,11 +105,20 @@ defmodule OpenSauce.Orders.Job do
       constraints min: 0
     end
 
+    # Status flow:
+    #   :scheduled   — job is planned, no one on site yet
+    #   :in_progress — triggered automatically when an arrival event is logged
+    #   :completed   — manually marked done; ready for invoicing
+    #   :cancelled   — job did not happen
+    # Transitions: :scheduled → :in_progress (on arrival) → :completed | :cancelled
+    #              :scheduled → :cancelled (no-show)
+    # Events (arrival/departure) are append-only and logged independently via JobEvent.
+    # Departure does NOT auto-complete the job — must be marked complete explicitly.
     attribute :status, :atom do
       allow_nil? false
       public? true
       default :scheduled
-      constraints one_of: [:scheduled, :completed, :cancelled]
+      constraints one_of: [:scheduled, :in_progress, :completed, :cancelled]
     end
 
     attribute :invoiced, :boolean do
@@ -108,6 +134,19 @@ defmodule OpenSauce.Orders.Job do
     end
 
     timestamps()
+  end
+
+  aggregates do
+    # Current odometer baseline: max km logged across all events for this job.
+    # Used as the pre-fill default when logging any event. Generalises as the
+    # business grows — no per-vehicle tracking yet.
+    max :current_odometer_km, :events, :odometer_km
+  end
+
+  calculations do
+    calculate :actual_duration_minutes,
+              :integer,
+              OpenSauce.Orders.Job.Calculations.ActualDurationMinutes
   end
 
   relationships do

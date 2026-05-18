@@ -51,7 +51,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
 
           <div class="flex gap-4">
             <div class="flex-1">
-              <.input field={@form[:scheduled_at]} type="datetime-local" label="Scheduled" />
+              <.input field={@form[:scheduled_at]} type="datetime-local" label="Scheduled" step="1800" />
             </div>
             <div class="w-32">
               <.input

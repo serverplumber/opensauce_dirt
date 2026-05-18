@@ -16,6 +16,9 @@ defmodule OpenSauce.Orders.JobEvent do
     end
   end
 
+  alias OpenSauce.Orders.JobEvent.TagOnly
+  alias OpenSauce.Orders.JobEvent.OdometerData
+
   actions do
     defaults [:read, :destroy]
 
@@ -28,7 +31,7 @@ defmodule OpenSauce.Orders.JobEvent do
 
     create :log do
       primary? true
-      accept [:job_id, :type, :timestamp, :odometer_km, :note, :organisation_id]
+      accept [:job_id, :data, :timestamp, :note, :organisation_id]
     end
   end
 
@@ -45,22 +48,24 @@ defmodule OpenSauce.Orders.JobEvent do
   attributes do
     uuid_primary_key :id
 
-    attribute :type, :atom do
+    attribute :data, :union do
       allow_nil? false
       public? true
-      constraints one_of: [:arrival, :departure]
+
+      constraints types: [
+                    arrival:            [type: OdometerData, tag: :type, tag_value: :arrival],
+                    departure:          [type: OdometerData, tag: :type, tag_value: :departure],
+                    shift_start:        [type: OdometerData, tag: :type, tag_value: :shift_start],
+                    shift_end:          [type: OdometerData, tag: :type, tag_value: :shift_end],
+                    work_session_start: [type: TagOnly,   tag: :type, tag_value: :work_session_start],
+                    work_session_stop:  [type: TagOnly,   tag: :type, tag_value: :work_session_stop]
+                  ]
     end
 
     # User-recorded time of the event, not the insert time.
     attribute :timestamp, :utc_datetime do
       allow_nil? false
       public? true
-    end
-
-    attribute :odometer_km, :decimal do
-      allow_nil? true
-      public? true
-      constraints min: 0
     end
 
     attribute :note, :string do
