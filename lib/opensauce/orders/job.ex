@@ -36,6 +36,7 @@ defmodule OpenSauce.Orders.Job do
         :service_type,
         :customer_id,
         :address_id,
+        :engagement_id,
         :scheduled_at,
         :estimated_duration_minutes,
         :status,
@@ -48,6 +49,7 @@ defmodule OpenSauce.Orders.Job do
       accept [
         :service_type,
         :address_id,
+        :engagement_id,
         :scheduled_at,
         :estimated_duration_minutes,
         :status,
@@ -136,17 +138,14 @@ defmodule OpenSauce.Orders.Job do
     timestamps()
   end
 
-  aggregates do
-    # Current odometer baseline: max km logged across all events for this job.
-    # Used as the pre-fill default when logging any event. Generalises as the
-    # business grows — no per-vehicle tracking yet.
-    max :current_odometer_km, :events, :odometer_km
-  end
-
   calculations do
     calculate :actual_duration_minutes,
               :integer,
               OpenSauce.Orders.Job.Calculations.ActualDurationMinutes
+
+    calculate :materials_cost,
+              :decimal,
+              OpenSauce.Orders.Job.Calculations.MaterialsCost
   end
 
   relationships do
@@ -162,6 +161,19 @@ defmodule OpenSauce.Orders.Job do
       public? true
       attribute_writable? true
       domain OpenSauce.CRM
+    end
+
+    # Informational link to the engagement this job was scoped under.
+    # Optional — jobs can exist without an engagement (one-off pruning, internal work).
+    belongs_to :engagement, OpenSauce.CRM.Engagement do
+      allow_nil? true
+      public? true
+      attribute_writable? true
+      domain OpenSauce.CRM
+    end
+
+    has_many :plants, OpenSauce.Orders.JobPlant do
+      public? true
     end
 
     has_many :events, OpenSauce.Orders.JobEvent do

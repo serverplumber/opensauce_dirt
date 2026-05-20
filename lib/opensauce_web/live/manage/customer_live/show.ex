@@ -45,6 +45,47 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         </div>
       </.tabs_content>
 
+      <.tabs_content :if={@live_action in [:engagements, :new_engagement, :edit_engagement]}>
+        <div class="mt-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Engagements</h3>
+            <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
+              <.button variant={:primary}>New Engagement</.button>
+            </.link>
+          </div>
+
+          <.table
+            id="customer_engagements"
+            rows={@customer.engagements}
+            row_click={fn e -> JS.patch(~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit") end}
+          >
+            <:col :let={e} label="Garden">
+              {if e.garden, do: e.garden.name || "Garden", else: "—"}
+            </:col>
+            <:col :let={e} label="Status">
+              <.badge
+                text={e.status}
+                colors={[{e.status, engagement_status_class(e.status)}]}
+              />
+            </:col>
+            <:col :let={e} label="Install">
+              {format_money(@settings.currency, e.install_price)}
+            </:col>
+            <:col :let={e} label="Annual maintenance">
+              {format_money(@settings.currency, e.maintenance_price_annual)}
+            </:col>
+            <:col :let={e} label="Term">
+              {format_term(e.term_start, e.term_end)}
+            </:col>
+            <:action :let={e}>
+              <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/plants"}>
+                <.button variant={:outline}>Plants</.button>
+              </.link>
+            </:action>
+          </.table>
+        </div>
+      </.tabs_content>
+
       <.tabs_content :if={@live_action == :orders}>
         <div class="mt-6 space-y-4">
           <div class="flex items-center justify-between">
@@ -114,24 +155,89 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         patch={~p"/manage/customers/#{@customer.reference}/details"}
       />
     </.modal>
+
+    <.modal
+      :if={@live_action == :new_engagement}
+      id="engagement-new-modal"
+      title="New Engagement"
+      max_width="max-w-2xl"
+      show
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
+    >
+      <.live_component
+        module={OpenSauceWeb.EngagementLive.FormComponent}
+        id="engagement-new"
+        current_member={@current_member}
+        engagement={nil}
+        customer={@customer}
+        patch={~p"/manage/customers/#{@customer.reference}/engagements"}
+      />
+    </.modal>
+
+    <.modal
+      :if={@live_action == :edit_engagement}
+      id="engagement-edit-modal"
+      title="Edit Engagement"
+      max_width="max-w-2xl"
+      show
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
+    >
+      <.live_component
+        module={OpenSauceWeb.EngagementLive.FormComponent}
+        id={"engagement-#{@engagement && @engagement.id}"}
+        current_member={@current_member}
+        engagement={@engagement}
+        customer={@customer}
+        patch={~p"/manage/customers/#{@customer.reference}/engagements"}
+      />
+    </.modal>
+
+    <.modal
+      :if={@live_action == :engagement_plants}
+      id="engagement-plants-modal"
+      title="Plants"
+      max_width="max-w-3xl"
+      show
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
+    >
+      <.live_component
+        module={OpenSauceWeb.EngagementLive.PlantsComponent}
+        id={"plants-#{@engagement_id}"}
+        engagement_id={@engagement_id}
+        current_member={@current_member}
+        currency={@settings.currency}
+      />
+    </.modal>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, socket |> assign(:engagement, nil) |> assign(:engagement_id, nil)}
   end
 
   @impl true
-  def handle_params(%{"reference" => reference}, _, socket) do
+  def handle_params(%{"reference" => reference} = params, _, socket) do
     customer = load_customer(reference, socket)
     live_action = socket.assigns.live_action
+
+    engagement =
+      if live_action == :edit_engagement do
+        Enum.find(customer.engagements, &(&1.id == params["engagement_id"]))
+      end
+
+    engagement_id = params["engagement_id"]
 
     tabs_links = [
       %{
         label: "Details",
         navigate: ~p"/manage/customers/#{customer.reference}/details",
         active: live_action in [:details, :show, :edit]
+      },
+      %{
+        label: "Engagements",
+        navigate: ~p"/manage/customers/#{customer.reference}/engagements",
+        active: live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_plants]
       },
       %{
         label: "Orders",
@@ -149,6 +255,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       socket
       |> assign(:page_title, page_title(live_action))
       |> assign(:customer, customer)
+      |> assign(:engagement, engagement)
+      |> assign(:engagement_id, engagement_id)
       |> assign(:tabs_links, tabs_links)
 
     {:noreply, Navigation.assign(socket, :customers, customer_trail(customer, live_action))}
@@ -176,6 +284,11 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     {:noreply, assign(socket, :customer, load_customer(customer.reference, socket))}
   end
 
+  def handle_info({OpenSauceWeb.EngagementLive.FormComponent, {:saved, _engagement}}, socket) do
+    customer = load_customer(socket.assigns.customer.reference, socket)
+    {:noreply, assign(socket, :customer, customer)}
+  end
+
   defp load_customer(reference, socket) do
     CRM.get_customer_by_reference!(
       reference,
@@ -187,16 +300,30 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         :total_orders,
         orders: [:total_cost, :total_items],
         billing_address: [:full_address],
-        garden_addresses: [:full_address]
+        garden_addresses: [:name, :short_address, :full_address],
+        engagements: [:total_quoted_value, garden: [:name]]
       ]
     )
   end
 
-  defp page_title(:show), do: "Customer Details"
+  defp page_title(:show), do: "Customer"
   defp page_title(:details), do: "Customer Details"
   defp page_title(:edit), do: "Edit Customer"
+  defp page_title(:engagements), do: "Engagements"
+  defp page_title(:new_engagement), do: "New Engagement"
+  defp page_title(:edit_engagement), do: "Edit Engagement"
+  defp page_title(:engagement_plants), do: "Plants"
   defp page_title(:orders), do: "Customer Orders"
   defp page_title(:statistics), do: "Customer Statistics"
+
+  defp customer_trail(customer, live_action)
+       when live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_plants] do
+    [
+      Navigation.root(:customers),
+      Navigation.resource(:customer, customer),
+      Navigation.page(:customers, :customer_engagements, customer)
+    ]
+  end
 
   defp customer_trail(customer, :orders) do
     [
@@ -216,4 +343,17 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   defp customer_trail(customer, _),
     do: [Navigation.root(:customers), Navigation.resource(:customer, customer)]
+
+  defp format_term(nil, nil), do: "—"
+  defp format_term(start, nil), do: "From #{Date.to_iso8601(start)}"
+  defp format_term(nil, end_date), do: "Until #{Date.to_iso8601(end_date)}"
+  defp format_term(start, end_date), do: "#{Date.to_iso8601(start)} → #{Date.to_iso8601(end_date)}"
+
+  defp engagement_status_class(:draft), do: "text-gray-600 bg-gray-100"
+  defp engagement_status_class(:proposed), do: "text-amber-700 bg-amber-100"
+  defp engagement_status_class(:signed), do: "text-blue-700 bg-blue-100"
+  defp engagement_status_class(:in_progress), do: "text-green-700 bg-green-100"
+  defp engagement_status_class(:completed), do: "text-emerald-700 bg-emerald-100"
+  defp engagement_status_class(:cancelled), do: "text-red-700 bg-red-100"
+  defp engagement_status_class(_), do: "text-gray-600 bg-gray-100"
 end

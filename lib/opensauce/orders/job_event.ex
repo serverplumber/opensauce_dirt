@@ -82,5 +82,9 @@ defmodule OpenSauce.Orders.JobEvent do
       allow_nil? false
       public? true
     end
+
+    has_many :plant_links, OpenSauce.Orders.JobEventPlant do
+      public? true
+    end
   end
 end

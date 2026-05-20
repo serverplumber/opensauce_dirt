@@ -262,6 +262,10 @@ defmodule OpenSauce.CRM.Customer do
     end
     
     has_many :orders, OpenSauce.Orders.Order
+
+    has_many :engagements, OpenSauce.CRM.Engagement do
+      public? true
+    end
   end
 
   calculations do

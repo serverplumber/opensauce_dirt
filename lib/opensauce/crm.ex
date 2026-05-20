@@ -25,5 +25,28 @@ defmodule OpenSauce.CRM do
       define :list_customers_with_keyset, action: :keyset
       define :destroy_customer, action: :destroy
     end
+
+    resource OpenSauce.CRM.Plant do
+      define :get_plant_by_id, action: :read, get_by: [:id]
+      define :list_plants, action: :read
+      define :create_plant, action: :create
+      define :update_plant, action: :update
+      define :destroy_plant, action: :destroy
+    end
+
+    resource OpenSauce.CRM.EngagementPlant do
+      define :create_engagement_plant, action: :create
+      define :update_engagement_plant, action: :update
+      define :destroy_engagement_plant, action: :destroy
+    end
+
+    resource OpenSauce.CRM.Engagement do
+      define :get_engagement_by_id, action: :read, get_by: [:id]
+      define :list_engagements, action: :read
+      define :create_engagement, action: :create
+      define :update_engagement, action: :update
+      define :sign_engagement, action: :sign
+      define :destroy_engagement, action: :destroy
+    end
   end
 end

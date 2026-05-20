@@ -136,6 +136,10 @@ defmodule OpenSauceWeb.Navigation do
     %{label: "Statistics", path: ~p"/manage/customers/#{customer.reference}/statistics"}
   end
 
+  def crumb_customer_engagements(customer) do
+    %{label: "Engagements", path: ~p"/manage/customers/#{customer.reference}/engagements"}
+  end
+
   defp sections do
     %{
       overview: %{
@@ -243,7 +247,8 @@ defmodule OpenSauceWeb.Navigation do
           new_customer: %{label: "New Customer", path: "/manage/customers/new"},
           customer: &__MODULE__.crumb_customer/1,
           customer_orders: &__MODULE__.crumb_customer_orders/1,
-          customer_statistics: &__MODULE__.crumb_customer_statistics/1
+          customer_statistics: &__MODULE__.crumb_customer_statistics/1,
+          customer_engagements: &__MODULE__.crumb_customer_engagements/1
         },
         sub_links: []
       },

@@ -40,11 +40,11 @@ defmodule OpenSauceWeb.JobLive.Index do
         <span :if={!job.scheduled_at} class="text-stone-400">—</span>
       </:col>
 
-      <:col :let={job} label="Time">
-        <span :if={job.scheduled_at}>
-          {format_date(job.scheduled_at, format: "%H:%M")}
-        </span>
-        <span :if={!job.scheduled_at} class="text-stone-400">—</span>
+      <:col :let={job} label="Cost / Price">
+        <div class="space-y-0.5">
+          <div class="text-red-600">({format_money(@settings.currency, job.materials_cost)})</div>
+          <div>{format_money(@settings.currency, price_from_cost(job.materials_cost))}</div>
+        </div>
       </:col>
 
       <:col :let={job} label="Duration">
@@ -85,6 +85,20 @@ defmodule OpenSauceWeb.JobLive.Index do
       </:col>
 
       <:action :let={job}>
+        <button
+          phx-click="open_plants"
+          phx-value-id={job.id}
+          class="text-sm text-stone-500 hover:text-stone-700"
+        >
+          Plants
+        </button>
+        <button
+          phx-click="open_materials"
+          phx-value-id={job.id}
+          class="text-sm text-stone-500 hover:text-stone-700"
+        >
+          Materials
+        </button>
         <.link patch={~p"/manage/jobs/#{job.id}/edit"} class="text-sm text-stone-500 hover:text-stone-700">
           Edit
         </.link>
@@ -108,6 +122,40 @@ defmodule OpenSauceWeb.JobLive.Index do
     </.modal>
 
     <.modal
+      :if={@materials_job_id != nil}
+      id="job-materials-modal"
+      title="Materials"
+      max_width="max-w-2xl"
+      show
+      on_cancel={JS.push("close_materials")}
+    >
+      <.live_component
+        module={OpenSauceWeb.JobLive.MaterialsComponent}
+        id={"job-materials-#{@materials_job_id}"}
+        job_id={@materials_job_id}
+        current_member={@current_member}
+        currency={@settings.currency}
+      />
+    </.modal>
+
+    <.modal
+      :if={@plants_job_id != nil}
+      id="job-plants-modal"
+      title="Plants"
+      max_width="max-w-3xl"
+      show
+      on_cancel={JS.push("close_plants")}
+    >
+      <.live_component
+        module={OpenSauceWeb.JobLive.PlantsComponent}
+        id={"job-plants-#{@plants_job_id}"}
+        job_id={@plants_job_id}
+        current_member={@current_member}
+        currency={@settings.currency}
+      />
+    </.modal>
+
+    <.modal
       :if={@event_log_job != nil}
       id="event-log-modal"
       title={"Log event — #{event_log_title(@event_log_job)}"}
@@ -127,7 +175,10 @@ defmodule OpenSauceWeb.JobLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(event_log_job: nil, event_log_events: []) |> load_jobs()}
+    {:ok,
+     socket
+     |> assign(plants_job_id: nil, materials_job_id: nil, event_log_job: nil, event_log_events: [])
+     |> load_jobs()}
   end
 
   @impl true
@@ -197,6 +248,26 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
+  def handle_event("open_materials", %{"id" => id}, socket) do
+    {:noreply, assign(socket, :materials_job_id, id)}
+  end
+
+  @impl true
+  def handle_event("close_materials", _params, socket) do
+    {:noreply, assign(socket, :materials_job_id, nil)}
+  end
+
+  @impl true
+  def handle_event("open_plants", %{"id" => id}, socket) do
+    {:noreply, assign(socket, :plants_job_id, id)}
+  end
+
+  @impl true
+  def handle_event("close_plants", _params, socket) do
+    {:noreply, assign(socket, :plants_job_id, nil)}
+  end
+
+  @impl true
   def handle_event("open_event_log", %{"id" => id}, socket) do
     member = socket.assigns.current_member
     job = Enum.find(socket.assigns.jobs, &(&1.id == id))
@@ -241,7 +312,7 @@ defmodule OpenSauceWeb.JobLive.Index do
       Orders.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
-        load: [:customer, :address, :actual_duration_minutes]
+        load: [:customer, :address, :actual_duration_minutes, :materials_cost]
       )
 
     assign(socket, :jobs, jobs)
@@ -289,6 +360,9 @@ defmodule OpenSauceWeb.JobLive.Index do
     m = rem(min, 60)
     if m == 0, do: "#{h}h", else: "#{h}h #{m}m"
   end
+
+  defp price_from_cost(nil), do: Decimal.new(0)
+  defp price_from_cost(cost), do: Decimal.mult(cost, Decimal.new("1.2"))
 
   defp service_type_label(:installation), do: "Installation"
   defp service_type_label(:maintenance), do: "Maintenance"

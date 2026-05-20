@@ -1,4 +1,4 @@
-set shell := ["bash", "-cu"]
+set shell := ["bash", "-euo", "pipefail", "-c"]
 
 postgres_dir := ".postgres"
 
@@ -30,3 +30,16 @@ down:
     podman rm   opensauce-postgres 2>/dev/null || true
     podman unshare rm -rf {{postgres_dir}}
     mkdir -p {{postgres_dir}}
+
+nuke:
+    rm -rf priv/repo/migrations/* priv/resource_snapshots/*
+    mix ash.reset
+    mix ash.codegen initial_schema
+    mix ash.migrate
+    find priv/repo/manual_migrations -name '*.exs' -exec mix run {} \; 2>/dev/null || true
+
+unnuke:
+    rm -rf priv/repo/migrations priv/resource_snapshots
+    git restore priv/repo/migrations priv/resource_snapshots
+    mix ash.reset
+    mix ash.migrate
