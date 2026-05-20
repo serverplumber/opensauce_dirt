@@ -1,4 +1,4 @@
-defmodule OpenSauceWeb.JobLive.PlantsComponent do
+defmodule OpenSauceWeb.JobLive.EventPlantsComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
@@ -9,23 +9,22 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
   def render(assigns) do
     ~H"""
     <div class="space-y-6">
-      <.table id={"jp-#{@job_id}"} rows={@plants}>
-        <:col :let={jp} label="Name">{jp.plant.name}</:col>
-        <:col :let={jp} label="Form">{jp.plant.form || "—"}</:col>
-        <:col :let={jp} label="Size">{jp.plant.size || "—"}</:col>
-        <:col :let={jp} label="Cost">{jp.plant.cost || "—"}</:col>
-        <:col :let={jp} label="Date">{format_date(jp.date) || "—"}</:col>
-        <:action :let={jp}>
+      <.table id={"jep-#{@job_event.id}"} rows={@plants}>
+        <:col :let={jep} label="Role">{role_label(jep.role)}</:col>
+        <:col :let={jep} label="Name">{jep.plant.name}</:col>
+        <:col :let={jep} label="Form">{jep.plant.form || "—"}</:col>
+        <:col :let={jep} label="Size">{jep.plant.size || "—"}</:col>
+        <:action :let={jep}>
           <.button
             variant={:outline}
             phx-click="remove"
-            phx-value-id={jp.id}
+            phx-value-id={jep.id}
             phx-target={@myself}
           >
             Remove
           </.button>
         </:action>
-        <:empty>No plants on this job yet.</:empty>
+        <:empty>No plants logged for this event yet.</:empty>
       </.table>
 
       <div class="flex justify-end border-t border-stone-200 pt-2 text-sm">
@@ -35,10 +34,26 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
 
       <div class="border-t border-stone-200 pt-4">
         <h4 class="mb-3 text-sm font-medium text-stone-700">Add plant</h4>
-        <.simple_form for={@form} id="job-plant-add-form" phx-target={@myself} phx-submit="add">
+        <.simple_form for={@form} id="event-plant-add-form" phx-target={@myself} phx-submit="add">
           <div class="space-y-3">
             <div class="grid grid-cols-2 gap-3">
               <.input field={@form[:name]} label="Name" />
+              <.input
+                field={@form[:role]}
+                type="select"
+                label="Role"
+                options={[
+                  {"— select —", ""},
+                  {"Install", "install"},
+                  {"Propagate", "propagate"},
+                  {"Harvest", "harvest"},
+                  {"Pickup", "pickup"},
+                  {"Dropoff", "dropoff"},
+                  {"Reception", "reception"}
+                ]}
+              />
+            </div>
+            <div class="grid grid-cols-3 gap-3">
               <.input
                 field={@form[:form]}
                 type="select"
@@ -52,11 +67,8 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
                   {"Specimen", "specimen"}
                 ]}
               />
-            </div>
-            <div class="grid grid-cols-3 gap-3">
               <.input field={@form[:size]} label="Size" />
               <.input field={@form[:cost]} type="number" label="Cost" step="0.01" min="0" />
-              <.input field={@form[:date]} type="date" label="Date" />
             </div>
             <.input field={@form[:note]} label="Note" />
           </div>
@@ -65,12 +77,16 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
           </:actions>
         </.simple_form>
       </div>
+
+      <div class="flex justify-end border-t border-stone-200 pt-4">
+        <.button phx-click="close_event_plants">Done</.button>
+      </div>
     </div>
     """
   end
 
   @impl true
-  def update(%{job_id: _job_id, current_member: _member} = assigns, socket) do
+  def update(%{job_event: _job_event, current_member: _member} = assigns, socket) do
     plants = load_plants(assigns)
 
     {:ok,
@@ -84,6 +100,8 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
   @impl true
   def handle_event("add", %{"plant" => params}, socket) do
     member = socket.assigns.current_member
+    event = socket.assigns.job_event
+    date = DateTime.to_date(event.timestamp)
 
     with {:ok, plant} <-
            CRM.create_plant(
@@ -97,23 +115,24 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
              actor: member,
              tenant: member.organisation_id
            ),
-         {:ok, _jp} <-
-           Orders.create_job_plant(
+         {:ok, _jep} <-
+           Orders.log_job_event_plant(
              %{
-               job_id: socket.assigns.job_id,
+               job_event_id: event.id,
                plant_id: plant.id,
-               date: parse_date(params["date"])
+               role: parse_atom(params["role"]),
+               date: date
              },
              actor: member,
              tenant: member.organisation_id
            ) do
-        plants = load_plants(socket.assigns)
+      plants = load_plants(socket.assigns)
 
-        {:noreply,
-         socket
-         |> assign(:plants, plants)
-         |> assign(:total_cost, sum_plants_cost(plants))
-         |> assign(:form, blank_form())}
+      {:noreply,
+       socket
+       |> assign(:plants, plants)
+       |> assign(:total_cost, sum_plants_cost(plants))
+       |> assign(:form, blank_form())}
     else
       {:error, %Ash.Error.Invalid{} = err} ->
         msg = err.errors |> Enum.map(& &1.message) |> Enum.join(", ")
@@ -126,9 +145,9 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
 
   def handle_event("remove", %{"id" => id}, socket) do
     member = socket.assigns.current_member
-    jp = Enum.find(socket.assigns.plants, &(&1.id == id))
+    jep = Enum.find(socket.assigns.plants, &(&1.id == id))
 
-    case Orders.destroy_job_plant(jp, actor: member, tenant: member.organisation_id) do
+    case Orders.destroy_job_event_plant(jep, actor: member, tenant: member.organisation_id) do
       :ok ->
         plants = load_plants(socket.assigns)
 
@@ -142,21 +161,29 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
     end
   end
 
-  defp load_plants(%{job_id: job_id, current_member: member}) do
-    Orders.get_job_by_id!(
-      job_id,
+  defp load_plants(%{job_event: event, current_member: member}) do
+    Orders.list_job_event_plants!(
+      event.id,
       actor: member,
       tenant: member.organisation_id,
-      load: [plants: [:plant]]
-    ).plants
+      load: [:plant]
+    )
   end
 
   defp blank_form,
     do:
       to_form(
-        %{"name" => "", "form" => "", "size" => "", "cost" => "", "note" => "", "date" => ""},
+        %{"name" => "", "role" => "", "form" => "", "size" => "", "cost" => "", "note" => ""},
         as: "plant"
       )
+
+  defp role_label(:install), do: "Install"
+  defp role_label(:propagate), do: "Propagate"
+  defp role_label(:harvest), do: "Harvest"
+  defp role_label(:pickup), do: "Pickup"
+  defp role_label(:dropoff), do: "Dropoff"
+  defp role_label(:reception), do: "Reception"
+  defp role_label(other), do: to_string(other)
 
   defp nilify(""), do: nil
   defp nilify(s), do: s
@@ -173,18 +200,9 @@ defmodule OpenSauceWeb.JobLive.PlantsComponent do
     end
   end
 
-  defp parse_date(""), do: nil
-
-  defp parse_date(s) do
-    case Date.from_iso8601(s) do
-      {:ok, d} -> d
-      _ -> nil
-    end
-  end
-
   defp sum_plants_cost(plants) do
-    Enum.reduce(plants, Decimal.new(0), fn jp, acc ->
-      cost = (jp.plant && jp.plant.cost) || Decimal.new(0)
+    Enum.reduce(plants, Decimal.new(0), fn jep, acc ->
+      cost = (jep.plant && jep.plant.cost) || Decimal.new(0)
       Decimal.add(acc, cost)
     end)
   end

@@ -84,7 +84,6 @@ defmodule OpenSauceWeb.InventoryLive.Index do
                     phx-click={
                       JS.push("delete", value: %{id: material.id}) |> hide("##{material.sku}")
                     }
-                    data-confirm="Are you sure?"
                   >
                     <.button size={:sm} variant={:danger}>
                       Delete

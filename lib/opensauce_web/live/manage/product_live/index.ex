@@ -75,7 +75,6 @@ defmodule OpenSauceWeb.ProductLive.Index do
       <:action :let={{_, product}}>
         <.link
           phx-click={JS.push("delete", value: %{id: product.id}) |> hide("#product-#{product.id}")}
-          data-confirm="Are you sure?"
         >
           <.button size={:sm} variant={:danger}>
             Delete

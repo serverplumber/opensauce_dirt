@@ -61,7 +61,6 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
                 size={:sm}
                 variant={:danger}
                 phx-click={JS.push("remove_member", value: %{id: m.id}, target: @myself)}
-                data-confirm="Remove this member? This cannot be undone."
               >
                 Remove
               </.button>

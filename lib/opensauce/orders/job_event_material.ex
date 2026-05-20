@@ -1,4 +1,4 @@
-defmodule OpenSauce.Orders.JobEventPlant do
+defmodule OpenSauce.Orders.JobEventMaterial do
   @moduledoc false
   use Ash.Resource,
     otp_app: :opensauce,
@@ -8,7 +8,7 @@ defmodule OpenSauce.Orders.JobEventPlant do
     fragments: [OpenSauce.Concerns.Multitenanted]
 
   postgres do
-    table "orders_job_event_plants"
+    table "orders_job_event_materials"
     repo OpenSauce.Repo
   end
 
@@ -22,7 +22,7 @@ defmodule OpenSauce.Orders.JobEventPlant do
 
     create :log do
       primary? true
-      accept [:job_event_id, :plant_id, :role, :date, :organisation_id]
+      accept [:job_event_id, :material_id, :quantity, :organisation_id]
     end
   end
 
@@ -39,15 +39,10 @@ defmodule OpenSauce.Orders.JobEventPlant do
   attributes do
     uuid_primary_key :id
 
-    attribute :role, :atom do
+    attribute :quantity, :decimal do
       allow_nil? false
       public? true
-      constraints one_of: [:install, :propagate, :harvest, :pickup, :dropoff, :reception]
-    end
-
-    attribute :date, :date do
-      allow_nil? true
-      public? true
+      constraints min: 0
     end
 
     timestamps()
@@ -59,10 +54,10 @@ defmodule OpenSauce.Orders.JobEventPlant do
       public? true
     end
 
-    belongs_to :plant, OpenSauce.CRM.Plant do
+    belongs_to :material, OpenSauce.Inventory.Material do
       allow_nil? false
       public? true
-      domain OpenSauce.CRM
+      domain OpenSauce.Inventory
     end
   end
 end

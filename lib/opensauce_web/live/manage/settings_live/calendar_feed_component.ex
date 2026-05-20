@@ -104,7 +104,6 @@ defmodule OpenSauceWeb.SettingsLive.CalendarFeedComponent do
                     size={:sm}
                     variant={:danger}
                     phx-click={JS.push("revoke_calendar_key", value: %{id: key.id}, target: @myself)}
-                    data-confirm="Revoke this calendar feed? Any calendar app using this URL will stop receiving updates."
                   >
                     Revoke
                   </.button>

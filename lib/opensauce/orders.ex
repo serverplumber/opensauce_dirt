@@ -75,8 +75,15 @@ defmodule OpenSauce.Orders do
     end
 
     resource OpenSauce.Orders.JobEventPlant do
+      define :list_job_event_plants, action: :for_event, args: [:job_event_id]
       define :log_job_event_plant, action: :log
       define :destroy_job_event_plant, action: :destroy
+    end
+
+    resource OpenSauce.Orders.JobEventMaterial do
+      define :list_job_event_materials, action: :for_event, args: [:job_event_id]
+      define :log_job_event_material, action: :log
+      define :destroy_job_event_material, action: :destroy
     end
 
     resource OpenSauce.Orders.JobMaterial do

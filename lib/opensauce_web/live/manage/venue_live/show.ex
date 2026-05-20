@@ -43,7 +43,6 @@ defmodule OpenSauceWeb.VenueLive.Show do
               variant={:danger}
               phx-click="delete_location"
               phx-value-id={loc.id}
-              data-confirm={"Delete #{loc.name}?"}
             >
               Delete
             </.button>

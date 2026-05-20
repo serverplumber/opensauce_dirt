@@ -50,7 +50,6 @@ defmodule OpenSauceWeb.VenueLive.Index do
                 variant={:danger}
                 phx-click="delete_venue"
                 phx-value-id={venue.id}
-                data-confirm={"Delete #{venue.name}? This cannot be undone."}
               >
                 Delete
               </.button>
@@ -100,7 +99,6 @@ defmodule OpenSauceWeb.VenueLive.Index do
                   phx-click="delete_location"
                   phx-value-id={loc.id}
                   phx-value-venue-id={venue.id}
-                  data-confirm={"Delete #{loc.name}?"}
                 >
                   Delete
                 </.button>

@@ -96,7 +96,6 @@ defmodule OpenSauceWeb.SettingsLive.ApiKeysComponent do
                 size={:sm}
                 variant={:danger}
                 phx-click={JS.push("revoke_key", value: %{id: key.id}, target: @myself)}
-                data-confirm="Are you sure you want to revoke this API key? This action cannot be undone."
               >
                 Revoke
               </.button>

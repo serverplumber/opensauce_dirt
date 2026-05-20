@@ -7,67 +7,102 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.simple_form
-        for={@form}
-        id={"event-log-form-#{@job.id}"}
-        phx-target={@myself}
-        phx-change="validate"
-        phx-submit="save"
-      >
-        <div class="space-y-4">
-          <div class="flex gap-4">
-            <div class="flex-1">
-              <.input field={@form[:timestamp]} type="datetime-local" label="Time" step="1800" />
-            </div>
-            <div class="w-36">
-              <.input type="number" name="event[odometer_km]" value={@odometer_km} label="Odometer (km)" min="0" step="1" />
-            </div>
-          </div>
-          <.input field={@form[:note]} type="textarea" label="Note" rows="2" />
+    <div class="space-y-6">
+      <div :if={@events != []} class="space-y-1">
+        <div :for={event <- @events} class="flex items-center gap-3 py-1.5 text-sm">
+          <span class="font-medium text-stone-700 shrink-0">{event_type_label(event.data.type)}</span>
+          <span class="text-stone-400 text-xs shrink-0">{format_event_time(event.timestamp)}</span>
+          <span :if={event.note} class="text-stone-500 text-xs truncate">{event.note}</span>
         </div>
+      </div>
 
-        <:actions>
-          <div class="flex flex-wrap gap-2">
-            <.button
-              :if={@show_arrive}
-              type="submit"
-              name="action"
-              value="arrive"
-              variant={:primary}
-            >
-              Arrive
-            </.button>
-            <.button
-              :if={@show_depart}
-              type="submit"
-              name="action"
-              value="depart"
-              variant={:primary}
-            >
-              Depart
-            </.button>
-            <.button
-              :if={@show_complete}
-              type="submit"
-              name="action"
-              value="complete"
-              class="bg-green-50 text-green-700 hover:bg-green-100 shadow-none ring-1 ring-green-200"
-            >
-              Mark complete
-            </.button>
-            <.button
-              :if={@show_cancel}
-              type="submit"
-              name="action"
-              value="cancel"
-              variant={:outline}
-            >
-              Cancel job
-            </.button>
+      <div class={[@events != [] && "border-t border-stone-200 pt-4"]}>
+        <.simple_form
+          for={@form}
+          id={"event-log-form-#{@job.id}"}
+          phx-target={@myself}
+          phx-change="validate"
+          phx-submit="save"
+        >
+          <div class="space-y-4">
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <.input field={@form[:timestamp]} type="datetime-local" label="Time" step="1800" />
+              </div>
+              <div class="w-36">
+                <.input
+                  type="number"
+                  name="event[odometer_km]"
+                  value={@odometer_km}
+                  label="Odometer (km)"
+                  min="0"
+                  step="1"
+                />
+              </div>
+            </div>
+            <.input field={@form[:note]} type="textarea" label="Note" rows="2" />
           </div>
-        </:actions>
-      </.simple_form>
+
+          <:actions>
+            <div class="flex flex-wrap gap-2">
+              <.button
+                :if={@events != []}
+                type="button"
+                phx-click="open_event_plants"
+                phx-target={@myself}
+                variant={:outline}
+              >
+                Add plants
+              </.button>
+              <.button
+                :if={@events != []}
+                type="button"
+                phx-click="open_event_materials"
+                phx-target={@myself}
+                variant={:outline}
+              >
+                Add materials
+              </.button>
+              <.button
+                :if={@show_arrive}
+                type="submit"
+                name="action"
+                value="arrive"
+                variant={:primary}
+              >
+                Arrive
+              </.button>
+              <.button
+                :if={@show_depart}
+                type="submit"
+                name="action"
+                value="depart"
+                variant={:primary}
+              >
+                Depart
+              </.button>
+              <.button
+                :if={@show_complete}
+                type="submit"
+                name="action"
+                value="complete"
+                class="bg-green-50 text-green-700 hover:bg-green-100 shadow-none ring-1 ring-green-200"
+              >
+                Mark complete
+              </.button>
+              <.button
+                :if={@show_cancel}
+                type="submit"
+                name="action"
+                value="cancel"
+                variant={:outline}
+              >
+                Cancel job
+              </.button>
+            </div>
+          </:actions>
+        </.simple_form>
+      </div>
     </div>
     """
   end
@@ -120,6 +155,16 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
     params = inject_fixed(params, socket)
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, socket |> assign(:form, form) |> assign(:odometer_km, odometer_km)}
+  end
+
+  def handle_event("open_event_plants", _params, socket) do
+    notify_parent({:manage_event_plants, List.last(socket.assigns.events)})
+    {:noreply, socket}
+  end
+
+  def handle_event("open_event_materials", _params, socket) do
+    notify_parent({:manage_event_materials, List.last(socket.assigns.events)})
+    {:noreply, socket}
   end
 
   def handle_event("save", %{"event" => params} = all_params, socket) do
@@ -187,4 +232,16 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
   defp button_visibility(_, _), do: {false, false, false, false}
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp event_type_label(:arrival), do: "Arrive"
+  defp event_type_label(:departure), do: "Depart"
+  defp event_type_label(:shift_start), do: "Shift start"
+  defp event_type_label(:shift_end), do: "Shift end"
+  defp event_type_label(:work_session_start), do: "Work start"
+  defp event_type_label(:work_session_stop), do: "Work stop"
+  defp event_type_label(other), do: to_string(other)
+
+  defp format_event_time(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%d %b %H:%M")
+  end
 end

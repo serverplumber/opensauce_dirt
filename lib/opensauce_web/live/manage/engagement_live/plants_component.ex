@@ -20,7 +20,6 @@ defmodule OpenSauceWeb.EngagementLive.PlantsComponent do
             phx-click="remove"
             phx-value-id={ep.id}
             phx-target={@myself}
-            data-confirm="Remove this plant from the engagement?"
           >
             Remove
           </.button>

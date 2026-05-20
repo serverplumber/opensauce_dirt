@@ -17,7 +17,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         <.link patch={~p"/manage/customers/#{@customer.reference}/edit"}>
           <.button variant={:outline}>Edit</.button>
         </.link>
-        <.button variant={:outline} phx-click="delete" data-confirm="Delete this customer?">
+        <.button variant={:outline} phx-click="delete">
           Delete
         </.button>
       </:actions>
