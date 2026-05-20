@@ -170,7 +170,7 @@ defmodule OpenSauceWeb.Layouts do
                   >
                     <.link
                       :if={not @is_manage?}
-                      navigate={~p"/manage/orders"}
+                      navigate={~p"/manage/jobs"}
                       class="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 transition hover:bg-stone-50 hover:text-stone-900"
                       role="menuitem"
                     >
@@ -273,7 +273,7 @@ defmodule OpenSauceWeb.Layouts do
       >
         <div :if={@current_user} class="space-y-3">
           <.link
-            navigate={~p"/manage/orders"}
+            navigate={~p"/manage/jobs"}
             class="flex items-center justify-between rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium text-stone-600 transition hover:border-stone-300 hover:text-stone-900"
           >
             <span>Open manage</span>
@@ -324,15 +324,6 @@ defmodule OpenSauceWeb.Layouts do
             stroke-linejoin="round"
             stroke-width="2"
             d="M7 4h10l1 3H6l1-3zm-1 5h12l1 9H5l1-9zm3 4h4"
-          />
-        </svg>
-      <% :products -> %>
-        <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 3l9 4.5-9 4.5-9-4.5L12 3zm0 9l9-4.5v9L12 21v-9zm0 0L3 7.5v9L12 21"
           />
         </svg>
       <% :orders -> %>
@@ -551,18 +542,11 @@ defmodule OpenSauceWeb.Layouts do
         prefix: "/manage/purchasing"
       },
       %{
-        label: "Products",
-        navigate: ~p"/manage/products",
-        icon: :products,
-        nav_section: :products,
-        prefix: "/manage/products"
-      },
-      %{
-        label: "Orders",
-        navigate: ~p"/manage/orders",
+        label: "Invoices",
+        navigate: ~p"/manage/invoices",
         icon: :orders,
-        nav_section: :orders,
-        prefix: "/manage/orders"
+        nav_section: :invoices,
+        prefix: "/manage/invoices"
       },
       %{
         label: "Jobs",

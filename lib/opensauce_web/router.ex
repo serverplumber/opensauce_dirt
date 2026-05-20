@@ -140,9 +140,6 @@ defmodule OpenSauceWeb.Router do
     # CSV Export (regular controller, not LiveView)
     get "/manage/settings/csv/export/:entity", CSVExportController, :export
 
-    # PDF exports (regular controllers, not LiveView)
-    get "/manage/orders/:reference/invoice.pdf", InvoiceController, :show
-
     # Staff Routes
     ash_authentication_live_session :manage_routes,
       on_mount: [
@@ -152,20 +149,8 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette
       ] do
-      # Products
-      live "/manage/products", ProductLive.Index, :index
-      live "/manage/products/new", ProductLive.Index, :new
-      live "/manage/products/:sku", ProductLive.Show, :show
-      live "/manage/products/:sku/details", ProductLive.Show, :details
-      live "/manage/products/:sku/recipe", ProductLive.Show, :recipe
-      live "/manage/products/:sku/photos", ProductLive.Show, :photos
-      live "/manage/products/:sku/edit", ProductLive.Show, :edit
-      live "/manage/products/:sku/label", ProductLive.Label, :label
-
       # Inventory
       live "/manage/inventory", InventoryLive.Index, :index
-      live "/manage/inventory/forecast", InventoryLive.Index, :forecast
-      live "/manage/inventory/forecast/reorder", InventoryLive.ReorderPlanner, :reorder
       live "/manage/inventory/new", InventoryLive.Index, :new
       live "/manage/inventory/:sku", InventoryLive.Show, :show
       live "/manage/inventory/:sku/details", InventoryLive.Show, :details
@@ -173,14 +158,11 @@ defmodule OpenSauceWeb.Router do
       live "/manage/inventory/:sku/edit", InventoryLive.Show, :edit
       live "/manage/inventory/:sku/adjust", InventoryLive.Show, :adjust
 
-      # Orders
-      live "/manage/orders", OrderLive.Index, :index
-      live "/manage/orders/new", OrderLive.Index, :new
-      live "/manage/orders/:reference", OrderLive.Show, :show
-      live "/manage/orders/:reference/details", OrderLive.Show, :details
-      live "/manage/orders/:reference/items", OrderLive.Show, :items
-      live "/manage/orders/:reference/edit", OrderLive.Show, :edit
-      live "/manage/orders/:reference/invoice", OrderLive.Invoice, :show
+      # Invoices
+      live "/manage/invoices", InvoiceLive.Index, :index
+      live "/manage/invoices/new", InvoiceLive.Index, :new
+      live "/manage/invoices/:id", InvoiceLive.Show, :show
+      live "/manage/invoices/:id/edit", InvoiceLive.Show, :edit
 
       # Purchasing
       live "/manage/purchasing", PurchasingLive.Index, :index
@@ -199,7 +181,6 @@ defmodule OpenSauceWeb.Router do
       live "/manage/customers/new", CustomerLive.Index, :new
       live "/manage/customers/:reference", CustomerLive.Show, :show
       live "/manage/customers/:reference/details", CustomerLive.Show, :details
-      live "/manage/customers/:reference/orders", CustomerLive.Show, :orders
       live "/manage/customers/:reference/statistics", CustomerLive.Show, :statistics
       live "/manage/customers/:reference/edit", CustomerLive.Show, :edit
       live "/manage/customers/:reference/engagements", CustomerLive.Show, :engagements

@@ -11,30 +11,28 @@ defmodule OpenSauce.Calendar.FeedGenerator do
     date_start = DateTime.add(now, -@past_days, :day)
     date_end = DateTime.add(now, @future_days, :day)
 
-    order_events = build_order_events(actor, date_start, date_end)
+    job_events = build_job_events(actor, date_start, date_end)
 
-    to_ics(order_events)
+    to_ics(job_events)
   end
 
-  defp build_order_events(actor, date_start, date_end) do
-    case Orders.list_orders(
-           %{delivery_date_start: date_start, delivery_date_end: date_end},
-           actor: actor
+  defp build_job_events(actor, date_start, date_end) do
+    case Orders.list_jobs(
+           actor: actor,
+           load: [:customer],
+           filter: [scheduled_at_gte: date_start, scheduled_at_lte: date_end]
          ) do
-      {:ok, %{results: orders}} ->
-        Enum.map(orders, &order_to_event/1)
-
-      {:ok, orders} when is_list(orders) ->
-        Enum.map(orders, &order_to_event/1)
+      {:ok, jobs} ->
+        Enum.map(jobs, &job_to_event/1)
 
       _ ->
         []
     end
   end
 
-  defp order_to_event(order) do
+  defp job_to_event(job) do
     customer_name =
-      case order do
+      case job do
         %{customer: %{first_name: first, last_name: last}}
         when is_binary(first) and is_binary(last) ->
           "#{first} #{last}"
@@ -43,12 +41,14 @@ defmodule OpenSauce.Calendar.FeedGenerator do
           "Unknown"
       end
 
+    service = job.service_type |> Atom.to_string() |> String.replace("_", " ")
+
     %{
-      summary: "Order #{order.reference} - #{customer_name}",
-      dtstart: order.delivery_date,
-      dtend: order.delivery_date,
-      uid: "order-#{order.id}@opensauce",
-      description: "Status: #{order.status}"
+      summary: "#{service} — #{customer_name}",
+      dtstart: job.scheduled_at,
+      dtend: job.scheduled_at,
+      uid: "job-#{job.id}@opensauce",
+      description: "Status: #{job.status}"
     }
   end
 

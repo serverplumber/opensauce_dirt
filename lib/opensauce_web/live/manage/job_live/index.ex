@@ -74,16 +74,6 @@ defmodule OpenSauceWeb.JobLive.Index do
         </button>
       </:col>
 
-      <:col :let={job} label="Invoiced">
-        <input
-          type="checkbox"
-          checked={job.invoiced}
-          phx-click="toggle_invoiced"
-          phx-value-id={job.id}
-          class="rounded border-stone-300 text-primary-600 cursor-pointer"
-        />
-      </:col>
-
       <:action :let={job}>
         <button
           phx-click="open_materials"
@@ -285,25 +275,6 @@ defmodule OpenSauceWeb.JobLive.Index do
   @impl true
   def handle_event("close_event_materials", _params, socket) do
     {:noreply, assign(socket, :event_materials_event, nil)}
-  end
-
-  @impl true
-  def handle_event("toggle_invoiced", %{"id" => id}, socket) do
-    member = socket.assigns.current_member
-
-    job =
-      Orders.get_job_by_id!(id,
-        actor: member,
-        tenant: member.organisation_id
-      )
-
-    {:ok, _} =
-      Orders.update_job(job, %{invoiced: !job.invoiced},
-        actor: member,
-        tenant: member.organisation_id
-      )
-
-    {:noreply, load_jobs(socket)}
   end
 
   defp load_jobs(socket) do

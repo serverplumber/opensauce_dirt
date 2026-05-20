@@ -129,11 +129,10 @@ defmodule OpenSauceWeb.SettingsLive.Index do
                     name="entity"
                     label="Entity to export"
                     options={[
-                      {"Orders", "orders"},
                       {"Customers", "customers"},
                       {"Inventory movements", "movements"}
                     ]}
-                    value="orders"
+                    value="customers"
                     required
                   />
                 </div>
@@ -240,24 +239,17 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   def csv_import_entities do
     [
       %{
-        value: "products",
-        label: "Products",
-        icon: "hero-cube-solid",
-        description: "Import product SKUs, base pricing, and default production info.",
-        includes: "Names, SKUs, pricing, packaging, packaging"
-      },
-      %{
         value: "materials",
         label: "Materials",
         icon: "hero-archive-box-solid",
-        description: "Bulk load raw materials so recipes and inventory stay accurate.",
-        includes: "Names, suppliers, units, cost, units, cost"
+        description: "Bulk load raw materials so inventory stays accurate.",
+        includes: "Names, suppliers, units, cost"
       },
       %{
         value: "customers",
         label: "Customers",
         icon: "hero-user-group-solid",
-        description: "Bring in customer records to reuse for orders and invoices.",
+        description: "Bring in customer records.",
         includes: "Names, company, contact details, delivery notes"
       }
     ]

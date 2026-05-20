@@ -50,10 +50,10 @@ defmodule OpenSauce.Orders.Job do
         :service_type,
         :address_id,
         :engagement_id,
+        :invoice_id,
         :scheduled_at,
         :estimated_duration_minutes,
         :status,
-        :invoiced,
         :notes
       ]
     end
@@ -123,12 +123,6 @@ defmodule OpenSauce.Orders.Job do
       constraints one_of: [:scheduled, :in_progress, :completed, :cancelled]
     end
 
-    attribute :invoiced, :boolean do
-      allow_nil? false
-      public? true
-      default false
-    end
-
     attribute :notes, :string do
       allow_nil? true
       public? true
@@ -166,6 +160,13 @@ defmodule OpenSauce.Orders.Job do
     # Informational link to the engagement this job was scoped under.
     # Optional — jobs can exist without an engagement (one-off pruning, internal work).
     belongs_to :engagement, OpenSauce.CRM.Engagement do
+      allow_nil? true
+      public? true
+      attribute_writable? true
+      domain OpenSauce.CRM
+    end
+
+    belongs_to :invoice, OpenSauce.CRM.Invoice do
       allow_nil? true
       public? true
       attribute_writable? true

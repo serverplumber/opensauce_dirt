@@ -89,54 +89,9 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         </div>
       </.tabs_content>
 
-      <.tabs_content :if={@live_action == :orders}>
-        <div class="mt-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Orders History</h3>
-            <.link navigate={~p"/manage/orders/new?customer_id=#{@customer.reference}"}>
-              <.button variant={:primary}>New Order</.button>
-            </.link>
-          </div>
-
-          <.table
-            id="customer_orders"
-            rows={@customer.orders}
-            row_click={fn order -> JS.navigate(~p"/manage/orders/#{order.reference}") end}
-          >
-            <:col :let={order} label="Reference">
-              <.kbd>{order.reference}</.kbd>
-            </:col>
-            <:col :let={order} label="Status">
-              <.badge
-                text={order.status}
-                colors={[
-                  {order.status,
-                   "#{order_status_color(order.status)} #{order_status_bg(order.status)}"}
-                ]}
-              />
-            </:col>
-            <:col :let={order} label="Created at">
-              {format_time(order.inserted_at, @time_zone)}
-            </:col>
-            <:col :let={order} label="Delivery Date">
-              {format_time(order.delivery_date, @time_zone)}
-            </:col>
-            <:col :let={order} label="Total">
-              {format_money(@settings.currency, order.total_cost)}
-            </:col>
-          </.table>
-        </div>
-      </.tabs_content>
-
       <.tabs_content :if={@live_action == :statistics}>
         <div class="mt-6 space-y-8">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <.stat_card title="Total Orders" value={@customer.total_orders} />
-            <.stat_card
-              title="Total Spent"
-              value={format_money(@settings.currency, @customer.total_orders_value)}
-            />
-          </div>
+          <p class="text-sm text-stone-500">No statistics available yet.</p>
         </div>
       </.tabs_content>
     </div>
@@ -263,11 +218,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         active: live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_materials]
       },
       %{
-        label: "Orders",
-        navigate: ~p"/manage/customers/#{customer.reference}/orders",
-        active: live_action == :orders
-      },
-      %{
         label: "Statistics",
         navigate: ~p"/manage/customers/#{customer.reference}/statistics",
         active: live_action == :statistics
@@ -342,9 +292,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       tenant: socket.assigns.current_member.organisation_id,
       load: [
         :full_name,
-        :total_orders_value,
-        :total_orders,
-        orders: [:total_cost, :total_items],
         billing_address: [:full_address],
         garden_addresses: [:name, :short_address, :full_address],
         engagements: [:total_quoted_value, :materials, garden: [:name]]
@@ -359,7 +306,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp page_title(:new_engagement), do: "New Engagement"
   defp page_title(:edit_engagement), do: "Edit Engagement"
   defp page_title(:engagement_materials), do: "Materials"
-  defp page_title(:orders), do: "Customer Orders"
   defp page_title(:statistics), do: "Customer Statistics"
 
   defp customer_trail(customer, live_action)
@@ -373,14 +319,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       Navigation.root(:customers),
       Navigation.resource(:customer, customer),
       Navigation.page(:customers, :customer_engagements, customer)
-    ]
-  end
-
-  defp customer_trail(customer, :orders) do
-    [
-      Navigation.root(:customers),
-      Navigation.resource(:customer, customer),
-      Navigation.page(:customers, :customer_orders, customer)
     ]
   end
 

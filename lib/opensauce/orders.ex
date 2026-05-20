@@ -3,8 +3,6 @@ defmodule OpenSauce.Orders do
   use Ash.Domain,
     extensions: [AshJsonApi.Domain, AshGraphql.Domain]
 
-  alias OpenSauce.Orders.Order
-
   json_api do
     prefix "/api/json"
   end
@@ -13,19 +11,6 @@ defmodule OpenSauce.Orders do
   end
 
   resources do
-    resource Order do
-      define :get_order_by_id, action: :read, get_by: [:id]
-      define :get_order_by_reference, action: :read, get_by: [:reference]
-      define :list_orders, action: :list
-      define :list_orders_with_keyset, action: :keyset
-      define :destroy_order, action: :destroy
-    end
-
-    resource OpenSauce.Orders.OrderItem do
-      define :get_order_item_by_id, action: :read, get_by: [:id]
-      define :update_item, action: :update
-    end
-
     resource OpenSauce.Orders.Job do
       define :list_jobs, action: :list
       define :list_upcoming_jobs, action: :upcoming

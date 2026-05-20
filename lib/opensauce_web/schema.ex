@@ -4,7 +4,6 @@ defmodule OpenSauceWeb.Schema do
 
   use AshGraphql,
     domains: [
-      OpenSauce.Catalog,
       OpenSauce.Orders,
       OpenSauce.Inventory,
       OpenSauce.CRM,

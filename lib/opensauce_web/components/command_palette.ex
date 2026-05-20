@@ -187,27 +187,9 @@ defmodule OpenSauceWeb.Components.CommandPalette do
               />
 
               <.result_section
-                :if={@results.products != []}
-                title="Products"
-                items={@results.products}
-                flat_results={@flat_results}
-                selected_index={@selected_index}
-                myself={@myself}
-              />
-
-              <.result_section
                 :if={@results.materials != []}
                 title="Materials"
                 items={@results.materials}
-                flat_results={@flat_results}
-                selected_index={@selected_index}
-                myself={@myself}
-              />
-
-              <.result_section
-                :if={@results.orders != []}
-                title="Orders"
-                items={@results.orders}
                 flat_results={@flat_results}
                 selected_index={@selected_index}
                 myself={@myself}
@@ -356,15 +338,6 @@ defmodule OpenSauceWeb.Components.CommandPalette do
               d="M7 4h10l1 3H6l1-3zm-1 5h12l1 9H5l1-9zm3 4h4"
             />
           </svg>
-        <% :products -> %>
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 3l9 4.5-9 4.5-9-4.5L12 3zm0 9l9-4.5v9L12 21v-9zm0 0L3 7.5v9L12 21"
-            />
-          </svg>
         <% :orders -> %>
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -412,9 +385,7 @@ defmodule OpenSauceWeb.Components.CommandPalette do
   defp empty_results?(results) do
     results.pages == [] and
       results.actions == [] and
-      results.products == [] and
       results.materials == [] and
-      results.orders == [] and
       results.customers == [] and
       results.suppliers == [] and
       results.purchase_orders == []

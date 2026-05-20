@@ -40,5 +40,15 @@ defmodule OpenSauce.CRM do
       define :sign_engagement, action: :sign
       define :destroy_engagement, action: :destroy
     end
+
+    resource OpenSauce.CRM.Invoice do
+      define :get_invoice_by_id, action: :read, get_by: [:id]
+      define :list_invoices, action: :read
+      define :create_invoice, action: :create
+      define :update_invoice, action: :update
+      define :mark_invoice_paid, action: :mark_paid
+      define :mark_invoice_sent, action: :mark_sent
+      define :destroy_invoice, action: :destroy
+    end
   end
 end

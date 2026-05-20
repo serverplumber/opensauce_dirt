@@ -9,18 +9,13 @@ defmodule OpenSauce.Accounts.Checks.ApiScopeCheck do
   use Ash.Policy.SimpleCheck
 
   @resource_scope_map %{
-    OpenSauce.Catalog.Product => "products",
-    OpenSauce.Catalog.BOM => "boms",
-    OpenSauce.Catalog.BOMComponent => "bom_components",
-    OpenSauce.Orders.Order => "orders",
-    OpenSauce.Orders.OrderItem => "order_items",
-    OpenSauce.Orders.ProductionBatch => "production_batches",
     OpenSauce.Inventory.Material => "materials",
     OpenSauce.Inventory.Lot => "lots",
     OpenSauce.Inventory.Movement => "movements",
     OpenSauce.Inventory.Supplier => "suppliers",
     OpenSauce.Inventory.PurchaseOrder => "purchase_orders",
     OpenSauce.CRM.Customer => "customers",
+    OpenSauce.CRM.Invoice => "invoices",
     OpenSauce.Settings.Settings => "settings"
   }
 

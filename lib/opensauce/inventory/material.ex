@@ -68,7 +68,6 @@ defmodule OpenSauce.Inventory.Material do
         :maximum_stock
       ]
 
-      change OpenSauce.Inventory.Changes.RefreshAffectedBomRollups
     end
 
     read :list do

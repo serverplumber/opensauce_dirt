@@ -2,7 +2,6 @@ defmodule OpenSauceWeb.JsonApiRouter do
   @moduledoc false
   use AshJsonApi.Router,
     domains: [
-      OpenSauce.Catalog,
       OpenSauce.Orders,
       OpenSauce.Inventory,
       OpenSauce.CRM,

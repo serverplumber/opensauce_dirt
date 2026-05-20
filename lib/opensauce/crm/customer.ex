@@ -261,7 +261,9 @@ defmodule OpenSauce.CRM.Customer do
       public? true
     end
     
-    has_many :orders, OpenSauce.Orders.Order
+    has_many :invoices, OpenSauce.CRM.Invoice do
+      public? true
+    end
 
     has_many :engagements, OpenSauce.CRM.Engagement do
       public? true
@@ -273,10 +275,6 @@ defmodule OpenSauce.CRM.Customer do
   end
 
   aggregates do
-    count :total_orders, :orders
-
-    sum :total_orders_value, [:orders, :items], :cost do
-    end
   end
 
   identities do

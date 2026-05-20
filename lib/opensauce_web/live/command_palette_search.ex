@@ -7,19 +7,16 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
 
   @pages [
     %{label: "Inventory", path: "/manage/inventory", icon: :inventory},
-    %{label: "Forecast", path: "/manage/inventory/forecast", icon: :inventory},
     %{label: "Purchasing", path: "/manage/purchasing", icon: :purchasing},
     %{label: "Suppliers", path: "/manage/purchasing/suppliers", icon: :purchasing},
-    %{label: "Products", path: "/manage/products", icon: :products},
-    %{label: "Orders", path: "/manage/orders", icon: :orders},
+    %{label: "Invoices", path: "/manage/invoices", icon: :orders},
     %{label: "Customers", path: "/manage/customers", icon: :customers},
     %{label: "Jobs", path: "/manage/jobs", icon: :manage},
     %{label: "Settings", path: "/manage/settings", icon: :settings}
   ]
 
   @actions [
-    %{label: "New Order", path: "/manage/orders/new", icon: :orders},
-    %{label: "New Product", path: "/manage/products/new", icon: :products},
+    %{label: "New Invoice", path: "/manage/invoices/new", icon: :orders},
     %{label: "New Material", path: "/manage/inventory/new", icon: :inventory},
     %{label: "New Customer", path: "/manage/customers/new", icon: :customers},
     %{label: "New Purchase Order", path: "/manage/purchasing/new", icon: :purchasing},
@@ -36,9 +33,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
       %{
         pages: @pages,
         actions: @actions,
-        products: [],
         materials: [],
-        orders: [],
         customers: [],
         suppliers: [],
         purchase_orders: []
@@ -47,9 +42,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
       %{
         pages: search_static(@pages, query),
         actions: search_static(@actions, query),
-        products: search_products(query, actor),
         materials: search_materials(query, actor),
-        orders: search_orders(query, actor),
         customers: search_customers(query, actor),
         suppliers: search_suppliers(query, actor),
         purchase_orders: search_purchase_orders(query, actor)
@@ -64,9 +57,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     List.flatten([
       Enum.map(results.pages, &Map.put(&1, :category, :pages)),
       Enum.map(results.actions, &Map.put(&1, :category, :actions)),
-      Enum.map(results.products, &Map.put(&1, :category, :products)),
       Enum.map(results.materials, &Map.put(&1, :category, :materials)),
-      Enum.map(results.orders, &Map.put(&1, :category, :orders)),
       Enum.map(results.customers, &Map.put(&1, :category, :customers)),
       Enum.map(results.suppliers, &Map.put(&1, :category, :suppliers)),
       Enum.map(results.purchase_orders, &Map.put(&1, :category, :purchase_orders))
@@ -83,25 +74,6 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     |> Enum.take(5)
   end
 
-  defp search_products(query, actor) do
-    pattern = "%#{query}%"
-
-    OpenSauce.Catalog.Product
-    |> filter(ilike(name, ^pattern) or ilike(sku, ^pattern))
-    |> limit(5)
-    |> Ash.read!(actor: actor)
-    |> Enum.map(fn p ->
-      %{
-        label: p.name,
-        sublabel: p.sku,
-        path: "/manage/products/#{p.sku}",
-        icon: :products
-      }
-    end)
-  rescue
-    _ -> []
-  end
-
   defp search_materials(query, actor) do
     pattern = "%#{query}%"
 
@@ -115,25 +87,6 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
         sublabel: m.sku,
         path: "/manage/inventory/#{m.sku}",
         icon: :inventory
-      }
-    end)
-  rescue
-    _ -> []
-  end
-
-  defp search_orders(query, actor) do
-    pattern = "%#{query}%"
-
-    OpenSauce.Orders.Order
-    |> filter(ilike(reference, ^pattern))
-    |> limit(5)
-    |> Ash.read!(actor: actor)
-    |> Enum.map(fn o ->
-      %{
-        label: o.reference,
-        sublabel: format_date(o.delivery_date),
-        path: "/manage/orders/#{o.reference}",
-        icon: :orders
       }
     end)
   rescue
@@ -195,12 +148,6 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     end)
   rescue
     _ -> []
-  end
-
-  defp format_date(nil), do: nil
-
-  defp format_date(date) do
-    Calendar.strftime(date, "%b %d, %Y")
   end
 
   defp format_status(nil), do: nil

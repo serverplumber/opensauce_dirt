@@ -45,7 +45,6 @@ config :opensauce,
     OpenSauce.CRM,
     OpenSauce.Orders,
     OpenSauce.Inventory,
-    OpenSauce.Catalog,
     OpenSauce.Accounts,
     OpenSauce.Operations
   ]

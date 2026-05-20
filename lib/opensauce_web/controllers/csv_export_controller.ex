@@ -2,7 +2,6 @@ defmodule OpenSauceWeb.CSVExportController do
   use OpenSauceWeb, :controller
 
   @exporters %{
-    "orders" => OpenSauce.CSV.Exporters.Orders,
     "customers" => OpenSauce.CSV.Exporters.Customers,
     "movements" => OpenSauce.CSV.Exporters.Movements
   }

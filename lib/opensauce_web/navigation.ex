@@ -8,7 +8,6 @@ defmodule OpenSauceWeb.Navigation do
   """
   use OpenSauceWeb, :html
 
-  alias OpenSauceWeb.HtmlHelpers
   alias OpenSauceWeb.PurchasingLive.Index
   alias OpenSauceWeb.PurchasingLive.Show
   alias OpenSauceWeb.PurchasingLive.Suppliers
@@ -16,19 +15,12 @@ defmodule OpenSauceWeb.Navigation do
   alias Phoenix.LiveView.Socket
 
   @type section ::
-          :orders
+          :invoices
           | :inventory
           | :purchasing
           | :customers
           | :venues
           | :settings
-
-  # Orders nav helpers
-  def orders_nav_visible?(socket), do: live_action(socket) in [:index, :new]
-
-  def orders_table_active?(socket), do: Map.get(socket.assigns, :view_mode, "table") != "calendar"
-
-  def orders_calendar_active?(socket), do: Map.get(socket.assigns, :view_mode) == "calendar"
 
   # Inventory nav helpers
   @inventory_material_actions [
@@ -44,8 +36,6 @@ defmodule OpenSauceWeb.Navigation do
   ]
 
   def inventory_material_active?(socket), do: live_action(socket) in @inventory_material_actions
-  def inventory_forecast_active?(socket), do: live_action(socket) == :forecast
-  def inventory_reorder_active?(socket), do: live_action(socket) == :reorder
 
   # Purchasing nav helpers
   def purchasing_orders_active?(socket), do: socket.view in [Index, Show]
@@ -69,12 +59,8 @@ defmodule OpenSauceWeb.Navigation do
   defp live_action(socket), do: Map.get(socket.assigns, :live_action)
 
   # Breadcrumb builders
-  def crumb_order(%{reference: reference}) do
-    %{label: HtmlHelpers.format_reference(reference), path: ~p"/manage/orders/#{reference}"}
-  end
-
-  def crumb_order_items(%{reference: reference}) do
-    %{label: "Items", path: ~p"/manage/orders/#{reference}/items"}
+  def crumb_invoice(%{reference: reference}) do
+    %{label: reference, path: ~p"/manage/invoices/#{reference}"}
   end
 
   def crumb_material(%{name: name, sku: sku}) do
@@ -106,10 +92,6 @@ defmodule OpenSauceWeb.Navigation do
     %{label: full_name, path: ~p"/manage/customers/#{reference}"}
   end
 
-  def crumb_customer_orders(customer) do
-    %{label: "Orders", path: ~p"/manage/customers/#{customer.reference}/orders"}
-  end
-
   def crumb_customer_statistics(customer) do
     %{label: "Statistics", path: ~p"/manage/customers/#{customer.reference}/statistics"}
   end
@@ -120,61 +102,24 @@ defmodule OpenSauceWeb.Navigation do
 
   defp sections do
     %{
-      orders: %{
-        label: "Orders",
-        path: "/manage/orders",
+      invoices: %{
+        label: "Invoices",
+        path: "/manage/invoices",
         pages: %{
-          new: %{label: "New Order", path: "/manage/orders/new"},
-          order: &__MODULE__.crumb_order/1,
-          order_items: &__MODULE__.crumb_order_items/1
+          new_invoice: %{label: "New Invoice", path: "/manage/invoices/new"},
+          invoice: &__MODULE__.crumb_invoice/1
         },
-        sub_links: [
-          %{
-            key: :orders_table,
-            label: "Table",
-            navigate: "/manage/orders?view=table",
-            show?: &__MODULE__.orders_nav_visible?/1,
-            active?: &__MODULE__.orders_table_active?/1
-          },
-          %{
-            key: :orders_calendar,
-            label: "Calendar",
-            navigate: "/manage/orders?view=calendar",
-            show?: &__MODULE__.orders_nav_visible?/1,
-            active?: &__MODULE__.orders_calendar_active?/1
-          }
-        ]
+        sub_links: []
       },
       inventory: %{
         label: "Inventory",
         path: "/manage/inventory",
         pages: %{
           new_material: %{label: "New Material", path: "/manage/inventory/new"},
-          forecast: %{label: "Usage Forecast", path: "/manage/inventory/forecast"},
-          reorder: %{label: "Reorder Planner", path: "/manage/inventory/forecast/reorder"},
           material: &__MODULE__.crumb_material/1,
           material_stock: &__MODULE__.crumb_material_stock/1
         },
-        sub_links: [
-          %{
-            key: :materials,
-            label: "Materials",
-            navigate: "/manage/inventory",
-            active?: &__MODULE__.inventory_material_active?/1
-          },
-          %{
-            key: :forecast,
-            label: "Usage Forecast",
-            navigate: "/manage/inventory/forecast",
-            active?: &__MODULE__.inventory_forecast_active?/1
-          },
-          %{
-            key: :reorder,
-            label: "Reorder Planner",
-            navigate: "/manage/inventory/forecast/reorder",
-            active?: &__MODULE__.inventory_reorder_active?/1
-          }
-        ]
+        sub_links: []
       },
       purchasing: %{
         label: "Purchasing",
@@ -218,7 +163,6 @@ defmodule OpenSauceWeb.Navigation do
         pages: %{
           new_customer: %{label: "New Customer", path: "/manage/customers/new"},
           customer: &__MODULE__.crumb_customer/1,
-          customer_orders: &__MODULE__.crumb_customer_orders/1,
           customer_statistics: &__MODULE__.crumb_customer_statistics/1,
           customer_engagements: &__MODULE__.crumb_customer_engagements/1
         },
@@ -279,7 +223,6 @@ defmodule OpenSauceWeb.Navigation do
   end
 
   @resource_sections %{
-    order: :orders,
     material: :inventory,
     purchase_order: :purchasing,
     supplier: :purchasing,
