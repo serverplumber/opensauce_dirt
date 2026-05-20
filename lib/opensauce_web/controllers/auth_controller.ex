@@ -17,7 +17,7 @@ defmodule OpenSauceWeb.AuthController do
         conn
         |> put_session("organisation_id", membership.organisation_id)
         |> put_flash(:info, "You are now signed in")
-        |> redirect(to: ~p"/manage/overview")
+        |> redirect(to: ~p"/manage/jobs")
 
       {:ok, _many} ->
         conn

@@ -282,7 +282,7 @@ defmodule OpenSauceWeb.Layouts do
         </div>
 
         <div :if={is_nil(@current_user)} class="space-y-3">
-          <p>Ready to manage your production workflow?</p>
+          <p>Sign in to manage your business.</p>
           <.link
             href={~p"/sign-in"}
             class="inline-flex items-center gap-2 rounded-md bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-stone-900"
@@ -308,15 +308,6 @@ defmodule OpenSauceWeb.Layouts do
 
     ~H"""
     <%= case @name do %>
-      <% :production -> %>
-        <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 7l9-4 9 4-9 4-9-4m9 4v10"
-          />
-        </svg>
       <% :inventory -> %>
         <svg class={@classes} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -545,20 +536,6 @@ defmodule OpenSauceWeb.Layouts do
 
   defp manage_links do
     [
-      %{
-        label: "Overview",
-        navigate: ~p"/manage/overview",
-        icon: :manage,
-        nav_section: :overview,
-        prefix: "/manage/overview"
-      },
-      %{
-        label: "Production",
-        navigate: ~p"/manage/production/schedule",
-        icon: :production,
-        nav_section: :production,
-        prefix: "/manage/production"
-      },
       %{
         label: "Inventory",
         navigate: ~p"/manage/inventory",

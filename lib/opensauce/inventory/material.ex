@@ -47,6 +47,7 @@ defmodule OpenSauce.Inventory.Material do
         :name,
         :sku,
         :unit,
+        :material_type,
         :price,
         :minimum_stock,
         :maximum_stock
@@ -61,6 +62,7 @@ defmodule OpenSauce.Inventory.Material do
         :name,
         :sku,
         :unit,
+        :material_type,
         :price,
         :minimum_stock,
         :maximum_stock
@@ -130,6 +132,13 @@ defmodule OpenSauce.Inventory.Material do
     attribute :price, :decimal do
       public? true
       allow_nil? false
+    end
+
+    attribute :material_type, :atom do
+      public? true
+      allow_nil? false
+      default :supply
+      constraints one_of: [:supply, :plant]
     end
 
     attribute :minimum_stock, :decimal do

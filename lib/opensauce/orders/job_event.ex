@@ -83,10 +83,6 @@ defmodule OpenSauce.Orders.JobEvent do
       public? true
     end
 
-    has_many :plant_links, OpenSauce.Orders.JobEventPlant do
-      public? true
-    end
-
     has_many :material_links, OpenSauce.Orders.JobEventMaterial do
       public? true
     end

@@ -48,3 +48,4 @@ npm-debug.log
 # Claude Code
 .claude/worktrees/
 todo/
+TODO.md

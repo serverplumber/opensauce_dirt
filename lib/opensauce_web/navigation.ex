@@ -9,8 +9,6 @@ defmodule OpenSauceWeb.Navigation do
   use OpenSauceWeb, :html
 
   alias OpenSauceWeb.HtmlHelpers
-  alias OpenSauceWeb.ProductionBatchLive.Index, as: ProductionBatchIndex
-  alias OpenSauceWeb.ProductionBatchLive.Show, as: ProductionBatchShow
   alias OpenSauceWeb.PurchasingLive.Index
   alias OpenSauceWeb.PurchasingLive.Show
   alias OpenSauceWeb.PurchasingLive.Suppliers
@@ -24,8 +22,6 @@ defmodule OpenSauceWeb.Navigation do
           | :customers
           | :venues
           | :settings
-          | :production
-          | :overview
 
   # Orders nav helpers
   def orders_nav_visible?(socket), do: live_action(socket) in [:index, :new]
@@ -70,21 +66,7 @@ defmodule OpenSauceWeb.Navigation do
   def settings_calendar_feed_active?(socket), do: settings_active?(:calendar_feed, socket)
   def settings_members_active?(socket), do: settings_active?(:members, socket)
 
-  # Production nav helpers
-  def production_weekly_active?(socket) do
-    live_action(socket) in [:schedule, :make_sheet] and schedule_view(socket) == :week
-  end
-
-  def production_daily_active?(socket) do
-    live_action(socket) in [:schedule, :make_sheet] and schedule_view(socket) == :day
-  end
-
-  def production_batches_active?(socket) do
-    socket.view in [ProductionBatchIndex, ProductionBatchShow]
-  end
-
   defp live_action(socket), do: Map.get(socket.assigns, :live_action)
-  defp schedule_view(socket), do: Map.get(socket.assigns, :schedule_view, :day)
 
   # Breadcrumb builders
   def crumb_order(%{reference: reference}) do
@@ -102,10 +84,6 @@ defmodule OpenSauceWeb.Navigation do
 
   def crumb_material_stock(material) do
     %{label: "Stock", path: ~p"/manage/inventory/#{material.sku}/stock"}
-  end
-
-  def crumb_production_batch(%{batch_code: batch_code}) do
-    %{label: batch_code, path: ~p"/manage/production/batches/#{batch_code}"}
   end
 
   def crumb_purchase_order(%{reference: reference}) do
@@ -142,12 +120,6 @@ defmodule OpenSauceWeb.Navigation do
 
   defp sections do
     %{
-      overview: %{
-        label: "Overview",
-        path: "/manage/overview",
-        pages: %{},
-        sub_links: []
-      },
       orders: %{
         label: "Orders",
         path: "/manage/orders",
@@ -303,37 +275,6 @@ defmodule OpenSauceWeb.Navigation do
           }
         ]
       },
-      production: %{
-        label: "Production",
-        path: "/manage/production/schedule",
-        pages: %{
-          schedule: %{label: "Schedule", path: "/manage/production/schedule"},
-          make_sheet: %{label: "Make Sheet", path: "/manage/production/make_sheet"},
-          materials: %{label: "Materials", path: "/manage/production/materials"},
-          batches: %{label: "Batches", path: "/manage/production/batches"},
-          batch: &__MODULE__.crumb_production_batch/1
-        },
-        sub_links: [
-          %{
-            key: :weekly,
-            label: "Weekly",
-            navigate: "/manage/production/schedule?view=week",
-            active?: &__MODULE__.production_weekly_active?/1
-          },
-          %{
-            key: :daily,
-            label: "Daily",
-            navigate: "/manage/production/schedule?view=day",
-            active?: &__MODULE__.production_daily_active?/1
-          },
-          %{
-            key: :batches,
-            label: "Batches",
-            navigate: "/manage/production/batches",
-            active?: &__MODULE__.production_batches_active?/1
-          }
-        ]
-      }
     }
   end
 

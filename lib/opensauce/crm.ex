@@ -26,18 +26,10 @@ defmodule OpenSauce.CRM do
       define :destroy_customer, action: :destroy
     end
 
-    resource OpenSauce.CRM.Plant do
-      define :get_plant_by_id, action: :read, get_by: [:id]
-      define :list_plants, action: :read
-      define :create_plant, action: :create
-      define :update_plant, action: :update
-      define :destroy_plant, action: :destroy
-    end
-
-    resource OpenSauce.CRM.EngagementPlant do
-      define :create_engagement_plant, action: :create
-      define :update_engagement_plant, action: :update
-      define :destroy_engagement_plant, action: :destroy
+    resource OpenSauce.CRM.EngagementMaterial do
+      define :list_engagement_materials, action: :read
+      define :create_engagement_material, action: :create
+      define :destroy_engagement_material, action: :destroy
     end
 
     resource OpenSauce.CRM.Engagement do

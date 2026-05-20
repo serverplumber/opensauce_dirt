@@ -151,7 +151,7 @@ defmodule OpenSauce.CRM.Engagement do
       attribute_writable? true
     end
 
-    has_many :plants, OpenSauce.CRM.EngagementPlant do
+    has_many :materials, OpenSauce.CRM.EngagementMaterial do
       public? true
     end
 

@@ -86,13 +86,6 @@ defmodule OpenSauceWeb.JobLive.Index do
 
       <:action :let={job}>
         <button
-          phx-click="open_plants"
-          phx-value-id={job.id}
-          class="text-sm text-stone-500 hover:text-stone-700"
-        >
-          Plants
-        </button>
-        <button
           phx-click="open_materials"
           phx-value-id={job.id}
           class="text-sm text-stone-500 hover:text-stone-700"
@@ -139,23 +132,6 @@ defmodule OpenSauceWeb.JobLive.Index do
     </.modal>
 
     <.modal
-      :if={@plants_job_id != nil}
-      id="job-plants-modal"
-      title="Plants"
-      max_width="max-w-3xl"
-      show
-      on_cancel={JS.push("close_plants")}
-    >
-      <.live_component
-        module={OpenSauceWeb.JobLive.PlantsComponent}
-        id={"job-plants-#{@plants_job_id}"}
-        job_id={@plants_job_id}
-        current_member={@current_member}
-        currency={@settings.currency}
-      />
-    </.modal>
-
-    <.modal
       :if={@event_log_job != nil}
       id="event-log-modal"
       title={"Log event — #{event_log_title(@event_log_job)}"}
@@ -168,23 +144,6 @@ defmodule OpenSauceWeb.JobLive.Index do
         job={@event_log_job}
         events={@event_log_events}
         current_member={@current_member}
-      />
-    </.modal>
-
-    <.modal
-      :if={@event_plants_event != nil}
-      id="event-plants-modal"
-      title="Event plants"
-      max_width="max-w-3xl"
-      show
-      on_cancel={JS.push("close_event_plants")}
-    >
-      <.live_component
-        module={OpenSauceWeb.JobLive.EventPlantsComponent}
-        id={"event-plants-#{@event_plants_event.id}"}
-        job_event={@event_plants_event}
-        current_member={@current_member}
-        currency={@settings.currency}
       />
     </.modal>
 
@@ -212,11 +171,9 @@ defmodule OpenSauceWeb.JobLive.Index do
     {:ok,
      socket
      |> assign(
-       plants_job_id: nil,
        materials_job_id: nil,
        event_log_job: nil,
        event_log_events: [],
-       event_plants_event: nil,
        event_materials_event: nil
      )
      |> load_jobs()}
@@ -263,19 +220,11 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
-  def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:manage_event_plants, event}}, socket) do
-    {:noreply,
-     socket
-     |> assign(event_log_job: nil, event_log_events: [])
-     |> assign(event_plants_event: event, event_materials_event: nil)}
-  end
-
-  @impl true
   def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:manage_event_materials, event}}, socket) do
     {:noreply,
      socket
      |> assign(event_log_job: nil, event_log_events: [])
-     |> assign(event_materials_event: event, event_plants_event: nil)}
+     |> assign(event_materials_event: event)}
   end
 
   @impl true
@@ -315,16 +264,6 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
-  def handle_event("open_plants", %{"id" => id}, socket) do
-    {:noreply, assign(socket, :plants_job_id, id)}
-  end
-
-  @impl true
-  def handle_event("close_plants", _params, socket) do
-    {:noreply, assign(socket, :plants_job_id, nil)}
-  end
-
-  @impl true
   def handle_event("open_event_log", %{"id" => id}, socket) do
     member = socket.assigns.current_member
     job = Enum.find(socket.assigns.jobs, &(&1.id == id))
@@ -341,11 +280,6 @@ defmodule OpenSauceWeb.JobLive.Index do
   @impl true
   def handle_event("close_event_log", _params, socket) do
     {:noreply, assign(socket, event_log_job: nil, event_log_events: [])}
-  end
-
-  @impl true
-  def handle_event("close_event_plants", _params, socket) do
-    {:noreply, assign(socket, :event_plants_event, nil)}
   end
 
   @impl true

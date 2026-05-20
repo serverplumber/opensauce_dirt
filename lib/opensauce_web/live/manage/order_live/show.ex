@@ -2,32 +2,15 @@ defmodule OpenSauceWeb.OrderLive.Show do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  import Ash.Expr
-
   alias OpenSauce.Catalog
   alias OpenSauce.Catalog.Product.Photo
   alias OpenSauce.CRM
   alias OpenSauce.Orders
-  alias OpenSauce.Orders.OrderItemBatchAllocation
   alias OpenSauceWeb.Navigation
-
-  require Ash.Query
 
   @default_order_load [
     :total_cost,
-    items: [
-      :cost,
-      :status,
-      :consumed_at,
-      :batch_code,
-      :planned_qty_sum,
-      :completed_qty_sum,
-      :material_cost,
-      :labor_cost,
-      :overhead_cost,
-      :unit_cost,
-      product: [:name, :sku]
-    ],
+    items: [:cost, :status, product: [:name, :sku]],
     customer: [:full_name, billing_address: [:full_address]]
   ]
 
@@ -128,16 +111,8 @@ defmodule OpenSauceWeb.OrderLive.Show do
             {format_money(@settings.currency, item.cost)}
           </:col>
           <:col :let={item} label="Status">
-            <% _planned = item.planned_qty_sum || Decimal.new(0) %>
-            <% completed = item.completed_qty_sum || Decimal.new(0) %>
-            <% status =
-              cond do
-                Decimal.compare(completed, item.quantity) != :lt -> :done
-                Decimal.compare(completed, Decimal.new(0)) == :gt -> :in_progress
-                true -> :todo
-              end %>
             <.badge
-              text={status}
+              text={item.status}
               colors={[
                 {:todo, "#{order_item_status_bg(:todo)} #{order_item_status_color(:todo)}"},
                 {:in_progress,
@@ -146,67 +121,9 @@ defmodule OpenSauceWeb.OrderLive.Show do
               ]}
             />
           </:col>
-          <:col :let={item} label="Allocations">
-            <div class="flex items-center gap-2 text-xs">
-              <span class="inline-flex items-center rounded bg-stone-100 px-2 py-0.5">
-                Planned: {item.planned_qty_sum || Decimal.new(0)}
-              </span>
-              <span class="inline-flex items-center rounded bg-stone-100 px-2 py-0.5">
-                Completed: {item.completed_qty_sum || Decimal.new(0)}
-              </span>
-            </div>
-          </:col>
-          <:action :let={item}>
-            <.button
-              size={:sm}
-              variant={:outline}
-              phx-click="open_add_to_batch"
-              phx-value-item_id={item.id}
-            >
-              Add to Batch…
-            </.button>
-          </:action>
-          <:col :let={item} label="Batch">
-            <%= if item.batch_code do %>
-              <.link
-                navigate={~p"/manage/production/batches/#{item.batch_code}"}
-                class="text-xs text-blue-700 hover:underline"
-              >
-                {item.batch_code}
-              </.link>
-            <% else %>
-              <span class="text-xs text-stone-600">-</span>
-            <% end %>
-          </:col>
-          <:col :let={item} label="Unit Cost">
-            {format_money(@settings.currency, item.unit_cost || Decimal.new(0))}
-          </:col>
         </.table>
       </.tabs_content>
     </div>
-
-    <.modal
-      :if={@pending_consumption_item_id}
-      id="consume-confirm-modal"
-      show
-      title="Confirm Materials Consumption"
-      on_cancel={JS.push("cancel_consume")}
-    >
-      <p class="mb-3 text-sm text-stone-700">
-        Completing this item will consume materials per the product's BOM. Review the quantities and confirm.
-      </p>
-      <.table id="order-consumption-recap" rows={@pending_consumption_recap}>
-        <:col :let={row} label="Material">{row.material.name}</:col>
-        <:col :let={row} label="Required">{format_amount(row.material.unit, row.required)}</:col>
-        <:col :let={row} label="Current Stock">
-          {format_amount(row.material.unit, row.current_stock || Decimal.new(0))}
-        </:col>
-      </.table>
-      <footer>
-        <.button variant={:outline} phx-click="cancel_consume">Close</.button>
-        <.button variant={:primary} phx-click="confirm_consume">Consume Now</.button>
-      </footer>
-    </.modal>
 
     <.modal
       :if={@live_action == :edit}
@@ -228,41 +145,6 @@ defmodule OpenSauceWeb.OrderLive.Show do
         patch={~p"/manage/orders/#{@order.reference}"}
       />
     </.modal>
-
-    <.modal
-      :if={@add_to_batch_item}
-      id="add-to-batch-modal"
-      show
-      title="Add Item to Batch"
-      on_cancel={JS.push("cancel_add_to_batch")}
-    >
-      <.form id="add-to-batch-form" for={%{}} phx-submit="save_add_to_batch">
-        <div class="space-y-3">
-          <div class="text-sm text-stone-700">
-            Product: <span class="font-medium">{@add_to_batch_item.product.name}</span>
-          </div>
-          <.input
-            type="select"
-            name="batch_id"
-            label="Open Batch"
-            options={for b <- @open_batches, do: {b.batch_code, b.id}}
-            value={@selected_batch_id}
-          />
-          <.input
-            type="number"
-            name="planned_qty"
-            label="Planned Quantity"
-            min="0"
-            step="any"
-            value={@default_planned_qty}
-          />
-          <div class="flex items-center justify-end gap-2">
-            <.button type="button" variant={:outline} phx-click="cancel_add_to_batch">Cancel</.button>
-            <.button type="submit" variant={:primary}>Add</.button>
-          </div>
-        </div>
-      </.form>
-    </.modal>
     """
   end
 
@@ -274,17 +156,7 @@ defmodule OpenSauceWeb.OrderLive.Show do
     customers =
       CRM.list_customers!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id, load: [:full_name])
 
-    {:ok,
-     assign(socket,
-       products: products,
-       customers: customers,
-       add_to_batch_item: nil,
-       open_batches: [],
-       default_planned_qty: Decimal.new(0),
-       selected_batch_id: nil,
-       pending_consumption_item_id: nil,
-       pending_consumption_recap: []
-     )}
+    {:ok, assign(socket, products: products, customers: customers)}
   end
 
   @impl true
@@ -317,111 +189,6 @@ defmodule OpenSauceWeb.OrderLive.Show do
       |> assign(:tabs_links, tabs_links)
 
     {:noreply, Navigation.assign(socket, :orders, order_trail(order, live_action))}
-  end
-
-  @impl true
-  def handle_event("update_item_status", _params, socket), do: {:noreply, socket}
-
-  @impl true
-  def handle_event("confirm_consume", _params, socket), do: {:noreply, socket}
-
-  @impl true
-  def handle_event("cancel_consume", _params, socket), do: {:noreply, socket}
-
-  @impl true
-  def handle_event("open_add_to_batch", %{"item_id" => item_id}, socket) do
-    actor = socket.assigns.current_member
-
-    item =
-      Orders.get_order_item_by_id!(item_id,
-        actor: actor, tenant: actor.organisation_id,
-        load: [:quantity, :planned_qty_sum, product: [:name, :sku]]
-      )
-
-    open_batches =
-      Orders.list_open_batches_for_product!(%{product_id: item.product_id}, actor: actor, tenant: actor.organisation_id)
-
-    remaining = Decimal.sub(item.quantity, item.planned_qty_sum || Decimal.new(0))
-
-    selected =
-      open_batches
-      |> List.first()
-      |> case do
-        nil -> nil
-        b -> b.id
-      end
-
-    {:noreply,
-     socket
-     |> assign(:add_to_batch_item, item)
-     |> assign(:open_batches, open_batches)
-     |> assign(:default_planned_qty, remaining)
-     |> assign(:selected_batch_id, selected)}
-  end
-
-  @impl true
-  def handle_event("save_add_to_batch", %{"batch_id" => batch_id, "planned_qty" => planned_qty}, socket) do
-    actor = socket.assigns.current_member
-    item = socket.assigns.add_to_batch_item
-    qty = Decimal.new(planned_qty)
-
-    existing =
-      OrderItemBatchAllocation
-      |> Ash.Query.new()
-      |> Ash.Query.filter(expr(order_item_id == ^item.id and production_batch_id == ^batch_id))
-      |> Ash.read_one(actor: actor, tenant: actor.organisation_id)
-
-    case existing do
-      {:ok, %{} = alloc} ->
-        _ =
-          Orders.update_order_item_batch_allocation!(
-            alloc,
-            %{planned_qty: Decimal.add(alloc.planned_qty || Decimal.new(0), qty)},
-            actor: actor, tenant: actor.organisation_id
-          )
-
-        :ok
-
-      _ ->
-        _ =
-          Orders.create_order_item_batch_allocation!(
-            %{
-              order_item_id: item.id,
-              production_batch_id: batch_id,
-              planned_qty: qty,
-              completed_qty: Decimal.new(0)
-            },
-            actor: actor, tenant: actor.organisation_id
-          )
-
-        :ok
-    end
-
-    order =
-      Orders.get_order_by_id!(socket.assigns.order.id,
-        load: @default_order_load,
-        actor: actor, tenant: actor.organisation_id
-      )
-
-    {:noreply,
-     socket
-     |> assign(:order, order)
-     |> assign(:add_to_batch_item, nil)
-     |> assign(:open_batches, [])
-     |> assign(:selected_batch_id, nil)
-     |> put_flash(:info, "Allocation added")}
-  rescue
-    e ->
-      {:noreply, put_flash(socket, :error, "Failed to add allocation: #{Exception.message(e)}")}
-  end
-
-  @impl true
-  def handle_event("cancel_add_to_batch", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:add_to_batch_item, nil)
-     |> assign(:open_batches, [])
-     |> assign(:selected_batch_id, nil)}
   end
 
   @impl true

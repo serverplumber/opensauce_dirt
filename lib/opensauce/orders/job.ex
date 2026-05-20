@@ -172,10 +172,6 @@ defmodule OpenSauce.Orders.Job do
       domain OpenSauce.CRM
     end
 
-    has_many :plants, OpenSauce.Orders.JobPlant do
-      public? true
-    end
-
     has_many :events, OpenSauce.Orders.JobEvent do
       public? true
     end

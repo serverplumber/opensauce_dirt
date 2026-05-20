@@ -3,7 +3,8 @@ defmodule OpenSauce.Types.Unit do
   Represents measurement units with conversion and formatting capabilities.
   Supports gram, milliliter, piece, kcal, milligram, and percent units with appropriate abbreviations.
   """
-  use Ash.Type.Enum, values: [:gram, :milliliter, :piece, :kcal, :milligram, :percent]
+  use Ash.Type.Enum,
+    values: [:gram, :milliliter, :piece, :kcal, :milligram, :percent, :bulb, :seed, :cutting, :division, :specimen]
 
   @unit_abbreviations %{
     kilogram: "kg",
@@ -13,7 +14,12 @@ defmodule OpenSauce.Types.Unit do
     piece: "pc",
     kcal: "kcal",
     milligram: "mg",
-    percent: "%"
+    percent: "%",
+    bulb: "bulb",
+    seed: "seed",
+    cutting: "cutting",
+    division: "division",
+    specimen: "specimen"
   }
 
   @singular_names %{
@@ -22,7 +28,12 @@ defmodule OpenSauce.Types.Unit do
     piece: "piece",
     kcal: "kcal",
     milligram: "mg",
-    percent: "%"
+    percent: "%",
+    bulb: "bulb",
+    seed: "seed",
+    cutting: "cutting",
+    division: "division",
+    specimen: "specimen"
   }
 
   @plural_names %{
@@ -31,7 +42,12 @@ defmodule OpenSauce.Types.Unit do
     piece: "pieces",
     kcal: "kcal",
     milligram: "mg",
-    percent: "%"
+    percent: "%",
+    bulb: "bulbs",
+    seed: "seeds",
+    cutting: "cuttings",
+    division: "divisions",
+    specimen: "specimens"
   }
 
   @doc """
@@ -119,6 +135,11 @@ defmodule OpenSauce.Types.Unit do
   def abbreviation(:percent, value) when is_integer(value), do: "#{value}#{@unit_abbreviations.percent}"
 
   def abbreviation(:percent, value), do: "#{format_number(value)}#{@unit_abbreviations.percent}"
+
+  def abbreviation(unit, value) when unit in [:bulb, :seed, :cutting, :division, :specimen] do
+    name = if value == 1, do: @singular_names[unit], else: @plural_names[unit]
+    "#{value} #{name}"
+  end
 
   @doc """
   Returns just the abbreviation for a unit.

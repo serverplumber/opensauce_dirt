@@ -240,15 +240,6 @@ defmodule OpenSauceWeb.Components.CommandPalette do
                 myself={@myself}
               />
 
-              <.result_section
-                :if={@results.batches != []}
-                title="Production Batches"
-                items={@results.batches}
-                flat_results={@flat_results}
-                selected_index={@selected_index}
-                myself={@myself}
-              />
-
               <div
                 :if={empty_results?(@results)}
                 class="py-8 text-center text-sm text-stone-500"
@@ -347,15 +338,6 @@ defmodule OpenSauceWeb.Components.CommandPalette do
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
             />
           </svg>
-        <% :production -> %>
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 7l9-4 9 4-9 4-9-4m9 4v10"
-            />
-          </svg>
         <% :inventory -> %>
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -435,8 +417,7 @@ defmodule OpenSauceWeb.Components.CommandPalette do
       results.orders == [] and
       results.customers == [] and
       results.suppliers == [] and
-      results.purchase_orders == [] and
-      results.batches == []
+      results.purchase_orders == []
   end
 
   defp cmd_key do

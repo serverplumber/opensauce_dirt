@@ -48,15 +48,6 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
               <.button
                 :if={@events != []}
                 type="button"
-                phx-click="open_event_plants"
-                phx-target={@myself}
-                variant={:outline}
-              >
-                Add plants
-              </.button>
-              <.button
-                :if={@events != []}
-                type="button"
                 phx-click="open_event_materials"
                 phx-target={@myself}
                 variant={:outline}
@@ -155,11 +146,6 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
     params = inject_fixed(params, socket)
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, socket |> assign(:form, form) |> assign(:odometer_km, odometer_km)}
-  end
-
-  def handle_event("open_event_plants", _params, socket) do
-    notify_parent({:manage_event_plants, List.last(socket.assigns.events)})
-    {:noreply, socket}
   end
 
   def handle_event("open_event_materials", _params, socket) do

@@ -45,7 +45,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         </div>
       </.tabs_content>
 
-      <.tabs_content :if={@live_action in [:engagements, :new_engagement, :edit_engagement]}>
+      <.tabs_content :if={@live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_materials]}>
         <div class="mt-6 space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">Engagements</h3>
@@ -78,8 +78,11 @@ defmodule OpenSauceWeb.CustomerLive.Show do
               {format_term(e.term_start, e.term_end)}
             </:col>
             <:action :let={e}>
-              <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/plants"}>
-                <.button variant={:outline}>Plants</.button>
+              <.button variant={:outline} phx-click="open_schedule_job" phx-value-id={e.id}>
+                New job
+              </.button>
+              <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/materials"}>
+                <.button variant={:outline}>Materials</.button>
               </.link>
             </:action>
           </.table>
@@ -193,19 +196,35 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     </.modal>
 
     <.modal
-      :if={@live_action == :engagement_plants}
-      id="engagement-plants-modal"
-      title="Plants"
+      :if={@live_action == :engagement_materials}
+      id="engagement-materials-modal"
+      title="Materials"
       max_width="max-w-3xl"
       show
       on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
     >
       <.live_component
-        module={OpenSauceWeb.EngagementLive.PlantsComponent}
-        id={"plants-#{@engagement_id}"}
+        module={OpenSauceWeb.EngagementLive.MaterialsComponent}
+        id={"materials-#{@engagement_id}"}
         engagement_id={@engagement_id}
         current_member={@current_member}
         currency={@settings.currency}
+      />
+    </.modal>
+
+    <.modal
+      :if={@schedule_job_engagement != nil}
+      id="schedule-job-modal"
+      title={"New job — #{schedule_job_title(@schedule_job_engagement)}"}
+      max_width="max-w-xl"
+      show
+      on_cancel={JS.push("close_schedule_job")}
+    >
+      <.live_component
+        module={OpenSauceWeb.EngagementLive.ScheduleJobComponent}
+        id={"schedule-job-#{@schedule_job_engagement.id}"}
+        engagement={@schedule_job_engagement}
+        current_member={@current_member}
       />
     </.modal>
     """
@@ -213,7 +232,11 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(:engagement, nil) |> assign(:engagement_id, nil)}
+    {:ok,
+     socket
+     |> assign(:engagement, nil)
+     |> assign(:engagement_id, nil)
+     |> assign(:schedule_job_engagement, nil)}
   end
 
   @impl true
@@ -237,7 +260,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       %{
         label: "Engagements",
         navigate: ~p"/manage/customers/#{customer.reference}/engagements",
-        active: live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_plants]
+        active: live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_materials]
       },
       %{
         label: "Orders",
@@ -280,6 +303,16 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   end
 
   @impl true
+  def handle_event("open_schedule_job", %{"id" => id}, socket) do
+    engagement = Enum.find(socket.assigns.customer.engagements, &(&1.id == id))
+    {:noreply, assign(socket, :schedule_job_engagement, engagement)}
+  end
+
+  def handle_event("close_schedule_job", _params, socket) do
+    {:noreply, assign(socket, :schedule_job_engagement, nil)}
+  end
+
+  @impl true
   def handle_info({OpenSauceWeb.CustomerLive.FormComponent, {:saved, customer}}, socket) do
     {:noreply, assign(socket, :customer, load_customer(customer.reference, socket))}
   end
@@ -287,6 +320,19 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   def handle_info({OpenSauceWeb.EngagementLive.FormComponent, {:saved, _engagement}}, socket) do
     customer = load_customer(socket.assigns.customer.reference, socket)
     {:noreply, assign(socket, :customer, customer)}
+  end
+
+  def handle_info(
+        {OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}},
+        socket
+      ) do
+    customer = load_customer(socket.assigns.customer.reference, socket)
+
+    {:noreply,
+     socket
+     |> assign(:customer, customer)
+     |> assign(:schedule_job_engagement, nil)
+     |> put_flash(:info, "Job scheduled with #{count} plant#{if count == 1, do: "", else: "s"}.")}
   end
 
   defp load_customer(reference, socket) do
@@ -301,7 +347,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         orders: [:total_cost, :total_items],
         billing_address: [:full_address],
         garden_addresses: [:name, :short_address, :full_address],
-        engagements: [:total_quoted_value, garden: [:name]]
+        engagements: [:total_quoted_value, :materials, garden: [:name]]
       ]
     )
   end
@@ -312,12 +358,17 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp page_title(:engagements), do: "Engagements"
   defp page_title(:new_engagement), do: "New Engagement"
   defp page_title(:edit_engagement), do: "Edit Engagement"
-  defp page_title(:engagement_plants), do: "Plants"
+  defp page_title(:engagement_materials), do: "Materials"
   defp page_title(:orders), do: "Customer Orders"
   defp page_title(:statistics), do: "Customer Statistics"
 
   defp customer_trail(customer, live_action)
-       when live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_plants] do
+       when live_action in [
+              :engagements,
+              :new_engagement,
+              :edit_engagement,
+              :engagement_materials
+            ] do
     [
       Navigation.root(:customers),
       Navigation.resource(:customer, customer),
@@ -343,6 +394,10 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   defp customer_trail(customer, _),
     do: [Navigation.root(:customers), Navigation.resource(:customer, customer)]
+
+  defp schedule_job_title(engagement) do
+    if engagement.garden, do: engagement.garden.name || "garden", else: "engagement"
+  end
 
   defp format_term(nil, nil), do: "—"
   defp format_term(start, nil), do: "From #{Date.to_iso8601(start)}"

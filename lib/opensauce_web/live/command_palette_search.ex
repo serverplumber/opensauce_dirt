@@ -6,9 +6,6 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
   import Ash.Query
 
   @pages [
-    %{label: "Overview", path: "/manage/overview", icon: :manage},
-    %{label: "Production Schedule", path: "/manage/production/schedule", icon: :production},
-    %{label: "Production Batches", path: "/manage/production/batches", icon: :production},
     %{label: "Inventory", path: "/manage/inventory", icon: :inventory},
     %{label: "Forecast", path: "/manage/inventory/forecast", icon: :inventory},
     %{label: "Purchasing", path: "/manage/purchasing", icon: :purchasing},
@@ -16,6 +13,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     %{label: "Products", path: "/manage/products", icon: :products},
     %{label: "Orders", path: "/manage/orders", icon: :orders},
     %{label: "Customers", path: "/manage/customers", icon: :customers},
+    %{label: "Jobs", path: "/manage/jobs", icon: :manage},
     %{label: "Settings", path: "/manage/settings", icon: :settings}
   ]
 
@@ -43,8 +41,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
         orders: [],
         customers: [],
         suppliers: [],
-        purchase_orders: [],
-        batches: []
+        purchase_orders: []
       }
     else
       %{
@@ -55,8 +52,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
         orders: search_orders(query, actor),
         customers: search_customers(query, actor),
         suppliers: search_suppliers(query, actor),
-        purchase_orders: search_purchase_orders(query, actor),
-        batches: search_batches(query, actor)
+        purchase_orders: search_purchase_orders(query, actor)
       }
     end
   end
@@ -73,8 +69,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
       Enum.map(results.orders, &Map.put(&1, :category, :orders)),
       Enum.map(results.customers, &Map.put(&1, :category, :customers)),
       Enum.map(results.suppliers, &Map.put(&1, :category, :suppliers)),
-      Enum.map(results.purchase_orders, &Map.put(&1, :category, :purchase_orders)),
-      Enum.map(results.batches, &Map.put(&1, :category, :batches))
+      Enum.map(results.purchase_orders, &Map.put(&1, :category, :purchase_orders))
     ])
   end
 
@@ -196,25 +191,6 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
         sublabel: format_status(po.status),
         path: "/manage/purchasing/#{po.reference}",
         icon: :purchasing
-      }
-    end)
-  rescue
-    _ -> []
-  end
-
-  defp search_batches(query, actor) do
-    pattern = "%#{query}%"
-
-    OpenSauce.Orders.ProductionBatch
-    |> filter(ilike(batch_code, ^pattern))
-    |> limit(5)
-    |> Ash.read!(actor: actor)
-    |> Enum.map(fn b ->
-      %{
-        label: b.batch_code,
-        sublabel: format_status(b.status),
-        path: "/manage/production/batches/#{b.batch_code}",
-        icon: :production
       }
     end)
   rescue

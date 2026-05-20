@@ -3,7 +3,7 @@ defmodule OpenSauceWeb.PageController do
 
   def home(conn, _params) do
     if conn.assigns[:current_user] do
-      redirect(conn, to: ~p"/manage/production/schedule")
+      redirect(conn, to: ~p"/manage/jobs")
     else
       release_version =
         case Application.spec(:opensauce, :vsn) do

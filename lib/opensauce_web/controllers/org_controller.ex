@@ -10,7 +10,7 @@ defmodule OpenSauceWeb.OrgController do
       {:ok, _member} ->
         conn
         |> put_session("organisation_id", org_id)
-        |> redirect(to: ~p"/manage/overview")
+        |> redirect(to: ~p"/manage/jobs")
 
       _ ->
         conn

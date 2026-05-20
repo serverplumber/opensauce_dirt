@@ -141,7 +141,6 @@ defmodule OpenSauceWeb.Router do
     get "/manage/settings/csv/export/:entity", CSVExportController, :export
 
     # PDF exports (regular controllers, not LiveView)
-    get "/manage/production/batches/:batch_code/sheet.pdf", BatchSheetController, :show
     get "/manage/orders/:reference/invoice.pdf", InvoiceController, :show
 
     # Staff Routes
@@ -206,15 +205,9 @@ defmodule OpenSauceWeb.Router do
       live "/manage/customers/:reference/engagements", CustomerLive.Show, :engagements
       live "/manage/customers/:reference/engagements/new", CustomerLive.Show, :new_engagement
       live "/manage/customers/:reference/engagements/:engagement_id/edit", CustomerLive.Show, :edit_engagement
-      live "/manage/customers/:reference/engagements/:engagement_id/plants", CustomerLive.Show, :engagement_plants
+      live "/manage/customers/:reference/engagements/:engagement_id/materials", CustomerLive.Show, :engagement_materials
 
       # Production
-      live "/manage/overview", OverviewLive, :index
-      live "/manage/production/schedule", OverviewLive, :schedule
-      live "/manage/production/make_sheet", OverviewLive, :make_sheet
-      live "/manage/production/materials", OverviewLive, :materials
-      live "/manage/production/batches", ProductionBatchLive.Index, :index
-      live "/manage/production/batches/:batch_code", ProductionBatchLive.Show, :show
     end
   end
 
