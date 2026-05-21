@@ -72,6 +72,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
           module={OpenSauceWeb.InvoiceLive.FormComponent}
           id={:new}
           current_member={@current_member}
+          settings={@settings}
           invoice={nil}
           patch={~p"/manage/invoices"}
         />

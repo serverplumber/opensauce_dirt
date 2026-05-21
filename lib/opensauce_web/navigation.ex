@@ -59,8 +59,8 @@ defmodule OpenSauceWeb.Navigation do
   defp live_action(socket), do: Map.get(socket.assigns, :live_action)
 
   # Breadcrumb builders
-  def crumb_invoice(%{reference: reference}) do
-    %{label: reference, path: ~p"/manage/invoices/#{reference}"}
+  def crumb_invoice(%{reference: reference, id: id}) do
+    %{label: reference, path: ~p"/manage/invoices/#{id}"}
   end
 
   def crumb_material(%{name: name, sku: sku}) do
@@ -226,7 +226,8 @@ defmodule OpenSauceWeb.Navigation do
     material: :inventory,
     purchase_order: :purchasing,
     supplier: :purchasing,
-    customer: :customers
+    customer: :customers,
+    invoice: :invoices
   }
 
   @doc """

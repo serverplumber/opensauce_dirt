@@ -2,6 +2,8 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  import Ash.Query
+
   alias OpenSauce.CRM
   alias OpenSauce.Orders
   alias OpenSauceWeb.Components.Page
@@ -58,7 +60,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                 </div>
                 <div :if={@invoice.engagement} class="flex justify-between">
                   <dt class="text-stone-500">Engagement</dt>
-                  <dd class="font-medium text-stone-700">{@invoice.engagement.title || "—"}</dd>
+                  <dd class="font-medium text-stone-700">{@invoice.engagement.scope_description || Atom.to_string(@invoice.engagement.status)}</dd>
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-stone-500">Issued</dt>
@@ -119,6 +121,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
           module={OpenSauceWeb.InvoiceLive.FormComponent}
           id={@invoice.id}
           current_member={@current_member}
+          settings={@settings}
           invoice={@invoice}
           patch={~p"/manage/invoices/#{@invoice.id}"}
         />
@@ -138,12 +141,10 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     invoice = load_invoice(id, member)
 
     jobs =
-      Orders.list_jobs!(
-        actor: member,
-        tenant: member.organisation_id,
-        filter: [invoice_id: id],
-        load: [:materials_cost]
-      )
+      Orders.Job
+      |> filter(invoice_id == ^id)
+      |> Ash.Query.load(:materials_cost)
+      |> Ash.read!(actor: member, tenant: member.organisation_id)
 
     socket =
       socket

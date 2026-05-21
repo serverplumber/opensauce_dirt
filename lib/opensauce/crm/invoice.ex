@@ -32,6 +32,7 @@ defmodule OpenSauce.CRM.Invoice do
         :amount,
         :status,
         :notes,
+        :line_items,
         :organisation_id
       ]
     end
@@ -44,7 +45,8 @@ defmodule OpenSauce.CRM.Invoice do
         :due_on,
         :amount,
         :status,
-        :notes
+        :notes,
+        :line_items
       ]
     end
 
@@ -106,6 +108,12 @@ defmodule OpenSauce.CRM.Invoice do
       allow_nil? true
       public? true
       constraints max_length: 2000
+    end
+
+    attribute :line_items, {:array, :map} do
+      allow_nil? false
+      public? true
+      default []
     end
 
     timestamps()
