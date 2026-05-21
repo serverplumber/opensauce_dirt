@@ -47,7 +47,7 @@ defmodule OpenSauce.Inventory do
 
     resource OpenSauce.Inventory.SupplierCatalogueItem do
       define :list_supplier_catalogue_items, action: :list
-      define :search_supplier_catalogue_items, action: :search, args: [:query]
+      define :search_supplier_catalogue_items, action: :search, args: [:query, {:optional, :supplier_id}]
       define :get_supplier_catalogue_item_by_id, action: :read, get_by: [:id]
       define :create_supplier_catalogue_item, action: :create
       define :update_supplier_catalogue_item, action: :update

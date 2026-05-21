@@ -27,10 +27,13 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
     read :search do
       argument :query, :string, allow_nil?: false
       argument :supplier_catalogue_id, :uuid, allow_nil?: true
+      argument :supplier_id, :uuid, allow_nil?: true
 
       filter expr(
                (is_nil(^arg(:supplier_catalogue_id)) or
                   supplier_catalogue_id == ^arg(:supplier_catalogue_id)) and
+                 (is_nil(^arg(:supplier_id)) or
+                    supplier_catalogue.supplier_id == ^arg(:supplier_id)) and
                  (fragment("? ILIKE '%' || ? || '%'", latin_name, ^arg(:query)) or
                     fragment("? ILIKE '%' || ? || '%'", cultivar, ^arg(:query)) or
                     fragment("? ILIKE '%' || ? || '%'", name, ^arg(:query)))

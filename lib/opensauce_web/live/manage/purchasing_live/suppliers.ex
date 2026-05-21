@@ -32,6 +32,9 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
         <:col :let={s} label="Email">{s.contact_email}</:col>
         <:col :let={s} label="Phone">{s.contact_phone}</:col>
         <:action :let={s}>
+          <.link navigate={~p"/manage/purchasing/suppliers/#{s.id}/import"}>
+            <.button size={:sm} variant={:outline}>Import Catalogue</.button>
+          </.link>
           <.link patch={~p"/manage/purchasing/suppliers/#{s.id}/edit"}>
             <.button size={:sm} variant={:outline}>Edit</.button>
           </.link>

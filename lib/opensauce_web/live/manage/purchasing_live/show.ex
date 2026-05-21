@@ -211,6 +211,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
         id="po-item-form"
         current_member={@current_member}
         materials={@materials}
+        supplier={@po.supplier}
         po_id={@po.id}
         purchase_order_item={nil}
         patch={~p"/manage/purchasing/#{@po.reference}/items"}
