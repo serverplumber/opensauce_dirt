@@ -4,12 +4,28 @@ defmodule OpenSauce.Types.Unit do
   Supports gram, milliliter, piece, kcal, milligram, and percent units with appropriate abbreviations.
   """
   use Ash.Type.Enum,
-    values: [:gram, :milliliter, :piece, :kcal, :milligram, :percent, :bulb, :seed, :cutting, :division, :specimen]
+    values: [
+      :gram,
+      :milliliter,
+      :piece,
+      :kcal,
+      :milligram,
+      :percent,
+      :bulb,
+      :seed,
+      :cutting,
+      :division,
+      :specimen,
+      :liter,
+      :kilogram,
+      :tonne,
+      :cubic_meter
+    ]
 
   @unit_abbreviations %{
     kilogram: "kg",
     gram: "g",
-    liter: "l",
+    liter: "L",
     milliliter: "ml",
     piece: "pc",
     kcal: "kcal",
@@ -19,7 +35,9 @@ defmodule OpenSauce.Types.Unit do
     seed: "seed",
     cutting: "cutting",
     division: "division",
-    specimen: "specimen"
+    specimen: "specimen",
+    tonne: "t",
+    cubic_meter: "m³"
   }
 
   @singular_names %{
@@ -33,7 +51,11 @@ defmodule OpenSauce.Types.Unit do
     seed: "seed",
     cutting: "cutting",
     division: "division",
-    specimen: "specimen"
+    specimen: "specimen",
+    liter: "liter",
+    kilogram: "kilogram",
+    tonne: "tonne",
+    cubic_meter: "cubic meter"
   }
 
   @plural_names %{
@@ -47,7 +69,11 @@ defmodule OpenSauce.Types.Unit do
     seed: "seeds",
     cutting: "cuttings",
     division: "divisions",
-    specimen: "specimens"
+    specimen: "specimens",
+    liter: "liters",
+    kilogram: "kilograms",
+    tonne: "tonnes",
+    cubic_meter: "cubic meters"
   }
 
   @doc """
@@ -139,6 +165,26 @@ defmodule OpenSauce.Types.Unit do
   def abbreviation(unit, value) when unit in [:bulb, :seed, :cutting, :division, :specimen] do
     name = if value == 1, do: @singular_names[unit], else: @plural_names[unit]
     "#{value} #{name}"
+  end
+
+  def abbreviation(:liter, value) do
+    name = if value == 1, do: @singular_names.liter, else: @plural_names.liter
+    "#{format_number(value)} #{name}"
+  end
+
+  def abbreviation(:kilogram, value) do
+    name = if value == 1, do: @singular_names.kilogram, else: @plural_names.kilogram
+    "#{format_number(value)} #{name}"
+  end
+
+  def abbreviation(:tonne, value) do
+    name = if value == 1, do: @singular_names.tonne, else: @plural_names.tonne
+    "#{format_number(value)} #{name}"
+  end
+
+  def abbreviation(:cubic_meter, value) do
+    name = if value == 1, do: @singular_names.cubic_meter, else: @plural_names.cubic_meter
+    "#{format_number(value)} #{name}"
   end
 
   @doc """

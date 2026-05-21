@@ -80,7 +80,7 @@ defmodule OpenSauce.MixProject do
       {:gen_smtp, "~> 1.0"},
       {:imprintor, "~> 0.5"},
       {:open_api_spex, "~> 3.16"},
-      {:req, "~> 0.5", only: [:dev, :test]}
+      {:req, "~> 0.5"}
     ]
   end
 

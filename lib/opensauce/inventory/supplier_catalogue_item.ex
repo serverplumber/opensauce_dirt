@@ -12,9 +12,6 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
     repo OpenSauce.Repo
 
     custom_indexes do
-      # Standard btree indexes for exact lookups
-      index [:latin_name], name: "inventory_sci_latin_name_index"
-      index [:cultivar], name: "inventory_sci_cultivar_index"
       index [:supplier_catalogue_id], name: "inventory_sci_catalogue_index"
     end
   end
@@ -26,19 +23,20 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
       prepare build(sort: [latin_name: :asc, cultivar: :asc, name: :asc])
     end
 
-    # Primary search path: Latin name → cultivar → common name, case-insensitive
-    # GIN trigram indexes on latin_name and cultivar (see migration add_pg_trgm)
-    # make this fast across large supplier catalogues.
+    # GIN trigram indexes on latin_name, cultivar, name back ILIKE with pg_trgm.
     read :search do
       argument :query, :string, allow_nil?: false
+      argument :supplier_catalogue_id, :uuid, allow_nil?: true
 
       filter expr(
-               contains(string_downcase(latin_name), string_downcase(^arg(:query))) or
-                 contains(string_downcase(cultivar), string_downcase(^arg(:query))) or
-                 contains(string_downcase(name), string_downcase(^arg(:query)))
+               (is_nil(^arg(:supplier_catalogue_id)) or
+                  supplier_catalogue_id == ^arg(:supplier_catalogue_id)) and
+                 (fragment("? ILIKE '%' || ? || '%'", latin_name, ^arg(:query)) or
+                    fragment("? ILIKE '%' || ? || '%'", cultivar, ^arg(:query)) or
+                    fragment("? ILIKE '%' || ? || '%'", name, ^arg(:query)))
              )
 
-      prepare build(sort: [latin_name: :asc, cultivar: :asc])
+      prepare build(sort: [latin_name: :asc, cultivar: :asc], limit: 50)
     end
 
     read :by_category do
@@ -58,10 +56,8 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
         :latin_name,
         :cultivar,
         :category,
-        :format,
+        :format_description,
         :size_cm,
-        :volume,
-        :volume_unit,
         :unit_price,
         :currency,
         :min_order_qty,
@@ -79,10 +75,8 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
         :latin_name,
         :cultivar,
         :category,
-        :format,
+        :format_description,
         :size_cm,
-        :volume,
-        :volume_unit,
         :unit_price,
         :currency,
         :min_order_qty,
@@ -106,7 +100,6 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
   attributes do
     uuid_primary_key :id
 
-    # Plants: [plant_number][format_letter] e.g. "12345B". Non-plants: arbitrary.
     attribute :sku, :string do
       allow_nil? false
       public? true
@@ -135,32 +128,18 @@ defmodule OpenSauce.Inventory.SupplierCatalogueItem do
       constraints one_of: [:plant, :amendment, :container, :other]
     end
 
-    # :bare_root — size_cm is height
-    # :potted    — size_cm is pot/root-ball diameter, volume is pot volume
-    # :volume    — volume + volume_unit only (amendments, soil)
-    # :unit      — sold as discrete units, no size (e.g. trays, bags by count)
-    attribute :format, :atom do
+    # Verbatim from the supplier's catalogue: "tige, 100mm WB", "Pots 1 gallon (3 L)", "30L bag", etc.
+    attribute :format_description, :string do
       allow_nil? true
       public? true
-      constraints one_of: [:bare_root, :potted, :volume, :unit]
+      constraints max_length: 200
     end
 
+    # For height-graded plants (cm). Distinct from pot format.
     attribute :size_cm, :decimal do
       allow_nil? true
       public? true
       constraints min: 0
-    end
-
-    attribute :volume, :decimal do
-      allow_nil? true
-      public? true
-      constraints min: 0
-    end
-
-    attribute :volume_unit, :atom do
-      allow_nil? true
-      public? true
-      constraints one_of: [:liter, :gallon, :cubic_foot]
     end
 
     attribute :unit_price, :decimal do
