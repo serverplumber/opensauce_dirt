@@ -58,6 +58,17 @@ defmodule OpenSauce.Inventory.PurchaseOrder do
       accept [:supplier_id, :status, :ordered_at, :received_at]
     end
 
+    update :mark_ordered do
+      accept []
+      change set_attribute(:status, :ordered)
+      change set_attribute(:ordered_at, &DateTime.utc_now/0)
+    end
+
+    update :confirm do
+      accept []
+      change set_attribute(:status, :confirmed)
+    end
+
     update :receive do
       require_atomic? false
 

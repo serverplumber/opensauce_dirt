@@ -60,6 +60,9 @@ defmodule OpenSauce.Inventory do
       define :list_purchase_orders, action: :list
       define :create_purchase_order, action: :create
       define :update_purchase_order, action: :update
+      define :mark_purchase_order_ordered, action: :mark_ordered
+      define :confirm_purchase_order, action: :confirm
+      define :receive_purchase_order, action: :receive
     end
 
     resource OpenSauce.Inventory.PurchaseOrderItem do
@@ -68,6 +71,8 @@ defmodule OpenSauce.Inventory do
       define :list_open_po_items_for_material, action: :open_for_material
       define :create_purchase_order_item, action: :create
       define :update_purchase_order_item, action: :update
+      define :confirm_purchase_order_item, action: :confirm
+      define :receive_purchase_order_item, action: :receive
     end
 
   end
