@@ -275,25 +275,28 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogueImport do
 
   @impl true
   def handle_event("extract", _params, socket) do
-    socket = assign(socket, extracting: true, error: nil, preview: nil)
+    # consume_uploaded_entries must run in the LV process — read bytes here,
+    # then hand them to a task for the blocking API call.
+    pdf_binaries =
+      consume_uploaded_entries(socket, :pdf, fn %{path: path}, _entry ->
+        {:ok, File.read!(path)}
+      end)
 
-    pid = self()
-
-    Task.start(fn ->
-      result =
-        consume_uploaded_entries(socket, :pdf, fn %{path: path}, _entry ->
-          pdf = File.read!(path)
-          CatalogueImporter.extract(pdf)
+    case pdf_binaries do
+      [{:ok, pdf}] ->
+        pid = self()
+        Task.start(fn ->
+          case CatalogueImporter.extract(pdf) do
+            {:ok, items} -> send(pid, {:extracted, items})
+            {:error, reason} -> send(pid, {:extract_failed, reason})
+          end
         end)
 
-      case result do
-        [{:ok, items}] -> send(pid, {:extracted, items})
-        [{:error, reason}] -> send(pid, {:extract_failed, reason})
-        [] -> send(pid, {:extract_failed, "No file received"})
-      end
-    end)
+        {:noreply, assign(socket, extracting: true, error: nil, preview: nil)}
 
-    {:noreply, socket}
+      _ ->
+        {:noreply, assign(socket, error: "No file received.")}
+    end
   end
 
   @impl true
