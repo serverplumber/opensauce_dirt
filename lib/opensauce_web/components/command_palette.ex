@@ -26,7 +26,7 @@ defmodule OpenSauceWeb.Components.CommandPalette do
 
   @impl true
   def handle_event("open", _params, socket) do
-    results = CommandPaletteSearch.search("", socket.assigns[:current_user])
+    results = CommandPaletteSearch.search("", socket.assigns[:current_member])
     flat = CommandPaletteSearch.flatten_results(results)
 
     {:noreply,
@@ -49,7 +49,7 @@ defmodule OpenSauceWeb.Components.CommandPalette do
     if query == socket.assigns.query do
       {:noreply, socket}
     else
-      results = CommandPaletteSearch.search(query, socket.assigns[:current_user])
+      results = CommandPaletteSearch.search(query, socket.assigns[:current_member])
       flat = CommandPaletteSearch.flatten_results(results)
 
       {:noreply,

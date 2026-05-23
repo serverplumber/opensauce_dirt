@@ -80,7 +80,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     OpenSauce.Inventory.Material
     |> filter(ilike(name, ^pattern) or ilike(sku, ^pattern))
     |> limit(5)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: actor && actor.organisation_id)
     |> Enum.map(fn m ->
       %{
         label: m.name,
@@ -99,7 +99,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     OpenSauce.CRM.Customer
     |> filter(ilike(first_name, ^pattern) or ilike(last_name, ^pattern) or ilike(reference, ^pattern))
     |> limit(5)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: actor && actor.organisation_id)
     |> Enum.map(fn c ->
       %{
         label: "#{c.first_name} #{c.last_name}",
@@ -118,7 +118,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     OpenSauce.Inventory.Supplier
     |> filter(ilike(name, ^pattern))
     |> limit(5)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: actor && actor.organisation_id)
     |> Enum.map(fn s ->
       %{
         label: s.name,
@@ -137,7 +137,7 @@ defmodule OpenSauceWeb.CommandPaletteSearch do
     OpenSauce.Inventory.PurchaseOrder
     |> filter(ilike(reference, ^pattern))
     |> limit(5)
-    |> Ash.read!(actor: actor)
+    |> Ash.read!(actor: actor, tenant: actor && actor.organisation_id)
     |> Enum.map(fn po ->
       %{
         label: po.reference,

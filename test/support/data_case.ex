@@ -16,8 +16,7 @@ defmodule OpenSauce.DataCase do
 
   use ExUnit.CaseTemplate
 
-  alias AshAuthentication.Strategy.Password
-  alias OpenSauce.Accounts.User
+  alias OpenSauce.Accounts.{Organisation, OrganisationMember, User}
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
@@ -61,44 +60,32 @@ defmodule OpenSauce.DataCase do
   end
 
   @doc """
-  Create a staff user for use as an actor in tests that require authorization.
+  Returns an OrganisationMember with role :staff for use as an actor in Ash domain calls.
   """
-  def staff_actor do
-    email = "staff+#{System.unique_integer([:positive])}@local"
-
-    User
-    |> Ash.Changeset.for_create(:register_with_password, %{
-      email: email,
-      password: "Passw0rd!!",
-      password_confirmation: "Passw0rd!!",
-      role: :staff
-    })
-    |> Ash.create!(
-      context: %{
-        strategy: Password,
-        private: %{ash_authentication?: true}
-      }
-    )
-  end
+  def staff_actor, do: create_member!(:staff)
 
   @doc """
-  Create or fetch an admin user for tests requiring elevated privileges.
+  Returns an OrganisationMember with role :owner for use as an actor in Ash domain calls.
   """
-  def admin_actor do
-    email = "admin+#{System.unique_integer([:positive])}@local"
+  def admin_actor, do: create_member!(:owner)
 
-    User
-    |> Ash.Changeset.for_create(:register_with_password, %{
-      email: email,
-      password: "Passw0rd!!",
-      password_confirmation: "Passw0rd!!",
-      role: :admin
-    })
-    |> Ash.create!(
-      context: %{
-        strategy: Password,
-        private: %{ash_authentication?: true}
-      }
-    )
+  defp create_member!(role) do
+    email = "#{role}+#{System.unique_integer([:positive])}@local"
+
+    user =
+      User
+      |> Ash.Changeset.for_create(:create, %{email: email})
+      |> Ash.create!(authorize?: false)
+
+    n = System.unique_integer([:positive])
+
+    org =
+      Organisation
+      |> Ash.Changeset.for_create(:create, %{name: "Test Org #{n}", slug: "test-org-#{n}"})
+      |> Ash.create!(authorize?: false)
+
+    OrganisationMember
+    |> Ash.Changeset.for_create(:create, %{role: role, user_id: user.id, organisation_id: org.id})
+    |> Ash.create!(authorize?: false)
   end
 end

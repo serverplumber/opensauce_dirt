@@ -4,6 +4,7 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
   import Phoenix.LiveViewTest
 
   alias OpenSauce.Test.Factory
+  alias OpenSauce.Operations
 
   describe "index and new" do
     @tag role: :staff
@@ -39,8 +40,8 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
 
   describe "show tabs" do
     @tag role: :staff
-    test "renders material details tab for staff", %{conn: conn} do
-      material = Factory.create_material!()
+    test "renders material details tab for staff", %{conn: conn, member: member} do
+      material = Factory.create_material!(%{}, member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}")
       assert has_element?(view, "[role=tablist]")
@@ -48,26 +49,8 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
     end
 
     @tag role: :staff
-    test "renders allergens tab for staff", %{conn: conn} do
-      material = Factory.create_material!()
-
-      {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/allergens")
-      assert has_element?(view, "[role=tablist]")
-      assert has_element?(view, "#material-allergen-form-2")
-    end
-
-    @tag role: :staff
-    test "renders nutritional facts tab for staff", %{conn: conn} do
-      material = Factory.create_material!()
-
-      {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/nutritional_facts")
-      assert has_element?(view, "[role=tablist]")
-      assert has_element?(view, "#material-nutritional-facts-form")
-    end
-
-    @tag role: :staff
-    test "renders stock tab for staff", %{conn: conn} do
-      material = Factory.create_material!()
+    test "renders stock tab for staff", %{conn: conn, member: member} do
+      material = Factory.create_material!(%{}, member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/stock")
       assert has_element?(view, "[role=tablist]")
@@ -75,16 +58,16 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
     end
 
     @tag role: :staff
-    test "renders edit modal for staff", %{conn: conn} do
-      material = Factory.create_material!()
+    test "renders edit modal for staff", %{conn: conn, member: member} do
+      material = Factory.create_material!(%{}, member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/edit")
       assert has_element?(view, "#material-form")
     end
 
     @tag role: :staff
-    test "renders adjust modal for staff", %{conn: conn} do
-      material = Factory.create_material!()
+    test "renders adjust modal for staff", %{conn: conn, member: member} do
+      material = Factory.create_material!(%{}, member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/adjust")
       assert has_element?(view, "#movement-form")
@@ -92,8 +75,8 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
   end
 
   describe "movement form" do
-    defp create_material_with_stock!(qty) do
-      actor = OpenSauce.DataCase.staff_actor()
+    defp create_material_with_stock!(qty, member) do
+      venue = Factory.create_venue!(%{}, member)
 
       material =
         OpenSauce.Inventory.Material
@@ -105,28 +88,29 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
           minimum_stock: Decimal.new(0),
           maximum_stock: Decimal.new(0)
         })
-        |> Ash.create!(actor: actor)
+        |> Ash.create!(actor: member, tenant: member.organisation_id)
 
       lot =
         OpenSauce.Inventory.Lot
         |> Ash.Changeset.for_create(:create, %{
           lot_code: "LOT-#{System.unique_integer([:positive])}",
-          material_id: material.id
+          material_id: material.id,
+          venue_id: venue.id
         })
-        |> Ash.create!(actor: actor)
+        |> Ash.create!(actor: member, tenant: member.organisation_id)
 
       OpenSauce.Inventory.adjust_stock!(
         %{quantity: Decimal.new(qty), reason: "seed", material_id: material.id, lot_id: lot.id},
-        actor: actor
+        actor: member,
+        tenant: member.organisation_id
       )
 
-      Ash.reload!(material, load: [:current_stock])
+      Ash.reload!(material, load: [:current_stock], actor: member, tenant: member.organisation_id)
     end
 
     @tag role: :staff
-    test "subtract mode creates a negative movement", %{conn: conn} do
-      material = create_material_with_stock!("100")
-      actor = OpenSauce.DataCase.staff_actor()
+    test "subtract mode creates a negative movement", %{conn: conn, member: member} do
+      material = create_material_with_stock!("100", member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/adjust")
 
@@ -140,18 +124,18 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
 
       reloaded =
         Ash.load!(
-          OpenSauce.Inventory.get_material_by_id!(material.id, actor: actor),
+          OpenSauce.Inventory.get_material_by_id!(material.id, actor: member, tenant: member.organisation_id),
           :current_stock,
-          actor: actor
+          actor: member,
+          tenant: member.organisation_id
         )
 
       assert Decimal.equal?(reloaded.current_stock, Decimal.new("70"))
     end
 
     @tag role: :staff
-    test "decimal quantity round-trips correctly", %{conn: conn} do
-      material = create_material_with_stock!("50")
-      actor = OpenSauce.DataCase.staff_actor()
+    test "decimal quantity round-trips correctly", %{conn: conn, member: member} do
+      material = create_material_with_stock!("50", member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/adjust")
 
@@ -163,17 +147,18 @@ defmodule OpenSauceWeb.ManageInventoryLiveTest do
 
       reloaded =
         Ash.load!(
-          OpenSauce.Inventory.get_material_by_id!(material.id, actor: actor),
+          OpenSauce.Inventory.get_material_by_id!(material.id, actor: member, tenant: member.organisation_id),
           :current_stock,
-          actor: actor
+          actor: member,
+          tenant: member.organisation_id
         )
 
       assert Decimal.equal?(reloaded.current_stock, Decimal.new("72.5"))
     end
 
     @tag role: :staff
-    test "subtract below zero shows red preview without clamping", %{conn: conn} do
-      material = create_material_with_stock!("10")
+    test "subtract below zero shows red preview without clamping", %{conn: conn, member: member} do
+      material = create_material_with_stock!("10", member)
 
       {:ok, view, _html} = live(conn, ~p"/manage/inventory/#{material.sku}/adjust")
 

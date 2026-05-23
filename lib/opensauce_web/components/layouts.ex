@@ -17,6 +17,7 @@ defmodule OpenSauceWeb.Layouts do
   attr :current_path, :string, default: ""
   attr :nav_section, :atom, default: nil
   attr :current_user, :any, default: nil
+  attr :current_member, :any, default: nil
   attr :flash, :map, default: %{}
   attr :socket, :any, default: nil
   attr :page_title, :string, default: nil
@@ -148,6 +149,7 @@ defmodule OpenSauceWeb.Layouts do
                   module={OpenSauceWeb.Components.CommandPalette}
                   id="command-palette"
                   current_user={@current_user}
+                  current_member={assigns[:current_member]}
                 />
                 <div :if={@current_user} class="relative">
                   <button

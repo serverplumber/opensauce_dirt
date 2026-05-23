@@ -49,13 +49,13 @@ defmodule OpenSauceWeb.ConnCase do
         {:ok, conn: conn}
 
       role ->
-        user =
+        {user, member} =
           [role: role]
           |> AuthHelpers.register_user!()
           |> AuthHelpers.ensure_token!()
 
         conn = AuthHelpers.sign_in(conn, user)
-        {:ok, conn: conn, user: user}
+        {:ok, conn: conn, user: user, member: member}
     end
   end
 end

@@ -1,112 +1,80 @@
 defmodule OpenSauce.Test.Factory do
-  @moduledoc """
-  Minimal factories for common domain entities used in tests.
-  Uses Ash actions and passes a default staff actor when needed.
-  """
+  @moduledoc false
 
-  alias OpenSauce.Catalog.BOM
-  alias OpenSauce.Catalog.Product
   alias OpenSauce.CRM.Customer
-  alias OpenSauce.Inventory.Material
-  alias OpenSauce.Orders.Order
+  alias OpenSauce.Inventory.{Material, Supplier}
 
-  defp staff_actor, do: OpenSauce.DataCase.staff_actor()
+  @doc """
+  Creates a Material. Accepts optional attribute overrides and an optional actor
+  (OrganisationMember). When no actor is provided, a fresh staff member is created.
+  """
+  def create_material!(attrs \\ %{}, actor \\ nil) do
+    member = actor || OpenSauce.DataCase.staff_actor()
 
-  # Products
-  def create_product!(attrs \\ %{}, actor \\ staff_actor()) do
-    params =
-      %{
-        name: Map.get(attrs, :name, "Test Product"),
-        sku: Map.get(attrs, :sku, unique_code("SKU")),
-        status: Map.get(attrs, :status, :active),
-        price: Map.get(attrs, :price, Decimal.new("10.00"))
-      }
-
-    Product
-    |> Ash.Changeset.for_create(:create, params)
-    |> Ash.create!(actor: actor)
-  end
-
-  # Materials & Allergens
-  def create_material!(attrs \\ %{}, actor \\ staff_actor()) do
-    params =
-      %{
-        name: Map.get(attrs, :name, "Test Material"),
-        sku: Map.get(attrs, :sku, unique_code("MAT")),
-        unit: Map.get(attrs, :unit, :gram),
-        price: Map.get(attrs, :price, Decimal.new("1.00")),
-        minimum_stock: Map.get(attrs, :minimum_stock, Decimal.new(0)),
-        maximum_stock: Map.get(attrs, :maximum_stock, Decimal.new(0))
-      }
-
-    Material
-    |> Ash.Changeset.for_create(:create, params)
-    |> Ash.create!(actor: actor)
-  end
-
-
-  # Legacy name kept for compatibility: creates a BOM instead
-  def create_recipe!(product, components, actor \\ staff_actor()) do
-    bom_components =
-      Enum.map(components, fn c ->
-        %{
-          component_type: :material,
-          material_id: c["material_id"] || c[:material_id],
-          quantity: c["quantity"] || c[:quantity]
-        }
-      end)
-
-    BOM
-    |> Ash.Changeset.for_create(:create, %{product_id: product.id, components: bom_components})
-    |> Ash.create!(actor: actor)
-  end
-
-  # Customers
-  def create_customer!(attrs \\ %{}, _actor \\ staff_actor()) do
-    params =
-      %{
-        type: :individual,
-        first_name: Map.get(attrs, :first_name, "Jane"),
-        last_name: Map.get(attrs, :last_name, "Doe"),
-        email: Map.get(attrs, :email, "jane.doe+#{System.unique_integer([:positive])}@local")
-      }
-
-    Customer
-    |> Ash.Changeset.for_create(:create, params)
-    |> Ash.create!()
-  end
-
-  # Orders
-  def create_order_with_items!(customer, items, opts \\ []) do
-    actor = Keyword.get(opts, :actor, staff_actor())
-    delivery_date = Keyword.get(opts, :delivery_date, DateTime.utc_now())
-
-    params = %{
-      customer_id: customer.id,
-      delivery_date: delivery_date,
-      items: items
+    defaults = %{
+      name: "Material #{System.unique_integer([:positive])}",
+      sku: "MAT-#{System.unique_integer([:positive])}",
+      unit: :gram,
+      price: Decimal.new("1.00"),
+      minimum_stock: Decimal.new(0),
+      maximum_stock: Decimal.new(0)
     }
 
-    {:ok, order} =
-      Order
-      |> Ash.Changeset.for_create(:create, params)
-      |> Ash.create(actor: actor)
-
-    Ash.reload!(order, load: [items: [product: [:name, :sku]]], actor: actor)
+    Material
+    |> Ash.Changeset.for_create(:create, Map.merge(defaults, attrs))
+    |> Ash.create!(actor: member, tenant: member.organisation_id)
   end
 
-  # API Keys
-  def create_api_key!(scopes \\ %{}, actor \\ admin_actor()) do
-    {:ok, api_key} =
-      OpenSauce.Accounts.create_api_key(
-        %{name: "test-key-#{System.unique_integer([:positive])}", scopes: scopes},
-        actor: actor
-      )
+  @doc """
+  Creates a Customer. Accepts optional attribute overrides and an optional actor.
+  Includes a default garden address (required by the create action).
+  """
+  def create_customer!(attrs \\ %{}, actor \\ nil) do
+    member = actor || OpenSauce.DataCase.staff_actor()
 
-    {Map.get(api_key, :__raw_key__), api_key}
+    defaults = %{
+      type: :individual,
+      first_name: "Test",
+      last_name: "Customer#{System.unique_integer([:positive])}",
+      email: "test+#{System.unique_integer([:positive])}@local",
+      garden_addresses: [%{is_garden: true, is_billing: false, is_indoor: false, city: "Springfield", country: "US"}]
+    }
+
+    Customer
+    |> Ash.Changeset.for_create(:create, Map.merge(defaults, attrs))
+    |> Ash.create!(actor: member, tenant: member.organisation_id)
   end
 
-  defp admin_actor, do: OpenSauce.DataCase.admin_actor()
+  @doc """
+  Creates a Venue. Accepts optional attribute overrides and an optional actor.
+  """
+  def create_venue!(attrs \\ %{}, actor \\ nil) do
+    member = actor || OpenSauce.DataCase.staff_actor()
 
-  defp unique_code(prefix), do: String.downcase(prefix) <> "-" <> Ecto.UUID.generate()
+    n = System.unique_integer([:positive])
+
+    defaults = %{
+      name: "Venue #{n}",
+      organisation_id: member.organisation_id
+    }
+
+    OpenSauce.Operations.Venue
+    |> Ash.Changeset.for_create(:create, Map.merge(defaults, attrs))
+    |> Ash.create!(actor: member, tenant: member.organisation_id)
+  end
+
+  @doc """
+  Creates a Supplier. Accepts optional attribute overrides and an optional actor.
+  """
+  def create_supplier!(attrs \\ %{}, actor \\ nil) do
+    member = actor || OpenSauce.DataCase.staff_actor()
+
+    defaults = %{
+      name: "Supplier #{System.unique_integer([:positive])}"
+    }
+
+    Supplier
+    |> Ash.Changeset.for_create(:create, Map.merge(defaults, attrs))
+    |> Ash.create!(actor: member, tenant: member.organisation_id)
+  end
 end

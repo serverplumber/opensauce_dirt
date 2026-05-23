@@ -3,24 +3,19 @@ defmodule OpenSauceWeb.CommandPaletteTest do
 
   import Phoenix.LiveViewTest
 
-  alias OpenSauce.Test.Factory
+  alias OpenSauce.Test.{AuthHelpers, Factory}
 
   defp staff_conn(conn) do
-    staff = OpenSauce.DataCase.staff_actor()
-
-    conn =
-      conn
-      |> AshAuthentication.Phoenix.Plug.store_in_session(staff)
-      |> Plug.Conn.assign(:current_user, staff)
-
-    {conn, staff}
+    {user, member} = AuthHelpers.register_user!(role: :staff)
+    conn = AuthHelpers.sign_in(conn, user)
+    {conn, member}
   end
 
   describe "command palette" do
     test "renders search button in header for authenticated users", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, _view, html} = live(conn, ~p"/manage/overview")
+      {:ok, _view, html} = live(conn, ~p"/manage/customers")
 
       assert html =~ "command-palette"
       assert html =~ "Search..."
@@ -29,7 +24,7 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     test "opens when clicking the search button", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       # Click the search button (targeting the component)
       view |> element("#command-palette button[phx-click=open]") |> render_click()
@@ -43,57 +38,53 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     test "shows static pages when first opened", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
       html = render(view)
       assert html =~ "Pages"
-      assert html =~ "Overview"
-      assert html =~ "Orders"
       assert html =~ "Inventory"
-      assert html =~ "Products"
+      assert html =~ "Customers"
+      assert html =~ "Purchasing"
+      assert html =~ "Jobs"
     end
 
     test "shows static actions when first opened", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
       html = render(view)
       assert html =~ "Actions"
-      assert html =~ "New Order"
-      assert html =~ "New Product"
+      assert html =~ "New Material"
       assert html =~ "New Customer"
     end
 
     test "filters results when searching", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
-      # Search for "order"
+      # Search for "purchase"
       view
       |> element("#command-palette")
-      |> render_hook("search", %{query: "order"})
+      |> render_hook("search", %{query: "purchase"})
 
       html = render(view)
-      # Should show pages/actions containing "order"
-      assert html =~ "Orders"
-      assert html =~ "New Order"
-      # Should not show unrelated static pages (check within the command palette results)
-      # Note: Inventory appears in the sidebar, so we check it's not in the pages section results
+      assert html =~ "Purchasing"
+      assert html =~ "New Purchase Order"
       refute html =~ ~r/<button[^>]*>.*New Material.*<\/button>/s
     end
 
     test "closes when clicking backdrop", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
       assert render(view) =~ "Search pages, actions, or records..."
@@ -105,32 +96,13 @@ defmodule OpenSauceWeb.CommandPaletteTest do
       refute render(view) =~ "Search pages, actions, or records..."
     end
 
-    test "searches products by name", %{conn: conn} do
-      {conn, staff} = staff_conn(conn)
-
-      # Create a test product
-      product = Factory.create_product!(%{name: "Chocolate Cake", sku: "choc-cake-001"}, staff)
-
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
-
-      view |> element("#command-palette button[phx-click=open]") |> render_click()
-
-      view
-      |> element("#command-palette")
-      |> render_hook("search", %{query: "chocolate"})
-
-      html = render(view)
-      assert html =~ "Chocolate Cake"
-      assert html =~ product.sku
-    end
-
     test "searches materials by name", %{conn: conn} do
       {conn, staff} = staff_conn(conn)
 
       # Create a test material
       material = Factory.create_material!(%{name: "Cocoa Powder", sku: "cocoa-001"}, staff)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
@@ -144,12 +116,12 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     end
 
     test "searches customers by name", %{conn: conn} do
-      {conn, _staff} = staff_conn(conn)
+      {conn, staff} = staff_conn(conn)
 
-      # Create a test customer
-      _customer = Factory.create_customer!(%{first_name: "Alice", last_name: "Smith"})
+      # Create a test customer in the same org as the LiveView session
+      _customer = Factory.create_customer!(%{first_name: "Alice", last_name: "Smith"}, staff)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
@@ -164,7 +136,7 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     test "shows no results message when nothing matches", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
@@ -180,7 +152,7 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     test "navigates down through results", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
@@ -198,7 +170,7 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     test "navigates up through results", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
@@ -222,23 +194,22 @@ defmodule OpenSauceWeb.CommandPaletteTest do
     test "selects item and navigates", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
-      # Click on the Orders page item
+      # Click on the Inventory page item
       view
-      |> element("#command-palette button[phx-value-path='/manage/orders']")
+      |> element("#command-palette button[phx-value-path='/manage/inventory']")
       |> render_click()
 
-      # Should navigate to orders page
-      assert_redirect(view, ~p"/manage/orders")
+      assert_redirect(view, ~p"/manage/inventory")
     end
 
     test "selects item via keyboard enter", %{conn: conn} do
       {conn, _staff} = staff_conn(conn)
 
-      {:ok, view, _html} = live(conn, ~p"/manage/overview")
+      {:ok, view, _html} = live(conn, ~p"/manage/customers")
 
       view |> element("#command-palette button[phx-click=open]") |> render_click()
 
@@ -247,8 +218,8 @@ defmodule OpenSauceWeb.CommandPaletteTest do
       |> element("#command-palette")
       |> render_hook("select", %{})
 
-      # Should navigate to first item (Overview)
-      assert_redirect(view, ~p"/manage/overview")
+      # Should navigate to first item (Inventory)
+      assert_redirect(view, ~p"/manage/inventory")
     end
   end
 end

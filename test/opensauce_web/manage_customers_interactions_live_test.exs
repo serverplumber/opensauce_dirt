@@ -3,19 +3,6 @@ defmodule OpenSauceWeb.ManageCustomersInteractionsLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias OpenSauce.CRM.Customer
-
-  defp create_customer! do
-    Customer
-    |> Ash.Changeset.for_create(:create, %{
-      type: :individual,
-      first_name: "Ada",
-      last_name: "Lovelace",
-      email: "ada+#{System.unique_integer()}@local"
-    })
-    |> Ash.create!()
-  end
-
   @tag role: :staff
   test "new customer button opens modal and submits form", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/manage/customers")
@@ -38,18 +25,26 @@ defmodule OpenSauceWeb.ManageCustomersInteractionsLiveTest do
         "email" => email,
         "phone" => "+1234567890",
         "billing_address" => %{
+          "is_billing" => "true",
+          "is_garden" => "false",
+          "is_indoor" => "false",
           "street" => "123 Main St",
           "city" => "Springfield",
-          "state" => "IL",
+          "province" => "IL",
           "zip" => "62701",
           "country" => "US"
         },
-        "shipping_address" => %{
-          "street" => "456 Oak Ave",
-          "city" => "Shelbyville",
-          "state" => "IL",
-          "zip" => "62565",
-          "country" => "US"
+        "garden_addresses" => %{
+          "0" => %{
+            "is_billing" => "false",
+            "is_garden" => "true",
+            "is_indoor" => "false",
+            "street" => "456 Oak Ave",
+            "city" => "Shelbyville",
+            "province" => "IL",
+            "zip" => "62565",
+            "country" => "US"
+          }
         }
       }
     }
@@ -62,16 +57,4 @@ defmodule OpenSauceWeb.ManageCustomersInteractionsLiveTest do
     assert render(view) =~ email
   end
 
-  @tag role: :staff
-  test "customer orders tab 'New Order' navigates to orders/new", %{conn: conn} do
-    c = create_customer!()
-
-    {:ok, view, _} = live(conn, ~p"/manage/customers/#{c.reference}/orders")
-
-    view
-    |> element("a[href='/manage/orders/new?customer_id=#{c.reference}']")
-    |> render_click()
-
-    assert_redirect(view, ~p"/manage/orders/new?customer_id=#{c.reference}")
-  end
 end
