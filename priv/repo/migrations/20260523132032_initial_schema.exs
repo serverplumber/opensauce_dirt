@@ -36,12 +36,6 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
       add :smtp_username, :text
       add :smtp_password, :text
       add :smtp_tls, :text, default: "if_available"
-      add :forecast_lookback_days, :bigint, null: false, default: 42
-      add :forecast_actual_weight, :decimal, null: false, default: "0.6"
-      add :forecast_planned_weight, :decimal, null: false, default: "0.4"
-      add :forecast_min_samples, :bigint, null: false, default: 10
-      add :forecast_default_service_level, :decimal, null: false, default: "0.95"
-      add :forecast_default_horizon_days, :bigint, null: false, default: 14
       add :organisation_id, :uuid, null: false
     end
 
