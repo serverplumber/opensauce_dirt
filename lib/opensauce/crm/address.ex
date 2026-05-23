@@ -102,6 +102,13 @@ defmodule OpenSauce.CRM.Address do
       attribute_writable? true
       domain OpenSauce.Accounts
     end
+
+    belongs_to :supplier, OpenSauce.Inventory.Supplier do
+      allow_nil? true
+      public? true
+      attribute_writable? true
+      domain OpenSauce.Inventory
+    end
   end
 
   calculations do

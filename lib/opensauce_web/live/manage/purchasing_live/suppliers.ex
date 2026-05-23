@@ -33,7 +33,7 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
         <:col :let={s} label="Phone">{s.contact_phone}</:col>
         <:action :let={s}>
           <.link navigate={~p"/manage/purchasing/suppliers/#{s.id}/import"}>
-            <.button size={:sm} variant={:outline}>Import Catalogue</.button>
+            <.button size={:sm} variant={:outline}>Import Catalog</.button>
           </.link>
           <.link patch={~p"/manage/purchasing/suppliers/#{s.id}/edit"}>
             <.button size={:sm} variant={:outline}>Edit</.button>
@@ -74,7 +74,13 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
     socket =
       case socket.assigns.live_action do
         :edit ->
-          sup = Inventory.get_supplier_by_id!(params["id"], actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
+          sup =
+            Inventory.get_supplier_by_id!(params["id"],
+              actor: socket.assigns.current_member,
+              tenant: socket.assigns.current_member.organisation_id,
+              load: [:address]
+            )
+
           assign(socket, :supplier, sup)
 
         :new ->

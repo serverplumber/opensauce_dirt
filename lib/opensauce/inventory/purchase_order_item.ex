@@ -18,6 +18,22 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
       prepare build(sort: [inserted_at: :asc], load: [:material, :purchase_order])
     end
 
+    read :list_open do
+      filter expr(purchase_order.status != :received)
+      prepare build(sort: [inserted_at: :asc])
+    end
+
+    read :find_open_by_job_and_item do
+      argument :job_id, :uuid, allow_nil?: false
+      argument :supplier_catalog_item_id, :uuid, allow_nil?: false
+
+      filter expr(
+               job_id == ^arg(:job_id) and
+                 supplier_catalog_item_id == ^arg(:supplier_catalog_item_id) and
+                 purchase_order.status != :received
+             )
+    end
+
     read :open_for_material do
       argument :material_id, :uuid do
         allow_nil? false
@@ -38,7 +54,8 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
 
       accept [
         :purchase_order_id,
-        :supplier_catalogue_item_id,
+        :job_id,
+        :supplier_catalog_item_id,
         :material_id,
         :supplier_sku,
         :quantity,
@@ -48,7 +65,7 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
     end
 
     update :update do
-      accept [:quantity, :unit_price, :is_reservation, :material_id]
+      accept [:job_id, :quantity, :unit_price, :is_reservation, :material_id]
     end
 
     # Called when supplier confirms availability and sets items aside.
@@ -78,8 +95,8 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
   attributes do
     uuid_primary_key :id
 
-    # Supplier's SKU, copied from catalogue item at PO build time so it is
-    # stable even if the catalogue entry changes later.
+    # Supplier's SKU, copied from catalog item at PO build time so it is
+    # stable even if the catalog entry changes later.
     attribute :supplier_sku, :string do
       allow_nil? false
       public? true
@@ -131,7 +148,7 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
       allow_nil? false
     end
 
-    belongs_to :supplier_catalogue_item, OpenSauce.Inventory.SupplierCatalogueItem do
+    belongs_to :supplier_catalog_item, OpenSauce.Inventory.SupplierCatalogItem do
       allow_nil? true
       public? true
       attribute_writable? true
@@ -141,6 +158,13 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
     # Gets linked when she receives and logs the stock.
     belongs_to :material, OpenSauce.Inventory.Material do
       allow_nil? true
+      attribute_writable? true
+    end
+
+    belongs_to :job, OpenSauce.Orders.Job do
+      allow_nil? true
+      public? true
+      domain OpenSauce.Orders
       attribute_writable? true
     end
   end

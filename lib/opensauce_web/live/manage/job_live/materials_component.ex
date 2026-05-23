@@ -2,16 +2,24 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
-  alias OpenSauce.Inventory
   alias OpenSauce.Orders
+  alias OpenSauceWeb.CatalogSearchComponent
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="space-y-6">
       <.table id={"jm-#{@job_id}"} rows={@job_materials}>
-        <:col :let={jm} label="Material">{jm.material.name}</:col>
-        <:col :let={jm} label="Qty">{jm.quantity} {jm.material.unit}</:col>
+        <:col :let={jm} label="Plant">
+          <span class="italic">{catalog_item_title(jm.supplier_catalog_item)}</span>
+        </:col>
+        <:col :let={jm} label="Format">
+          {jm.supplier_catalog_item.format_description || "—"}
+        </:col>
+        <:col :let={jm} label="Supplier">
+          {jm.supplier_catalog_item.supplier_catalog.supplier.name}
+        </:col>
+        <:col :let={jm} label="Qty">{jm.quantity}</:col>
         <:action :let={jm}>
           <.button
             variant={:outline}
@@ -32,21 +40,34 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
 
       <div class="border-t border-stone-200 pt-4">
         <h4 class="mb-3 text-sm font-medium text-stone-700">Add material</h4>
+
+        <div class="mb-3">
+          <label class="mb-1 block text-sm font-medium text-stone-700">Search Catalog</label>
+          <.live_component
+            module={CatalogSearchComponent}
+            id={"jm-catalog-search-#{@id}"}
+            current_member={@current_member}
+            notify={__MODULE__}
+            notify_id={@id}
+            selected_item={@selected_item}
+          />
+        </div>
+
         <.simple_form for={@form} id="job-material-add-form" phx-target={@myself} phx-submit="add">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="col-span-2">
-              <.input
-                field={@form[:material_id]}
-                type="select"
-                label="Material"
-                options={Enum.map(@materials, &{material_label(&1), &1.id})}
-                prompt="Select a material"
-              />
-            </div>
-            <.input field={@form[:quantity]} type="number" label="Quantity" step="0.01" min="0" />
-          </div>
+          <input
+            type="hidden"
+            name="job_material[supplier_catalog_item_id]"
+            value={@selected_item && @selected_item.id}
+          />
+          <.input field={@form[:quantity]} type="number" label="Quantity" step="0.01" min="0" />
           <:actions>
-            <.button variant={:primary} phx-disable-with="Adding...">Add</.button>
+            <.button
+              variant={:primary}
+              phx-disable-with="Adding..."
+              disabled={is_nil(@selected_item)}
+            >
+              Add
+            </.button>
           </:actions>
         </.simple_form>
       </div>
@@ -55,21 +76,19 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
   end
 
   @impl true
-  def update(%{job_id: _job_id, current_member: member} = assigns, socket) do
-    materials =
-      Inventory.list_materials!(
-        actor: member,
-        tenant: member.organisation_id
-      )
+  def update(%{catalog_item: item} = _assigns, socket) do
+    {:ok, assign(socket, :selected_item, item)}
+  end
 
+  def update(%{job_id: _job_id, current_member: _member} = assigns, socket) do
     job_materials = load_job_materials(assigns)
 
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:materials, materials)
      |> assign(:job_materials, job_materials)
      |> assign(:total_cost, sum_materials_cost(job_materials))
+     |> assign_new(:selected_item, fn -> nil end)
      |> assign(:form, blank_form())}
   end
 
@@ -80,7 +99,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
     case Orders.create_job_material(
            %{
              job_id: socket.assigns.job_id,
-             material_id: params["material_id"],
+             supplier_catalog_item_id: params["supplier_catalog_item_id"],
              quantity: parse_decimal(params["quantity"])
            },
            actor: member,
@@ -93,6 +112,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
          socket
          |> assign(:job_materials, job_materials)
          |> assign(:total_cost, sum_materials_cost(job_materials))
+         |> assign(:selected_item, nil)
          |> assign(:form, blank_form())}
 
       {:error, %Ash.Error.Invalid{} = err} ->
@@ -127,12 +147,12 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
       job_id,
       actor: member,
       tenant: member.organisation_id,
-      load: [materials: [:material]]
+      load: [materials: [supplier_catalog_item: [supplier_catalog: [:supplier]]]]
     ).materials
   end
 
   defp blank_form,
-    do: to_form(%{"material_id" => "", "quantity" => ""}, as: "job_material")
+    do: to_form(%{"supplier_catalog_item_id" => "", "quantity" => ""}, as: "job_material")
 
   defp parse_decimal(""), do: nil
 
@@ -145,10 +165,20 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
 
   defp sum_materials_cost(job_materials) do
     Enum.reduce(job_materials, Decimal.new(0), fn jm, acc ->
-      price = (jm.material && jm.material.price) || Decimal.new(0)
+      price =
+        (jm.supplier_catalog_item && jm.supplier_catalog_item.unit_price) || Decimal.new(0)
+
       Decimal.add(acc, Decimal.mult(jm.quantity, price))
     end)
   end
 
-  defp material_label(m), do: "#{m.name} (#{m.unit})"
+  defp catalog_item_title(item) do
+    [item.latin_name, item.cultivar]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+    |> case do
+      "" -> item.name
+      title -> title
+    end
+  end
 end

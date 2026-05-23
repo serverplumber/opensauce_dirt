@@ -49,10 +49,28 @@ defmodule OpenSauce.Inventory.Supplier do
     create :create do
       primary? true
       accept [:name, :contact_name, :contact_email, :contact_phone, :notes]
+
+      argument :address, :map, allow_nil?: true
+
+      change manage_relationship(:address,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
     end
 
     update :update do
       accept [:name, :contact_name, :contact_email, :contact_phone, :notes]
+
+      argument :address, :map, allow_nil?: true
+
+      change manage_relationship(:address,
+               on_lookup: :relate,
+               on_no_match: :create,
+               on_match: :update,
+               on_missing: :destroy
+             )
     end
   end
 
@@ -98,5 +116,13 @@ defmodule OpenSauce.Inventory.Supplier do
     end
 
     timestamps()
+  end
+
+  relationships do
+    has_one :address, OpenSauce.CRM.Address do
+      allow_nil? true
+      public? true
+      domain OpenSauce.CRM
+    end
   end
 end

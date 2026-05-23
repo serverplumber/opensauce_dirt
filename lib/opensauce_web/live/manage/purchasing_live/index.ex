@@ -4,6 +4,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
 
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.Receiving
+  alias OpenSauce.Inventory.UpdatePurchaseOrders
   alias OpenSauceWeb.Navigation
 
   @impl true
@@ -17,6 +18,9 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
     <.header>
       Purchasing
       <:actions>
+        <.button phx-click="update_purchase_orders" phx-disable-with="Checking…">
+          Update from Jobs
+        </.button>
         <.link patch={~p"/manage/purchasing/new"}>
           <.button variant={:primary}>New Purchase Order</.button>
         </.link>
@@ -32,7 +36,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
         <:col :let={po} label="Reference">
           <.kbd>{po.reference}</.kbd>
         </:col>
-        <:col :let={po} label="Supplier">{po.supplier.name}</:col>
+        <:col :let={po} label="Supplier">{(po.supplier && po.supplier.name) || "—"}</:col>
         <:col :let={po} label="Status">{po.status}</:col>
         <:col :let={po} label="Ordered">{format_time(po.ordered_at, @time_zone)}</:col>
         <:col :let={po} label="Received">{format_time(po.received_at, @time_zone)}</:col>
@@ -118,6 +122,22 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
       end
 
     {:noreply, Navigation.assign(socket, :purchasing, purchasing_trail(socket.assigns))}
+  end
+
+  @impl true
+  def handle_event("update_purchase_orders", _params, socket) do
+    member = socket.assigns.current_member
+
+    case UpdatePurchaseOrders.run(actor: member, tenant: member.organisation_id) do
+      {:ok, 0} ->
+        {:noreply, put_flash(socket, :info, "All job materials are already on open POs.")}
+
+      {:ok, n} ->
+        {:noreply,
+         socket
+         |> assign(:purchase_orders, load_purchase_orders(socket))
+         |> put_flash(:info, "Added #{n} item(s) to the draft PO.")}
+    end
   end
 
   @impl true

@@ -171,7 +171,7 @@ defmodule OpenSauceWeb.Router do
       live "/manage/purchasing/suppliers", PurchasingLive.Suppliers, :index
       live "/manage/purchasing/suppliers/new", PurchasingLive.Suppliers, :new
       live "/manage/purchasing/suppliers/:id/edit", PurchasingLive.Suppliers, :edit
-      live "/manage/purchasing/suppliers/:id/import", PurchasingLive.CatalogueImport, :import
+      live "/manage/purchasing/suppliers/:id/import", PurchasingLive.CatalogImport, :import
       # Purchase order routes (by reference)
       live "/manage/purchasing/:po_ref", PurchasingLive.Show, :show
       live "/manage/purchasing/:po_ref/items", PurchasingLive.Show, :items

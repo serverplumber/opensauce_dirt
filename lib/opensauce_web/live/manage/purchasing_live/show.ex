@@ -3,14 +3,17 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   use OpenSauceWeb, :live_view
 
   alias Decimal, as: D
+  alias OpenSauce.Accounts
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.Receiving
   alias OpenSauceWeb.Navigation
 
+  import OpenSauceWeb.PurchaseOrderPrint
+
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
+    <.header class="print:hidden">
       {@po.reference}
       <:subtitle>
         <span class={["rounded px-2 py-0.5 text-xs font-medium", status_class(@po.status)]}>
@@ -18,6 +21,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
         </span>
       </:subtitle>
       <:actions>
+        <.button variant={:outline} onclick="window.print()">Print</.button>
         <.link :if={@po.status == :draft} patch={~p"/manage/purchasing/#{@po.reference}/add_item"}>
           <.button variant={:outline}>Add Item</.button>
         </.link>
@@ -35,13 +39,15 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
       </:actions>
     </.header>
 
-    <.sub_nav links={@tabs_links} />
+    <.sub_nav links={@tabs_links} class="print:hidden" />
 
-    <div class="mt-4">
+    <.purchase_order_print po={@po} currency={@settings.currency} organisation={@organisation} />
+
+    <div class="mt-4 print:hidden">
       <div :if={@live_action == :show}>
         <.list>
           <:item title="Reference"><.kbd>{@po.reference}</.kbd></:item>
-          <:item title="Supplier">{@po.supplier.name}</:item>
+          <:item title="Supplier">{(@po.supplier && @po.supplier.name) || "—"}</:item>
           <:item title="Status">{Phoenix.Naming.humanize(@po.status)}</:item>
           <:item title="Ordered">{format_time(@po.ordered_at, @time_zone)}</:item>
           <:item title="Received">{format_time(@po.received_at, @time_zone)}</:item>
@@ -222,13 +228,18 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
+    member = socket.assigns.current_member
+
     materials =
       Inventory.list_materials!(
-        actor: socket.assigns.current_member,
-        tenant: socket.assigns.current_member.organisation_id
+        actor: member,
+        tenant: member.organisation_id
       )
 
-    {:ok, assign(socket, materials: materials)}
+    organisation =
+      Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
+
+    {:ok, assign(socket, materials: materials, organisation: organisation)}
   end
 
   @impl true
@@ -345,7 +356,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   end
 
   defp po_load do
-    [:supplier, items: [material: [:unit], supplier_catalogue_item: []]]
+    [supplier: [:address], items: [:material, supplier_catalog_item: [], job: [:address]]]
   end
 
   defp build_tabs(po, live_action) do
@@ -376,7 +387,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
     end
   end
 
-  defp plant_label(%{supplier_catalogue_item: %{latin_name: ln, cultivar: cv}})
+  defp plant_label(%{supplier_catalog_item: %{latin_name: ln, cultivar: cv}})
        when not is_nil(ln) do
     [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
   end

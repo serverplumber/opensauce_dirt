@@ -17,11 +17,17 @@ defmodule OpenSauce.Orders.JobMaterial do
 
     create :create do
       primary? true
-      accept [:job_id, :material_id, :quantity, :organisation_id]
+      accept [:job_id, :supplier_catalog_item_id, :quantity, :organisation_id]
     end
 
     update :update do
       accept [:quantity]
+    end
+
+    update :move do
+      accept [:job_id]
+      require_atomic? false
+      change OpenSauce.Orders.JobMaterial.Changes.MovePoItem
     end
   end
 
@@ -53,7 +59,7 @@ defmodule OpenSauce.Orders.JobMaterial do
       public? true
     end
 
-    belongs_to :material, OpenSauce.Inventory.Material do
+    belongs_to :supplier_catalog_item, OpenSauce.Inventory.SupplierCatalogItem do
       allow_nil? false
       public? true
       domain OpenSauce.Inventory

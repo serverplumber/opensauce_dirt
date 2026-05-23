@@ -57,8 +57,10 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
               <span class="text-stone-400 text-xs w-20 shrink-0">
                 {format_date(em.scheduled_date)}
               </span>
-              <span class="font-medium">{em.material.name}</span>
-              <span class="text-stone-500 text-xs">{em.quantity} {em.material.unit}</span>
+              <span class="font-medium italic">{catalog_item_title(em.supplier_catalog_item)}</span>
+              <span class="text-stone-500 text-xs">
+                {em.quantity}{if em.supplier_catalog_item.format_description, do: " · #{em.supplier_catalog_item.format_description}"}
+              </span>
             </div>
           </div>
         </div>
@@ -78,7 +80,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
         engagement.id,
         actor: member,
         tenant: member.organisation_id,
-        load: [materials: [:material], jobs: []]
+        load: [materials: [:supplier_catalog_item], jobs: []]
       )
 
     {:ok,
@@ -134,7 +136,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
 
       for em <- date_materials do
         Orders.create_job_material(
-          %{job_id: job.id, material_id: em.material_id, quantity: em.quantity},
+          %{job_id: job.id, supplier_catalog_item_id: em.supplier_catalog_item_id, quantity: em.quantity},
           actor: member,
           tenant: member.organisation_id
         )
@@ -143,7 +145,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
       if engagement.jobs == [] do
         for em <- unscheduled do
           Orders.create_job_material(
-            %{job_id: job.id, material_id: em.material_id, quantity: em.quantity},
+            %{job_id: job.id, supplier_catalog_item_id: em.supplier_catalog_item_id, quantity: em.quantity},
             actor: member,
             tenant: member.organisation_id
           )
@@ -193,4 +195,14 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
   defp blank_form, do: to_form(%{"date" => "", "service_type" => "maintenance"}, as: "job")
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp catalog_item_title(item) do
+    [item.latin_name, item.cultivar]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+    |> case do
+      "" -> item.name
+      title -> title
+    end
+  end
 end

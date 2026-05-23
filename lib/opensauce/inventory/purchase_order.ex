@@ -48,6 +48,11 @@ defmodule OpenSauce.Inventory.PurchaseOrder do
       prepare build(sort: [inserted_at: :desc], load: [:supplier])
     end
 
+    read :list_draft do
+      filter expr(status == :draft)
+      prepare build(sort: [inserted_at: :desc])
+    end
+
     create :create do
       primary? true
       accept [:supplier_id, :status, :ordered_at]
@@ -172,7 +177,9 @@ defmodule OpenSauce.Inventory.PurchaseOrder do
 
   relationships do
     belongs_to :supplier, OpenSauce.Inventory.Supplier do
-      allow_nil? false
+      allow_nil? true
+      public? true
+      attribute_writable? true
     end
 
     has_many :items, OpenSauce.Inventory.PurchaseOrderItem

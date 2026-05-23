@@ -17,7 +17,7 @@ defmodule OpenSauce.CRM.EngagementMaterial do
 
     create :create do
       primary? true
-      accept [:engagement_id, :material_id, :quantity, :note, :scheduled_date, :organisation_id]
+      accept [:engagement_id, :supplier_catalog_item_id, :quantity, :note, :scheduled_date, :organisation_id]
     end
   end
 
@@ -59,7 +59,7 @@ defmodule OpenSauce.CRM.EngagementMaterial do
       public? true
     end
 
-    belongs_to :material, OpenSauce.Inventory.Material do
+    belongs_to :supplier_catalog_item, OpenSauce.Inventory.SupplierCatalogItem do
       allow_nil? false
       public? true
       domain OpenSauce.Inventory

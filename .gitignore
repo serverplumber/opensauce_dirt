@@ -22,6 +22,10 @@ npm-debug.log
 .minio
 .postgres
 
+# Local secrets (not for source control)
+.env
+.envrc.local
+
 # Language servers
 .elixir_ls
 .lexical

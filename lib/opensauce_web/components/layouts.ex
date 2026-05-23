@@ -63,7 +63,7 @@ defmodule OpenSauceWeb.Layouts do
 
     ~H"""
     <div>
-      <div class="md:hidden">
+      <div class="md:hidden print:hidden">
         <div
           id="mobile-sidebar-backdrop"
           class="bg-black/40 fixed inset-0 z-40 hidden"
@@ -102,7 +102,7 @@ defmodule OpenSauceWeb.Layouts do
 
       <div class="flex min-h-screen bg-stone-50 text-stone-800">
         <aside
-          class="bg-stone-50/90 hidden border-r border-stone-200 backdrop-blur md:fixed md:inset-y-0 md:flex md:w-72 md:flex-col"
+          class="bg-stone-50/90 hidden border-r border-stone-200 backdrop-blur md:fixed md:inset-y-0 md:flex md:w-72 md:flex-col print:hidden"
           aria-label="Primary navigation"
         >
           <div class="min-h-14 flex items-center border-b border-stone-200 px-6">
@@ -120,8 +120,8 @@ defmodule OpenSauceWeb.Layouts do
           />
         </aside>
 
-        <div class="flex w-full flex-col md:pl-72">
-          <header class="bg-stone-50/90 min-h-14 flex items-center gap-3 border-b border-stone-200 sm:px-6 lg:px-8">
+        <div class="flex w-full flex-col md:pl-72 print:pl-0">
+          <header class="bg-stone-50/90 min-h-14 flex items-center gap-3 border-b border-stone-200 sm:px-6 lg:px-8 print:hidden">
             <button
               type="button"
               class="ml-1 rounded-md border border-stone-200 bg-white p-2 text-stone-600 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 md:hidden"

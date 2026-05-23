@@ -22,6 +22,19 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           <.input field={@form[:contact_phone]} type="text" label="Contact Phone" />
         </div>
         <.input field={@form[:contact_email]} type="email" label="Contact Email" />
+
+        <.inputs_for :let={f_addr} field={@form[:address]}>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <.input field={f_addr[:street]} type="text" label="Street" />
+            </div>
+            <.input field={f_addr[:city]} type="text" label="City" />
+            <.input field={f_addr[:province]} type="text" label="Province" />
+            <.input field={f_addr[:zip]} type="text" label="Postal Code" />
+            <.input field={f_addr[:country]} type="text" label="Country" />
+          </div>
+        </.inputs_for>
+
         <.input field={@form[:notes]} type="textarea" label="Notes" />
 
         <:actions>
@@ -56,16 +69,35 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
   end
 
   defp assign_form(%{assigns: %{supplier: supplier}} = socket) do
+    member = socket.assigns.current_member
+
     form =
       if supplier do
         Form.for_update(supplier, :update,
           as: "supplier",
-          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
+          actor: member,
+          tenant: member.organisation_id,
+          forms: [
+            address: [
+              data: supplier.address,
+              resource: OpenSauce.CRM.Address,
+              create_action: :create,
+              update_action: :update
+            ]
+          ]
         )
       else
         Form.for_create(Inventory.Supplier, :create,
           as: "supplier",
-          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
+          actor: member,
+          tenant: member.organisation_id,
+          forms: [
+            address: [
+              resource: OpenSauce.CRM.Address,
+              create_action: :create,
+              update_action: :update
+            ]
+          ]
         )
       end
 

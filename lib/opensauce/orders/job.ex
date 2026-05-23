@@ -30,6 +30,12 @@ defmodule OpenSauce.Orders.Job do
       prepare build(sort: [scheduled_at: :asc])
     end
 
+    read :at_address do
+      argument :address_id, :uuid, allow_nil?: false
+      filter expr(address_id == ^arg(:address_id) and status in [:scheduled, :in_progress])
+      prepare build(sort: [scheduled_at: :asc], load: [:materials])
+    end
+
     create :create do
       primary? true
       accept [

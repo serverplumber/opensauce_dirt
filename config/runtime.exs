@@ -205,3 +205,5 @@ if config_env() == :prod do
 
   config :opensauce, :anthropic_api_key, System.get_env("ANTHROPIC_API_KEY")
 end
+
+config :opensauce, :anthropic_api_key, System.get_env("ANTHROPIC_API_KEY")

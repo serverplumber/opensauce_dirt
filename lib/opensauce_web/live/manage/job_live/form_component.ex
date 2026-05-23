@@ -49,6 +49,17 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
             prompt="Select type"
           />
 
+          <.input
+            :if={@upstream_jobs != []}
+            name="job[upstream_job_id]"
+            id="job_upstream_job_id"
+            type="select"
+            label="Supplies from"
+            options={Enum.map(@upstream_jobs, &{upstream_job_label(&1), &1.id})}
+            prompt="Select job"
+            value=""
+          />
+
           <div class="flex gap-4">
             <div class="flex-1">
               <.input field={@form[:scheduled_at]} type="datetime-local" label="Scheduled" step="1800" />
@@ -86,7 +97,6 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
       )
 
     customer_id = job && job.customer_id
-
     addresses = addresses_for_customer(customers, customer_id)
 
     form =
@@ -109,6 +119,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
      |> assign(assigns)
      |> assign(:customers, customers)
      |> assign(:addresses, addresses)
+     |> assign(:upstream_jobs, [])
      |> assign(:form, to_form(form))}
   end
 
@@ -119,12 +130,27 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     customer_id = params["customer_id"]
     addresses = addresses_for_customer(socket.assigns.customers, customer_id)
 
-    {:noreply, socket |> assign(:form, form) |> assign(:addresses, addresses)}
+    upstream_jobs =
+      if params["address_id"] not in [nil, ""] and params["service_type"] not in [nil, ""] do
+        load_upstream_jobs(params["address_id"], socket.assigns.current_member)
+      else
+        []
+      end
+
+    {:noreply,
+     socket
+     |> assign(:form, form)
+     |> assign(:addresses, addresses)
+     |> assign(:upstream_jobs, upstream_jobs)}
   end
 
+  @impl true
   def handle_event("save", %{"job" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+    {upstream_job_id, job_params} = Map.pop(params, "upstream_job_id")
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: job_params) do
       {:ok, job} ->
+        move_materials_from_upstream(upstream_job_id, job, socket)
         notify_parent({:saved, job})
 
         {:noreply,
@@ -137,7 +163,41 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     end
   end
 
+  defp move_materials_from_upstream(id, _job, _socket) when id in [nil, ""], do: :ok
+
+  defp move_materials_from_upstream(upstream_job_id, job, socket) do
+    member = socket.assigns.current_member
+
+    upstream =
+      Orders.get_job_by_id!(upstream_job_id,
+        actor: member,
+        tenant: member.organisation_id,
+        load: [:materials]
+      )
+
+    Enum.each(upstream.materials, fn jm ->
+      Orders.move_job_material!(jm, %{job_id: job.id},
+        actor: member,
+        tenant: member.organisation_id
+      )
+    end)
+  end
+
+  defp load_upstream_jobs(address_id, member) do
+    Orders.list_jobs_at_address!(address_id,
+      actor: member,
+      tenant: member.organisation_id
+    )
+    |> Enum.filter(&(&1.materials != []))
+  end
+
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp upstream_job_label(%{service_type: st, scheduled_at: nil}),
+    do: Phoenix.Naming.humanize(st)
+
+  defp upstream_job_label(%{service_type: st, scheduled_at: dt}),
+    do: "#{Phoenix.Naming.humanize(st)} — #{Calendar.strftime(dt, "%b %-d, %Y")}"
 
   defp customer_label(c) do
     if c.company_name_nickname,
