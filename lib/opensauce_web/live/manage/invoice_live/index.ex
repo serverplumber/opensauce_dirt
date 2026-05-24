@@ -45,7 +45,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
               {invoice.due_on || "—"}
             </:col>
             <:col :let={invoice} label="Amount">
-              {format_money(@settings.currency, invoice.amount)}
+              {format_money(@organisation.currency, invoice.amount)}
             </:col>
             <:col :let={invoice} label="Status">
               <span class={["px-2 py-0.5 rounded text-xs font-medium", status_class(invoice.status)]}>

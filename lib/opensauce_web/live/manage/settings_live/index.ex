@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Accounts
-  alias OpenSauce.Settings
   alias OpenSauceWeb.Navigation
 
   @impl true
@@ -18,17 +17,6 @@ defmodule OpenSauceWeb.SettingsLive.Index do
       <div :if={@live_action in [:general, :index]}>
         <div class="flex flex-col gap-6 lg:flex-row">
           <div class="grow space-y-6">
-            <div class="rounded-md border border-gray-200 bg-white p-6">
-              <.live_component
-                module={OpenSauceWeb.SettingsLive.FormComponent}
-                id="settings-form"
-                current_member={@current_member}
-                title={@page_title}
-                action={@live_action}
-                settings={@settings}
-                patch={~p"/manage/settings/general"}
-              />
-            </div>
             <div class="rounded-md border border-gray-200 bg-white p-6">
               <.live_component
                 module={OpenSauceWeb.SettingsLive.OrgFormComponent}
@@ -167,13 +155,10 @@ defmodule OpenSauceWeb.SettingsLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    member = socket.assigns.current_member
-    settings = Settings.get_by_id!(socket.assigns.settings.id, actor: member, tenant: member.organisation_id)
     organisation = Accounts.get_organisation!(socket.assigns.current_member.organisation_id, authorize?: false, load: [:address])
 
     socket =
       socket
-      |> assign(:settings, settings)
       |> assign(:organisation, organisation)
       |> assign(:csv_form, to_form(%{}))
       |> assign(:csv_export_form, to_form(%{}))
@@ -274,13 +259,8 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   end
 
   @impl true
-  def handle_info({OpenSauceWeb.SettingsLive.FormComponent, {:saved, settings}}, socket) do
-    {:noreply, assign(socket, :settings, settings)}
-  end
-
-  @impl true
   def handle_info({OpenSauceWeb.SettingsLive.OrgFormComponent, {:saved, organisation}}, socket) do
-    {:noreply, assign(socket, :organisation, organisation)}
+    {:noreply, socket |> assign(:organisation, organisation) |> put_flash(:info, "Organisation updated.")}
   end
 
   @impl true

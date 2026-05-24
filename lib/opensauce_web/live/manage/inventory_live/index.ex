@@ -49,7 +49,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
               {format_amount(material.unit, material.current_stock)}
             </:col>
             <:col :let={{_, material}} label="Price">
-              {format_money(@settings.currency, material.price)} / {material.unit}
+              {format_money(@organisation.currency, material.price)} / {material.unit}
             </:col>
             <:action :let={{_, material}}>
               <div class="sr-only">

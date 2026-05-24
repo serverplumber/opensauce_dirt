@@ -64,6 +64,8 @@ defmodule OpenSauce.Accounts.Emails do
   end
 
   defp email_sender do
-    {"OpenSauce", "noreply@opensauce.app"}
+    name = Application.get_env(:opensauce, :email_from_name, "OpenSauce")
+    address = Application.get_env(:opensauce, :email_from_address, "noreply@opensauce.app")
+    {name, address}
   end
 end

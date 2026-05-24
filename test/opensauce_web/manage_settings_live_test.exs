@@ -9,7 +9,7 @@ defmodule OpenSauceWeb.ManageSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/manage/settings")
 
       assert has_element?(view, "[role=tablist]")
-      assert has_element?(view, "#settings-form")
+      assert has_element?(view, "#org-form")
     end
 
     @tag role: :owner
@@ -17,7 +17,7 @@ defmodule OpenSauceWeb.ManageSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/manage/settings/general")
 
       assert has_element?(view, "[role=tablist]")
-      assert has_element?(view, "#settings-form")
+      assert has_element?(view, "#org-form")
     end
   end
 

@@ -10,32 +10,12 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
   def up do
     create table(:settings, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :currency, :text, null: false, default: "CAD"
-      add :tax_mode, :text, null: false, default: "exclusive"
-      add :tax_rate, :decimal, null: false, default: "0"
-      add :offers_pickup, :boolean, null: false, default: true
-      add :offers_delivery, :boolean, null: false, default: true
-      add :lead_time_days, :bigint, null: false, default: 0
-      add :daily_capacity, :bigint, null: false, default: 0
-      add :shipping_flat, :decimal, null: false, default: "0"
       add :labor_hourly_rate, :decimal, null: false, default: "0"
       add :labor_overhead_percent, :decimal, null: false, default: "0"
       add :retail_markup_mode, :text, null: false, default: "percent"
       add :retail_markup_value, :decimal, null: false, default: "0"
       add :wholesale_markup_mode, :text, null: false, default: "percent"
       add :wholesale_markup_value, :decimal, null: false, default: "0"
-      add :email_from_name, :text, null: false, default: "OpenSauce"
-      add :email_from_address, :text, null: false, default: "noreply@craftplan.app"
-      add :email_provider, :text, null: false, default: "smtp"
-      add :email_api_key, :binary
-      add :email_api_secret, :binary
-      add :email_api_domain, :text
-      add :email_api_region, :text, default: "us-east-1"
-      add :smtp_host, :text
-      add :smtp_port, :bigint, default: 587
-      add :smtp_username, :text
-      add :smtp_password, :text
-      add :smtp_tls, :text, default: "if_available"
       add :organisation_id, :uuid, null: false
     end
 
@@ -988,6 +968,11 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
     alter table(:accounts_organisations) do
       add :name, :text, null: false
       add :slug, :text, null: false
+      add :currency, :text, null: false, default: "CAD"
+      add :tax_mode, :text, null: false, default: "exclusive"
+      add :tax_rate, :decimal, null: false, default: "0"
+      add :email_from_name, :text, default: "OpenSauce"
+      add :email_from_address, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,

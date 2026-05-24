@@ -8,7 +8,6 @@ defmodule OpenSauce.Settings.Settings do
     extensions: [AshJsonApi.Resource],
     fragments: [OpenSauce.Concerns.Multitenanted]
 
-  alias OpenSauce.Types.EncryptedBinary
 
   json_api do
     type "settings"
@@ -63,60 +62,6 @@ defmodule OpenSauce.Settings.Settings do
 
   attributes do
     uuid_primary_key :id
-
-    attribute :currency, OpenSauce.Types.Currency do
-      public? true
-      allow_nil? false
-      default :CAD
-    end
-
-    # Tax configuration
-    attribute :tax_mode, :atom do
-      public? true
-      allow_nil? false
-      default :exclusive
-      constraints one_of: [:inclusive, :exclusive]
-    end
-
-    attribute :tax_rate, :decimal do
-      public? true
-      allow_nil? false
-      default 0
-    end
-
-    # Fulfillment configuration
-    attribute :offers_pickup, :boolean do
-      public? true
-      allow_nil? false
-      default true
-    end
-
-    attribute :offers_delivery, :boolean do
-      public? true
-      allow_nil? false
-      default true
-    end
-
-    attribute :lead_time_days, :integer do
-      public? true
-      allow_nil? false
-      default 0
-      constraints min: 0
-    end
-
-    attribute :daily_capacity, :integer do
-      public? true
-      allow_nil? false
-      default 0
-      description "Max orders per day (0 = unlimited)"
-      constraints min: 0
-    end
-
-    attribute :shipping_flat, :decimal do
-      public? true
-      allow_nil? false
-      default 0
-    end
 
     # TODO(polish): workshop labor is a period cost, not tracked per plant. Hours
     # are spent tending all stock at a venue collectively, not per batch or per
@@ -173,69 +118,5 @@ defmodule OpenSauce.Settings.Settings do
       constraints min: 0
     end
 
-    # Email sender
-    attribute :email_from_name, :string do
-      public? true
-      allow_nil? false
-      default "OpenSauce"
-    end
-
-    attribute :email_from_address, :string do
-      public? true
-      allow_nil? false
-      default "noreply@craftplan.app"
-    end
-
-    # Email provider
-    attribute :email_provider, :atom do
-      public? true
-      allow_nil? false
-      default :smtp
-      constraints one_of: [:smtp, :sendgrid, :mailgun, :postmark, :brevo, :amazon_ses]
-    end
-
-    attribute :email_api_key, EncryptedBinary do
-      public? true
-      sensitive? true
-    end
-
-    attribute :email_api_secret, EncryptedBinary do
-      public? true
-      sensitive? true
-    end
-
-    attribute :email_api_domain, :string do
-      public? true
-    end
-
-    attribute :email_api_region, :string do
-      public? true
-      default "us-east-1"
-    end
-
-    # SMTP configuration
-    attribute :smtp_host, :string do
-      public? true
-    end
-
-    attribute :smtp_port, :integer do
-      public? true
-      default 587
-    end
-
-    attribute :smtp_username, :string do
-      public? true
-    end
-
-    attribute :smtp_password, :string do
-      public? true
-      sensitive? true
-    end
-
-    attribute :smtp_tls, :atom do
-      public? true
-      default :if_available
-      constraints one_of: [:if_available, :always, :never]
-    end
   end
 end

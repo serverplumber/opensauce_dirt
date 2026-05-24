@@ -13,6 +13,7 @@ defmodule OpenSauceWeb.LiveSettings do
     else
       socket
       |> load_settings()
+      |> load_organisation()
       |> assign_timezone(session["timezone"])
       |> then(&{:cont, &1})
     end
@@ -24,14 +25,21 @@ defmodule OpenSauceWeb.LiveSettings do
 
     settings =
       case OpenSauce.Settings.get_settings(opts) do
-        {:ok, settings} ->
-          settings
-
-        {:error, _} ->
-          OpenSauce.Settings.init!(opts)
+        {:ok, settings} -> settings
+        {:error, _} -> OpenSauce.Settings.init!(opts)
       end
 
     assign(socket, :settings, settings)
+  end
+
+  defp load_organisation(socket) do
+    org =
+      OpenSauce.Accounts.get_organisation!(
+        socket.assigns.current_member.organisation_id,
+        authorize?: false
+      )
+
+    assign(socket, :organisation, org)
   end
 
   defp assign_timezone(socket, timezone) do

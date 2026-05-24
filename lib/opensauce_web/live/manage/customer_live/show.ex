@@ -69,10 +69,10 @@ defmodule OpenSauceWeb.CustomerLive.Show do
               />
             </:col>
             <:col :let={e} label="Install">
-              {format_money(@settings.currency, e.install_price)}
+              {format_money(@organisation.currency, e.install_price)}
             </:col>
             <:col :let={e} label="Annual maintenance">
-              {format_money(@settings.currency, e.maintenance_price_annual)}
+              {format_money(@organisation.currency, e.maintenance_price_annual)}
             </:col>
             <:col :let={e} label="Term">
               {format_term(e.term_start, e.term_end)}
@@ -163,7 +163,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         id={"materials-#{@engagement_id}"}
         engagement_id={@engagement_id}
         current_member={@current_member}
-        currency={@settings.currency}
+        currency={@organisation.currency}
       />
     </.modal>
 

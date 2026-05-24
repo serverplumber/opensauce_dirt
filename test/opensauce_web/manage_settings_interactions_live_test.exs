@@ -4,16 +4,14 @@ defmodule OpenSauceWeb.ManageSettingsInteractionsLiveTest do
   import Phoenix.LiveViewTest
 
   @tag role: :owner
-  test "general settings can be saved", %{conn: conn} do
+  test "organisation settings can be saved", %{conn: conn, member: member} do
     {:ok, view, _html} = live(conn, ~p"/manage/settings/general")
 
-    params = %{"settings" => %{"tax_rate" => "0.05"}}
-
     view
-    |> element("#settings-form")
-    |> render_submit(params)
+    |> element("#org-form")
+    |> render_submit(%{"organisation" => %{"tax_rate" => "0.15"}})
 
-    assert render(view) =~ "Settings updated successfully"
+    org = OpenSauce.Accounts.get_organisation!(member.organisation_id, authorize?: false)
+    assert Decimal.equal?(org.tax_rate, Decimal.new("0.15"))
   end
-
 end

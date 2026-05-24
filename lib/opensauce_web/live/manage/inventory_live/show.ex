@@ -37,7 +37,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
             </.kbd>
           </:item>
           <:item title="Price">
-            {format_money(@settings.currency, @material.price)}
+            {format_money(@organisation.currency, @material.price)}
           </:item>
           <:item title="Current Stock">
             {format_amount(@material.unit, @material.current_stock)}

@@ -41,7 +41,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
     <.sub_nav links={@tabs_links} class="print:hidden" />
 
-    <.purchase_order_print po={@po} currency={@settings.currency} organisation={@organisation} />
+    <.purchase_order_print po={@po} currency={@organisation.currency} organisation={@organisation} />
 
     <div class="mt-4 print:hidden">
       <div :if={@live_action == :show}>
@@ -88,7 +88,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                       />
                     </td>
                     <td class="px-3 py-2 text-right text-stone-500">
-                      {format_money(@settings.currency, item.unit_price || D.new(0))}
+                      {format_money(@organisation.currency, item.unit_price || D.new(0))}
                     </td>
                     <td class="px-3 py-2">
                       <span :if={item.is_reservation} class="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">
@@ -119,7 +119,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
               {fmt_qty(i.received_qty) || "—"}
             </:col>
             <:col :let={i} label="Price">
-              {format_money(@settings.currency, i.unit_price || D.new(0))}
+              {format_money(@organisation.currency, i.unit_price || D.new(0))}
             </:col>
             <:col :let={i} label="">
               <span :if={i.is_reservation} class="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">

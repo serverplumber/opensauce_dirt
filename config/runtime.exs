@@ -90,7 +90,10 @@ if config_env() == :prod do
     System.get_env("CLOAK_KEY") ||
       raise "Missing environment variable CLOAK_KEY (32-byte key, base64-encoded)"
 
-  # Email provider (env-var fallback — DB settings take precedence at boot)
+  config :opensauce,
+    email_from_name: System.get_env("EMAIL_FROM_NAME") || "OpenSauce",
+    email_from_address: System.get_env("EMAIL_FROM_ADDRESS") || "noreply@opensauce.app"
+
   email_provider = System.get_env("EMAIL_PROVIDER")
 
   config :opensauce, OpenSauce.Vault,

@@ -73,7 +73,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                 <div class="flex justify-between border-t border-stone-100 pt-3">
                   <dt class="font-semibold text-stone-700">Amount</dt>
                   <dd class="text-lg font-bold text-stone-900">
-                    {format_money(@settings.currency, @invoice.amount)}
+                    {format_money(@organisation.currency, @invoice.amount)}
                   </dd>
                 </div>
                 <div :if={@invoice.notes} class="pt-2">
@@ -102,7 +102,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                   {job.status}
                 </:col>
                 <:col :let={job} label="Cost">
-                  {format_money(@settings.currency, job.materials_cost)}
+                  {format_money(@organisation.currency, job.materials_cost)}
                 </:col>
               </.table>
             </Page.surface>

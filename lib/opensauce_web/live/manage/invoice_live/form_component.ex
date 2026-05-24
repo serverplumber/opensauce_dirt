@@ -245,7 +245,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
         <div class="flex items-center justify-between border-t border-stone-100 pt-4">
           <span class="text-sm font-semibold text-stone-700">
-            Total: {format_total(@selected_jobs, @hidden_job_ids, @engagement_amount, @engagement_hidden, @custom_line_items, @settings.currency)}
+            Total: {format_total(@selected_jobs, @hidden_job_ids, @engagement_amount, @engagement_hidden, @custom_line_items, @organisation.currency)}
           </span>
           <.button type="submit" variant={:primary} phx-disable-with="Saving…">
             Save Invoice

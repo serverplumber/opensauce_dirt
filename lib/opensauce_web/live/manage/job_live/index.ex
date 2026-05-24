@@ -42,8 +42,8 @@ defmodule OpenSauceWeb.JobLive.Index do
 
       <:col :let={job} label="Cost / Price">
         <div class="space-y-0.5">
-          <div class="text-red-600">({format_money(@settings.currency, job.materials_cost)})</div>
-          <div>{format_money(@settings.currency, price_from_cost(job.materials_cost))}</div>
+          <div class="text-red-600">({format_money(@organisation.currency, job.materials_cost)})</div>
+          <div>{format_money(@organisation.currency, price_from_cost(job.materials_cost))}</div>
         </div>
       </:col>
 
@@ -117,7 +117,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         id={"job-materials-#{@materials_job_id}"}
         job_id={@materials_job_id}
         current_member={@current_member}
-        currency={@settings.currency}
+        currency={@organisation.currency}
       />
     </.modal>
 
@@ -150,7 +150,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         id={"event-materials-#{@event_materials_event.id}"}
         job_event={@event_materials_event}
         current_member={@current_member}
-        currency={@settings.currency}
+        currency={@organisation.currency}
       />
     </.modal>
     """

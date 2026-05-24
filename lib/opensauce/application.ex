@@ -25,16 +25,7 @@ defmodule OpenSauce.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: OpenSauce.Supervisor]
-    result = Supervisor.start_link(children, opts)
-
-    apply_smtp_from_settings()
-
-    result
-  end
-
-  defp apply_smtp_from_settings do
-    # Settings are now per-organisation — no single row to load at startup.
-    :ok
+    Supervisor.start_link(children, opts)
   end
 
   # Tell Phoenix to update the endpoint configuration

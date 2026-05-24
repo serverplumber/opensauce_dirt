@@ -15,7 +15,7 @@ defmodule OpenSauce.Accounts.Organisation do
     defaults [:read, :destroy, create: [:name, :slug]]
 
     update :update do
-      accept [:name]
+      accept [:name, :currency, :tax_mode, :tax_rate, :email_from_name, :email_from_address]
 
       argument :address, :map, allow_nil?: true
 
@@ -45,6 +45,34 @@ defmodule OpenSauce.Accounts.Organisation do
 
     attribute :slug, :string do
       allow_nil? false
+      public? true
+    end
+
+    attribute :currency, OpenSauce.Types.Currency do
+      public? true
+      allow_nil? false
+      default :CAD
+    end
+
+    attribute :tax_mode, :atom do
+      public? true
+      allow_nil? false
+      default :exclusive
+      constraints one_of: [:inclusive, :exclusive]
+    end
+
+    attribute :tax_rate, :decimal do
+      public? true
+      allow_nil? false
+      default 0
+    end
+
+    attribute :email_from_name, :string do
+      public? true
+      default "OpenSauce"
+    end
+
+    attribute :email_from_address, :string do
       public? true
     end
 
