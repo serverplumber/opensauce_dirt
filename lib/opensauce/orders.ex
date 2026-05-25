@@ -14,7 +14,8 @@ defmodule OpenSauce.Orders do
     resource OpenSauce.Orders.Job do
       define :list_jobs, action: :list
       define :list_upcoming_jobs, action: :upcoming
-      define :list_jobs_at_address, action: :at_address, args: [:address_id]
+      define :list_jobs_for_shift, action: :for_shift, args: [:shift_id]
+      define :list_jobs_at_garden, action: :at_garden, args: [:garden_id]
       define :get_job_by_id, action: :read, get_by: [:id]
       define :create_job, action: :create
       define :update_job, action: :update
@@ -42,6 +43,5 @@ defmodule OpenSauce.Orders do
       define :move_job_material, action: :move
       define :destroy_job_material, action: :destroy
     end
-
   end
 end

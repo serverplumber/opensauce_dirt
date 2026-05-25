@@ -20,11 +20,5 @@ defmodule OpenSauce.Operations do
       define :delete_storage_location,          action: :destroy
     end
 
-    resource OpenSauce.Operations.Shift do
-      define :create_shift,            action: :create
-      define :list_shifts,             action: :read
-      define :update_shift,            action: :update
-      define :delete_shift,            action: :destroy
-    end
   end
 end

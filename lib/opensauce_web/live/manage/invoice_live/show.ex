@@ -93,10 +93,10 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
               </div>
               <.table :if={!Enum.empty?(@jobs)} id="invoice-jobs" rows={@jobs}>
                 <:col :let={job} label="Date">
-                  {job.scheduled_at && DateTime.to_date(job.scheduled_at)}
+                  {job.scheduled_for}
                 </:col>
                 <:col :let={job} label="Type">
-                  {job.service_type |> Atom.to_string() |> String.replace("_", " ")}
+                  {(job.service_category || job.type) |> Atom.to_string() |> String.replace("_", " ")}
                 </:col>
                 <:col :let={job} label="Status">
                   {job.status}

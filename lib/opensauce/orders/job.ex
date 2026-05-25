@@ -5,16 +5,19 @@ defmodule OpenSauce.Orders.Job do
     domain: OpenSauce.Orders,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    fragments: [OpenSauce.Concerns.Multitenanted]
+    fragments: [OpenSauce.Concerns.Multitenanted],
+    primary_read_warning?: false
 
   postgres do
     table "orders_jobs"
     repo OpenSauce.Repo
 
     custom_indexes do
-      index [:customer_id], name: "orders_jobs_customer_id_index"
-      index [:scheduled_at], name: "orders_jobs_scheduled_at_index"
+      index [:scheduled_for], name: "orders_jobs_scheduled_for_index"
       index [:status], name: "orders_jobs_status_index"
+      index [:containing_shift_id], name: "orders_jobs_containing_shift_id_index"
+      index [:engagement_id], name: "orders_jobs_engagement_id_index"
+      index [:garden_id], name: "orders_jobs_garden_id_index"
     end
   end
 
@@ -22,29 +25,38 @@ defmodule OpenSauce.Orders.Job do
     defaults [:read, :destroy]
 
     read :list do
-      prepare build(sort: [scheduled_at: :asc])
+      primary? true
+      prepare build(sort: [scheduled_for: :asc])
     end
 
     read :upcoming do
-      filter expr(status == :scheduled and scheduled_at >= ^DateTime.utc_now())
-      prepare build(sort: [scheduled_at: :asc])
+      filter expr(status == :planned and not is_nil(scheduled_for) and scheduled_for >= ^Date.utc_today())
+      prepare build(sort: [scheduled_for: :asc])
     end
 
-    read :at_address do
-      argument :address_id, :uuid, allow_nil?: false
-      filter expr(address_id == ^arg(:address_id) and status in [:scheduled, :in_progress])
-      prepare build(sort: [scheduled_at: :asc], load: [:materials])
+    read :for_shift do
+      argument :shift_id, :uuid, allow_nil?: false
+      filter expr(containing_shift_id == ^arg(:shift_id))
+      prepare build(sort: [scheduled_for: :asc])
+    end
+
+    read :at_garden do
+      argument :garden_id, :uuid, allow_nil?: false
+      filter expr(garden_id == ^arg(:garden_id) and status in [:planned, :in_progress])
+      prepare build(sort: [scheduled_for: :asc])
     end
 
     create :create do
       primary? true
       accept [
-        :service_type,
-        :customer_id,
-        :address_id,
+        :type,
+        :service_category,
+        :account_code,
+        :garden_id,
         :engagement_id,
-        :scheduled_at,
-        :estimated_duration_minutes,
+        :containing_shift_id,
+        :actor_id,
+        :scheduled_for,
         :status,
         :notes,
         :organisation_id
@@ -52,34 +64,58 @@ defmodule OpenSauce.Orders.Job do
     end
 
     update :update do
+      require_atomic? false
       accept [
-        :service_type,
-        :address_id,
+        :type,
+        :service_category,
+        :account_code,
+        :garden_id,
         :engagement_id,
-        :invoice_id,
-        :scheduled_at,
-        :estimated_duration_minutes,
+        :containing_shift_id,
+        :actor_id,
+        :scheduled_for,
         :status,
         :notes
       ]
     end
 
-    # Decoupled status transitions — safe to call from any context.
-    # Arrival events drive mark_in_progress; departure does not auto-complete.
     update :mark_in_progress do
+      require_atomic? false
       accept []
       change set_attribute(:status, :in_progress)
     end
 
     update :complete do
+      require_atomic? false
       accept []
       change set_attribute(:status, :completed)
     end
 
     update :cancel do
+      require_atomic? false
       accept []
       change set_attribute(:status, :cancelled)
     end
+  end
+
+  validations do
+    validate present(:service_category),
+      where: [attribute_equals(:type, :client_work)],
+      message: "is required for client work"
+
+    validate present(:account_code),
+      where: [attribute_equals(:type, :internal_work)],
+      message: "is required for internal work"
+
+    validate absent(:garden_id),
+      where: [attribute_equals(:type, :shift)],
+      message: "shift jobs cannot have a garden"
+
+    validate absent(:engagement_id),
+      where: [attribute_equals(:type, :shift)],
+      message: "shift jobs cannot have an engagement"
+
+    validate {OpenSauce.Orders.Job.Validations.RequireGardenForAddressable, []}
   end
 
   policies do
@@ -95,38 +131,39 @@ defmodule OpenSauce.Orders.Job do
   attributes do
     uuid_primary_key :id
 
-    attribute :service_type, :atom do
+    attribute :type, :atom do
       allow_nil? false
       public? true
-      constraints one_of: [:installation, :maintenance, :delivery, :consultation, :pruning, :open_garden, :winterize_garden]
+      default :client_work
+      constraints one_of: [:client_work, :shift, :internal_work]
     end
 
-    attribute :scheduled_at, :utc_datetime do
+    attribute :service_category, :atom do
+      allow_nil? true
+      public? true
+      constraints one_of: [:installation, :delivery, :pruning, :consultation, :design, :opening, :winterization, :nursery_run, :other]
+    end
+
+    attribute :account_code, :atom do
+      allow_nil? true
+      public? true
+      constraints one_of: [:production, :maintenance]
+    end
+
+    attribute :scheduled_for, :date do
       allow_nil? true
       public? true
     end
 
-    # Minutes. Nil means duration is unknown at scheduling time.
-    attribute :estimated_duration_minutes, :integer do
-      allow_nil? true
-      public? true
-      constraints min: 0
-    end
-
-    # Status flow:
-    #   :scheduled   — job is planned, no one on site yet
-    #   :in_progress — triggered automatically when an arrival event is logged
-    #   :completed   — manually marked done; ready for invoicing
-    #   :cancelled   — job did not happen
-    # Transitions: :scheduled → :in_progress (on arrival) → :completed | :cancelled
-    #              :scheduled → :cancelled (no-show)
-    # Events (arrival/departure) are append-only and logged independently via JobEvent.
-    # Departure does NOT auto-complete the job — must be marked complete explicitly.
+    # planned     — on the schedule, not yet underway
+    # in_progress — triggered when an arrival event is logged
+    # completed   — manually marked done; ready for invoicing
+    # cancelled   — job did not happen
     attribute :status, :atom do
       allow_nil? false
       public? true
-      default :scheduled
-      constraints one_of: [:scheduled, :in_progress, :completed, :cancelled]
+      default :planned
+      constraints one_of: [:planned, :in_progress, :completed, :cancelled]
     end
 
     attribute :notes, :string do
@@ -139,32 +176,28 @@ defmodule OpenSauce.Orders.Job do
   end
 
   calculations do
-    calculate :actual_duration_minutes,
-              :integer,
-              OpenSauce.Orders.Job.Calculations.ActualDurationMinutes
+    # Pair-walks arrival/departure (or shift_start/shift_end) events to sum elapsed time.
+    calculate :duration, :integer, OpenSauce.Orders.Job.Calculations.Duration
 
-    calculate :materials_cost,
-              :decimal,
-              OpenSauce.Orders.Job.Calculations.MaterialsCost
+    # Odometer diff: shift_start → shift_end for :shift, arrival → departure for others.
+    calculate :mileage_km, :decimal, OpenSauce.Orders.Job.Calculations.MileageKm
+
+    calculate :materials_cost, :decimal, OpenSauce.Orders.Job.Calculations.MaterialsCost
+
+    # labor (actor hourly rate × duration) + mileage cost + materials — stub until rates wired
+    calculate :realized_cost, :decimal, OpenSauce.Orders.Job.Calculations.RealizedCost
   end
 
   relationships do
-    belongs_to :customer, OpenSauce.CRM.Customer do
-      allow_nil? false
-      public? true
-      domain OpenSauce.CRM
-    end
-
-    # A customer's garden or indoor address — determines indoor vs outdoor job.
-    belongs_to :address, OpenSauce.CRM.Address do
+    # The garden (outdoor site) this job is at. :client_work jobs with addressable
+    # service categories require one; :shift and :nursery_run/:delivery do not.
+    belongs_to :garden, OpenSauce.CRM.Address do
       allow_nil? true
       public? true
       attribute_writable? true
       domain OpenSauce.CRM
     end
 
-    # Informational link to the engagement this job was scoped under.
-    # Optional — jobs can exist without an engagement (one-off pruning, internal work).
     belongs_to :engagement, OpenSauce.CRM.Engagement do
       allow_nil? true
       public? true
@@ -172,11 +205,25 @@ defmodule OpenSauce.Orders.Job do
       domain OpenSauce.CRM
     end
 
-    belongs_to :invoice, OpenSauce.CRM.Invoice do
+    # :client_work and :internal_work jobs reference the :shift job that contains them.
+    belongs_to :containing_shift, OpenSauce.Orders.Job do
       allow_nil? true
       public? true
       attribute_writable? true
-      domain OpenSauce.CRM
+    end
+
+    # Child jobs belonging to this shift (meaningful when type == :shift).
+    has_many :jobs, OpenSauce.Orders.Job do
+      public? true
+      destination_attribute :containing_shift_id
+    end
+
+    # Who is doing the work on this job.
+    belongs_to :actor, OpenSauce.Accounts.User do
+      allow_nil? true
+      public? true
+      attribute_writable? true
+      domain OpenSauce.Accounts
     end
 
     has_many :events, OpenSauce.Orders.JobEvent do

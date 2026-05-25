@@ -29,30 +29,27 @@ defmodule OpenSauceWeb.JobLive.Index do
           {site_label(job)}
         </div>
         <div class="text-xs text-stone-500">
-          {customer_label(job.customer)}
+          {customer_label(job)}
         </div>
       </:col>
 
       <:col :let={job} label="Date">
-        <span :if={job.scheduled_at}>
-          {format_date(job.scheduled_at, format: "%d %b %Y")}
+        <span :if={job.scheduled_for}>
+          {format_date(job.scheduled_for, format: "%d %b %Y")}
         </span>
-        <span :if={!job.scheduled_at} class="text-stone-400">—</span>
+        <span :if={!job.scheduled_for} class="text-stone-400">—</span>
       </:col>
 
-      <:col :let={job} label="Cost / Price">
-        <div class="space-y-0.5">
-          <div class="text-red-600">({format_money(@organisation.currency, job.materials_cost)})</div>
-          <div>{format_money(@organisation.currency, price_from_cost(job.materials_cost))}</div>
-        </div>
+      <:col :let={job} label="Cost">
+        <div class="text-red-600">({format_money(@organisation.currency, job.materials_cost)})</div>
       </:col>
 
       <:col :let={job} label="Duration">
         {job_duration(job)}
       </:col>
 
-      <:col :let={job} label="Type">
-        {service_type_label(job.service_type)}
+      <:col :let={job} label="Category">
+        {service_category_label(job.service_category)}
       </:col>
 
       <:col :let={job} label="Status">
@@ -65,7 +62,7 @@ defmodule OpenSauceWeb.JobLive.Index do
           <.badge
             text={job.status}
             colors={[
-              {:scheduled, "text-blue-700 bg-blue-50"},
+              {:planned, "text-blue-700 bg-blue-50"},
               {:in_progress, "text-amber-700 bg-amber-50"},
               {:completed, "text-green-700 bg-green-50"},
               {:cancelled, "text-stone-500 bg-stone-100"}
@@ -195,7 +192,7 @@ defmodule OpenSauceWeb.JobLive.Index do
       Orders.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
-        load: [:customer, :address]
+        load: [:garden, engagement: [:customer]]
       )
 
     socket
@@ -222,7 +219,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     member = socket.assigns.current_member
     job = socket.assigns.event_log_job
 
-    if event.data.type == :arrival && job.status == :scheduled do
+    if event.data.type == :arrival && job.status == :planned do
       Orders.mark_job_in_progress(job, actor: member, tenant: member.organisation_id)
     end
 
@@ -284,7 +281,7 @@ defmodule OpenSauceWeb.JobLive.Index do
       Orders.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
-        load: [:customer, :address, :actual_duration_minutes, :materials_cost]
+        load: [:garden, :duration, :materials_cost, engagement: [:customer]]
       )
 
     assign(socket, :jobs, jobs)
@@ -292,56 +289,48 @@ defmodule OpenSauceWeb.JobLive.Index do
 
   defp event_log_title(job) do
     site = site_label(job)
-    customer = customer_label(job.customer)
+    customer = customer_label(job)
     if customer == "", do: site, else: "#{site} · #{customer}"
   end
 
-  defp site_label(%{address: nil}), do: "No site set"
-  defp site_label(%{address: addr}) do
-    type = if addr.is_indoor, do: "indoor", else: "garden"
-    addr.name || "Unnamed #{type}"
+  defp site_label(%{garden: nil}), do: "No site set"
+
+  defp site_label(%{garden: garden}) do
+    garden.name || "Unnamed site"
   end
 
-  defp customer_label(nil), do: ""
-  defp customer_label(c) do
+  defp customer_label(%{engagement: nil}), do: ""
+  defp customer_label(%{engagement: %{customer: nil}}), do: ""
+
+  defp customer_label(%{engagement: %{customer: c}}) do
     if c.company_name_nickname,
       do: c.company_name_nickname,
       else: "#{c.first_name} #{c.last_name}"
   end
 
-  # Actual duration from events always wins when available (any status).
-  defp job_duration(%{actual_duration_minutes: actual}) when is_integer(actual) do
-    format_minutes(actual)
-  end
-
-  # Planned estimate: parenthesised for scheduled (accounting-negative style).
-  defp job_duration(%{status: :scheduled, estimated_duration_minutes: min}) when is_integer(min) do
-    "(#{format_minutes(min)})"
-  end
-
-  # Non-scheduled with only an estimate and no actual events yet.
-  defp job_duration(%{estimated_duration_minutes: min}) when is_integer(min) do
-    format_minutes(min)
+  defp job_duration(%{duration: minutes}) when is_integer(minutes) do
+    format_minutes(minutes)
   end
 
   defp job_duration(_), do: "—"
 
   defp format_minutes(min) when min < 60, do: "#{min}m"
+
   defp format_minutes(min) do
     h = div(min, 60)
     m = rem(min, 60)
     if m == 0, do: "#{h}h", else: "#{h}h #{m}m"
   end
 
-  defp price_from_cost(nil), do: Decimal.new(0)
-  defp price_from_cost(cost), do: Decimal.mult(cost, Decimal.new("1.2"))
-
-  defp service_type_label(:installation), do: "Installation"
-  defp service_type_label(:maintenance), do: "Maintenance"
-  defp service_type_label(:delivery), do: "Delivery"
-  defp service_type_label(:consultation), do: "Consultation"
-  defp service_type_label(:pruning), do: "Pruning"
-  defp service_type_label(:open_garden), do: "Open garden"
-  defp service_type_label(:winterize_garden), do: "Winterize"
-  defp service_type_label(other), do: to_string(other)
+  defp service_category_label(nil), do: "—"
+  defp service_category_label(:installation), do: "Installation"
+  defp service_category_label(:delivery), do: "Delivery"
+  defp service_category_label(:pruning), do: "Pruning"
+  defp service_category_label(:consultation), do: "Consultation"
+  defp service_category_label(:design), do: "Design"
+  defp service_category_label(:opening), do: "Opening"
+  defp service_category_label(:winterization), do: "Winterization"
+  defp service_category_label(:nursery_run), do: "Nursery run"
+  defp service_category_label(:other), do: "Other"
+  defp service_category_label(other), do: to_string(other)
 end

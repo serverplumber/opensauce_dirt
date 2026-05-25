@@ -1,4 +1,4 @@
-defmodule OpenSauce.Orders.Job.Calculations.ActualDurationMinutes do
+defmodule OpenSauce.Orders.Job.Calculations.Duration do
   @moduledoc false
   use Ash.Resource.Calculation
 
@@ -9,22 +9,24 @@ defmodule OpenSauce.Orders.Job.Calculations.ActualDurationMinutes do
   def calculate(records, _opts, _context) do
     {:ok,
      Enum.map(records, fn job ->
+       {open_tag, close_tag} =
+         if job.type == :shift,
+           do: {:shift_start, :shift_end},
+           else: {:arrival, :departure}
+
        job.events
        |> Enum.sort_by(& &1.timestamp, DateTime)
-       |> sum_paired_minutes()
+       |> sum_paired_minutes(open_tag, close_tag)
      end)}
   end
 
-  # Walk events chronologically. Each arrival opens a pair; the next departure
-  # closes it and accumulates elapsed minutes. Work session events and orphan
-  # departures are ignored.
-  defp sum_paired_minutes(events) do
+  defp sum_paired_minutes(events, open_tag, close_tag) do
     {total, _open} =
       Enum.reduce(events, {0, nil}, fn
-        %{data: %Ash.Union{type: :arrival}} = e, {acc, _} ->
+        %{data: %Ash.Union{type: ^open_tag}} = e, {acc, _} ->
           {acc, e}
 
-        %{data: %Ash.Union{type: :departure}} = e, {acc, open} when open != nil ->
+        %{data: %Ash.Union{type: ^close_tag}} = e, {acc, open} when open != nil ->
           minutes = DateTime.diff(e.timestamp, open.timestamp, :second) |> div(60)
           {acc + minutes, nil}
 

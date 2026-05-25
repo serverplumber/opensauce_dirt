@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
+  alias OpenSauce.Accounts
   alias OpenSauce.CRM
   alias OpenSauce.Orders
 
@@ -18,67 +19,89 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
       >
         <div class="mt-4 space-y-4">
           <.input
-            field={@form[:customer_id]}
+            field={@form[:type]}
             type="select"
-            label="Customer"
-            options={Enum.map(@customers, &{customer_label(&1), &1.id})}
-            prompt="Select a customer"
-          />
-
-          <.input
-            field={@form[:address_id]}
-            type="select"
-            label="Garden / Site"
-            options={Enum.map(@addresses, &{address_label(&1), &1.id})}
-            prompt="Select a site"
-          />
-
-          <.input
-            field={@form[:service_type]}
-            type="select"
-            label="Service type"
+            label="Type"
             options={[
-              {"Installation", :installation},
-              {"Maintenance", :maintenance},
-              {"Delivery", :delivery},
-              {"Consultation", :consultation},
-              {"Pruning", :pruning},
-              {"Open garden", :open_garden},
-              {"Winterize", :winterize_garden}
+              {"Client work", :client_work},
+              {"Shift", :shift},
+              {"Internal work", :internal_work}
             ]}
-            prompt="Select type"
           />
+
+          <%!-- Client work fields --%>
+          <div :if={@job_type == :client_work} class="space-y-4">
+            <.input
+              field={@form[:engagement_id]}
+              type="select"
+              label="Engagement"
+              options={[{"— none —", ""}] ++ Enum.map(@engagements, &{engagement_label(&1), &1.id})}
+            />
+
+            <.input
+              field={@form[:service_category]}
+              type="select"
+              label="Service category"
+              options={[
+                {"Installation", :installation},
+                {"Delivery", :delivery},
+                {"Pruning", :pruning},
+                {"Consultation", :consultation},
+                {"Design", :design},
+                {"Opening", :opening},
+                {"Winterization", :winterization},
+                {"Nursery run", :nursery_run},
+                {"Other", :other}
+              ]}
+              prompt="Select category"
+            />
+
+            <.input
+              field={@form[:garden_id]}
+              type="select"
+              label="Garden / Site"
+              options={[{"— none —", ""}] ++ Enum.map(@gardens, &{garden_label(&1), &1.id})}
+            />
+
+            <.input
+              :if={@upstream_jobs != []}
+              name="job[upstream_job_id]"
+              id="job_upstream_job_id"
+              type="select"
+              label="Cherry-pick materials from"
+              options={[{"— none —", ""}] ++ Enum.map(@upstream_jobs, &{upstream_job_label(&1), &1.id})}
+              value=""
+            />
+          </div>
+
+          <%!-- Internal work fields --%>
+          <div :if={@job_type == :internal_work}>
+            <.input
+              field={@form[:account_code]}
+              type="select"
+              label="Account code"
+              options={[
+                {"Production", :production},
+                {"Maintenance", :maintenance}
+              ]}
+              prompt="Select code"
+            />
+          </div>
 
           <.input
-            :if={@upstream_jobs != []}
-            name="job[upstream_job_id]"
-            id="job_upstream_job_id"
+            field={@form[:actor_id]}
             type="select"
-            label="Supplies from"
-            options={Enum.map(@upstream_jobs, &{upstream_job_label(&1), &1.id})}
-            prompt="Select job"
-            value=""
+            label="Staff member"
+            options={[{"— none —", ""}] ++ Enum.map(@members, &{member_label(&1), &1.user_id})}
           />
 
-          <div class="flex gap-4">
-            <div class="flex-1">
-              <.input field={@form[:scheduled_at]} type="datetime-local" label="Scheduled" step="1800" />
-            </div>
-            <div class="w-32">
-              <.input
-                field={@form[:estimated_duration_minutes]}
-                type="number"
-                label="Duration (min)"
-                min="0"
-              />
-            </div>
-          </div>
+          <.input field={@form[:scheduled_for]} type="date" label="Date" />
 
           <.input field={@form[:notes]} type="textarea" label="Notes" rows="3" />
         </div>
 
         <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Schedule Job</.button>
+          <.button variant={:primary} phx-disable-with="Saving...">{if @job, do: "Save", else: "Create Job"}</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -89,15 +112,17 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
   def update(%{job: job} = assigns, socket) do
     member = assigns.current_member
 
-    customers =
-      CRM.list_customers!(
-        actor: member,
-        tenant: member.organisation_id,
-        load: [garden_addresses: [:short_address], indoor_addresses: [:short_address]]
-      )
+    engagements = load_engagements(member)
+    members = load_members(member)
 
-    customer_id = job && job.customer_id
-    addresses = addresses_for_customer(customers, customer_id)
+    current_type = (job && job.type) || :client_work
+    engagement_id = job && job.engagement_id
+    garden_id = job && job.garden_id
+
+    gardens = gardens_for_engagement(engagements, engagement_id)
+
+    upstream_jobs =
+      if garden_id, do: load_upstream_jobs(garden_id, member), else: []
 
     form =
       if job do
@@ -117,9 +142,11 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:customers, customers)
-     |> assign(:addresses, addresses)
-     |> assign(:upstream_jobs, [])
+     |> assign(:engagements, engagements)
+     |> assign(:members, members)
+     |> assign(:gardens, gardens)
+     |> assign(:upstream_jobs, upstream_jobs)
+     |> assign(:job_type, current_type)
      |> assign(:form, to_form(form))}
   end
 
@@ -127,12 +154,22 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
   def handle_event("validate", %{"job" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
 
-    customer_id = params["customer_id"]
-    addresses = addresses_for_customer(socket.assigns.customers, customer_id)
+    job_type =
+      case params["type"] do
+        "client_work" -> :client_work
+        "shift" -> :shift
+        "internal_work" -> :internal_work
+        _ -> :client_work
+      end
+
+    engagement_id = params["engagement_id"]
+    gardens = gardens_for_engagement(socket.assigns.engagements, engagement_id)
+
+    garden_id = params["garden_id"]
 
     upstream_jobs =
-      if params["address_id"] not in [nil, ""] and params["service_type"] not in [nil, ""] do
-        load_upstream_jobs(params["address_id"], socket.assigns.current_member)
+      if garden_id not in [nil, ""] do
+        load_upstream_jobs(garden_id, socket.assigns.current_member)
       else
         []
       end
@@ -140,7 +177,8 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     {:noreply,
      socket
      |> assign(:form, form)
-     |> assign(:addresses, addresses)
+     |> assign(:job_type, job_type)
+     |> assign(:gardens, gardens)
      |> assign(:upstream_jobs, upstream_jobs)}
   end
 
@@ -155,7 +193,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Job scheduled successfully")
+         |> put_flash(:info, "Job saved")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, form} ->
@@ -183,42 +221,73 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     end)
   end
 
-  defp load_upstream_jobs(address_id, member) do
-    Orders.list_jobs_at_address!(address_id,
+  defp load_engagements(member) do
+    CRM.list_engagements!(
       actor: member,
-      tenant: member.organisation_id
+      tenant: member.organisation_id,
+      load: [:garden, :customer]
+    )
+  rescue
+    _ -> []
+  end
+
+  defp load_members(member) do
+    Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+  rescue
+    _ -> []
+  end
+
+  defp load_upstream_jobs(garden_id, member) do
+    Orders.list_jobs_at_garden!(garden_id,
+      actor: member,
+      tenant: member.organisation_id,
+      load: [:materials]
     )
     |> Enum.filter(&(&1.materials != []))
+  rescue
+    _ -> []
+  end
+
+  defp gardens_for_engagement(_engagements, nil), do: []
+  defp gardens_for_engagement(_engagements, ""), do: []
+
+  defp gardens_for_engagement(engagements, engagement_id) do
+    case Enum.find(engagements, &(&1.id == engagement_id)) do
+      %{garden: garden} when not is_nil(garden) -> [garden]
+      _ -> []
+    end
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp upstream_job_label(%{service_type: st, scheduled_at: nil}),
-    do: Phoenix.Naming.humanize(st)
+  defp engagement_label(%{customer: nil} = e), do: "Engagement #{String.slice(e.id, 0, 8)}"
 
-  defp upstream_job_label(%{service_type: st, scheduled_at: dt}),
-    do: "#{Phoenix.Naming.humanize(st)} — #{Calendar.strftime(dt, "%b %-d, %Y")}"
+  defp engagement_label(%{customer: c, garden: nil}) do
+    customer_name(c)
+  end
 
-  defp customer_label(c) do
+  defp engagement_label(%{customer: c, garden: g}) do
+    "#{customer_name(c)} — #{g.name || "unnamed site"}"
+  end
+
+  defp customer_name(c) do
     if c.company_name_nickname,
-      do: "#{c.company_name_nickname} (#{c.first_name} #{c.last_name})",
+      do: c.company_name_nickname,
       else: "#{c.first_name} #{c.last_name}"
   end
 
-  defp address_label(addr) do
-    type = if addr.is_indoor, do: "indoor", else: "garden"
-    name = addr.name || "Unnamed #{type}"
-    short = addr.short_address
+  defp garden_label(addr), do: addr.name || "Unnamed site"
 
-    if short, do: "#{name} — #{short}", else: name
+  defp member_label(m) do
+    title = m.display_title
+    if title && title != "", do: title, else: "Member"
   end
 
-  defp addresses_for_customer(customers, customer_id) when is_binary(customer_id) do
-    case Enum.find(customers, &(&1.id == customer_id)) do
-      nil -> []
-      c -> c.garden_addresses ++ c.indoor_addresses
-    end
-  end
+  defp upstream_job_label(%{service_category: nil, scheduled_for: nil}), do: "Job"
 
-  defp addresses_for_customer(_, _), do: []
+  defp upstream_job_label(%{service_category: cat, scheduled_for: nil}),
+    do: Phoenix.Naming.humanize(cat)
+
+  defp upstream_job_label(%{service_category: cat, scheduled_for: d}),
+    do: "#{Phoenix.Naming.humanize(cat)} — #{Calendar.strftime(d, "%b %-d, %Y")}"
 end

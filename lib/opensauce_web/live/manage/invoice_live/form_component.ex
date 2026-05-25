@@ -394,16 +394,16 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
   defp load_unpaid_jobs(customer_id, member) do
     Orders.Job
-    |> filter(customer_id == ^customer_id and is_nil(invoice_id) and status != :cancelled)
-    |> Ash.Query.sort(scheduled_at: :asc)
+    |> filter(engagement.customer_id == ^customer_id and status in [:planned, :in_progress, :completed])
+    |> Ash.Query.sort(scheduled_for: :asc)
     |> Ash.Query.load(:materials_cost)
     |> Ash.read!(actor: member, tenant: member.organisation_id)
     |> Enum.map(fn job ->
       %{
         id: job.id,
         struct: job,
-        service_type: job.service_type,
-        scheduled_at: job.scheduled_at,
+        service_type: job.service_category || job.type,
+        scheduled_at: job.scheduled_for,
         amount: job.materials_cost |> D.round(2) |> D.to_string()
       }
     end)
@@ -485,11 +485,8 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   end
 
   defp format_scheduled(nil), do: "—"
-
-  defp format_scheduled(%DateTime{} = dt) do
-    dt |> DateTime.to_date() |> Date.to_string()
-  end
-
+  defp format_scheduled(%Date{} = d), do: Date.to_string(d)
+  defp format_scheduled(%DateTime{} = dt), do: dt |> DateTime.to_date() |> Date.to_string()
   defp format_scheduled(other), do: to_string(other)
 
   defp format_total(jobs, hidden_job_ids, engagement_amount, engagement_hidden, custom_items, currency) do

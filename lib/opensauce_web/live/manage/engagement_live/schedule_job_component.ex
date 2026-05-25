@@ -19,17 +19,19 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
         <div class="grid grid-cols-2 gap-3">
           <.input field={@form[:date]} type="date" label="Job date" />
           <.input
-            field={@form[:service_type]}
+            field={@form[:service_category]}
             type="select"
-            label="Type"
+            label="Category"
             options={[
-              {"Maintenance", "maintenance"},
               {"Installation", "installation"},
               {"Delivery", "delivery"},
-              {"Consultation", "consultation"},
               {"Pruning", "pruning"},
-              {"Open garden", "open_garden"},
-              {"Winterize", "winterize_garden"}
+              {"Consultation", "consultation"},
+              {"Design", "design"},
+              {"Opening", "opening"},
+              {"Winterization", "winterization"},
+              {"Nursery run", "nursery_run"},
+              {"Other", "other"}
             ]}
           />
         </div>
@@ -116,15 +118,14 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
     engagement = socket.assigns.engagement_full
 
     with {:ok, to_date} <- Date.from_iso8601(params["date"] || ""),
-         scheduled_at = DateTime.new!(to_date, ~T[09:00:00], "Etc/UTC"),
          {:ok, job} <-
            Orders.create_job(
              %{
-               customer_id: engagement.customer_id,
-               address_id: engagement.garden_id,
+               type: :client_work,
+               garden_id: engagement.garden_id,
                engagement_id: engagement.id,
-               scheduled_at: scheduled_at,
-               service_type: String.to_existing_atom(params["service_type"])
+               scheduled_for: to_date,
+               service_category: String.to_existing_atom(params["service_category"])
              },
              actor: member,
              tenant: member.organisation_id
@@ -166,8 +167,8 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
   defp from_date(engagement) do
     last_job_date =
       engagement.jobs
-      |> Enum.filter(&(&1.scheduled_at != nil))
-      |> Enum.map(&DateTime.to_date(&1.scheduled_at))
+      |> Enum.filter(&(&1.scheduled_for != nil))
+      |> Enum.map(& &1.scheduled_for)
       |> Enum.sort(Date)
       |> List.last()
 
@@ -192,7 +193,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
     |> Enum.sort_by(& &1.scheduled_date, Date)
   end
 
-  defp blank_form, do: to_form(%{"date" => "", "service_type" => "maintenance"}, as: "job")
+  defp blank_form, do: to_form(%{"date" => "", "service_category" => "consultation"}, as: "job")
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 

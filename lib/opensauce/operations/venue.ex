@@ -44,6 +44,5 @@ defmodule OpenSauce.Operations.Venue do
 
   relationships do
     has_many :storage_locations, OpenSauce.Operations.StorageLocation
-    has_many :shifts, OpenSauce.Operations.Shift
   end
 end
