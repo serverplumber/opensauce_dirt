@@ -15,8 +15,7 @@ defmodule OpenSauce.Accounts.Checks.ApiScopeCheck do
     OpenSauce.Inventory.Supplier => "suppliers",
     OpenSauce.Inventory.PurchaseOrder => "purchase_orders",
     OpenSauce.CRM.Customer => "customers",
-    OpenSauce.CRM.Invoice => "invoices",
-    OpenSauce.Settings.Settings => "settings"
+    OpenSauce.CRM.Invoice => "invoices"
   }
 
   @impl true

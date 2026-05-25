@@ -177,33 +177,33 @@ defmodule OpenSauceWeb.Navigation do
         sub_links: []
       },
       settings: %{
-        label: "Settings",
+        label: "Organisation",
         path: "/manage/settings",
         pages: %{
-          general: %{label: "General Settings", path: "/manage/settings/general"},
+          general: %{label: "Settings", path: "/manage/settings/general"},
           csv: %{label: "Import & Export", path: "/manage/settings/csv"},
           api_keys: %{label: "API Keys", path: "/manage/settings/api_keys"},
           calendar_feed: %{label: "Calendar Feed", path: "/manage/settings/calendar"},
-          members: %{label: "Members", path: "/manage/settings/members"}
+          members: %{label: "Staff", path: "/manage/settings/members"}
         },
         sub_links: [
           %{
             key: :general,
-            label: "General",
+            label: "Settings",
             navigate: "/manage/settings/general",
             active?: &__MODULE__.settings_general_active?/1
-          },
-          %{
-            key: :csv,
-            label: "Import & Export",
-            navigate: "/manage/settings/csv",
-            active?: &__MODULE__.settings_csv_active?/1
           },
           %{
             key: :api_keys,
             label: "API Keys",
             navigate: "/manage/settings/api_keys",
             active?: &__MODULE__.settings_api_keys_active?/1
+          },
+          %{
+            key: :csv,
+            label: "Import & Export",
+            navigate: "/manage/settings/csv",
+            active?: &__MODULE__.settings_csv_active?/1
           },
           %{
             key: :calendar_feed,
@@ -213,7 +213,7 @@ defmodule OpenSauceWeb.Navigation do
           },
           %{
             key: :members,
-            label: "Members",
+            label: "Staff",
             navigate: "/manage/settings/members",
             active?: &__MODULE__.settings_members_active?/1
           }

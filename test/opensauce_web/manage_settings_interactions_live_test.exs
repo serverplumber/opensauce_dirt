@@ -9,9 +9,9 @@ defmodule OpenSauceWeb.ManageSettingsInteractionsLiveTest do
 
     view
     |> element("#org-form")
-    |> render_submit(%{"organisation" => %{"tax_rate" => "0.15"}})
+    |> render_submit(%{"organisation" => %{"currency" => "USD"}})
 
     org = OpenSauce.Accounts.get_organisation!(member.organisation_id, authorize?: false)
-    assert Decimal.equal?(org.tax_rate, Decimal.new("0.15"))
+    assert org.currency == :USD
   end
 end

@@ -55,7 +55,6 @@ defmodule OpenSauceWeb.CustomerLive.Index do
         title={@page_title}
         action={@live_action}
         customer={@customer}
-        settings={@settings}
         patch={~p"/manage/customers"}
       />
     </.modal>

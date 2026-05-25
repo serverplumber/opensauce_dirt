@@ -41,7 +41,6 @@ config :opensauce,
   ecto_repos: [OpenSauce.Repo],
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [
-    OpenSauce.Settings,
     OpenSauce.CRM,
     OpenSauce.Orders,
     OpenSauce.Inventory,

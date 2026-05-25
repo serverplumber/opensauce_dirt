@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.VenueLive.Index do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.Accounts.Roles
   alias OpenSauce.Operations
   alias OpenSauceWeb.Navigation
   alias OpenSauceWeb.StorageLocationLive.FormComponent, as: LocationForm
@@ -33,15 +34,32 @@ defmodule OpenSauceWeb.VenueLive.Index do
         <div :for={venue <- @venues} class="rounded-md border border-gray-200 bg-white">
           <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
             <div>
-              <.link
-                navigate={~p"/manage/venues/#{venue.id}"}
-                class="text-base font-semibold text-stone-900 hover:underline"
-              >
-                {venue.name}
-              </.link>
+              <div class="flex items-center gap-2">
+                <.link
+                  navigate={~p"/manage/venues/#{venue.id}"}
+                  class="text-base font-semibold text-stone-900 hover:underline"
+                >
+                  {venue.name}
+                </.link>
+                <span
+                  :if={venue.id == @organisation.head_office_venue_id}
+                  class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700"
+                >
+                  Head Office
+                </span>
+              </div>
               <p :if={venue.address} class="mt-0.5 text-xs text-stone-500">{venue.address}</p>
             </div>
             <div class="flex gap-2">
+              <.button
+                :if={Roles.owner?(@current_member) and venue.id != @organisation.head_office_venue_id}
+                size={:sm}
+                variant={:secondary}
+                phx-click="set_head_office"
+                phx-value-id={venue.id}
+              >
+                Set as Head Office
+              </.button>
               <.button size={:sm} variant={:secondary} phx-click="edit_venue" phx-value-id={venue.id}>
                 Edit
               </.button>
@@ -197,6 +215,20 @@ defmodule OpenSauceWeb.VenueLive.Index do
      socket
      |> assign(:venues, load_venues(socket))
      |> put_flash(:info, "Venue deleted.")}
+  end
+
+  @impl true
+  def handle_event("set_head_office", %{"id" => venue_id}, socket) do
+    org = socket.assigns.organisation
+    actor = socket.assigns.current_member
+
+    case Ash.update(org, %{head_office_venue_id: venue_id}, action: :update, actor: actor) do
+      {:ok, updated_org} ->
+        {:noreply, socket |> assign(:organisation, updated_org) |> put_flash(:info, "Head office updated.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not update head office.")}
+    end
   end
 
   @impl true

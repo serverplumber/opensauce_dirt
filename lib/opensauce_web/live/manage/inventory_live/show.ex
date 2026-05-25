@@ -109,7 +109,6 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         action={@live_action}
         current_member={@current_member}
         material={@material}
-        settings={@settings}
         patch={~p"/manage/inventory/#{@material.sku}/details"}
       />
     </.modal>
@@ -125,7 +124,6 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         id={@material.id}
         material={@material}
         current_member={@current_member}
-        settings={@settings}
         patch={~p"/manage/inventory/#{@material.sku}/stock"}
       />
     </.modal>

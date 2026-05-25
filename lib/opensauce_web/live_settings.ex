@@ -8,28 +8,14 @@ defmodule OpenSauceWeb.LiveSettings do
   import Phoenix.Component
 
   def on_mount(:default, _params, session, socket) do
-    if socket.assigns[:settings] do
+    if socket.assigns[:organisation] do
       {:cont, socket}
     else
       socket
-      |> load_settings()
       |> load_organisation()
       |> assign_timezone(session["timezone"])
       |> then(&{:cont, &1})
     end
-  end
-
-  defp load_settings(socket) do
-    member = socket.assigns.current_member
-    opts = [actor: member, tenant: member.organisation_id]
-
-    settings =
-      case OpenSauce.Settings.get_settings(opts) do
-        {:ok, settings} -> settings
-        {:error, _} -> OpenSauce.Settings.init!(opts)
-      end
-
-    assign(socket, :settings, settings)
   end
 
   defp load_organisation(socket) do

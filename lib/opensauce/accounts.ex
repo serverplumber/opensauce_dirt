@@ -37,5 +37,12 @@ defmodule OpenSauce.Accounts do
       define :touch_api_key_last_used, action: :touch_last_used
       define :get_api_key_by_id, action: :read, get_by: [:id]
     end
+
+    resource OpenSauce.Accounts.TaxRate do
+      define :list_tax_rates, action: :list
+      define :create_tax_rate, action: :create
+      define :update_tax_rate, action: :update
+      define :delete_tax_rate, action: :destroy
+    end
   end
 end

@@ -121,7 +121,6 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
           module={OpenSauceWeb.InvoiceLive.FormComponent}
           id={@invoice.id}
           current_member={@current_member}
-          settings={@settings}
           invoice={@invoice}
           patch={~p"/manage/invoices/#{@invoice.id}"}
         />

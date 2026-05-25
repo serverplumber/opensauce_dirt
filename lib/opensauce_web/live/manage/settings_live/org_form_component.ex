@@ -2,12 +2,155 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
+  alias OpenSauce.Accounts
   alias OpenSauce.Accounts.Roles
+  alias OpenSauce.Operations
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="space-y-6">
+      <%!-- Manager+ visible: Currency & Tax --%>
+      <div :if={Roles.manager_or_above?(@current_member)} class="space-y-6">
+        <section
+          id="currency-settings"
+          aria-labelledby="currency-settings-title"
+          class="rounded-lg border border-stone-200 bg-stone-50"
+        >
+          <div class="border-b border-stone-200 px-4 py-3">
+            <h3 id="currency-settings-title" class="text-base font-semibold text-stone-800">
+              Currency &amp; Tax
+            </h3>
+            <p class="mt-1 text-sm text-stone-600">
+              Default currency and how tax is applied across invoices.
+            </p>
+          </div>
+          <div class="p-4">
+            <.simple_form
+              for={@currency_form}
+              id="currency-form"
+              phx-target={@myself}
+              phx-change="save_currency"
+              phx-submit="save_currency"
+            >
+              <.input
+                field={@currency_form[:currency]}
+                type="select"
+                options={[{"Canadian Dollar", :CAD}, {"US Dollar", :USD}, {"Euro", :EUR}]}
+                label="Currency"
+              />
+            </.simple_form>
+          </div>
+        </section>
+
+        <section
+          id="tax-settings"
+          aria-labelledby="tax-settings-title"
+          class="rounded-lg border border-stone-200 bg-stone-50"
+        >
+          <div class="border-b border-stone-200 px-4 py-3">
+            <h3 id="tax-settings-title" class="text-base font-semibold text-stone-800">
+              Tax &amp; Pricing
+            </h3>
+            <p class="mt-1 text-sm text-stone-600">
+              Tax mode and individual tax lines. Rates are decimal — e.g. 0.05 for 5%.
+              Compound taxes are applied on top of the base price plus all prior simple taxes.
+            </p>
+          </div>
+
+          <div class="border-b border-stone-200 p-4">
+            <.simple_form
+              for={@tax_mode_form}
+              id="tax-mode-form"
+              phx-target={@myself}
+              phx-change="save_tax_mode"
+              phx-submit="save_tax_mode"
+            >
+              <.input
+                field={@tax_mode_form[:tax_mode]}
+                type="select"
+                options={[
+                  {"Exclusive (add tax on top)", :exclusive},
+                  {"Inclusive (price already includes tax)", :inclusive}
+                ]}
+                label="Tax mode"
+              />
+            </.simple_form>
+          </div>
+
+          <div class="divide-y divide-stone-100">
+            <div
+              :for={rate <- @tax_rates}
+              class="flex items-center gap-3 px-4 py-3"
+              id={"tax-rate-#{rate.id}"}
+            >
+              <div class="flex-1">
+                <span class="text-sm font-medium text-stone-800">{rate.name}</span>
+                <span :if={rate.is_compound} class="ml-2 text-xs text-stone-500">compound</span>
+              </div>
+              <span class="text-sm text-stone-600">
+                {rate.rate |> Decimal.mult(100) |> Decimal.round(3) |> Decimal.normalize()}%
+              </span>
+              <button
+                type="button"
+                phx-click="delete_tax_rate"
+                phx-value-id={rate.id}
+                phx-target={@myself}
+                class="text-stone-400 hover:text-red-500"
+                aria-label={"Delete #{rate.name}"}
+              >
+                <.icon name="hero-x-mark" class="h-4 w-4" />
+              </button>
+            </div>
+
+            <div :if={@tax_rates == []} class="px-4 py-3 text-sm text-stone-400">
+              No tax lines yet.
+            </div>
+          </div>
+
+          <div class="border-t border-stone-200 p-4">
+            <.simple_form
+              for={@new_tax_rate_form}
+              id="new-tax-rate-form"
+              phx-target={@myself}
+              phx-submit="add_tax_rate"
+            >
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                <div class="sm:col-span-2">
+                  <.input field={@new_tax_rate_form[:name]} type="text" label="Name" placeholder="GST" />
+                </div>
+                <.input
+                  field={@new_tax_rate_form[:rate]}
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  label="Rate"
+                  placeholder="0.05"
+                />
+                <.input
+                  field={@new_tax_rate_form[:position]}
+                  type="number"
+                  min="0"
+                  label="Position"
+                  placeholder="0"
+                />
+              </div>
+              <div class="mt-2">
+                <.input
+                  field={@new_tax_rate_form[:is_compound]}
+                  type="checkbox"
+                  label="Compound (applied on base + prior simple taxes)"
+                />
+              </div>
+              <:actions>
+                <.button variant={:secondary}>Add Tax Line</.button>
+              </:actions>
+            </.simple_form>
+          </div>
+        </section>
+      </div>
+
+      <%!-- Owner only: identity, head office, email --%>
       <.simple_form :if={Roles.owner?(@current_member)}
         for={@form}
         id="org-form"
@@ -25,7 +168,7 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
               Organisation
             </h3>
             <p class="mt-1 text-sm text-stone-600">
-              Your organisation's display name and address.
+              Display name and address.
             </p>
           </div>
           <div class="space-y-4 p-4">
@@ -46,58 +189,24 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
         </section>
 
         <section
-          id="currency-settings"
-          aria-labelledby="currency-settings-title"
+          id="head-office-settings"
+          aria-labelledby="head-office-settings-title"
           class="rounded-lg border border-stone-200 bg-stone-50"
         >
           <div class="border-b border-stone-200 px-4 py-3">
-            <h3 id="currency-settings-title" class="text-base font-semibold text-stone-800">
-              Currency
+            <h3 id="head-office-settings-title" class="text-base font-semibold text-stone-800">
+              Head Office
             </h3>
             <p class="mt-1 text-sm text-stone-600">
-              Default currency used across invoices and reports.
+              The venue that serves as the organisation's primary location.
             </p>
           </div>
           <div class="p-4">
             <.input
-              field={@form[:currency]}
+              field={@form[:head_office_venue_id]}
               type="select"
-              options={[{"Canadian Dollar", :CAD}, {"US Dollar", :USD}, {"Euro", :EUR}]}
-              label="Currency"
-            />
-          </div>
-        </section>
-
-        <section
-          id="tax-settings"
-          aria-labelledby="tax-settings-title"
-          class="rounded-lg border border-stone-200 bg-stone-50"
-        >
-          <div class="border-b border-stone-200 px-4 py-3">
-            <h3 id="tax-settings-title" class="text-base font-semibold text-stone-800">
-              Tax &amp; Pricing
-            </h3>
-            <p class="mt-1 text-sm text-stone-600">
-              How tax is applied and the default rate. Rates are decimal, e.g. 0.21 for 21%.
-            </p>
-          </div>
-          <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
-            <.input
-              field={@form[:tax_mode]}
-              type="select"
-              options={[
-                {"Exclusive (add tax)", :exclusive},
-                {"Inclusive (price includes tax)", :inclusive}
-              ]}
-              label="Tax mode"
-            />
-            <.input
-              field={@form[:tax_rate]}
-              type="number"
-              step="0.001"
-              min="0"
-              label="Tax rate"
-              placeholder="0.21"
+              label="Head Office venue"
+              options={[{"— none —", ""}] ++ Enum.map(@venues, &{&1.name, &1.id})}
             />
           </div>
         </section>
@@ -155,7 +264,33 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
         ]
       )
 
-    {:ok, socket |> assign(assigns) |> assign(:form, to_form(form))}
+    tax_rates = load_tax_rates(assigns.current_member)
+    venues = load_venues(assigns.current_member)
+
+    currency_form =
+      to_form(%{"currency" => assigns.organisation.currency}, as: "currency")
+
+    tax_mode_form =
+      to_form(%{"tax_mode" => assigns.organisation.tax_mode}, as: "tax_mode")
+
+    new_tax_rate_form =
+      AshPhoenix.Form.for_create(OpenSauce.Accounts.TaxRate, :create,
+        as: "tax_rate",
+        actor: assigns.current_member,
+        tenant: assigns.current_member.organisation_id
+      )
+
+    socket =
+      socket
+      |> assign(assigns)
+      |> assign(:form, to_form(form))
+      |> assign(:venues, venues)
+      |> assign(:tax_rates, tax_rates)
+      |> assign(:currency_form, currency_form)
+      |> assign(:tax_mode_form, tax_mode_form)
+      |> assign(:new_tax_rate_form, to_form(new_tax_rate_form))
+
+    {:ok, socket}
   end
 
   @impl true
@@ -173,6 +308,94 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
     end
+  end
+
+  @impl true
+  def handle_event("save_currency", %{"currency" => %{"currency" => currency}}, socket) do
+    actor = socket.assigns.current_member
+
+    case Ash.update(socket.assigns.organisation, %{currency: String.to_existing_atom(currency)},
+           action: :update,
+           actor: actor
+         ) do
+      {:ok, organisation} ->
+        notify_parent({:saved, organisation})
+
+        {:noreply,
+         socket
+         |> assign(:organisation, organisation)
+         |> assign(:currency_form, to_form(%{"currency" => organisation.currency}, as: "currency"))}
+
+      {:error, _} ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("save_tax_mode", %{"tax_mode" => %{"tax_mode" => tax_mode}}, socket) do
+    actor = socket.assigns.current_member
+
+    case Ash.update(socket.assigns.organisation, %{tax_mode: String.to_existing_atom(tax_mode)},
+           action: :update,
+           actor: actor
+         ) do
+      {:ok, organisation} ->
+        notify_parent({:saved, organisation})
+        {:noreply, assign(socket, :organisation, organisation)}
+
+      {:error, _} ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("add_tax_rate", %{"tax_rate" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.new_tax_rate_form, params: params) do
+      {:ok, _rate} ->
+        tax_rates = load_tax_rates(socket.assigns.current_member)
+
+        new_form =
+          AshPhoenix.Form.for_create(OpenSauce.Accounts.TaxRate, :create,
+            as: "tax_rate",
+            actor: socket.assigns.current_member,
+            tenant: socket.assigns.current_member.organisation_id
+          )
+
+        {:noreply,
+         socket
+         |> assign(:tax_rates, tax_rates)
+         |> assign(:new_tax_rate_form, to_form(new_form))}
+
+      {:error, form} ->
+        {:noreply, assign(socket, :new_tax_rate_form, form)}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_tax_rate", %{"id" => id}, socket) do
+    actor = socket.assigns.current_member
+
+    rate =
+      Ash.get!(OpenSauce.Accounts.TaxRate, id,
+        actor: actor,
+        tenant: actor.organisation_id
+      )
+
+    Ash.destroy!(rate, actor: actor, tenant: actor.organisation_id)
+
+    {:noreply, assign(socket, :tax_rates, load_tax_rates(actor))}
+  end
+
+  defp load_tax_rates(actor) do
+    Accounts.list_tax_rates(actor: actor, tenant: actor.organisation_id)
+    |> case do
+      {:ok, rates} -> rates
+      _ -> []
+    end
+  end
+
+  defp load_venues(actor) do
+    Operations.list_venues!(actor: actor, tenant: actor.organisation_id)
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

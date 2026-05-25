@@ -198,11 +198,11 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   end
 
   defp apply_action(socket, :index, _params) do
-    assign(socket, :page_title, "Settings")
+    assign(socket, :page_title, "Organisation")
   end
 
   defp apply_action(socket, :general, _params) do
-    assign(socket, :page_title, "General Settings")
+    assign(socket, :page_title, "Settings")
   end
 
   defp apply_action(socket, :csv, _params) do
@@ -218,7 +218,7 @@ defmodule OpenSauceWeb.SettingsLive.Index do
   end
 
   defp apply_action(socket, :members, _params) do
-    assign(socket, :page_title, "Members")
+    assign(socket, :page_title, "Staff")
   end
 
   def csv_import_entities do

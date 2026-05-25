@@ -6,8 +6,7 @@ defmodule OpenSauceWeb.Schema do
     domains: [
       OpenSauce.Orders,
       OpenSauce.Inventory,
-      OpenSauce.CRM,
-      OpenSauce.Settings
+      OpenSauce.CRM
     ]
 
   query do

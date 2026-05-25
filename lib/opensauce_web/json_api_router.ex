@@ -4,8 +4,7 @@ defmodule OpenSauceWeb.JsonApiRouter do
     domains: [
       OpenSauce.Orders,
       OpenSauce.Inventory,
-      OpenSauce.CRM,
-      OpenSauce.Settings
+      OpenSauce.CRM
     ],
     open_api: "/open_api"
 end
