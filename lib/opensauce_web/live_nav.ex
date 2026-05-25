@@ -23,6 +23,7 @@ defmodule OpenSauceWeb.LiveNav do
         String.starts_with?(path, "/manage/products") -> :products
         String.starts_with?(path, "/manage/jobs") -> :jobs
         String.starts_with?(path, "/manage/orders") -> :orders
+        String.starts_with?(path, "/manage/engagements") -> :customers
         String.starts_with?(path, "/manage/customers") -> :customers
         String.starts_with?(path, "/manage/venues") -> :venues
         String.starts_with?(path, "/manage/settings") -> :settings

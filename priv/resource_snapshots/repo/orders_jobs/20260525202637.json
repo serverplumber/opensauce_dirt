@@ -62,7 +62,7 @@
     },
     {
       "allow_nil?": false,
-      "default": "scheduled",
+      "default": "\"scheduled\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -71,6 +71,30 @@
       "size": null,
       "source": "status",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "duration_estimate",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "realized_cost",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -381,7 +405,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "A5A97B183C3A69AB27AFDC6311D2D3638FAAE45491CC9C1924EFEAD3C7EBC56F",
+  "hash": "8846874D222E74B31251FDD8609254439156204CDB952CE36037092674E29E90",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",

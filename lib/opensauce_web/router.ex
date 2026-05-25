@@ -179,6 +179,8 @@ defmodule OpenSauceWeb.Router do
       live "/manage/purchasing/:po_ref/lineup", PurchasingLive.Show, :lineup
 
       # Customers
+      live "/manage/engagements", EngagementLive.Index, :index
+      live "/manage/engagements/new", EngagementLive.Index, :new
       live "/manage/customers", CustomerLive.Index, :index
       live "/manage/customers/new", CustomerLive.Index, :new
       live "/manage/customers/:reference", CustomerLive.Show, :show

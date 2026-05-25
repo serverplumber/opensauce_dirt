@@ -36,6 +36,18 @@ defmodule OpenSauce.Orders do
       define :destroy_job_event_material, action: :destroy
     end
 
+    resource OpenSauce.Orders.JobStaff do
+      define :assign_job_staff, action: :assign
+      define :list_job_staff, action: :read
+      define :unassign_job_staff, action: :destroy
+    end
+
+    resource OpenSauce.Orders.JobEventStaff do
+      define :log_job_event_staff, action: :log
+      define :list_job_event_staff, action: :read
+      define :destroy_job_event_staff, action: :destroy
+    end
+
     resource OpenSauce.Orders.JobMaterial do
       define :list_job_materials, action: :read
       define :create_job_material, action: :create

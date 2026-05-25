@@ -19,6 +19,7 @@ defmodule OpenSauceWeb.Navigation do
           | :inventory
           | :purchasing
           | :customers
+          | :engagements
           | :venues
           | :settings
 
@@ -43,6 +44,10 @@ defmodule OpenSauceWeb.Navigation do
 
   # Jobs nav helpers
   def jobs_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/jobs")
+
+  # Customers nav helpers
+  def customers_list_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/customers")
+  def engagements_list_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/engagements")
 
   # Venues nav helpers
   def venues_active?(socket), do: String.starts_with?(Map.get(socket.assigns, :current_path, ""), "/manage/venues")
@@ -166,7 +171,39 @@ defmodule OpenSauceWeb.Navigation do
           customer_statistics: &__MODULE__.crumb_customer_statistics/1,
           customer_engagements: &__MODULE__.crumb_customer_engagements/1
         },
-        sub_links: []
+        sub_links: [
+          %{
+            key: :customers,
+            label: "Customers",
+            navigate: "/manage/customers",
+            active?: &__MODULE__.customers_list_active?/1
+          },
+          %{
+            key: :engagements,
+            label: "Engagements",
+            navigate: "/manage/engagements",
+            active?: &__MODULE__.engagements_list_active?/1
+          }
+        ]
+      },
+      engagements: %{
+        label: "Engagements",
+        path: "/manage/engagements",
+        pages: %{},
+        sub_links: [
+          %{
+            key: :customers,
+            label: "Customers",
+            navigate: "/manage/customers",
+            active?: &__MODULE__.customers_list_active?/1
+          },
+          %{
+            key: :engagements,
+            label: "Engagements",
+            navigate: "/manage/engagements",
+            active?: &__MODULE__.engagements_list_active?/1
+          }
+        ]
       },
       venues: %{
         label: "Venues",

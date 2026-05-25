@@ -16,12 +16,23 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
         phx-submit="save"
       >
         <div class="mt-4 space-y-4">
+          <%!-- Customer selector — only shown when not pre-set from a customer page --%>
+          <.input
+            :if={@standalone}
+            name="engagement[customer_id]"
+            id="engagement_customer_id"
+            type="select"
+            label="Customer"
+            options={Enum.map(@customers, &{customer_label(&1), &1.id})}
+            value={@customer_id}
+            prompt="Select a customer"
+          />
+
           <.input
             field={@form[:garden_id]}
             type="select"
             label="Garden"
-            options={Enum.map(@gardens, &{garden_label(&1), &1.id})}
-            prompt="Select a garden"
+            options={[{"— none —", ""}] ++ Enum.map(@gardens, &{garden_label(&1), &1.id})}
           />
 
           <.input
@@ -81,6 +92,15 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   @impl true
   def update(%{engagement: engagement, customer: customer} = assigns, socket) do
     member = assigns.current_member
+    standalone = is_nil(customer)
+
+    {customer_id, gardens, customers} =
+      if standalone do
+        all = load_customers(member)
+        {"", [], all}
+      else
+        {customer.id, customer.garden_addresses, []}
+      end
 
     form =
       if engagement do
@@ -100,20 +120,46 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:customer_id, customer.id)
-     |> assign(:gardens, customer.garden_addresses)
+     |> assign(:standalone, standalone)
+     |> assign(:customer_id, customer_id)
+     |> assign(:customers, customers)
+     |> assign(:gardens, gardens)
      |> assign(:form, to_form(form))}
   end
 
   @impl true
   def handle_event("validate", %{"engagement" => params}, socket) do
-    params = Map.put(params, "customer_id", socket.assigns.customer_id)
+    {customer_id, gardens} =
+      if socket.assigns.standalone do
+        new_customer_id = params["customer_id"] || ""
+
+        if new_customer_id != socket.assigns.customer_id and new_customer_id != "" do
+          gardens = load_gardens(new_customer_id, socket.assigns.current_member)
+          {new_customer_id, gardens}
+        else
+          {new_customer_id, socket.assigns.gardens}
+        end
+      else
+        {socket.assigns.customer_id, socket.assigns.gardens}
+      end
+
+    params = Map.put(params, "customer_id", customer_id)
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
-    {:noreply, assign(socket, :form, form)}
+
+    {:noreply,
+     socket
+     |> assign(:form, form)
+     |> assign(:customer_id, customer_id)
+     |> assign(:gardens, gardens)}
   end
 
   def handle_event("save", %{"engagement" => params}, socket) do
-    params = Map.put(params, "customer_id", socket.assigns.customer_id)
+    customer_id =
+      if socket.assigns.standalone,
+        do: params["customer_id"] || socket.assigns.customer_id,
+        else: socket.assigns.customer_id
+
+    params = Map.put(params, "customer_id", customer_id)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, engagement} ->
@@ -130,6 +176,29 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp load_customers(member) do
+    CRM.list_customers!(actor: member, tenant: member.organisation_id)
+  rescue
+    _ -> []
+  end
+
+  defp load_gardens(customer_id, member) do
+    case CRM.get_customer_by_id(customer_id,
+           actor: member,
+           tenant: member.organisation_id,
+           load: [garden_addresses: [:short_address]]
+         ) do
+      {:ok, customer} -> customer.garden_addresses
+      _ -> []
+    end
+  end
+
+  defp customer_label(c) do
+    if c.company_name_nickname,
+      do: "#{c.company_name_nickname} (#{c.first_name} #{c.last_name})",
+      else: "#{c.first_name} #{c.last_name}"
+  end
 
   defp garden_label(addr) do
     name = addr.name || "Garden"

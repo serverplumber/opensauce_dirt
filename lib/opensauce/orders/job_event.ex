@@ -31,7 +31,7 @@ defmodule OpenSauce.Orders.JobEvent do
 
     create :log do
       primary? true
-      accept [:job_id, :data, :timestamp, :note, :organisation_id]
+      accept [:job_id, :data, :timestamp, :note, :actor_id, :organisation_id]
     end
   end
 
@@ -62,6 +62,12 @@ defmodule OpenSauce.Orders.JobEvent do
                   ]
     end
 
+    # Who submitted this event — may differ from the crew present (e.g. a foreman clocking in staff).
+    attribute :actor_id, :uuid do
+      allow_nil? true
+      public? true
+    end
+
     # User-recorded time of the event, not the insert time.
     attribute :timestamp, :utc_datetime do
       allow_nil? false
@@ -80,6 +86,10 @@ defmodule OpenSauce.Orders.JobEvent do
   relationships do
     belongs_to :job, OpenSauce.Orders.Job do
       allow_nil? false
+      public? true
+    end
+
+    has_many :event_staff, OpenSauce.Orders.JobEventStaff do
       public? true
     end
 

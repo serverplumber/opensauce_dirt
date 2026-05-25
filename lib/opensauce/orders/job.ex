@@ -57,6 +57,7 @@ defmodule OpenSauce.Orders.Job do
         :containing_shift_id,
         :actor_id,
         :scheduled_for,
+        :duration_estimate,
         :status,
         :notes,
         :organisation_id
@@ -74,6 +75,7 @@ defmodule OpenSauce.Orders.Job do
         :containing_shift_id,
         :actor_id,
         :scheduled_for,
+        :duration_estimate,
         :status,
         :notes
       ]
@@ -89,6 +91,12 @@ defmodule OpenSauce.Orders.Job do
       require_atomic? false
       accept []
       change set_attribute(:status, :completed)
+      change OpenSauce.Orders.Job.Changes.SnapshotRealizedCost
+    end
+
+    update :write_realized_cost do
+      require_atomic? false
+      accept [:realized_cost]
     end
 
     update :cancel do
@@ -166,6 +174,17 @@ defmodule OpenSauce.Orders.Job do
       constraints one_of: [:scheduled, :in_progress, :completed, :cancelled]
     end
 
+    attribute :duration_estimate, :integer do
+      allow_nil? true
+      public? true
+      constraints min: 1
+    end
+
+    attribute :realized_cost, :decimal do
+      allow_nil? true
+      public? true
+    end
+
     attribute :notes, :string do
       allow_nil? true
       public? true
@@ -184,7 +203,14 @@ defmodule OpenSauce.Orders.Job do
 
     calculate :materials_cost, :decimal, OpenSauce.Orders.Job.Calculations.MaterialsCost
 
-    calculate :realized_cost, :decimal, OpenSauce.Orders.Job.Calculations.RealizedCost
+    # Sum of tentative staff hourly rates — used for calendar scheduling and cost estimation.
+    calculate :man_hour_rate, :decimal, OpenSauce.Orders.Job.Calculations.ManHourRate
+
+    # duration_estimate (minutes) expressed as hours.
+    calculate :estimated_man_hours, :decimal, OpenSauce.Orders.Job.Calculations.EstimatedManHours
+
+    # Rough estimate: estimated_man_hours × man_hour_rate × overhead + materials.
+    calculate :estimated_cost, :decimal, OpenSauce.Orders.Job.Calculations.EstimatedCost
   end
 
   relationships do
@@ -223,6 +249,11 @@ defmodule OpenSauce.Orders.Job do
       public? true
       attribute_writable? true
       domain OpenSauce.Accounts
+    end
+
+    # Tentative staff assigned to this job — drives calendar visibility and cost estimation.
+    has_many :staff_assignments, OpenSauce.Orders.JobStaff do
+      public? true
     end
 
     has_many :events, OpenSauce.Orders.JobEvent do
