@@ -7,14 +7,14 @@ defmodule OpenSauce.Orders.Job.Calculations.RealizedCost do
 
   @impl true
   def calculate(records, _opts, context) do
-    overhead = load_overhead(context)
+    {overhead, mileage_rate} = load_org_rates(context)
     members_by_user_id = load_members(context)
 
     {:ok,
      Enum.map(records, fn job ->
        member = job.actor_id && Map.get(members_by_user_id, job.actor_id)
        labor = labor_cost(job.duration, member, overhead)
-       mileage = mileage_cost(job.mileage_km)
+       mileage = mileage_cost(job.mileage_km, mileage_rate)
        materials = job.materials_cost || Decimal.new(0)
 
        Decimal.add(labor, Decimal.add(mileage, materials))
@@ -31,13 +31,18 @@ defmodule OpenSauce.Orders.Job.Calculations.RealizedCost do
     rate |> Decimal.mult(hours) |> Decimal.mult(multiplier)
   end
 
-  defp mileage_cost(nil), do: Decimal.new(0)
-  defp mileage_cost(_km), do: Decimal.new(0)
+  defp mileage_cost(nil, _rate), do: Decimal.new(0)
+  defp mileage_cost(km, rate), do: Decimal.mult(km, rate)
 
-  defp load_overhead(context) do
+  defp load_org_rates(context) do
     case Ash.get(OpenSauce.Accounts.Organisation, context.tenant, authorize?: false) do
-      {:ok, org} -> org.labor_overhead_percent || Decimal.new(0)
-      _ -> Decimal.new(0)
+      {:ok, org} ->
+        overhead = org.labor_overhead_percent || Decimal.new(0)
+        mileage_rate = org.mileage_cost_per_km || Decimal.new(0)
+        {overhead, mileage_rate}
+
+      _ ->
+        {Decimal.new(0), Decimal.new(0)}
     end
   end
 

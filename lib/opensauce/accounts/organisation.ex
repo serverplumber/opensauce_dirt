@@ -15,7 +15,7 @@ defmodule OpenSauce.Accounts.Organisation do
     defaults [:read, :destroy, create: [:name, :slug]]
 
     update :update do
-      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :email_from_name, :email_from_address, :head_office_venue_id]
+      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :head_office_venue_id]
 
       argument :address, :map, allow_nil?: true
 
@@ -62,6 +62,13 @@ defmodule OpenSauce.Accounts.Organisation do
     end
 
     attribute :labor_overhead_percent, :decimal do
+      public? true
+      allow_nil? false
+      default 0
+      constraints min: 0
+    end
+
+    attribute :mileage_cost_per_km, :decimal do
       public? true
       allow_nil? false
       default 0

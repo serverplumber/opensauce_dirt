@@ -21,7 +21,7 @@ defmodule OpenSauce.Repo.Migrations.RedesignJobs do
       remove :estimated_duration_minutes
       remove :scheduled_at
       remove :service_type
-      modify :status, :text, default: "planned"
+      modify :status, :text, default: "scheduled"
       add :type, :text, null: false, default: "client_work"
       add :service_category, :text
       add :account_code, :text
@@ -60,7 +60,7 @@ defmodule OpenSauce.Repo.Migrations.RedesignJobs do
 
     create index(:orders_jobs, [:organisation_id, :scheduled_for], name: "orders_jobs_scheduled_for_index")
 
-    execute("UPDATE orders_jobs SET status = 'planned' WHERE status = 'scheduled'")
+    execute("UPDATE orders_jobs SET status = 'scheduled' WHERE status = 'planned'")
   end
 
   def down do

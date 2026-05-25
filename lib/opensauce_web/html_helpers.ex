@@ -247,16 +247,13 @@ defmodule OpenSauceWeb.HtmlHelpers do
   (spot rate on payment date → base currency Decimal) happens before values reach
   this function.
   """
-  # TODO: Accept the Settings currency atom from context rather than passing it
-  # at every call site. Once forex conversion writes back a base-currency Decimal
-  # on payment, callers won't need to know the currency at all.
   @spec format_currency(atom(), Decimal.t() | number() | nil, Keyword.t()) :: String.t()
   def format_currency(currency, amount, opts \\ [])
 
   def format_currency(currency, nil, opts), do: format_currency(currency, Decimal.new(0), opts)
 
   def format_currency(currency, %Decimal{} = amount, _opts) do
-    "#{currency} #{Decimal.to_string(Decimal.round(amount, 2))}"
+    "#{currency_symbol(currency)}#{Decimal.to_string(Decimal.round(amount, 2))}"
   end
 
   def format_currency(currency, amount, opts) when is_integer(amount) do
@@ -275,6 +272,11 @@ defmodule OpenSauceWeb.HtmlHelpers do
   rescue
     _ -> format_currency(currency, Decimal.new(0), opts)
   end
+
+  defp currency_symbol(:CAD), do: "$"
+  defp currency_symbol(:USD), do: "$"
+  defp currency_symbol(:EUR), do: "€"
+  defp currency_symbol(other), do: to_string(other)
 
   # Formatting helpers
 

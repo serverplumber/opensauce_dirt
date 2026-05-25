@@ -30,7 +30,7 @@ defmodule OpenSauce.Orders.Job do
     end
 
     read :upcoming do
-      filter expr(status == :planned and not is_nil(scheduled_for) and scheduled_for >= ^Date.utc_today())
+      filter expr(status == :scheduled and not is_nil(scheduled_for) and scheduled_for >= ^Date.utc_today())
       prepare build(sort: [scheduled_for: :asc])
     end
 
@@ -42,7 +42,7 @@ defmodule OpenSauce.Orders.Job do
 
     read :at_garden do
       argument :garden_id, :uuid, allow_nil?: false
-      filter expr(garden_id == ^arg(:garden_id) and status in [:planned, :in_progress])
+      filter expr(garden_id == ^arg(:garden_id) and status in [:scheduled, :in_progress])
       prepare build(sort: [scheduled_for: :asc])
     end
 
@@ -162,8 +162,8 @@ defmodule OpenSauce.Orders.Job do
     attribute :status, :atom do
       allow_nil? false
       public? true
-      default :planned
-      constraints one_of: [:planned, :in_progress, :completed, :cancelled]
+      default :scheduled
+      constraints one_of: [:scheduled, :in_progress, :completed, :cancelled]
     end
 
     attribute :notes, :string do
@@ -184,7 +184,6 @@ defmodule OpenSauce.Orders.Job do
 
     calculate :materials_cost, :decimal, OpenSauce.Orders.Job.Calculations.MaterialsCost
 
-    # labor (actor hourly rate × duration) + mileage cost + materials — stub until rates wired
     calculate :realized_cost, :decimal, OpenSauce.Orders.Job.Calculations.RealizedCost
   end
 

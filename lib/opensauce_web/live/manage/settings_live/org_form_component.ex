@@ -83,6 +83,14 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
                   label="Labour overhead"
                   placeholder="0.15"
                 />
+                <.input
+                  field={@pricing_form[:mileage_cost_per_km]}
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  label="Mileage cost per km"
+                  placeholder="0.61"
+                />
               </div>
               <:actions>
                 <.button variant={:secondary} phx-disable-with="Saving...">Save</.button>
@@ -292,7 +300,8 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
     pricing_form =
       to_form(%{
         "tax_mode" => assigns.organisation.tax_mode,
-        "labor_overhead_percent" => assigns.organisation.labor_overhead_percent
+        "labor_overhead_percent" => assigns.organisation.labor_overhead_percent,
+        "mileage_cost_per_km" => assigns.organisation.mileage_cost_per_km
       }, as: "pricing")
 
     new_tax_rate_form =
@@ -361,7 +370,8 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
            socket.assigns.organisation,
            %{
              tax_mode: String.to_existing_atom(params["tax_mode"]),
-             labor_overhead_percent: params["labor_overhead_percent"]
+             labor_overhead_percent: params["labor_overhead_percent"],
+             mileage_cost_per_km: params["mileage_cost_per_km"]
            },
            action: :update,
            actor: actor
@@ -372,7 +382,8 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
         pricing_form =
           to_form(%{
             "tax_mode" => organisation.tax_mode,
-            "labor_overhead_percent" => organisation.labor_overhead_percent
+            "labor_overhead_percent" => organisation.labor_overhead_percent,
+            "mileage_cost_per_km" => organisation.mileage_cost_per_km
           }, as: "pricing")
 
         {:noreply, socket |> assign(:organisation, organisation) |> assign(:pricing_form, pricing_form)}

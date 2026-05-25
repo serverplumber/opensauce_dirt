@@ -394,7 +394,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
   defp load_unpaid_jobs(customer_id, member) do
     Orders.Job
-    |> filter(engagement.customer_id == ^customer_id and status in [:planned, :in_progress, :completed])
+    |> filter(engagement.customer_id == ^customer_id and status in [:scheduled, :in_progress, :completed])
     |> Ash.Query.sort(scheduled_for: :asc)
     |> Ash.Query.load(:materials_cost)
     |> Ash.read!(actor: member, tenant: member.organisation_id)

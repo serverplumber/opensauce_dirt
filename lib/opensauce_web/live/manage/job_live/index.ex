@@ -62,7 +62,7 @@ defmodule OpenSauceWeb.JobLive.Index do
           <.badge
             text={job.status}
             colors={[
-              {:planned, "text-blue-700 bg-blue-50"},
+              {:scheduled, "text-blue-700 bg-blue-50"},
               {:in_progress, "text-amber-700 bg-amber-50"},
               {:completed, "text-green-700 bg-green-50"},
               {:cancelled, "text-stone-500 bg-stone-100"}
@@ -219,7 +219,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     member = socket.assigns.current_member
     job = socket.assigns.event_log_job
 
-    if event.data.type == :arrival && job.status == :planned do
+    if event.data.type == :arrival && job.status == :scheduled do
       Orders.mark_job_in_progress(job, actor: member, tenant: member.organisation_id)
     end
 
