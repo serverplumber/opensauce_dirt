@@ -91,9 +91,9 @@ config :phoenix_live_view,
 
 config :swoosh, :api_client, false
 
-config :waffle,
-  storage: Waffle.Storage.Local,
-  storage_dir: "priv/static/uploads"
+config :opensauce,
+  storage_adapter: OpenSauce.Storage.Local,
+  upload_dir: Path.join([File.cwd!(), "priv", "static", "uploads"])
 
 # Set a higher stacktrace during development. Avoid configuring such
 # Disable swoosh api client as it is only required for production adapters.

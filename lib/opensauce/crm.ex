@@ -26,6 +26,14 @@ defmodule OpenSauce.CRM do
       define :destroy_customer, action: :destroy
     end
 
+    resource OpenSauce.CRM.EngagementImage do
+      define :create_engagement_image, action: :create
+      define :update_engagement_image, action: :update
+      define :destroy_engagement_image, action: :destroy
+      define :list_engagement_images, action: :for_engagement, args: [:engagement_id]
+      define :list_engagement_paintings, action: :paintings_for_engagement, args: [:engagement_id]
+    end
+
     resource OpenSauce.CRM.EngagementMaterial do
       define :list_engagement_materials, action: :read
       define :create_engagement_material, action: :create

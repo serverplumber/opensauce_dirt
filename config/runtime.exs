@@ -81,9 +81,9 @@ if config_env() == :prod do
       System.get_env("TOKEN_SIGNING_SECRET") ||
         raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
-  config :waffle,
-    storage: Waffle.Storage.Local,
-    storage_dir: System.get_env("UPLOAD_DIR") || "/var/lib/opensauce/uploads"
+  config :opensauce,
+    storage_adapter: OpenSauce.Storage.Local,
+    upload_dir: System.get_env("UPLOAD_DIR") || "/var/lib/opensauce/uploads"
 
   # Cloak encryption vault
   cloak_key =

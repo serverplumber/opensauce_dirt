@@ -24,7 +24,6 @@ defmodule OpenSauce.CRM.Engagement do
     default_accept [
       :garden_id,
       :customer_id,
-      :painting,
       :scope_description,
       :install_price,
       :maintenance_price_annual,
@@ -75,12 +74,6 @@ defmodule OpenSauce.CRM.Engagement do
 
   attributes do
     uuid_primary_key :id
-
-    # Painting stored as a file path; upload handled via Engagement.Painting uploader.
-    attribute :painting, :string do
-      allow_nil? true
-      public? true
-    end
 
     attribute :scope_description, :string do
       allow_nil? true
@@ -149,6 +142,13 @@ defmodule OpenSauce.CRM.Engagement do
       allow_nil? false
       public? true
       attribute_writable? true
+    end
+
+    # All images (photos and paintings) attached to this engagement, newest first.
+    # Use the :paintings_for_engagement action (or filter images by type == :painting)
+    # to determine invoice description style: "Garden as drawn" vs "Garden as described".
+    has_many :images, OpenSauce.CRM.EngagementImage do
+      public? true
     end
 
     has_many :materials, OpenSauce.CRM.EngagementMaterial do
