@@ -53,28 +53,40 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
               Tax &amp; Pricing
             </h3>
             <p class="mt-1 text-sm text-stone-600">
-              Tax mode and individual tax lines. Rates are decimal — e.g. 0.05 for 5%.
+              Tax mode, labour overhead, and individual tax lines. Rates are decimal — e.g. 0.05 for 5%.
               Compound taxes are applied on top of the base price plus all prior simple taxes.
             </p>
           </div>
 
           <div class="border-b border-stone-200 p-4">
             <.simple_form
-              for={@tax_mode_form}
-              id="tax-mode-form"
+              for={@pricing_form}
+              id="pricing-form"
               phx-target={@myself}
-              phx-change="save_tax_mode"
-              phx-submit="save_tax_mode"
+              phx-submit="save_pricing"
             >
-              <.input
-                field={@tax_mode_form[:tax_mode]}
-                type="select"
-                options={[
-                  {"Exclusive (add tax on top)", :exclusive},
-                  {"Inclusive (price already includes tax)", :inclusive}
-                ]}
-                label="Tax mode"
-              />
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input
+                  field={@pricing_form[:tax_mode]}
+                  type="select"
+                  options={[
+                    {"Exclusive (add tax on top)", :exclusive},
+                    {"Inclusive (price already includes tax)", :inclusive}
+                  ]}
+                  label="Tax mode"
+                />
+                <.input
+                  field={@pricing_form[:labor_overhead_percent]}
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  label="Labour overhead"
+                  placeholder="0.15"
+                />
+              </div>
+              <:actions>
+                <.button variant={:secondary} phx-disable-with="Saving...">Save</.button>
+              </:actions>
             </.simple_form>
           </div>
 
@@ -106,6 +118,13 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
             <div :if={@tax_rates == []} class="px-4 py-3 text-sm text-stone-400">
               No tax lines yet.
             </div>
+
+            <div :if={length(@tax_rates) >= 2} class="flex items-center justify-between border-t border-stone-200 px-4 py-3">
+              <span class="text-sm font-medium text-stone-700">Total</span>
+              <span class="text-sm font-semibold text-stone-900">
+                {total_tax_rate(@tax_rates) |> Decimal.mult(100) |> Decimal.round(4) |> Decimal.normalize()}%
+              </span>
+            </div>
           </div>
 
           <div class="border-t border-stone-200 p-4">
@@ -124,8 +143,8 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
                   type="number"
                   step="0.001"
                   min="0"
-                  label="Rate"
-                  placeholder="0.05"
+                  label="Rate %"
+                  placeholder="5"
                 />
                 <.input
                   field={@new_tax_rate_form[:position]}
@@ -270,8 +289,11 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
     currency_form =
       to_form(%{"currency" => assigns.organisation.currency}, as: "currency")
 
-    tax_mode_form =
-      to_form(%{"tax_mode" => assigns.organisation.tax_mode}, as: "tax_mode")
+    pricing_form =
+      to_form(%{
+        "tax_mode" => assigns.organisation.tax_mode,
+        "labor_overhead_percent" => assigns.organisation.labor_overhead_percent
+      }, as: "pricing")
 
     new_tax_rate_form =
       AshPhoenix.Form.for_create(OpenSauce.Accounts.TaxRate, :create,
@@ -287,7 +309,7 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
       |> assign(:venues, venues)
       |> assign(:tax_rates, tax_rates)
       |> assign(:currency_form, currency_form)
-      |> assign(:tax_mode_form, tax_mode_form)
+      |> assign(:pricing_form, pricing_form)
       |> assign(:new_tax_rate_form, to_form(new_tax_rate_form))
 
     {:ok, socket}
@@ -332,16 +354,28 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
   end
 
   @impl true
-  def handle_event("save_tax_mode", %{"tax_mode" => %{"tax_mode" => tax_mode}}, socket) do
+  def handle_event("save_pricing", %{"pricing" => params}, socket) do
     actor = socket.assigns.current_member
 
-    case Ash.update(socket.assigns.organisation, %{tax_mode: String.to_existing_atom(tax_mode)},
+    case Ash.update(
+           socket.assigns.organisation,
+           %{
+             tax_mode: String.to_existing_atom(params["tax_mode"]),
+             labor_overhead_percent: params["labor_overhead_percent"]
+           },
            action: :update,
            actor: actor
          ) do
       {:ok, organisation} ->
         notify_parent({:saved, organisation})
-        {:noreply, assign(socket, :organisation, organisation)}
+
+        pricing_form =
+          to_form(%{
+            "tax_mode" => organisation.tax_mode,
+            "labor_overhead_percent" => organisation.labor_overhead_percent
+          }, as: "pricing")
+
+        {:noreply, socket |> assign(:organisation, organisation) |> assign(:pricing_form, pricing_form)}
 
       {:error, _} ->
         {:noreply, socket}
@@ -350,6 +384,10 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
 
   @impl true
   def handle_event("add_tax_rate", %{"tax_rate" => params}, socket) do
+    params = Map.update(params, "rate", "0", fn pct ->
+      pct |> Decimal.new() |> Decimal.div(100) |> to_string()
+    end)
+
     case AshPhoenix.Form.submit(socket.assigns.new_tax_rate_form, params: params) do
       {:ok, _rate} ->
         tax_rates = load_tax_rates(socket.assigns.current_member)
@@ -399,4 +437,22 @@ defmodule OpenSauceWeb.SettingsLive.OrgFormComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  # Compound taxes are applied on (base + sum of all simple taxes), so they
+  # effectively cost more than their nominal rate against the original base.
+  defp total_tax_rate(rates) do
+    simple_sum =
+      rates
+      |> Enum.reject(& &1.is_compound)
+      |> Enum.reduce(Decimal.new(0), &Decimal.add(&2, &1.rate))
+
+    compound_sum =
+      rates
+      |> Enum.filter(& &1.is_compound)
+      |> Enum.reduce(Decimal.new(0), fn rate, acc ->
+        Decimal.add(acc, Decimal.mult(rate.rate, Decimal.add(1, simple_sum)))
+      end)
+
+    Decimal.add(simple_sum, compound_sum)
+  end
 end

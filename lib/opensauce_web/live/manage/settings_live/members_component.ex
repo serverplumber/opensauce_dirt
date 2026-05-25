@@ -47,6 +47,11 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
             <:col :let={m} label="Role">
               <.badge text={m.role} colors={role_colors()} />
             </:col>
+            <:col :let={m} label="Hourly rate">
+              <span :if={Decimal.gt?(m.labor_hourly_rate, 0)}>
+                {m.labor_hourly_rate |> Decimal.round(2)}
+              </span>
+            </:col>
             <:action :let={m}>
               <.button
                 :if={m.id != @current_member.id and Roles.can_manage_members?(@current_member)}
@@ -127,6 +132,14 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
             options={role_options(@current_member)}
             value={@edit_form[:role].value}
           />
+          <.input
+            field={@edit_form[:labor_hourly_rate]}
+            type="number"
+            step="0.01"
+            min="0"
+            label="Hourly rate"
+            placeholder="0.00"
+          />
           <:actions>
             <.button variant={:primary} phx-disable-with="Saving...">Save</.button>
           </:actions>
@@ -148,7 +161,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
      |> assign(:show_edit_modal, false)
      |> assign(:editing_member, nil)
      |> assign(:invite_form, invite_form())
-     |> assign(:edit_form, edit_form(%{role: :staff}))}
+     |> assign(:edit_form, edit_form(%{role: :staff, display_title: nil, labor_hourly_rate: 0}))}
   end
 
   @impl true
@@ -230,7 +243,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
     actor = socket.assigns.current_member
     member = socket.assigns.editing_member
 
-    case Accounts.update_organisation_member(member, %{role: params["role"], display_title: params["display_title"]}, authorize?: false) do
+    case Accounts.update_organisation_member(member, %{role: params["role"], display_title: params["display_title"], labor_hourly_rate: params["labor_hourly_rate"]}, authorize?: false) do
       {:ok, _} ->
         {:noreply,
          socket
@@ -269,8 +282,8 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
     to_form(Map.merge(%{"email" => "", "display_title" => "", "role" => "staff"}, params), as: "invite")
   end
 
-  defp edit_form(%{role: role, display_title: title}) do
-    to_form(%{"role" => to_string(role), "display_title" => title || ""}, as: "edit")
+  defp edit_form(%{role: role, display_title: title, labor_hourly_rate: rate}) do
+    to_form(%{"role" => to_string(role), "display_title" => title || "", "labor_hourly_rate" => rate}, as: "edit")
   end
 
   defp edit_form(%{"role" => _} = params) do
@@ -278,7 +291,7 @@ defmodule OpenSauceWeb.SettingsLive.MembersComponent do
   end
 
   defp edit_form(_) do
-    to_form(%{"role" => "staff", "display_title" => ""}, as: "edit")
+    to_form(%{"role" => "staff", "display_title" => "", "labor_hourly_rate" => "0"}, as: "edit")
   end
 
   # Owners can assign any role; managers can only assign up to manager.
