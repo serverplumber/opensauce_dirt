@@ -1,37 +1,45 @@
 # OpenSauce Agent Guide
 
 ## Project Snapshot
-- OpenSauce is a self-hosted inventory & manufacturing software for micro-business, covering catalog, inventory, orders, CRM, and planner flows.
+- OpenSauce Dirt is a self-hosted ERP for small landscaping and gardening businesses, covering client engagement management, field job scheduling, crew costing, inventory, purchasing, and invoicing.
 - Core stack: Elixir 1.18+, Ash Framework for domain modeling, AshPostgres for persistence, Phoenix LiveView + TailwindCSS for UI.
-- Product principles: keep the operate → make → stock loop simple, favor printable artifacts (planner, labels, invoices), and ship durable primitives over heavy configuration.
+- Product principles: model the real operational loop (engagements → jobs → events → invoices), capture costs at the point of work, keep the UI simple enough for field staff.
 
 ## Repo Layout Highlights
-- `lib/opensauce/`: Ash domains by context (`catalog`, `inventory`, `orders`, `settings`, `crm`, `csv`, `types`).
-- `lib/opensauce_web/`: Phoenix boundary (LiveViews in `live/`, shared components in `components/`, controllers for public endpoints).
-- `priv/repo/`: Database migrations and `seeds.exs`; keep `priv/resource_snapshots/` aligned with Ash migrations.
+- `lib/opensauce/`: Ash domains by context — `accounts`, `crm`, `orders`, `inventory`, `operations`; plus `storage.ex` (pluggable file storage behaviour) and `storage/local.ex`.
+- `lib/opensauce_web/`: Phoenix boundary — LiveViews in `live/manage/`, shared components in `components/`, controllers for non-LiveView endpoints, `navigation.ex` for nav section definitions.
+- `priv/repo/`: Database migrations and `seeds.exs`. `priv/resource_snapshots/` tracks Ash schema state — always commit snapshots alongside their migration.
 - `assets/`: Frontend assets (requires `npm install --prefix assets` before builds).
 - `test/`: Domain tests under `opensauce/`, LiveView integration under `opensauce_web/`, shared helpers in `test/support`.
 
 ## Working Locally
 - First setup: `mix setup` (runs deps.get, `ash.setup`, asset install/build, seeds).
 - Start server: `mix phx.server`; demo data seeded from `priv/repo/seeds.exs`.
-- Reset data: `mix ash.reset` for extension-aware rebuilds or `mix ash_postgres.drop && mix setup` after major schema changes.
+- Reset data: `mix ash.reset` for extension-aware rebuilds.
+- After any resource change: `mix ash.codegen <migration_name>` generates both the migration and updated snapshots; commit both.
 - Assets: run `npm install --prefix assets` once; `mix assets.deploy` creates production bundles.
-- Environment: `.envrc`/`config/runtime.exs` hold runtime secrets; mirror updates in `docker-compose.yml` when containerizing.
+- Environment: `config/runtime.exs` holds runtime secrets (TOKEN_SIGNING_SECRET, CLOAK_KEY, UPLOAD_DIR, etc.); mirror updates in `docker-compose.yml` when containerizing.
 
 ## Ash Patterns & Expectations
 - Express business rules in `Ash.Resource` (attributes, relationships, `changes`, `validations`) and avoid imperative LiveView logic.
+- All resources use the `OpenSauce.Concerns.Multitenanted` fragment — attribute-based multitenancy on `organisation_id`.
 - Use `manage_relationship` helpers for nested updates; avoid manual Repo access in the web layer.
-- Preload data with `Ash.Query.load/2` or `Ash.load/3` before pushing to LiveViews to keep UI resource agnostic.
-- After schema changes run `mix ash_postgres.generate_migrations` to update migrations *and* `priv/resource_snapshots/`; commit both.
-- Create explicit read/update actions for LiveViews instead of ad-hoc queries; leverage `Ash.Flow` or `Ash.Changeset.for_action` for multi-step operations.
+- Preload data with `Ash.Query.load/2` or `Ash.load/3` before pushing to LiveViews.
+- Create explicit read/update actions for LiveViews; use `Ash.Changeset.for_action` for multi-step operations.
+- Update actions on complex resources need `require_atomic? false` when custom validations or changes cannot run atomically.
+
+## File Storage
+- All file I/O goes through `OpenSauce.Storage` — never write directly to disk in domain or web code.
+- Configure the adapter via `config :opensauce, storage_adapter: MyAdapter` and `upload_dir`.
+- `OpenSauce.Storage.Local` is the default; an S3 adapter can be added by implementing the behaviour.
+- Storage keys are opaque — store exactly as returned by `Storage.put/4`, pass verbatim to `url/1` and `delete/1`.
 
 ## Phoenix & LiveView Notes
 - Use `to_form` assigns with `<.form>`; never access raw changesets in HEEx templates.
 - Prefer LiveView streams (`stream/3`) for long-running collections and track counts with dedicated assigns.
 - Extend shared UI in `OpenSauceWeb.Components` instead of duplicating markup.
 - Place JS hooks in `assets/js` and wire via `app.js`; never embed `<script>` tags in HEEx.
-- Check router scopes for implicit aliases when adding LiveView routes (e.g., `/manage/orders` inside the browser scope).
+- Router has two live session groups under `/manage/`: `:admin_routes` (manager+) and `:manage_routes` (staff+). Add new routes to the appropriate group.
 
 ## Testing & QA
 - Default run: `mix test` (alias runs `ash.setup --quiet` first); narrow with `mix test path/to/file.exs:line`.
@@ -42,7 +50,6 @@
 ## Reference & Tooling
 - For docs, use `mix usage_rules.docs <Module>` and `mix usage_rules.search_docs "query"`.
 - Visual aids: `mix ash.generate_resource_diagrams`, `mix ash.generate_policy_charts`.
-- Keep `PLAN.md` milestone checkboxes updated as features land.
 
 ## Git Rules
 - Commit message format: `<type>(<scope>): <subject>`
