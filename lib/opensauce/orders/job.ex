@@ -230,6 +230,13 @@ defmodule OpenSauce.Orders.Job do
       domain OpenSauce.CRM
     end
 
+    belongs_to :invoice, OpenSauce.CRM.Invoice do
+      allow_nil? true
+      public? true
+      attribute_writable? true
+      domain OpenSauce.CRM
+    end
+
     # :client_work and :internal_work jobs reference the :shift job that contains them.
     belongs_to :containing_shift, OpenSauce.Orders.Job do
       allow_nil? true
