@@ -53,16 +53,61 @@ defmodule OpenSauceWeb.Layouts do
           >
             <p class="px-3 py-2 text-xs text-stone-400 truncate">{@current_user.email}</p>
             <div class="border-t border-stone-100" />
-            <.link
-              href={~p"/sign-out"}
-              class="flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition"
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition"
+              phx-click={
+                JS.hide(to: "#mobile-user-menu")
+                |> JS.show(to: "#sign-out-sheet")
+              }
               role="menuitem"
             >
               Sign out
-            </.link>
+            </button>
           </div>
         </div>
       </header>
+
+      <%!-- Sign-out confirmation sheet --%>
+      <div
+        id="sign-out-sheet"
+        class="hidden fixed inset-0 z-50 flex items-end justify-center"
+        role="dialog"
+        aria-label="Sign out confirmation"
+      >
+        <div
+          class="absolute inset-0 bg-black/30"
+          phx-click={JS.hide(to: "#sign-out-sheet")}
+          aria-hidden="true"
+        />
+        <div class="relative w-full bg-white rounded-t-2xl px-6 pt-6 pb-10 space-y-5 max-w-lg"
+          style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom))">
+          <div class="space-y-1">
+            <p class="text-base font-semibold text-stone-900">Sign out?</p>
+            <p class="text-sm text-stone-500">
+              You'll need a new magic link to sign back in.
+            </p>
+          </div>
+          <div class="flex flex-col gap-3">
+            <.link
+              href={~p"/sign-out"}
+              method="delete"
+              id="confirm-sign-out"
+              class="flex w-full items-center justify-center rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-700 transition"
+            >
+              Sign out
+            </.link>
+            <button
+              type="button"
+              id="cancel-sign-out"
+              class="flex w-full items-center justify-center rounded-xl border border-stone-200 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 transition"
+              phx-click={JS.hide(to: "#sign-out-sheet")}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
 
       <main class="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-20">
         <.flash_group flash={@flash} />

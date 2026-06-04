@@ -2,8 +2,6 @@ defmodule OpenSauceWeb.Router do
   use OpenSauceWeb, :router
   use AshAuthentication.Phoenix.Router
 
-  alias AshAuthentication.Phoenix.Overrides.Default
-
   #
   # Plugs
   #
@@ -64,12 +62,8 @@ defmodule OpenSauceWeb.Router do
     get "/", PageController, :home
 
     # Authentication Routes
-    magic_sign_in_route(OpenSauce.Accounts.User, :magic_link,
-      auth_routes_prefix: "/auth",
-      overrides: [OpenSauceWeb.AuthOverrides, Default],
-      path: "/auth/user/magic_link",
-      token_as_route_param?: false
-    )
+    # Own the magic-link redemption GET so there's no intermediate confirm page.
+    get "/auth/user/magic_link", AuthController, :redeem_magic_link
 
     auth_routes AuthController, OpenSauce.Accounts.User, path: "/auth"
     sign_out_route AuthController

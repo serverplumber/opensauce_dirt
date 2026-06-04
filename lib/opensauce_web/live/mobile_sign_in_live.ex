@@ -31,6 +31,8 @@ defmodule OpenSauceWeb.MobileSignInLive do
     ~H"""
     <div class="min-h-dvh bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
       <div class="w-full max-w-sm space-y-8">
+        <.flash_group flash={@flash} />
+
         <div class="text-center">
           <svg
             class="mx-auto h-10 w-10"
