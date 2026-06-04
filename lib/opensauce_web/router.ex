@@ -74,15 +74,10 @@ defmodule OpenSauceWeb.Router do
     auth_routes AuthController, OpenSauce.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
-    sign_in_route auth_routes_prefix: "/auth",
-                  on_mount: [
-                    OpenSauceWeb.LiveCurrentPath,
-                    {OpenSauceWeb.LiveUserAuth, :live_no_user}
-                  ],
-                  overrides: [
-                    OpenSauceWeb.AuthOverrides,
-                    Default
-                  ]
+    ash_authentication_live_session :sign_in_routes,
+      on_mount: [{OpenSauceWeb.LiveUserAuth, :live_no_user}] do
+      live "/sign-in", MobileSignInLive, :index
+    end
   end
 
   #
@@ -149,6 +144,9 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette
       ] do
+      # Today dashboard
+      live "/manage/today", TodayLive, :index
+
       # Inventory
       live "/manage/inventory", InventoryLive.Index, :index
       live "/manage/inventory/new", InventoryLive.Index, :new

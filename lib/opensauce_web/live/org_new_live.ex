@@ -41,42 +41,54 @@ defmodule OpenSauceWeb.OrgNewLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="grid h-screen place-items-center bg-stone-50">
-      <div class="w-full max-w-sm space-y-6 px-4">
+    <div class="min-h-dvh bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
+      <div class="w-full max-w-sm space-y-8">
         <div>
           <h1 class="text-2xl font-bold text-stone-900">Create your organisation</h1>
           <p class="mt-1 text-sm text-stone-500">
-            You can add team members and change settings after setup.
+            Add team members and update settings after setup.
           </p>
         </div>
 
-        <form phx-submit="create" phx-change="change" class="space-y-4">
+        <.flash_group flash={@flash} />
+
+        <form phx-submit="create" phx-change="change" class="space-y-5" id="new-org-form">
           <div>
-            <label for="name" class="block text-sm font-medium text-stone-700">
+            <label for="org-name" class="block text-sm font-medium text-stone-700">
               Organisation name
             </label>
             <input
-              id="name"
+              id="org-name"
               name="name"
               type="text"
               value={@name}
-              placeholder="Acme Bakery"
+              placeholder="Acme Gardens"
               required
               autofocus
-              class="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm shadow-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+              class="mt-1.5 block w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
             />
-            <p :if={@slug != ""} class="mt-1 text-xs text-stone-400">
+            <p :if={@slug != ""} class="mt-1.5 text-xs text-stone-400">
               Slug: <span class="font-mono">{@slug}</span>
             </p>
           </div>
 
           <button
+            id="create-org-btn"
             type="submit"
-            class="w-full rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2"
+            class="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2 transition"
           >
             Create organisation
           </button>
         </form>
+
+        <div class="text-center">
+          <.link
+            navigate={~p"/org/pick"}
+            class="text-sm text-stone-400 hover:text-stone-700 transition"
+          >
+            ← Back to organisation list
+          </.link>
+        </div>
       </div>
     </div>
     """

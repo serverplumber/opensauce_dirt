@@ -1,14 +1,8 @@
-<.sidebar_layout
+<.mobile_shell
   current_user={assigns[:current_user]}
-  current_member={assigns[:current_member]}
-  current_path={assigns[:current_path]}
-  nav_section={assigns[:nav_section]}
-  socket={assigns[:socket] || assigns[:conn]}
+  current_path={assigns[:current_path] || ""}
   flash={assigns[:flash] || %{}}
   page_title={assigns[:page_title]}
-  nav_sub_links={assigns[:nav_sub_links] || []}
-  nav_sub_label={assigns[:nav_sub_label]}
-  breadcrumbs={assigns[:breadcrumbs] || []}
 >
   {@inner_content}
-</.sidebar_layout>
+</.mobile_shell>

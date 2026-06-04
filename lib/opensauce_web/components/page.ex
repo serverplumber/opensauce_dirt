@@ -1,11 +1,12 @@
 defmodule OpenSauceWeb.Components.Page do
   @moduledoc """
-  Layout primitives that mirror the settings experience across manage views.
-
-  These helpers encapsulate the common white-surface treatment, spacing, and
-  responsive behavior used throughout OpenSauce.
+  Layout primitives for manage views, including the mobile bottom-nav shell.
   """
   use Phoenix.Component
+
+  use Phoenix.VerifiedRoutes,
+    router: OpenSauceWeb.Router,
+    endpoint: OpenSauceWeb.Endpoint
 
   alias Phoenix.LiveView.JS
 
@@ -182,4 +183,234 @@ defmodule OpenSauceWeb.Components.Page do
   defp grid_class(3), do: "sm:grid-cols-2 lg:grid-cols-3"
   defp grid_class(4), do: "sm:grid-cols-2 lg:grid-cols-4"
   defp grid_class(_), do: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+
+  # -------------------------------------------------------------------------
+  # Bottom navigation shell
+  # -------------------------------------------------------------------------
+
+  @more_sections [
+    %{label: "Inventory", path: "/manage/inventory"},
+    %{label: "Engagements", path: "/manage/engagements"},
+    %{label: "Venues", path: "/manage/venues"},
+    %{label: "Invoices", path: "/manage/invoices"},
+    %{label: "Settings", path: "/manage/settings"}
+  ]
+
+  @primary_prefixes ["/manage/today", "/manage/jobs", "/manage/customers", "/manage/purchasing"]
+
+  attr :current_path, :string, default: ""
+
+  def bottom_nav(assigns) do
+    more_active =
+      assigns.current_path != "" and
+        not Enum.any?(@primary_prefixes, &String.starts_with?(assigns.current_path, &1))
+
+    assigns = assign(assigns, more_active: more_active, more_sections: @more_sections)
+
+    ~H"""
+    <div>
+      <%!-- More overflow sheet --%>
+      <div
+        id="more-backdrop"
+        class="hidden fixed inset-0 z-30"
+        phx-click={hide_more_sheet()}
+        aria-hidden="true"
+      />
+      <div
+        id="more-sheet"
+        class="hidden fixed inset-x-0 bottom-14 z-40 bg-white border-t border-stone-200 shadow-lg rounded-t-xl"
+        role="dialog"
+        aria-label="More navigation"
+      >
+        <div class="px-4 pt-4 pb-2">
+          <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-3">More</p>
+          <ul class="space-y-1">
+            <li :for={s <- @more_sections}>
+              <.link
+                navigate={s.path}
+                phx-click={hide_more_sheet()}
+                class={[
+                  "flex items-center justify-between rounded-lg px-3 py-3 text-sm font-medium transition",
+                  String.starts_with?(@current_path, s.path) &&
+                    "bg-stone-100 text-stone-900",
+                  not String.starts_with?(@current_path, s.path) &&
+                    "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                ]}
+              >
+                {s.label}
+                <.chevron_right_icon />
+              </.link>
+            </li>
+          </ul>
+          <div class="h-safe-bottom" />
+        </div>
+      </div>
+
+      <%!-- Bottom nav bar --%>
+      <nav
+        class="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-stone-200"
+        aria-label="Primary navigation"
+        style="padding-bottom: env(safe-area-inset-bottom)"
+      >
+        <div class="flex">
+          <.nav_tab
+            navigate={~p"/manage/today"}
+            label="Today"
+            active={String.starts_with?(@current_path, "/manage/today")}
+          >
+            <:icon><.today_icon /></:icon>
+          </.nav_tab>
+
+          <.nav_tab
+            navigate={~p"/manage/jobs"}
+            label="Jobs"
+            active={String.starts_with?(@current_path, "/manage/jobs")}
+          >
+            <:icon><.jobs_icon /></:icon>
+          </.nav_tab>
+
+          <.nav_tab
+            navigate={~p"/manage/customers"}
+            label="Customers"
+            active={
+              String.starts_with?(@current_path, "/manage/customers") or
+                String.starts_with?(@current_path, "/manage/engagements")
+            }
+          >
+            <:icon><.customers_icon /></:icon>
+          </.nav_tab>
+
+          <.nav_tab
+            navigate={~p"/manage/purchasing"}
+            label="POs"
+            active={String.starts_with?(@current_path, "/manage/purchasing")}
+          >
+            <:icon><.purchasing_icon /></:icon>
+          </.nav_tab>
+
+          <button
+            id="more-tab"
+            type="button"
+            class={[
+              "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem] text-[10px] leading-none font-medium transition",
+              @more_active && "text-stone-900",
+              not @more_active && "text-stone-400"
+            ]}
+            phx-click={show_more_sheet()}
+            aria-label="More"
+          >
+            <.more_icon />
+            <span>More</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+    """
+  end
+
+  slot :icon, required: true
+  attr :navigate, :string, required: true
+  attr :label, :string, required: true
+  attr :active, :boolean, default: false
+
+  defp nav_tab(assigns) do
+    ~H"""
+    <.link
+      navigate={@navigate}
+      class={[
+        "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem] text-[10px] leading-none font-medium transition",
+        @active && "text-stone-900",
+        not @active && "text-stone-400 hover:text-stone-600"
+      ]}
+    >
+      {render_slot(@icon)}
+      <span>{@label}</span>
+    </.link>
+    """
+  end
+
+  defp show_more_sheet(js \\ %JS{}) do
+    js
+    |> JS.show(to: "#more-backdrop")
+    |> JS.show(to: "#more-sheet")
+  end
+
+  defp hide_more_sheet(js \\ %JS{}) do
+    js
+    |> JS.hide(to: "#more-backdrop")
+    |> JS.hide(to: "#more-sheet")
+  end
+
+  defp today_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 110 10A5 5 0 0112 7z"
+      />
+    </svg>
+    """
+  end
+
+  defp jobs_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+    """
+  end
+
+  defp customers_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M17 20h5v-1a6 6 0 00-9-5.197M9 20H4v-1a6 6 0 0112 0v1zm3-9a4 4 0 100-8 4 4 0 000 8z"
+      />
+    </svg>
+    """
+  end
+
+  defp purchasing_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M7 4h10l1 3H6l1-3zm-1 5h12l1 9H5l1-9zm3 4h4"
+      />
+    </svg>
+    """
+  end
+
+  defp more_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+    """
+  end
+
+  defp chevron_right_icon(assigns) do
+    ~H"""
+    <svg class="h-4 w-4 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    """
+  end
 end
