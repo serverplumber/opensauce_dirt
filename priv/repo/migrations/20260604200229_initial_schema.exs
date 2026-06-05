@@ -549,6 +549,7 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
       add :province, :text
       add :zip, :text
       add :country, :text
+      add :notes, :text
       add :location, :map
 
       add :inserted_at, :utc_datetime_usec,

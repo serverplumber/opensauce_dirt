@@ -21,56 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "type",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "captured_on",
-      "type": "date"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "storage_key",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "content_type",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "original_filename",
-      "type": "text"
+      "source": "data",
+      "type": "map"
     },
     {
       "allow_nil?": true,
@@ -81,7 +33,31 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "notes",
+      "source": "actor_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "timestamp",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "note",
       "type": "text"
     },
     {
@@ -127,7 +103,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_engagement_images_organisation_id_fkey",
+        "name": "orders_job_events_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -158,16 +134,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_engagement_images_engagement_id_fkey",
+        "name": "orders_job_events_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_engagements"
+        "table": "orders_jobs"
       },
       "scale": null,
       "size": null,
-      "source": "engagement_id",
+      "source": "job_id",
       "type": "uuid"
     }
   ],
@@ -179,44 +155,22 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "engagement_id"
+        "job_id",
+        "timestamp"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "engagement_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_engagement_images_engagement_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id",
-        "type"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
+          "value": "job_id"
         },
         {
           "type": "atom",
-          "value": "type"
+          "value": "timestamp"
         }
       ],
       "include": null,
       "message": null,
-      "name": "crm_engagement_images_engagement_type_index",
+      "name": "orders_job_events_job_timeline_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -227,7 +181,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1EBF8996732A31226DB1A39D6B6223BCC26AEE276F636591FBA0F8EDB72DF059",
+  "hash": "A653328182675EDD3520202EB6BEB5BF0B2A2D89795350473C5B5E6B44CA002D",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -236,5 +190,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_engagement_images"
+  "table": "orders_job_events"
 }

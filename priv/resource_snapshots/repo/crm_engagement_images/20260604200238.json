@@ -15,25 +15,61 @@
     {
       "allow_nil?": false,
       "default": "nil",
-      "generated?": true,
+      "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reference",
+      "source": "type",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "\"draft\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
+      "source": "captured_on",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "storage_key",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "content_type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "original_filename",
       "type": "text"
     },
     {
@@ -45,20 +81,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "ordered_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "received_at",
-      "type": "utc_datetime"
+      "source": "notes",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -103,7 +127,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_purchase_orders_organisation_id_fkey",
+        "name": "crm_engagement_images_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -116,7 +140,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -134,42 +158,77 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_purchase_orders_supplier_id_fkey",
+        "name": "crm_engagement_images_engagement_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_suppliers"
+        "table": "crm_engagements"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_id",
+      "source": "engagement_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
-  "custom_statements": [],
-  "has_create_action": true,
-  "hash": "1839D004A1442B3CEC898A514560FCB4FA3C049D3CA83A19FDD3324F8FE11705",
-  "identities": [
+  "custom_indexes": [
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "inventory_purchase_orders_reference_index",
-      "keys": [
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id"
+      ],
+      "fields": [
         {
           "type": "atom",
-          "value": "reference"
+          "value": "engagement_id"
         }
       ],
-      "name": "reference",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": "crm_engagement_images_engagement_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id",
+        "type"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "engagement_id"
+        },
+        {
+          "type": "atom",
+          "value": "type"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "crm_engagement_images_engagement_type_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     }
   ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "7E6CCEFDD57724A36816E0CC61F6C084C0D4D34AB0EF048E08E25BC4E18C5552",
+  "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -177,5 +236,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_purchase_orders"
+  "table": "crm_engagement_images"
 }

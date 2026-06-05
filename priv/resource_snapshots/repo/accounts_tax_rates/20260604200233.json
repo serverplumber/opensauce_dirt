@@ -25,52 +25,40 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_name",
-      "type": "text"
+      "source": "rate",
+      "type": "decimal"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "false",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_email",
-      "type": "text"
+      "source": "is_compound",
+      "type": "boolean"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "0",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_phone",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
+      "source": "position",
+      "type": "bigint"
     },
     {
       "allow_nil?": false,
@@ -115,7 +103,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_suppliers_organisation_id_fkey",
+        "name": "accounts_tax_rates_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -134,7 +122,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9BFEA718FD94656A654E98399C38D0ECE95657EAAEC25901297745032B859930",
+  "hash": "9A8CBD28EF63C0065506E72C1FA00A5B32EB20D2D84854D4EDEDD2E6ED71D9E9",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -143,5 +131,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_suppliers"
+  "table": "accounts_tax_rates"
 }

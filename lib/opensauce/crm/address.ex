@@ -14,6 +14,11 @@ defmodule OpenSauce.CRM.Address do
   actions do
     default_accept :*
     defaults [:read, :create, :update, :destroy]
+
+    read :list_gardens do
+      filter expr(is_garden == true)
+      prepare build(sort: [name: :asc])
+    end
   end
 
   policies do
@@ -69,6 +74,11 @@ defmodule OpenSauce.CRM.Address do
     end
 
     attribute :country, :string do
+      allow_nil? true
+      public? true
+    end
+
+    attribute :notes, :string do
       allow_nil? true
       public? true
     end

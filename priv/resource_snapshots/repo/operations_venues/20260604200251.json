@@ -21,8 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "quantity",
-      "type": "decimal"
+      "source": "name",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -33,20 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reason",
+      "source": "address",
       "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "occurred_at",
-      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -91,7 +79,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_movements_organisation_id_fkey",
+        "name": "operations_venues_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -102,68 +90,6 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_movements_material_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_materials"
-      },
-      "scale": null,
-      "size": null,
-      "source": "material_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_movements_lot_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_lots"
-      },
-      "scale": null,
-      "size": null,
-      "source": "lot_id",
-      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -172,7 +98,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "F1B452DFD0E12B5F23F641654CEBF98B4300667DF210DF4A083B1E1A590366D8",
+  "hash": "492C1271B7DF7525BD3DDAD78545E5E9ECF9DA182762F171249A4801EA36DF06",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -181,5 +107,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_movements"
+  "table": "operations_venues"
 }

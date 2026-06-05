@@ -12,6 +12,7 @@ defmodule OpenSauce.CRM do
 
   resources do
     resource OpenSauce.CRM.Address do
+      define :list_gardens, action: :list_gardens
       define :create_address, action: :create
       define :update_address, action: :update
       define :destroy_address, action: :destroy

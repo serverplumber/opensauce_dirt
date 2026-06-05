@@ -50,15 +50,19 @@ defmodule OpenSauce.CRM.Customer do
     defaults [:read, :destroy]
 
     create :create do
-      argument :billing_address, :map, allow_nil?: true
       argument :garden_addresses, {:array, :map}, allow_nil?: true, default: []
 
-      change manage_relationship(:billing_address,
-               on_lookup: :relate,
-               on_no_match: :create,
-               on_match: :update,
-               on_missing: :destroy
-             )
+      change fn changeset, _ ->
+        gardens = Ash.Changeset.get_argument(changeset, :garden_addresses) || []
+
+        if Enum.empty?(gardens) or Enum.any?(gardens, &billing_flagged?/1) do
+          changeset
+        else
+          [first | rest] = gardens
+          normalized = [Map.put(first, "is_billing", true) | rest]
+          Ash.Changeset.set_argument(changeset, :garden_addresses, normalized)
+        end
+      end
 
       change manage_relationship(:garden_addresses,
                on_lookup: :relate,
@@ -68,9 +72,15 @@ defmodule OpenSauce.CRM.Customer do
              )
 
       validate fn changeset, _ ->
+        gardens = Ash.Changeset.get_argument(changeset, :garden_addresses) || []
+        billing_count = Enum.count(gardens, &billing_flagged?/1)
+
         cond do
-          Ash.Changeset.get_argument(changeset, :garden_addresses) == [] ->
+          gardens == [] ->
             {:error, field: :garden_addresses, message: "at least one garden address is required"}
+
+          billing_count > 1 ->
+            {:error, field: :garden_addresses, message: "only one garden can be the billing address"}
 
           Ash.Changeset.get_attribute(changeset, :type) == :company and
               is_nil(Ash.Changeset.get_attribute(changeset, :company_name_nickname)) ->
@@ -85,15 +95,26 @@ defmodule OpenSauce.CRM.Customer do
     update :update do
       require_atomic? false
 
-      argument :billing_address, :map, allow_nil?: true
       argument :garden_addresses, {:array, :map}, allow_nil?: true
 
-      change manage_relationship(:billing_address,
-               on_lookup: :relate,
-               on_no_match: :create,
-               on_match: :update,
-               on_missing: :destroy
-             )
+      change fn changeset, _ ->
+        case Ash.Changeset.get_argument(changeset, :garden_addresses) do
+          nil ->
+            changeset
+
+          [] ->
+            changeset
+
+          gardens ->
+            if Enum.any?(gardens, &billing_flagged?/1) do
+              changeset
+            else
+              [first | rest] = gardens
+              normalized = [Map.put(first, "is_billing", true) | rest]
+              Ash.Changeset.set_argument(changeset, :garden_addresses, normalized)
+            end
+        end
+      end
 
       change manage_relationship(:garden_addresses,
                on_lookup: :relate,
@@ -111,9 +132,17 @@ defmodule OpenSauce.CRM.Customer do
           Ash.Changeset.get_attribute(changeset, :company_name_nickname) ||
             Map.get(changeset.data, :company_name_nickname)
 
+        gardens = Ash.Changeset.get_argument(changeset, :garden_addresses)
+
+        billing_count =
+          if is_list(gardens), do: Enum.count(gardens, &billing_flagged?/1), else: nil
+
         cond do
-          Ash.Changeset.get_argument(changeset, :garden_addresses) == [] ->
+          gardens == [] ->
             {:error, field: :garden_addresses, message: "at least one garden address is required"}
+
+          billing_count != nil and billing_count > 1 ->
+            {:error, field: :garden_addresses, message: "only one garden can be the billing address"}
 
           type == :company and is_nil(company_name_nickname) ->
             {:error, field: :company_name_nickname, message: "is required for companies"}
@@ -281,5 +310,9 @@ defmodule OpenSauce.CRM.Customer do
     identity :phone, [:phone]
     identity :email, [:email]
     identity :reference, [:reference]
+  end
+
+  defp billing_flagged?(garden) when is_map(garden) do
+    Map.get(garden, :is_billing) == true or Map.get(garden, "is_billing") in [true, "true"]
   end
 end

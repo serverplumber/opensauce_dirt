@@ -108,7 +108,6 @@ defmodule OpenSauceWeb.Router do
       ] do
       # Job Routes
       live "/manage/jobs", JobLive.Index, :index
-      live "/manage/jobs/new", JobLive.Index, :new
       live "/manage/jobs/:id/edit", JobLive.Index, :edit
 
       # Venue Routes
@@ -138,6 +137,9 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette
       ] do
+      # Job creation
+      live "/manage/jobs/new", JobLive.New, :index
+
       # Today dashboard
       live "/manage/today", TodayLive, :index
 
@@ -174,7 +176,7 @@ defmodule OpenSauceWeb.Router do
       live "/manage/engagements", EngagementLive.Index, :index
       live "/manage/engagements/new", EngagementLive.Index, :new
       live "/manage/customers", CustomerLive.Index, :index
-      live "/manage/customers/new", CustomerLive.Index, :new
+      live "/manage/customers/new", CustomerLive.New, :index
       live "/manage/customers/:reference", CustomerLive.Show, :show
       live "/manage/customers/:reference/details", CustomerLive.Show, :details
       live "/manage/customers/:reference/statistics", CustomerLive.Show, :statistics
@@ -211,19 +213,10 @@ defmodule OpenSauceWeb.Router do
   # Development Routes
   #
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:opensauce, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
-
     scope "/dev" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: OpenSauceWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
 
       forward "/graphiql", Absinthe.Plug.GraphiQL,

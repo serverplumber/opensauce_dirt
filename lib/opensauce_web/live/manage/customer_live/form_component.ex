@@ -37,35 +37,6 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
           </div>
 
           <div class="space-y-4">
-            <div class="flex items-center gap-3">
-              <label class="text-sm font-semibold leading-6 text-zinc-800">Billing Address</label>
-              <label class="flex cursor-pointer items-center gap-1.5 text-sm font-normal text-stone-500">
-                <input
-                  type="checkbox"
-                  checked={@same_as_billing}
-                  phx-click="toggle_same_as_billing"
-                  phx-target={@myself}
-                  class="rounded border-stone-300 text-primary-600"
-                />
-                Same as first garden address
-              </label>
-            </div>
-            <.inputs_for :if={not @same_as_billing} :let={f_addr} field={@form[:billing_address]}>
-              <input type="hidden" name={f_addr[:is_billing].name} value="true" />
-              <input type="hidden" name={f_addr[:is_garden].name} value="false" />
-              <input type="hidden" name={f_addr[:is_indoor].name} value="false" />
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                  <.input field={f_addr[:street]} type="text" label="Street" />
-                </div>
-                <.input field={f_addr[:city]} type="text" label="City" />
-                <.input field={f_addr[:province]} type="text" label="Province" />
-                <.input field={f_addr[:zip]} type="text" label="Postal Code" />
-              </div>
-            </.inputs_for>
-          </div>
-
-          <div class="space-y-4">
             <div class="flex items-center justify-between">
               <label class="text-sm font-semibold leading-6 text-zinc-800">Garden Addresses</label>
               <.button
@@ -118,17 +89,12 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
 
   @impl true
   def update(assigns, socket) do
-    same_as_billing = Enum.empty?(assigns.customer && assigns.customer.garden_addresses || [])
-    {:ok, socket |> assign(assigns) |> assign(:same_as_billing, same_as_billing) |> assign_form()}
+    {:ok, socket |> assign(assigns) |> assign_form()}
   end
 
   @impl true
   def handle_event("validate", %{"customer" => customer_params}, socket) do
     {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, customer_params))}
-  end
-
-  def handle_event("toggle_same_as_billing", _params, socket) do
-    {:noreply, assign(socket, :same_as_billing, not socket.assigns.same_as_billing)}
   end
 
   def handle_event("add_garden_address", _params, socket) do
@@ -176,12 +142,6 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
           actor: member,
           tenant: member.organisation_id,
           forms: [
-            billing_address: [
-              data: customer.billing_address,
-              resource: OpenSauce.CRM.Address,
-              create_action: :create,
-              update_action: :update
-            ],
             garden_addresses: [
               type: :list,
               data: customer.garden_addresses || [],
@@ -197,12 +157,6 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
           actor: member,
           tenant: member.organisation_id,
           forms: [
-            billing_address: [
-              data: nil,
-              resource: OpenSauce.CRM.Address,
-              create_action: :create,
-              update_action: :update
-            ],
             garden_addresses: [
               type: :list,
               data: [],

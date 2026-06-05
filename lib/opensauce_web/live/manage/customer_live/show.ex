@@ -5,104 +5,289 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   alias OpenSauce.CRM
   alias OpenSauceWeb.Navigation
 
+  @empty_draft %{
+    "name" => "",
+    "street" => "",
+    "city" => "",
+    "province" => "",
+    "zip" => "",
+    "notes" => "",
+    "is_billing" => "false"
+  }
+
   @impl true
   def render(assigns) do
-    assigns =
-      assign_new(assigns, :breadcrumbs, fn -> [] end)
-
     ~H"""
-    <.header>
-      {@customer.company_name_nickname}
-      <:actions>
-        <.link patch={~p"/manage/customers/#{@customer.reference}/edit"}>
-          <.button variant={:outline}>Edit</.button>
+    <div class="max-w-lg mx-auto space-y-4 pb-36">
+      <%!-- Back + edit row --%>
+      <div class="flex items-center justify-between pt-1">
+        <.link navigate={~p"/manage/customers"} class="text-stone-500 hover:text-stone-700 p-1 -ml-1">
+          <.icon name="hero-arrow-left" class="h-5 w-5" />
         </.link>
-        <.button variant={:outline} phx-click="delete">
-          Delete
-        </.button>
-      </:actions>
-    </.header>
+        <.link
+          patch={~p"/manage/customers/#{@customer.reference}/edit"}
+          class="text-sm font-medium text-stone-500 hover:text-stone-700"
+        >
+          Edit
+        </.link>
+      </div>
 
-    <.sub_nav links={@tabs_links} />
-
-    <div class="p mt-4 space-y-6">
-      <.tabs_content :if={@live_action in [:details, :show]}>
-        <div class="mt-8 space-y-8">
-          <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <.list>
-              <:item title="Type"><.badge text={@customer.type} /></:item>
-              <:item title="Name">{@customer.full_name}</:item>
-              <:item title="Email">{@customer.email}</:item>
-              <:item title="Phone">{@customer.phone}</:item>
-              <:item :if={@customer.billing_address} title="Billing Address">
-                {@customer.billing_address.full_address}
-              </:item>
-              <:item :for={addr <- @customer.garden_addresses} title={addr.name || "Garden Address"}>
-                {addr.full_address}
-              </:item>
-            </.list>
-          </div>
+      <%!-- Identity card --%>
+      <div class="bg-white rounded-xl border border-stone-200 px-4 py-4 space-y-4">
+        <div>
+          <p class="text-xl font-bold text-stone-900">{@customer.full_name}</p>
+          <p :if={@customer.type == :company and @customer.company_name_nickname} class="text-sm text-stone-500 mt-0.5">
+            {@customer.company_name_nickname}
+          </p>
         </div>
-      </.tabs_content>
-
-      <.tabs_content :if={@live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_materials]}>
-        <div class="mt-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Engagements</h3>
-            <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
-              <.button variant={:primary}>New Engagement</.button>
-            </.link>
-          </div>
-
-          <.table
-            id="customer_engagements"
-            rows={@customer.engagements}
-            row_click={fn e -> JS.patch(~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit") end}
+        <div class="flex gap-3">
+          <a
+            :if={@customer.phone}
+            href={"tel:#{@customer.phone}"}
+            class="flex-1 flex items-center justify-center gap-2 rounded-xl border border-stone-200 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100"
           >
-            <:col :let={e} label="Garden">
-              {if e.garden, do: e.garden.name || "Garden", else: "—"}
-            </:col>
-            <:col :let={e} label="Status">
-              <.badge
-                text={e.status}
-                colors={[{e.status, engagement_status_class(e.status)}]}
-              />
-            </:col>
-            <:col :let={e} label="Install">
-              {format_money(@organisation.currency, e.install_price)}
-            </:col>
-            <:col :let={e} label="Annual maintenance">
-              {format_money(@organisation.currency, e.maintenance_price_annual)}
-            </:col>
-            <:col :let={e} label="Term">
-              {format_term(e.term_start, e.term_end)}
-            </:col>
-            <:action :let={e}>
-              <.button variant={:outline} phx-click="open_schedule_job" phx-value-id={e.id}>
-                New job
-              </.button>
-              <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/materials"}>
-                <.button variant={:outline}>Materials</.button>
-              </.link>
-            </:action>
-          </.table>
+            <.icon name="hero-phone" class="h-4 w-4 text-stone-500" />
+            Call
+          </a>
+          <a
+            :if={@customer.email}
+            href={"mailto:#{@customer.email}"}
+            class="flex-1 flex items-center justify-center gap-2 rounded-xl border border-stone-200 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100"
+          >
+            <.icon name="hero-envelope" class="h-4 w-4 text-stone-500" />
+            Email
+          </a>
+          <div
+            :if={is_nil(@customer.phone) and is_nil(@customer.email)}
+            class="flex-1 text-sm text-stone-400 text-center py-2.5"
+          >
+            No contact info
+          </div>
         </div>
-      </.tabs_content>
+      </div>
 
-      <.tabs_content :if={@live_action == :statistics}>
-        <div class="mt-6 space-y-8">
-          <p class="text-sm text-stone-500">No statistics available yet.</p>
+      <%!-- KPI row --%>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+          <p class="text-2xl font-bold text-stone-900">{length(@customer.garden_addresses)}</p>
+          <p class="text-xs text-stone-500 mt-0.5">Gardens</p>
         </div>
-      </.tabs_content>
+        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+          <p class="text-2xl font-bold text-stone-900">
+            {length(@customer.engagements)}/{Enum.sum(Map.values(@open_jobs_by_garden))}
+          </p>
+          <p class="text-xs text-stone-500 mt-0.5">Eng · Jobs</p>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+          <p class="text-sm font-bold text-stone-900 leading-tight">
+            {format_due_billed(@customer.invoices)}
+          </p>
+          <p class="text-xs text-stone-500 mt-0.5">Due / Billed</p>
+        </div>
+      </div>
+
+      <%!-- Gardens --%>
+      <div class="bg-white rounded-xl border border-stone-200">
+        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+          <h2 class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Gardens</h2>
+          <button
+            type="button"
+            phx-click="open_garden_sheet"
+            class="text-amber-600 hover:text-amber-700 p-1 -mr-1"
+            aria-label="Add garden"
+          >
+            <.icon name="hero-plus" class="h-4 w-4" />
+          </button>
+        </div>
+        <div
+          :for={addr <- @customer.garden_addresses}
+          class="px-4 py-3 border-b border-stone-100 last:border-0"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <.icon
+                :if={addr.is_billing}
+                name="hero-document-currency-dollar"
+                class="h-4 w-4 text-amber-500 shrink-0"
+              />
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-stone-900 truncate">
+                  {addr.name || "Unnamed garden"}
+                </p>
+                <p :if={addr.full_address} class="text-xs text-stone-500 mt-0.5 truncate">
+                  {addr.full_address}
+                </p>
+                <p :if={addr.notes} class="text-xs text-stone-400 mt-0.5 italic truncate">
+                  {addr.notes}
+                </p>
+              </div>
+            </div>
+            <span
+              :if={Map.get(@open_jobs_by_garden, addr.id, 0) > 0}
+              class="shrink-0 text-xs font-semibold text-stone-600 bg-stone-100 rounded-full px-2 py-0.5"
+            >
+              {Map.get(@open_jobs_by_garden, addr.id)} open
+            </span>
+          </div>
+        </div>
+        <div
+          :if={Enum.empty?(@customer.garden_addresses)}
+          class="px-4 py-4 text-sm text-stone-400 text-center"
+        >
+          No gardens — tap + to add one
+        </div>
+      </div>
+
+      <%!-- Engagements --%>
+      <div class="bg-white rounded-xl border border-stone-200">
+        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+          <h2 class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Engagements</h2>
+          <.link
+            patch={~p"/manage/customers/#{@customer.reference}/engagements/new"}
+            class="text-amber-600 hover:text-amber-700 p-1 -mr-1"
+            aria-label="New engagement"
+          >
+            <.icon name="hero-plus" class="h-4 w-4" />
+          </.link>
+        </div>
+        <div
+          :for={e <- @customer.engagements}
+          class="px-4 py-3 border-b border-stone-100 last:border-0"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-stone-900 truncate">
+                {if e.garden, do: e.garden.name || "Garden", else: "—"}
+              </p>
+              <p
+                :if={format_term(e.term_start, e.term_end) != "—"}
+                class="text-xs text-stone-500 mt-0.5"
+              >
+                {format_term(e.term_start, e.term_end)}
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <.badge text={e.status} colors={[{e.status, engagement_status_class(e.status)}]} />
+              <button
+                type="button"
+                phx-click="open_schedule_job"
+                phx-value-id={e.id}
+                class="text-stone-400 hover:text-stone-600 p-1"
+                title="Schedule job"
+              >
+                <.icon name="hero-calendar" class="h-4 w-4" />
+              </button>
+              <.link
+                patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit"}
+                class="text-stone-400 hover:text-stone-600 p-1"
+              >
+                <.icon name="hero-pencil-square" class="h-4 w-4" />
+              </.link>
+            </div>
+          </div>
+        </div>
+        <div
+          :if={Enum.empty?(@customer.engagements)}
+          class="px-4 py-4 text-sm text-stone-400 text-center"
+        >
+          No engagements yet
+        </div>
+      </div>
     </div>
 
+    <%!-- Sticky bottom CTA (above bottom nav) --%>
+    <div class="fixed bottom-16 left-0 right-0 px-4 pb-2 bg-gradient-to-t from-stone-50 via-stone-50/95 to-transparent pt-4 pointer-events-none">
+      <.link
+        navigate={~p"/manage/jobs/new"}
+        class="pointer-events-auto block w-full rounded-xl bg-amber-500 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-amber-600 active:bg-amber-700"
+      >
+        New Job
+      </.link>
+    </div>
+
+    <%!-- Add garden slide-up sheet --%>
+    <div
+      :if={@show_garden_sheet}
+      id="garden-sheet"
+      class="fixed inset-0 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Add garden"
+    >
+      <div class="absolute inset-0 bg-black/40" phx-click="close_garden_sheet"></div>
+      <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[85dvh] flex flex-col">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-stone-100 shrink-0">
+          <h3 class="text-base font-semibold text-stone-900">Add garden</h3>
+          <button
+            type="button"
+            phx-click="close_garden_sheet"
+            class="text-stone-400 hover:text-stone-600 p-1 -mr-1"
+          >
+            <.icon name="hero-x-mark" class="h-5 w-5" />
+          </button>
+        </div>
+        <.form
+          for={:garden}
+          id="garden-draft-form"
+          phx-submit="add_garden"
+          class="flex-1 overflow-y-auto p-4 space-y-4"
+        >
+          <.input name="garden[name]" id="draft-name" value={@draft["name"]} label="Garden name" />
+          <.input name="garden[street]" id="draft-street" value={@draft["street"]} label="Street" />
+          <div class="grid grid-cols-2 gap-3">
+            <.input name="garden[city]" id="draft-city" value={@draft["city"]} label="City" />
+            <.input name="garden[province]" id="draft-province" value={@draft["province"]} label="Province" />
+          </div>
+          <.input name="garden[zip]" id="draft-zip" value={@draft["zip"]} label="Postal code" />
+          <.input
+            name="garden[notes]"
+            id="draft-notes"
+            value={@draft["notes"]}
+            label="Notes"
+          />
+          <label class="flex items-center justify-between rounded-xl border border-stone-200 px-4 py-3 cursor-pointer">
+            <div>
+              <p class="text-sm font-medium text-stone-900">Billing address</p>
+              <p class="text-xs text-stone-500 mt-0.5">Use this garden for invoices</p>
+            </div>
+            <button
+              type="button"
+              phx-click="toggle_draft_billing"
+              class={"relative inline-flex h-6 w-11 items-center rounded-full transition-colors " <> if(@draft["is_billing"] == "true", do: "bg-amber-500", else: "bg-stone-200")}
+              role="switch"
+              aria-checked={@draft["is_billing"] == "true"}
+            >
+              <span class={"inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform " <> if(@draft["is_billing"] == "true", do: "translate-x-6", else: "translate-x-1")} />
+            </button>
+            <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
+          </label>
+          <div class="flex gap-3 pt-2">
+            <button
+              type="button"
+              phx-click="close_garden_sheet"
+              class="flex-1 rounded-xl border border-stone-200 py-3 text-sm font-medium text-stone-700 hover:bg-stone-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-medium text-white hover:bg-amber-600"
+            >
+              Add garden
+            </button>
+          </div>
+        </.form>
+      </div>
+    </div>
+
+    <%!-- Edit customer modal --%>
     <.modal
       :if={@live_action == :edit}
       id="customer-modal"
       title="Edit Customer"
       max_width="max-w-2xl"
       show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/details")}
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
     >
       <.live_component
         module={OpenSauceWeb.CustomerLive.FormComponent}
@@ -110,17 +295,18 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         current_member={@current_member}
         action={@live_action}
         customer={@customer}
-        patch={~p"/manage/customers/#{@customer.reference}/details"}
+        patch={~p"/manage/customers/#{@customer.reference}"}
       />
     </.modal>
 
+    <%!-- New engagement modal --%>
     <.modal
       :if={@live_action == :new_engagement}
       id="engagement-new-modal"
       title="New Engagement"
       max_width="max-w-2xl"
       show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
     >
       <.live_component
         module={OpenSauceWeb.EngagementLive.FormComponent}
@@ -128,17 +314,18 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         current_member={@current_member}
         engagement={nil}
         customer={@customer}
-        patch={~p"/manage/customers/#{@customer.reference}/engagements"}
+        patch={~p"/manage/customers/#{@customer.reference}"}
       />
     </.modal>
 
+    <%!-- Edit engagement modal --%>
     <.modal
       :if={@live_action == :edit_engagement}
       id="engagement-edit-modal"
       title="Edit Engagement"
       max_width="max-w-2xl"
       show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
     >
       <.live_component
         module={OpenSauceWeb.EngagementLive.FormComponent}
@@ -146,17 +333,18 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         current_member={@current_member}
         engagement={@engagement}
         customer={@customer}
-        patch={~p"/manage/customers/#{@customer.reference}/engagements"}
+        patch={~p"/manage/customers/#{@customer.reference}"}
       />
     </.modal>
 
+    <%!-- Engagement materials modal --%>
     <.modal
       :if={@live_action == :engagement_materials}
       id="engagement-materials-modal"
       title="Materials"
       max_width="max-w-3xl"
       show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}/engagements")}
+      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
     >
       <.live_component
         module={OpenSauceWeb.EngagementLive.MaterialsComponent}
@@ -167,6 +355,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       />
     </.modal>
 
+    <%!-- Schedule job modal --%>
     <.modal
       :if={@schedule_job_engagement != nil}
       id="schedule-job-modal"
@@ -191,7 +380,10 @@ defmodule OpenSauceWeb.CustomerLive.Show do
      socket
      |> assign(:engagement, nil)
      |> assign(:engagement_id, nil)
-     |> assign(:schedule_job_engagement, nil)}
+     |> assign(:schedule_job_engagement, nil)
+     |> assign(:show_garden_sheet, false)
+     |> assign(:draft, @empty_draft)
+     |> assign(:open_jobs_by_garden, %{})}
   end
 
   @impl true
@@ -204,35 +396,15 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         Enum.find(customer.engagements, &(&1.id == params["engagement_id"]))
       end
 
-    engagement_id = params["engagement_id"]
-
-    tabs_links = [
-      %{
-        label: "Details",
-        navigate: ~p"/manage/customers/#{customer.reference}/details",
-        active: live_action in [:details, :show, :edit]
-      },
-      %{
-        label: "Engagements",
-        navigate: ~p"/manage/customers/#{customer.reference}/engagements",
-        active: live_action in [:engagements, :new_engagement, :edit_engagement, :engagement_materials]
-      },
-      %{
-        label: "Statistics",
-        navigate: ~p"/manage/customers/#{customer.reference}/statistics",
-        active: live_action == :statistics
-      }
-    ]
-
     socket =
       socket
-      |> assign(:page_title, page_title(live_action))
+      |> assign(:page_title, short_name(customer))
       |> assign(:customer, customer)
       |> assign(:engagement, engagement)
-      |> assign(:engagement_id, engagement_id)
-      |> assign(:tabs_links, tabs_links)
+      |> assign(:engagement_id, params["engagement_id"])
+      |> assign(:open_jobs_by_garden, open_jobs_by_garden(customer, socket))
 
-    {:noreply, Navigation.assign(socket, :customers, customer_trail(customer, live_action))}
+    {:noreply, Navigation.assign(socket, :customers, customer_trail(customer))}
   end
 
   @impl true
@@ -253,6 +425,70 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   end
 
   @impl true
+  def handle_event("open_garden_sheet", _params, socket) do
+    {:noreply, assign(socket, show_garden_sheet: true, draft: @empty_draft)}
+  end
+
+  def handle_event("close_garden_sheet", _params, socket) do
+    {:noreply, assign(socket, show_garden_sheet: false)}
+  end
+
+  def handle_event("toggle_draft_billing", _params, socket) do
+    new_val = if socket.assigns.draft["is_billing"] == "true", do: "false", else: "true"
+    {:noreply, assign(socket, draft: Map.put(socket.assigns.draft, "is_billing", new_val))}
+  end
+
+  def handle_event("add_garden", %{"garden" => params}, socket) do
+    member = socket.assigns.current_member
+    customer = socket.assigns.customer
+    is_billing_new = params["is_billing"] == "true"
+
+    existing =
+      Enum.map(customer.garden_addresses, fn addr ->
+        %{
+          "id" => addr.id,
+          "name" => addr.name || "",
+          "street" => addr.street || "",
+          "city" => addr.city || "",
+          "province" => addr.province || "",
+          "zip" => addr.zip || "",
+          "notes" => addr.notes,
+          "is_garden" => "true",
+          "is_billing" => if(is_billing_new, do: "false", else: to_string(addr.is_billing)),
+          "is_indoor" => to_string(addr.is_indoor)
+        }
+      end)
+
+    all_gardens = existing ++ [Map.put(params, "is_garden", "true")]
+
+    result =
+      customer
+      |> Ash.Changeset.for_update(:update, %{garden_addresses: all_gardens},
+        actor: member,
+        tenant: member.organisation_id
+      )
+      |> Ash.update()
+
+    case result do
+      {:ok, _} ->
+        updated_customer = load_customer(customer.reference, socket)
+
+        {:noreply,
+         socket
+         |> assign(:customer, updated_customer)
+         |> assign(:open_jobs_by_garden, open_jobs_by_garden(updated_customer, socket))
+         |> assign(:show_garden_sheet, false)
+         |> assign(:draft, @empty_draft)}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Could not add garden.")
+         |> assign(:show_garden_sheet, false)}
+    end
+  end
+
+  @impl true
   def handle_event("open_schedule_job", %{"id" => id}, socket) do
     engagement = Enum.find(socket.assigns.customer.engagements, &(&1.id == id))
     {:noreply, assign(socket, :schedule_job_engagement, engagement)}
@@ -268,19 +504,16 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   end
 
   def handle_info({OpenSauceWeb.EngagementLive.FormComponent, {:saved, _engagement}}, socket) do
-    customer = load_customer(socket.assigns.customer.reference, socket)
-    {:noreply, assign(socket, :customer, customer)}
+    {:noreply, assign(socket, :customer, load_customer(socket.assigns.customer.reference, socket))}
   end
 
   def handle_info(
         {OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}},
         socket
       ) do
-    customer = load_customer(socket.assigns.customer.reference, socket)
-
     {:noreply,
      socket
-     |> assign(:customer, customer)
+     |> assign(:customer, load_customer(socket.assigns.customer.reference, socket))
      |> assign(:schedule_job_engagement, nil)
      |> put_flash(:info, "Job scheduled with #{count} plant#{if count == 1, do: "", else: "s"}.")}
   end
@@ -292,49 +525,47 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       tenant: socket.assigns.current_member.organisation_id,
       load: [
         :full_name,
-        billing_address: [:full_address],
-        garden_addresses: [:name, :short_address, :full_address],
+        garden_addresses: [:name, :full_address, :is_billing, :notes, :is_indoor],
+        invoices: [:amount, :status],
         engagements: [:total_quoted_value, :materials, garden: [:name]]
       ]
     )
   end
 
-  defp page_title(:show), do: "Customer"
-  defp page_title(:details), do: "Customer Details"
-  defp page_title(:edit), do: "Edit Customer"
-  defp page_title(:engagements), do: "Engagements"
-  defp page_title(:new_engagement), do: "New Engagement"
-  defp page_title(:edit_engagement), do: "Edit Engagement"
-  defp page_title(:engagement_materials), do: "Materials"
-  defp page_title(:statistics), do: "Customer Statistics"
+  defp open_jobs_by_garden(customer, socket) do
+    member = socket.assigns.current_member
+    opts = [actor: member, tenant: member.organisation_id]
 
-  defp customer_trail(customer, live_action)
-       when live_action in [
-              :engagements,
-              :new_engagement,
-              :edit_engagement,
-              :engagement_materials
-            ] do
-    [
-      Navigation.root(:customers),
-      Navigation.resource(:customer, customer),
-      Navigation.page(:customers, :customer_engagements, customer)
-    ]
+    customer.garden_addresses
+    |> Enum.map(fn addr ->
+      count =
+        case OpenSauce.Orders.list_jobs_at_garden(addr.id, opts) do
+          {:ok, jobs} -> length(jobs)
+          _ -> 0
+        end
+
+      {addr.id, count}
+    end)
+    |> Enum.reject(fn {_, count} -> count == 0 end)
+    |> Map.new()
   end
 
-  defp customer_trail(customer, :statistics) do
-    [
-      Navigation.root(:customers),
-      Navigation.resource(:customer, customer),
-      Navigation.page(:customers, :customer_statistics, customer)
-    ]
+  defp short_name(customer) do
+    customer.company_name_nickname || customer.first_name
   end
 
-  defp customer_trail(customer, _),
+  defp customer_trail(customer),
     do: [Navigation.root(:customers), Navigation.resource(:customer, customer)]
 
   defp schedule_job_title(engagement) do
     if engagement.garden, do: engagement.garden.name || "garden", else: "engagement"
+  end
+
+  defp format_due_billed(invoices) do
+    zero = Decimal.new(0)
+    billed = invoices |> Enum.map(& &1.amount) |> Enum.reject(&is_nil/1) |> Enum.reduce(zero, &Decimal.add/2)
+    due = invoices |> Enum.filter(&(&1.status == :sent)) |> Enum.map(& &1.amount) |> Enum.reject(&is_nil/1) |> Enum.reduce(zero, &Decimal.add/2)
+    "#{Decimal.to_string(due, :normal)} / #{Decimal.to_string(billed, :normal)}"
   end
 
   defp format_term(nil, nil), do: "—"

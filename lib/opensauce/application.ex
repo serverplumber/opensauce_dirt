@@ -8,22 +8,15 @@ defmodule OpenSauce.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      OpenSauceWeb.Telemetry,
       OpenSauce.Vault,
       OpenSauce.Repo,
       {DNSCluster, query: Application.get_env(:opensauce, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: OpenSauce.PubSub},
-      # Start the Finch HTTP client for sending emails
       {Finch, name: OpenSauce.Finch},
-      # Start a worker by calling: OpenSauce.Worker.start_link(arg)
-      # {OpenSauce.Worker, arg},
-      # Start to serve requests, typically the last entry
       OpenSauceWeb.Endpoint,
       {AshAuthentication.Supervisor, [otp_app: :opensauce]}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: OpenSauce.Supervisor]
     Supervisor.start_link(children, opts)
   end

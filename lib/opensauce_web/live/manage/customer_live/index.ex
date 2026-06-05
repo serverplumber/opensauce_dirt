@@ -7,71 +7,54 @@ defmodule OpenSauceWeb.CustomerLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Customers
-      <:subtitle>Manage your customer records</:subtitle>
-      <:actions>
-        <.link patch={~p"/manage/customers/new"}>
-          <.button variant={:primary}>New Customer</.button>
+    <div class="max-w-lg mx-auto space-y-4">
+      <div class="flex items-center justify-between pt-1">
+        <h1 class="text-lg font-semibold text-stone-900">Customers</h1>
+        <.link navigate={~p"/manage/customers/new"} class="text-sm font-medium text-amber-600 hover:text-amber-700">
+          + New
         </.link>
-      </:actions>
-    </.header>
+      </div>
 
-    <.table
-      id="customers"
-      rows={@streams.customers}
-      row_click={fn {_id, customer} -> JS.navigate(~p"/manage/customers/#{customer.reference}") end}
-    >
-      <:empty>
-        <div class="block py-4 pr-6">
-          <span class={["relative"]}>
-            No customers found
-          </span>
+      <div id="customers" phx-update="stream" class="space-y-2">
+        <div :for={{dom_id, customer} <- @streams.customers} id={dom_id}>
+          <.link
+            navigate={~p"/manage/customers/#{customer.reference}"}
+            class="flex items-center gap-3 bg-white rounded-xl border border-stone-200 px-4 py-3 hover:bg-stone-50 active:bg-stone-100"
+          >
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-stone-900 truncate">{customer.full_name}</p>
+              <p :if={customer.company_name_nickname} class="text-xs text-stone-500 truncate">
+                {customer.company_name_nickname}
+              </p>
+              <p class="text-xs text-stone-400 mt-0.5">
+                {garden_count_label(customer.garden_addresses)}
+              </p>
+            </div>
+            <.icon name="hero-chevron-right" class="h-4 w-4 text-stone-300 shrink-0" />
+          </.link>
         </div>
-      </:empty>
-      <:col :let={{_id, customer}} label="Name">{customer.company_name_nickname}</:col>
-      <:col :let={{_id, customer}} label="Email">{customer.email}</:col>
-      <:col :let={{_id, customer}} label="Phone">{customer.phone}</:col>
-      <:col :let={{_id, customer}} label="Gardens">
-        <div :for={addr <- customer.garden_addresses} class="text-sm leading-snug">
-          <span class="font-medium">{addr.name}</span>
-          <span :if={addr.short_address} class="text-stone-500">: {addr.short_address}</span>
-        </div>
-      </:col>
-    </.table>
+      </div>
 
-    <.modal
-      :if={@live_action in [:new, :edit]}
-      id="customer-modal"
-      title={@page_title}
-      description="Use this form to manage customer records in your database."
-      show
-      on_cancel={JS.patch(~p"/manage/customers")}
-    >
-      <.live_component
-        module={OpenSauceWeb.CustomerLive.FormComponent}
-        id={(@customer && @customer.id) || :new}
-        current_member={@current_member}
-        title={@page_title}
-        action={@live_action}
-        customer={@customer}
-        patch={~p"/manage/customers"}
-      />
-    </.modal>
+      <p :if={@customer_count == 0} class="text-sm text-stone-400 text-center py-8">
+        No customers yet
+      </p>
+    </div>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
+    customers =
+      OpenSauce.CRM.list_customers!(
+        actor: socket.assigns.current_member,
+        tenant: socket.assigns.current_member.organisation_id,
+        load: [:full_name, :garden_addresses]
+      )
+
     {:ok,
      socket
-     |> stream(
-       :customers,
-       OpenSauce.CRM.list_customers!(
-         actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-         load: [:full_name, garden_addresses: [:short_address]]
-       )
-     )
+     |> stream(:customers, customers)
+     |> assign(:customer_count, length(customers))
      |> assign_new(:current_member, fn -> nil end)}
   end
 
@@ -82,68 +65,13 @@ defmodule OpenSauceWeb.CustomerLive.Index do
     {:noreply, Navigation.assign(socket, :customers, customer_index_trail(socket.assigns))}
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Customer")
-    |> assign(
-      :customer,
-      OpenSauce.CRM.get_customer_by_id!(id,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [:billing_address, :garden_addresses]
-      )
-    )
-  end
-
-  defp apply_action(socket, :edit, %{"reference" => reference}) do
-    socket
-    |> assign(:page_title, "Edit Customer")
-    |> assign(
-      :customer,
-      OpenSauce.CRM.get_customer_by_reference!(reference,
-        actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id,
-        load: [:billing_address, :garden_addresses]
-      )
-    )
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Customer")
-    |> assign(:customer, nil)
-  end
-
   defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Customers")
-    |> assign(:customer, nil)
+    assign(socket, :page_title, "Customers")
   end
-
-  defp customer_index_trail(%{live_action: :new}),
-    do: [Navigation.root(:customers), Navigation.page(:customers, :new_customer)]
-
-  defp customer_index_trail(%{live_action: :edit, customer: %{} = customer}),
-    do: [Navigation.root(:customers), Navigation.resource(:customer, customer)]
 
   defp customer_index_trail(_), do: [Navigation.root(:customers)]
 
-  @impl true
-  def handle_info({OpenSauceWeb.CustomerLive.FormComponent, {:saved, customer}}, socket) do
-    {:noreply, stream_insert(socket, :customers, customer)}
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    case id
-         |> OpenSauce.CRM.get_customer_by_id!(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id)
-         |> OpenSauce.CRM.destroy_customer(actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id) do
-      :ok ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Customer deleted successfully")
-         |> stream_delete(:customers, %{id: id})}
-
-      {:error, _error} ->
-        {:noreply, put_flash(socket, :error, "Failed to delete customer.")}
-    end
-  end
+  defp garden_count_label([]), do: "No gardens"
+  defp garden_count_label([_]), do: "1 garden"
+  defp garden_count_label(gardens), do: "#{length(gardens)} gardens"
 end

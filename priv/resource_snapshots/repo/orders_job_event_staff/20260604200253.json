@@ -14,51 +14,15 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "data",
-      "type": "map"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "actor_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "timestamp",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "note",
-      "type": "text"
+      "source": "man_hour_rate",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -103,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_events_organisation_id_fkey",
+        "name": "orders_job_event_staff_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -134,16 +98,47 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_events_job_id_fkey",
+        "name": "orders_job_event_staff_job_event_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_jobs"
+        "table": "orders_job_events"
       },
       "scale": null,
       "size": null,
-      "source": "job_id",
+      "source": "job_event_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "orders_job_event_staff_member_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_organisation_members"
+      },
+      "scale": null,
+      "size": null,
+      "source": "member_id",
       "type": "uuid"
     }
   ],
@@ -155,22 +150,17 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "job_id",
-        "timestamp"
+        "job_event_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "job_id"
-        },
-        {
-          "type": "atom",
-          "value": "timestamp"
+          "value": "job_event_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": "orders_job_events_job_timeline_index",
+      "name": "orders_job_event_staff_job_event_id_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -181,7 +171,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "74913373EE2F3F19A858F8AD6623AFBC8A0A45F1731BE9B4ED3A7634FC90BAA5",
+  "hash": "7FEC938EA53975FE64EBAA773A7E5EF161C9033ADD6AB651B0DCC74542C577F8",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -190,5 +180,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_events"
+  "table": "orders_job_event_staff"
 }

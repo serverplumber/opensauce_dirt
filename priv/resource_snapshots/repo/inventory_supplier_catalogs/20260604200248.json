@@ -21,8 +21,56 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "quantity",
-      "type": "decimal"
+      "source": "name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"year_round\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "season",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "year",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "valid_from",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "valid_until",
+      "type": "date"
     },
     {
       "allow_nil?": false,
@@ -67,7 +115,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_materials_organisation_id_fkey",
+        "name": "inventory_supplier_catalogs_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,47 +146,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_materials_job_id_fkey",
+        "name": "inventory_supplier_catalogs_supplier_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_jobs"
+        "table": "inventory_suppliers"
       },
       "scale": null,
       "size": null,
-      "source": "job_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "orders_job_materials_supplier_catalog_item_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_supplier_catalog_items"
-      },
-      "scale": null,
-      "size": null,
-      "source": "supplier_catalog_item_id",
+      "source": "supplier_id",
       "type": "uuid"
     }
   ],
@@ -148,7 +165,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "3E462E2D40AE0BE87D40F1F90260938C93286C6C8C3EBDB03FA55731961E2D7F",
+  "hash": "9BCF668FDD4451808FDFD05584F386374B93F3E148EE281E331A27F6F0928D39",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -157,5 +174,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_materials"
+  "table": "inventory_supplier_catalogs"
 }
