@@ -787,6 +787,7 @@ defmodule OpenSauceWeb.Components.Core do
     |> JS.focus_first(to: "##{id}-content")
   end
 
+  attr :href, :string, default: nil
   attr :valid, :boolean, default: false
   attr :rest, :global
 
@@ -794,7 +795,17 @@ defmodule OpenSauceWeb.Components.Core do
 
   def glow_button(assigns) do
     ~H"""
+    <a
+      :if={@href}
+      href={@href}
+      ontouchstart=""
+      class={["btn-glow h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 no-underline text-[#0C1F15] font-bold text-base", @valid && "btn-glow--on"]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </a>
     <button
+      :if={!@href}
       ontouchstart=""
       class={["btn-glow h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 border-0 text-[#0C1F15] font-bold text-base cursor-pointer", @valid && "btn-glow--on"]}
       {@rest}

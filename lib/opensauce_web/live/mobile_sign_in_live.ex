@@ -143,9 +143,9 @@ defmodule OpenSauceWeb.MobileSignInLive do
           </p>
 
           <div style="width:100%;margin-top:30px;display:flex;flex-direction:column;gap:12px;">
-            <.leaf_button href={"mailto:"}>
+            <.glow_button href="mailto:">
               Open mail app
-            </.leaf_button>
+            </.glow_button>
             <div style="display:flex;gap:22px;justify-content:center;margin-top:2px;">
               <button
                 id="resend-btn"
