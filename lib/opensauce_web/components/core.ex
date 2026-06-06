@@ -787,6 +787,53 @@ defmodule OpenSauceWeb.Components.Core do
     |> JS.focus_first(to: "##{id}-content")
   end
 
+  attr :valid, :boolean, default: false
+  attr :rest, :global
+
+  slot :inner_block, required: true
+
+  def glow_button(assigns) do
+    ~H"""
+    <button
+      ontouchstart=""
+      class={["btn-glow h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 border-0 text-[#0C1F15] font-bold text-base cursor-pointer", @valid && "btn-glow--on"]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  attr :href, :string, default: nil
+  attr :type, :string, default: "button"
+  attr :class, :string, default: ""
+  attr :rest, :global
+
+  slot :inner_block, required: true
+
+  def leaf_button(assigns) do
+    ~H"""
+    <a
+      :if={@href}
+      href={@href}
+      ontouchstart=""
+      class={["leaf-btn h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 no-underline text-[#0C1F15] font-bold text-base", @class]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </a>
+    <button
+      :if={!@href}
+      type={@type}
+      ontouchstart=""
+      class={["leaf-btn h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 border-0 text-[#0C1F15] font-bold text-base cursor-pointer", @class]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
   def hide_modal(js \\ %JS{}, id) do
     js
     |> JS.hide(

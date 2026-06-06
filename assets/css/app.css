@@ -45,6 +45,59 @@ button {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Mobile sign-in screen */
+#email-field {
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+#email-field:focus-within {
+  border-color: #54B57E !important;
+  box-shadow: 0 0 0 4px rgba(84,181,126,0.30) !important;
+}
+#email:focus,
+#email:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Leaf green CTA button — shared base */
+.leaf-btn,
+.btn-glow {
+  background: #54B57E;
+  box-shadow: 0 6px 20px rgba(84,181,126,0.30);
+  transition: background .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+@media (hover: hover) {
+  .btn-glow:hover {
+    background: #6BCB93;
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 4px rgba(84,181,126,0.25), 0 8px 24px rgba(84,181,126,0.45);
+    animation-play-state: paused;
+  }
+}
+.btn-glow:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(84,181,126,0.30);
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(84,181,126,0.30); }
+  50%       { box-shadow: 0 0 0 5px rgba(84,181,126,0.20), 0 6px 28px rgba(84,181,126,0.55); }
+}
+.btn-glow--on {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@media (hover: hover) {
+  .leaf-btn:hover {
+    background: #6BCB93;
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 4px rgba(84,181,126,0.25), 0 8px 24px rgba(84,181,126,0.45);
+  }
+}
+.leaf-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(84,181,126,0.30);
+}
+
 /* Utility to hide scrollbar but allow scrolling */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
