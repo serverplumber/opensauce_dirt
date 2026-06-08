@@ -25,42 +25,6 @@
       "type": "text"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "prefix",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "key_hash",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "%{}",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "scopes",
-      "type": "map"
-    },
-    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -69,20 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "last_used_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "revoked_at",
-      "type": "utc_datetime"
+      "source": "address",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -127,7 +79,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "accounts_api_keys_organisation_id_fkey",
+        "name": "operations_venues_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -146,23 +98,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1C4DF766643A2D7A66D7B2C97E621F06713BBDD15C4D3814675E5F297E8B53E7",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "accounts_api_keys_key_hash_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "key_hash"
-        }
-      ],
-      "name": "key_hash",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "3AB9160CA061683F763C0C55BCBD86D32CE2A28A0DF0018C0E40BE4278B0DB05",
+  "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -170,5 +107,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_api_keys"
+  "table": "operations_venues"
 }

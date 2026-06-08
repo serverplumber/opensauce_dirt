@@ -15,25 +15,85 @@
     {
       "allow_nil?": false,
       "default": "nil",
-      "generated?": true,
+      "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reference",
+      "source": "name",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "\"draft\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
+      "source": "slug",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"CAD\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "currency",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"exclusive\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "tax_mode",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"0\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "labor_overhead_percent",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"0\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mileage_cost_per_km",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "\"OpenSauce\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "email_from_name",
       "type": "text"
     },
     {
@@ -45,20 +105,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "ordered_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "received_at",
-      "type": "utc_datetime"
+      "source": "email_from_address",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -85,37 +133,6 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "inventory_purchase_orders_organisation_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_organisations"
-      },
-      "scale": null,
-      "size": null,
-      "source": "organisation_id",
-      "type": "uuid"
-    },
-    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -134,16 +151,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_purchase_orders_supplier_id_fkey",
+        "name": "accounts_organisations_head_office_venue_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_suppliers"
+        "table": "operations_venues"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_id",
+      "source": "head_office_venue_id",
       "type": "uuid"
     }
   ],
@@ -153,29 +170,29 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "A211D1AEFD3BBB764A6229934B8D53B66353EDD6AD9150F0CC8A1DB497ED6806",
+  "hash": "20A97CD02B3B842985E45EE412A8231951CCB2F4B0D5A63AE6F3C2AAD31D045A",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "inventory_purchase_orders_reference_index",
+      "index_name": "accounts_organisations_unique_slug_index",
       "keys": [
         {
           "type": "atom",
-          "value": "reference"
+          "value": "slug"
         }
       ],
-      "name": "reference",
+      "name": "unique_slug",
       "nils_distinct?": true,
       "where": null
     }
   ],
   "multitenancy": {
-    "attribute": "organisation_id",
-    "global": false,
-    "strategy": "attribute"
+    "attribute": null,
+    "global": null,
+    "strategy": null
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_purchase_orders"
+  "table": "accounts_organisations"
 }

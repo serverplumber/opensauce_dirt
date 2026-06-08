@@ -13,100 +13,16 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "scope_description",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "install_price",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "maintenance_price_annual",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "term_start",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "term_end",
-      "type": "date"
-    },
-    {
       "allow_nil?": false,
-      "default": "\"draft\"",
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "signature",
-      "type": "map"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
+      "source": "man_hour_rate",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -151,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_engagements_organisation_id_fkey",
+        "name": "orders_job_event_staff_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -161,37 +77,6 @@
       "scale": null,
       "size": null,
       "source": "organisation_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "crm_engagements_garden_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "crm_addresses"
-      },
-      "scale": null,
-      "size": null,
-      "source": "garden_id",
       "type": "uuid"
     },
     {
@@ -213,16 +98,47 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_engagements_customer_id_fkey",
+        "name": "orders_job_event_staff_job_event_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_customers"
+        "table": "orders_job_events"
       },
       "scale": null,
       "size": null,
-      "source": "customer_id",
+      "source": "job_event_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "orders_job_event_staff_member_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_organisation_members"
+      },
+      "scale": null,
+      "size": null,
+      "source": "member_id",
       "type": "uuid"
     }
   ],
@@ -234,61 +150,17 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "customer_id"
+        "job_event_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "customer_id"
+          "value": "job_event_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "garden_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "garden_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "status"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "status"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
+      "name": "orders_job_event_staff_job_event_id_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -299,7 +171,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9A5FF0F2B27ED3DF3850C04A794EA17B34D6CBFE4D47C5DEFCC529433FA86BCA",
+  "hash": "2F1A85588E8241B3E5422267FCAAA3EED8C0F54B76E06963B9C994627B3D2AF4",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -308,5 +180,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_engagements"
+  "table": "orders_job_event_staff"
 }

@@ -15,25 +15,13 @@
     {
       "allow_nil?": false,
       "default": "nil",
-      "generated?": false,
+      "generated?": true,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"year_round\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "season",
+      "source": "reference",
       "type": "text"
     },
     {
@@ -45,8 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "year",
-      "type": "bigint"
+      "source": "type",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -57,8 +45,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "valid_from",
-      "type": "date"
+      "source": "company_name_nickname",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "first_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "last_name",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -69,8 +81,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "valid_until",
-      "type": "date"
+      "source": "email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "phone",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -115,7 +139,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_supplier_catalogs_organisation_id_fkey",
+        "name": "crm_customers_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -126,37 +150,6 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_supplier_catalogs_supplier_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_suppliers"
-      },
-      "scale": null,
-      "size": null,
-      "source": "supplier_id",
-      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -165,8 +158,51 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9BCF668FDD4451808FDFD05584F386374B93F3E148EE281E331A27F6F0928D39",
-  "identities": [],
+  "hash": "B6E03D63BA0CD0DD3CC0CB18E9240E83A64DD69DF4B2DA196E4E08213AE00D14",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "crm_customers_email_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "email"
+        }
+      ],
+      "name": "email",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "crm_customers_phone_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "phone"
+        }
+      ],
+      "name": "phone",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "crm_customers_reference_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "reference"
+        }
+      ],
+      "name": "reference",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -174,5 +210,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_supplier_catalogs"
+  "table": "crm_customers"
 }

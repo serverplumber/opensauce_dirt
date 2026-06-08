@@ -14,93 +14,6 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "reference",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"CURRENT_DATE\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "issued_on",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "due_on",
-      "type": "date"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "amount",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"draft\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "status",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "[]",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "line_items",
-      "type": [
-        "array",
-        "map"
-      ]
-    },
-    {
-      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -142,7 +55,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_invoices_organisation_id_fkey",
+        "name": "orders_job_staff_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -173,20 +86,20 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_invoices_customer_id_fkey",
+        "name": "orders_job_staff_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_customers"
+        "table": "orders_jobs"
       },
       "scale": null,
       "size": null,
-      "source": "customer_id",
+      "source": "job_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -200,20 +113,20 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "crm_invoices_engagement_id_fkey",
+        "name": "orders_job_staff_member_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_engagements"
+        "table": "accounts_organisation_members"
       },
       "scale": null,
       "size": null,
-      "source": "engagement_id",
+      "source": "member_id",
       "type": "uuid"
     }
   ],
@@ -225,61 +138,17 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "customer_id"
+        "job_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "customer_id"
+          "value": "job_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": "crm_invoices_customer_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_invoices_engagement_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "status"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "status"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_invoices_status_index",
+      "name": "orders_job_staff_job_id_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -290,8 +159,27 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "72DA596F578C160EE787E07A12D40F4B8EA993C7F517CB4E6EAE169F2173CA56",
-  "identities": [],
+  "hash": "1A02910A3D58E355BFFB9A2F6A6868C0B278AE6EC5E061259263EF6901A981FC",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "orders_job_staff_unique_staff_assignment_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "job_id"
+        },
+        {
+          "type": "atom",
+          "value": "member_id"
+        }
+      ],
+      "name": "unique_staff_assignment",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -299,5 +187,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_invoices"
+  "table": "orders_job_staff"
 }

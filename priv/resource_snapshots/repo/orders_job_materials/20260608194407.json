@@ -21,68 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "type",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "captured_on",
-      "type": "date"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "storage_key",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "content_type",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "original_filename",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
+      "source": "quantity",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -127,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_engagement_images_organisation_id_fkey",
+        "name": "orders_job_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -158,76 +98,57 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_engagement_images_engagement_id_fkey",
+        "name": "orders_job_materials_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_engagements"
+        "table": "orders_jobs"
       },
       "scale": null,
       "size": null,
-      "source": "engagement_id",
+      "source": "job_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_job_materials_supplier_catalog_item_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_supplier_catalog_items"
+      },
+      "scale": null,
+      "size": null,
+      "source": "supplier_catalog_item_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_engagement_images_engagement_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id",
-        "type"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        },
-        {
-          "type": "atom",
-          "value": "type"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_engagement_images_engagement_type_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "7E6CCEFDD57724A36816E0CC61F6C084C0D4D34AB0EF048E08E25BC4E18C5552",
+  "hash": "1AF1FD5F5326118D18280909AE756B7C90A009A9BC4845CF62A754BB0507D6D1",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -236,5 +157,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_engagement_images"
+  "table": "orders_job_materials"
 }

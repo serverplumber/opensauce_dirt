@@ -14,6 +14,42 @@
     },
     {
       "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "quantity",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "scheduled_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "note",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -55,7 +91,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_staff_organisation_id_fkey",
+        "name": "crm_engagement_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -86,16 +122,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_staff_job_id_fkey",
+        "name": "crm_engagement_materials_engagement_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_jobs"
+        "table": "crm_engagements"
       },
       "scale": null,
       "size": null,
-      "source": "job_id",
+      "source": "engagement_id",
       "type": "uuid"
     },
     {
@@ -113,73 +149,31 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
         },
-        "name": "orders_job_staff_member_id_fkey",
+        "name": "crm_engagement_materials_supplier_catalog_item_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "accounts_organisation_members"
+        "table": "inventory_supplier_catalog_items"
       },
       "scale": null,
       "size": null,
-      "source": "member_id",
+      "source": "supplier_catalog_item_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "job_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "job_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "orders_job_staff_job_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "93184094051B26A7490E2A6E29D0D7E3803AB84E79274E17CC3C024FABCE54A0",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "orders_job_staff_unique_staff_assignment_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "job_id"
-        },
-        {
-          "type": "atom",
-          "value": "member_id"
-        }
-      ],
-      "name": "unique_staff_assignment",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "91202F1D3E6B6DF8D233328FC88CD7214A4966E9E3B2FC007E3E2CD058BD59EF",
+  "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -187,5 +181,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_staff"
+  "table": "crm_engagement_materials"
 }

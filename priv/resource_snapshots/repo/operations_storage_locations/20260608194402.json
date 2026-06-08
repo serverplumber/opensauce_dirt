@@ -117,7 +117,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "8B1AB52A8C9B933A1C99E9CCFC0DDAB81CD6321CBC4B5FF3665529C5E0578DF2",
+  "hash": "38DC3B681FCA0246C05A8244D9A1F1D43E284D219069FF228EDB681A7C3324E5",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",

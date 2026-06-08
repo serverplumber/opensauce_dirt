@@ -14,15 +14,15 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"staff\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "quantity",
-      "type": "decimal"
+      "source": "role",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -33,20 +33,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reason",
+      "source": "display_title",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "occurred_at",
-      "type": "utc_datetime"
+      "source": "labor_hourly_rate",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -91,16 +91,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_movements_organisation_id_fkey",
+        "name": "accounts_organisation_members_user_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "accounts_organisations"
+        "table": "accounts_users"
       },
       "scale": null,
       "size": null,
-      "source": "organisation_id",
+      "source": "user_id",
       "type": "uuid"
     },
     {
@@ -118,51 +118,20 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "inventory_movements_material_id_fkey",
+        "name": "accounts_organisation_members_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_materials"
+        "table": "accounts_organisations"
       },
       "scale": null,
       "size": null,
-      "source": "material_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_movements_lot_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_lots"
-      },
-      "scale": null,
-      "size": null,
-      "source": "lot_id",
+      "source": "organisation_id",
       "type": "uuid"
     }
   ],
@@ -172,14 +141,33 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "894AB4DAC30C150C1F34E36F34BF4EDD41B0DF9012C912D26974E1A5A30A3865",
-  "identities": [],
+  "hash": "BB6BE312AFD12BE83EFDE771553180C5AB64020D74B97A509F3DB681E35E0EAE",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_organisation_members_unique_membership_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "user_id"
+        },
+        {
+          "type": "atom",
+          "value": "organisation_id"
+        }
+      ],
+      "name": "unique_membership",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
-    "attribute": "organisation_id",
-    "global": false,
-    "strategy": "attribute"
+    "attribute": null,
+    "global": null,
+    "strategy": null
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_movements"
+  "table": "accounts_organisation_members"
 }

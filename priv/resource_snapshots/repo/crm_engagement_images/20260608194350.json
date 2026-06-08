@@ -14,15 +14,75 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"0\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "man_hour_rate",
-      "type": "decimal"
+      "source": "type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "captured_on",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "storage_key",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "content_type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "original_filename",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "notes",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -67,7 +127,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_event_staff_organisation_id_fkey",
+        "name": "crm_engagement_images_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,47 +158,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_event_staff_job_event_id_fkey",
+        "name": "crm_engagement_images_engagement_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_job_events"
+        "table": "crm_engagements"
       },
       "scale": null,
       "size": null,
-      "source": "job_event_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "orders_job_event_staff_member_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_organisation_members"
-      },
-      "scale": null,
-      "size": null,
-      "source": "member_id",
+      "source": "engagement_id",
       "type": "uuid"
     }
   ],
@@ -150,17 +179,44 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "job_event_id"
+        "engagement_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "job_event_id"
+          "value": "engagement_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": "orders_job_event_staff_job_event_id_index",
+      "name": "crm_engagement_images_engagement_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id",
+        "type"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "engagement_id"
+        },
+        {
+          "type": "atom",
+          "value": "type"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "crm_engagement_images_engagement_type_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -171,7 +227,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "7FEC938EA53975FE64EBAA773A7E5EF161C9033ADD6AB651B0DCC74542C577F8",
+  "hash": "9EE8CC9106C9C02B8AEEEAAA7DCB1A5F8DE09AB215D33DC8243B7019D97E2081",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -180,5 +236,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_event_staff"
+  "table": "crm_engagement_images"
 }
