@@ -27,7 +27,7 @@ defmodule OpenSauceWeb.OrgPickLive do
 
   def render(assigns) do
     ~H"""
-    <div style="min-height:100dvh;background:#16140E;font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;">
+    <div class="dark-screen" style="min-height:100dvh;background:#16140E;font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;">
 
       <%!-- top bar --%>
       <div style="height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">

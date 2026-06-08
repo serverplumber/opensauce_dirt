@@ -149,7 +149,7 @@ defmodule OpenSauce.Orders.Job do
     attribute :service_category, :atom do
       allow_nil? true
       public? true
-      constraints one_of: [:installation, :delivery, :pruning, :consultation, :design, :opening, :winterization, :nursery_run, :other]
+      constraints one_of: [:installation, :delivery, :pruning, :consultation, :design, :opening, :winterization, :maintenance]
     end
 
     attribute :account_code, :atom do
@@ -214,8 +214,7 @@ defmodule OpenSauce.Orders.Job do
   end
 
   relationships do
-    # The garden (outdoor site) this job is at. :client_work jobs with addressable
-    # service categories require one; :shift and :nursery_run/:delivery do not.
+    # The garden (outdoor site) this job is at. All :client_work jobs require one.
     belongs_to :garden, OpenSauce.CRM.Address do
       allow_nil? true
       public? true

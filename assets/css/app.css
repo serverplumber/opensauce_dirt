@@ -45,6 +45,30 @@ button {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Dark scrollbar — mobile shell main area and full-dark screens */
+.mobile-scroll::-webkit-scrollbar,
+.dark-screen::-webkit-scrollbar {
+  width: 4px;
+}
+.mobile-scroll::-webkit-scrollbar-track,
+.dark-screen::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mobile-scroll::-webkit-scrollbar-thumb,
+.dark-screen::-webkit-scrollbar-thumb {
+  background: rgba(52,48,37,0.7);
+  border-radius: 2px;
+}
+.mobile-scroll::-webkit-scrollbar-thumb:hover,
+.dark-screen::-webkit-scrollbar-thumb:hover {
+  background: rgba(84,181,126,0.4);
+}
+.mobile-scroll,
+.dark-screen {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52,48,37,0.7) transparent;
+}
+
 /* Mobile sign-in screen */
 #email-field {
   transition: border-color .12s ease, box-shadow .12s ease;
@@ -57,6 +81,29 @@ button {
 #email:focus-visible {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* Segmented control */
+.seg-tab {
+  flex: 1;
+  height: 36px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #9A9384;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background .12s ease, color .12s ease;
+}
+.seg-tab--on {
+  background: #54B57E;
+  color: #0C1F15;
 }
 
 /* Leaf green CTA button — shared base */
@@ -96,6 +143,221 @@ button {
 .leaf-btn:active {
   transform: translateY(0);
   box-shadow: 0 4px 14px rgba(84,181,126,0.30);
+}
+
+/* Day-group header row */
+.dayrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 4px 10px;
+}
+.dayrow .dl {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6E675A;
+  white-space: nowrap;
+}
+.dayrow .line { flex: 1; height: 1px; background: rgba(52,48,37,0.58); }
+.dayrow .dn { font-size: 12px; font-weight: 600; color: #9A9384; white-space: nowrap; }
+
+/* Job card */
+.jcard {
+  background: #211E16;
+  border: 1.5px solid rgba(52,48,37,0.58);
+  border-radius: 16px;
+  padding: 13px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 30px rgba(0,0,0,0.45);
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease;
+  position: relative;
+}
+@media (hover: hover) {
+  .jcard:hover { transform: translateY(-1px); }
+}
+.jcard.live {
+  border-color: #54B57E;
+  box-shadow: 0 0 0 1px #54B57E, 0 12px 30px rgba(0,0,0,0.45);
+}
+
+/* Status pills */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.pill.live   { background: rgba(84,181,126,0.14); color: #6BCB93; }
+.pill.sched  { background: rgba(52,48,37,0.8);    color: #9A9384; }
+.pill.done   { background: rgba(90,180,216,0.14); color: #5AB4D8; }
+.pill.cancel { background: rgba(219,146,88,0.14); color: #DB9258; }
+
+/* Pulsing status dot */
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.dot.pulse { animation: dot-pulse 1.8s infinite; }
+@keyframes dot-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(107,203,147,0.6); }
+  70%  { box-shadow: 0 0 0 7px rgba(107,203,147,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(107,203,147,0);   }
+}
+
+/* Category label + color dot */
+.jcat { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #6E675A; }
+.catdot { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
+
+/* Crew row */
+.crewrow {
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(52,48,37,0.58);
+  display: flex;
+  align-items: center;
+}
+.avs { display: flex; }
+.av {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #211E16;
+  margin-left: -7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #0C1F15;
+}
+.av:first-child { margin-left: 0; }
+
+/* Live strip (in-progress jobs) */
+.live-strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(52,48,37,0.58);
+}
+.live-strip .lbl { font-size: 12px; color: #9A9384; }
+.live-strip .open {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #54B57E;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Floating action button */
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: 86px;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #54B57E;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(84,181,126,0.30);
+  cursor: pointer;
+  z-index: 5;
+  transition: transform .12s ease, background .12s ease;
+}
+@media (hover: hover) {
+  .fab:hover { background: #6BCB93; transform: translateY(-2px); }
+}
+.fab:active { transform: translateY(0); }
+
+/* Dark form inputs */
+.dark-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6E675A;
+  margin-bottom: 8px;
+}
+
+.dark-select,
+.dark-input,
+.dark-textarea {
+  width: 100%;
+  background: #16140E;
+  border: 1.5px solid rgba(52,48,37,0.58);
+  border-radius: 10px;
+  color: #F4EFE2;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 13px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color .12s ease, box-shadow .12s ease;
+  box-sizing: border-box;
+}
+
+.dark-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%236E675A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.dark-select option {
+  background: #211E16;
+  color: #F4EFE2;
+}
+
+.dark-select:focus,
+.dark-input:focus,
+.dark-textarea:focus {
+  border-color: #54B57E;
+  box-shadow: 0 0 0 3px rgba(84,181,126,0.18);
+}
+
+.dark-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.dark-field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #E87E7E;
+}
+
+.dark-input[type="date"] {
+  color-scheme: dark;
 }
 
 /* Utility to hide scrollbar but allow scrolling */

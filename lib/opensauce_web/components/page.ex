@@ -199,6 +199,7 @@ defmodule OpenSauceWeb.Components.Page do
   @primary_prefixes ["/manage/today", "/manage/jobs", "/manage/customers", "/manage/purchasing"]
 
   attr :current_path, :string, default: ""
+  attr :current_user, :any, default: nil
 
   def bottom_nav(assigns) do
     more_active =
@@ -209,6 +210,49 @@ defmodule OpenSauceWeb.Components.Page do
 
     ~H"""
     <div>
+      <%!-- Sign-out confirmation sheet --%>
+      <div
+        id="sign-out-sheet"
+        class="hidden fixed inset-0 z-50 flex items-end justify-center"
+        role="dialog"
+        aria-label="Sign out confirmation"
+      >
+        <div
+          class="absolute inset-0 bg-black/50"
+          phx-click={JS.hide(to: "#sign-out-sheet")}
+          aria-hidden="true"
+        />
+        <div
+          class="relative w-full bg-[#211E16] rounded-t-2xl px-6 pt-6 space-y-4 max-w-lg"
+          style="border-top: 1.5px solid rgba(52,48,37,0.58); padding-bottom: max(2.5rem, env(safe-area-inset-bottom))"
+        >
+          <div class="space-y-1">
+            <p class="text-base font-semibold text-[#F4EFE2]">Sign out?</p>
+            <p class="text-sm text-[#9A9384]">You'll need a new magic link to sign back in.</p>
+          </div>
+          <div :if={@current_user}>
+            <p class="text-xs text-[#6E675A] truncate">{@current_user.email}</p>
+          </div>
+          <div class="flex flex-col gap-3 pb-2">
+            <.link
+              href={~p"/sign-out"}
+              method="delete"
+              class="leaf-btn flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition"
+            >
+              Sign out
+            </.link>
+            <button
+              type="button"
+              class="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium text-[#9A9384] hover:bg-[#2B2820] hover:text-[#F4EFE2] transition"
+              style="border: 1.5px solid rgba(52,48,37,0.58)"
+              phx-click={JS.hide(to: "#sign-out-sheet")}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
       <%!-- More overflow sheet --%>
       <div
         id="more-backdrop"
@@ -218,12 +262,13 @@ defmodule OpenSauceWeb.Components.Page do
       />
       <div
         id="more-sheet"
-        class="hidden fixed inset-x-0 bottom-14 z-40 bg-white border-t border-stone-200 shadow-lg rounded-t-xl"
+        class="hidden fixed inset-x-0 bottom-14 z-40 bg-[#211E16] shadow-lg rounded-t-xl"
+        style="border-top: 1.5px solid rgba(52,48,37,0.58)"
         role="dialog"
         aria-label="More navigation"
       >
         <div class="px-4 pt-4 pb-2">
-          <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-3">More</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#6E675A] mb-3">More</p>
           <ul class="space-y-1">
             <li :for={s <- @more_sections}>
               <.link
@@ -232,9 +277,9 @@ defmodule OpenSauceWeb.Components.Page do
                 class={[
                   "flex items-center justify-between rounded-lg px-3 py-3 text-sm font-medium transition",
                   String.starts_with?(@current_path, s.path) &&
-                    "bg-stone-100 text-stone-900",
+                    "bg-[rgba(84,181,126,0.14)] text-[#54B57E]",
                   not String.starts_with?(@current_path, s.path) &&
-                    "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                    "text-[#9A9384] hover:bg-[#2B2820] hover:text-[#F4EFE2]"
                 ]}
               >
                 {s.label}
@@ -242,15 +287,27 @@ defmodule OpenSauceWeb.Components.Page do
               </.link>
             </li>
           </ul>
+          <div class="mt-2 pt-2" style="border-top: 1px solid rgba(52,48,37,0.58)">
+            <button
+              type="button"
+              phx-click={hide_more_sheet() |> JS.show(to: "#sign-out-sheet")}
+              class="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-medium text-[#9A9384] hover:bg-[#2B2820] hover:text-[#F4EFE2] transition"
+            >
+              Sign out
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
           <div class="h-safe-bottom" />
         </div>
       </div>
 
       <%!-- Bottom nav bar --%>
       <nav
-        class="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-stone-200"
+        class="fixed bottom-0 inset-x-0 z-50 bg-[#211E16]"
         aria-label="Primary navigation"
-        style="padding-bottom: env(safe-area-inset-bottom)"
+        style="border-top: 1.5px solid rgba(52,48,37,0.58); padding-bottom: env(safe-area-inset-bottom)"
       >
         <div class="flex">
           <.nav_tab
@@ -293,10 +350,10 @@ defmodule OpenSauceWeb.Components.Page do
             type="button"
             class={[
               "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem] text-[10px] leading-none font-medium transition",
-              @more_active && "text-stone-900",
-              not @more_active && "text-stone-400"
+              @more_active && "text-[#54B57E]",
+              not @more_active && "text-[#6E675A]"
             ]}
-            phx-click={show_more_sheet()}
+            phx-click={toggle_more_sheet()}
             aria-label="More"
           >
             <.more_icon />
@@ -319,8 +376,8 @@ defmodule OpenSauceWeb.Components.Page do
       navigate={@navigate}
       class={[
         "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem] text-[10px] leading-none font-medium transition",
-        @active && "text-stone-900",
-        not @active && "text-stone-400 hover:text-stone-600"
+        @active && "text-[#54B57E]",
+        not @active && "text-[#6E675A] hover:text-[#9A9384]"
       ]}
     >
       {render_slot(@icon)}
@@ -329,16 +386,18 @@ defmodule OpenSauceWeb.Components.Page do
     """
   end
 
-  defp show_more_sheet(js \\ %JS{}) do
+  defp toggle_more_sheet(js \\ %JS{}) do
     js
-    |> JS.show(to: "#more-backdrop")
-    |> JS.show(to: "#more-sheet")
+    |> JS.toggle(to: "#more-backdrop")
+    |> JS.toggle(to: "#more-sheet")
+    |> JS.toggle_class("!text-[#54B57E]", to: "#more-tab")
   end
 
   defp hide_more_sheet(js \\ %JS{}) do
     js
     |> JS.hide(to: "#more-backdrop")
     |> JS.hide(to: "#more-sheet")
+    |> JS.remove_class("!text-[#54B57E]", to: "#more-tab")
   end
 
   defp today_icon(assigns) do

@@ -6,8 +6,6 @@ defmodule OpenSauceWeb.JobLive.New do
   alias OpenSauce.Inventory
   alias OpenSauce.Orders
 
-  @addressable_categories [:installation, :pruning, :consultation, :design, :opening, :winterization]
-
   @service_categories [
     {:installation, "Install"},
     {:delivery, "Delivery"},
@@ -16,8 +14,7 @@ defmodule OpenSauceWeb.JobLive.New do
     {:design, "Design"},
     {:opening, "Opening"},
     {:winterization, "Winterize"},
-    {:nursery_run, "Nursery run"},
-    {:other, "Other"}
+    {:maintenance, "Maintenance"}
   ]
 
   @impl true
@@ -52,500 +49,351 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:duration_h, "")
      |> assign(:duration_m, "")
      |> assign(:notes, "")
-     |> assign(:step1_error, nil)
+     |> assign(:service_error, nil)
+     |> assign(:garden_error, nil)
      |> assign(:save_error, nil)}
   end
 
   @impl true
   def handle_params(_params, _uri, socket) do
-    {:noreply, assign(socket, :page_title, "New Job")}
+    {:noreply, assign(socket, page_title: "New Job", main_bg: "bg-[#16140E]")}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-lg mx-auto pb-4">
-      <%!-- Step 1 --%>
-      <div :if={@step == 1} class="px-4 space-y-5 pt-2 pb-40">
-        <%!-- Back --%>
-        <div class="flex items-center justify-between">
-          <.link navigate={~p"/manage/jobs"} class="text-stone-400 hover:text-stone-600 p-1 -ml-1">
-            <.icon name="hero-x-mark" class="h-5 w-5" />
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+
+      <%!-- ── Step 1 ─────────────────────────────────────────────── --%>
+      <div :if={@step == 1} style="padding:0 16px 160px;">
+
+        <%!-- header --%>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 22px;">
+          <.link navigate={~p"/manage/jobs"} style="color:#6E675A;line-height:0;padding:4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </.link>
-          <span class="text-xs font-medium text-stone-400">Step 1 of 2</span>
+          <span style="font-size:12px;font-weight:600;color:#6E675A;">Step 1 of 2</span>
         </div>
 
-        <%!-- Type segmented control --%>
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Type of work</p>
-          <div class="flex rounded-xl border border-stone-200 bg-stone-100 p-1 gap-1">
-            <button
-              :for={{val, label} <- [{:client_work, "Client"}, {:shift, "Shift"}, {:internal_work, "Internal"}]}
-              type="button"
-              phx-click="set_type"
-              phx-value-type={val}
-              class={[
-                "flex-1 rounded-lg py-2 text-sm font-medium transition",
-                if(@job_type == val,
-                  do: "bg-white text-stone-900 shadow-sm",
-                  else: "text-stone-500 hover:text-stone-700"
-                )
-              ]}
-            >
-              {label}
-            </button>
-          </div>
+        <%!-- type segmented control --%>
+        <div style="margin-bottom:24px;display:flex;gap:4px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:13px;padding:4px;">
+          <button
+            :for={{val, label} <- [{:client_work, "Client"}, {:shift, "Shift"}, {:internal_work, "Internal"}]}
+            type="button"
+            phx-click="set_type"
+            phx-value-type={val}
+            class={["seg-tab", @job_type == val && "seg-tab--on"]}
+          >
+            {label}
+          </button>
         </div>
 
-        <%!-- Client work fields --%>
-        <div :if={@job_type == :client_work} class="space-y-5">
-          <%!-- Engagement --%>
+        <%!-- client work fields --%>
+        <div :if={@job_type == :client_work} style="display:flex;flex-direction:column;gap:20px;">
+
+          <%!-- engagement --%>
           <div>
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Engagement</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span class="dark-label" style="margin-bottom:0;">Engagement</span>
               <button
                 type="button"
                 phx-click="toggle_engagement"
-                class={[
-                  "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none",
-                  if(@engagement_enabled, do: "bg-amber-500", else: "bg-stone-200")
-                ]}
                 role="switch"
                 aria-checked={to_string(@engagement_enabled)}
+                style={"position:relative;display:inline-flex;width:36px;height:20px;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @engagement_enabled, do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
+                ontouchstart=""
               >
-                <span class={[
-                  "inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform",
-                  if(@engagement_enabled, do: "translate-x-4", else: "translate-x-1")
-                ]} />
+                <span style={"display:inline-block;width:14px;height:14px;border-radius:50%;background:#F4EFE2;box-shadow:0 1px 2px rgba(0,0,0,0.4);position:absolute;top:3px;transition:left .12s ease;#{if @engagement_enabled, do: "left:19px;", else: "left:3px;"}"}></span>
               </button>
             </div>
             <div :if={@engagement_enabled}>
-              <div :if={@engagement} class="rounded-xl border-2 border-amber-400 bg-amber-50 px-3 py-3 flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg border-2 border-amber-400 flex items-center justify-center text-xl font-bold text-amber-600 font-mono shrink-0">
+              <div :if={@engagement} style="border-radius:14px;border:1.5px solid #54B57E;background:rgba(84,181,126,0.10);padding:11px 13px;display:flex;align-items:center;gap:12px;">
+                <div style="width:36px;height:36px;border-radius:10px;border:1.5px solid #54B57E;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;color:#54B57E;flex:0 0 auto;">
                   {engagement_initial(@engagement)}
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-stone-900 truncate">{engagement_title(@engagement)}</p>
-                  <p class="text-xs text-stone-500 mt-0.5">{engagement_subtitle(@engagement)}</p>
+                <div style="flex:1;min-width:0;">
+                  <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{engagement_title(@engagement)}</p>
+                  <p style="font-size:12px;color:#9A9384;margin-top:2px;">{engagement_subtitle(@engagement)}</p>
                 </div>
-                <button
-                  type="button"
-                  phx-click="open_engagement_sheet"
-                  class="text-xs font-medium text-amber-600 hover:text-amber-800 shrink-0"
-                >
-                  change
-                </button>
+                <button type="button" phx-click="open_engagement_sheet" style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;">change</button>
               </div>
-              <div :if={is_nil(@engagement)}>
-                <button
-                  type="button"
-                  phx-click="open_engagement_sheet"
-                  class="w-full rounded-xl border border-dashed border-stone-300 bg-white px-3 py-3 text-sm text-stone-400 hover:border-stone-400 hover:text-stone-600 text-left"
-                >
-                  Pick an engagement…
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Garden / site --%>
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Garden / site</p>
-            <div :if={@garden}>
-              <div class={[
-                "rounded-xl border px-3 py-3 flex items-center justify-between",
-                if(garden_from_engagement?(@garden, @engagement),
-                  do: "border-stone-200 bg-stone-50",
-                  else: "border-amber-400 bg-amber-50"
-                )
-              ]}>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-stone-900">{@garden.name || "Unnamed site"}</p>
-                  <p :if={@garden.street} class="text-xs text-stone-500 mt-0.5">{@garden.street}</p>
-                  <p :if={garden_from_engagement?(@garden, @engagement)} class="text-xs text-stone-400 mt-0.5">from engagement</p>
-                </div>
-                <.icon :if={garden_from_engagement?(@garden, @engagement)} name="hero-check-circle" class="h-5 w-5 text-amber-500 shrink-0" />
-                <button
-                  :if={not garden_from_engagement?(@garden, @engagement)}
-                  type="button"
-                  phx-click="open_garden_sheet"
-                  class="text-xs font-medium text-amber-600 hover:text-amber-800 shrink-0"
-                >
-                  change
-                </button>
-              </div>
-            </div>
-            <div :if={is_nil(@garden)}>
-              <button
-                type="button"
-                phx-click="open_garden_sheet"
-                class="w-full rounded-xl border border-dashed border-stone-300 bg-white px-3 py-3 text-sm text-stone-400 hover:border-stone-400 hover:text-stone-600 text-left"
-              >
-                Pick a garden…
+              <button :if={is_nil(@engagement)} type="button" phx-click="open_engagement_sheet"
+                style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:11px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
+                ontouchstart="">
+                Pick an engagement…
               </button>
             </div>
           </div>
 
-          <%!-- Service category --%>
+          <%!-- garden / site --%>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Service category</p>
+            <span class="dark-label">Garden / site</span>
+            <div :if={@garden} style={"border-radius:14px;border:1.5px solid;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;#{if garden_from_engagement?(@garden, @engagement), do: "border-color:rgba(52,48,37,0.58);background:#211E16;", else: "border-color:#54B57E;background:rgba(84,181,126,0.10);"}"}>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:14px;font-weight:700;color:#F4EFE2;">{@garden.name || "Unnamed site"}</p>
+                <p :if={@garden.street} style="font-size:12px;color:#9A9384;margin-top:2px;">{@garden.street}</p>
+                <p :if={garden_from_engagement?(@garden, @engagement)} style="font-size:11.5px;color:#6E675A;margin-top:2px;">from engagement</p>
+              </div>
+              <svg :if={garden_from_engagement?(@garden, @engagement)} width="18" height="18" viewBox="0 0 24 24" fill="none" style="color:#54B57E;flex:0 0 auto;">
+                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <button :if={not garden_from_engagement?(@garden, @engagement)} type="button" phx-click="open_garden_sheet"
+                style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;">
+                change
+              </button>
+            </div>
+            <button :if={is_nil(@garden)} type="button" phx-click="open_garden_sheet"
+              style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:11px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
+              ontouchstart="">
+              Pick a garden…
+            </button>
+            <span :if={@garden_error} class="dark-field-error">{@garden_error}</span>
+          </div>
+
+          <%!-- service category --%>
+          <div>
+            <label class="dark-label" for="service_category_select">Service</label>
             <form phx-change="set_category">
-              <select
-                name="service_category"
-                class="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 focus:border-amber-400 focus:outline-none appearance-none"
-              >
+              <select name="service_category" id="service_category_select" class="dark-select">
                 <option value="">— pick one —</option>
-                <option
-                  :for={{cat, label} <- @service_categories}
-                  value={cat}
-                  selected={@service_category == cat}
-                >
-                  {label}
-                </option>
+                <option :for={{cat, label} <- @service_categories} value={cat} selected={@service_category == cat}>{label}</option>
               </select>
             </form>
+            <span :if={@service_error} class="dark-field-error">{@service_error}</span>
           </div>
+
         </div>
 
-        <%!-- Internal work fields --%>
+        <%!-- internal work fields --%>
         <div :if={@job_type == :internal_work}>
-          <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Account code</p>
-          <div class="flex gap-2">
+          <span class="dark-label">Account code</span>
+          <div style="display:flex;gap:8px;">
             <button
               :for={{code, label} <- [{:production, "Production"}, {:maintenance, "Maintenance"}]}
               type="button"
               phx-click="set_account_code"
               phx-value-code={code}
-              class={[
-                "flex-1 rounded-xl border py-3 text-sm font-medium transition",
-                if(@account_code == code,
-                  do: "bg-stone-900 text-white border-stone-900",
-                  else: "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
-                )
-              ]}
+              ontouchstart=""
+              style={"flex:1;border-radius:12px;border:1.5px solid;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;transition:background .12s ease,color .12s ease,border-color .12s ease;#{if @account_code == code, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#211E16;color:#9A9384;border-color:rgba(52,48,37,0.58);"}"}
             >
               {label}
             </button>
           </div>
+          <span :if={@service_error} class="dark-field-error">{@service_error}</span>
         </div>
 
-        <%!-- Materials --%>
-        <div :if={@job_type != :shift}>
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Materials &amp; plants</p>
-            <button
-              type="button"
-              phx-click="open_materials_sheet"
-              class="flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-800"
-            >
-              <.icon name="hero-plus" class="h-3.5 w-3.5" /> Add
+        <%!-- materials --%>
+        <div :if={@job_type != :shift} style="margin-top:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span class="dark-label" style="margin-bottom:0;">Materials &amp; plants</span>
+            <button type="button" phx-click="open_materials_sheet"
+              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+              Add
             </button>
           </div>
-          <div :if={@draft_materials == []} class="rounded-xl border border-dashed border-stone-200 bg-white px-3 py-3 text-sm text-stone-400 text-center">
+          <div :if={@draft_materials == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
             No materials added
           </div>
-          <div :if={@draft_materials != []} class="space-y-2">
-            <div
-              :for={{{item, qty}, idx} <- Enum.with_index(@draft_materials)}
-              class="rounded-xl border border-stone-200 bg-white px-3 py-2.5 flex items-center gap-3"
-            >
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-stone-900 truncate">{catalog_item_title(item)}</p>
-                <p class="text-xs text-stone-500">{item.name} · qty {format_qty(qty)}</p>
+          <div :if={@draft_materials != []} style="display:flex;flex-direction:column;gap:8px;">
+            <div :for={{{item, qty}, idx} <- Enum.with_index(@draft_materials)}
+              style="border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:10px 13px;display:flex;align-items:center;gap:10px;">
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{catalog_item_title(item)}</p>
+                <p style="font-size:12px;color:#9A9384;margin-top:1px;">{item.name} · qty {format_qty(qty)}</p>
               </div>
-              <button
-                type="button"
-                phx-click="remove_material"
-                phx-value-index={idx}
-                class="text-stone-300 hover:text-red-500 transition shrink-0"
-              >
-                <.icon name="hero-x-mark" class="h-4 w-4" />
+              <button type="button" phx-click="remove_material" phx-value-index={idx}
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               </button>
             </div>
           </div>
         </div>
 
-        <%!-- Next button --%>
-        <div class="fixed bottom-16 left-0 right-0 bg-white border-t border-stone-200 px-4 py-3 space-y-2">
-          <p :if={@step1_error} class="text-xs text-red-600 text-center">{@step1_error}</p>
-          <button
-            type="button"
-            phx-click="next"
-            class="w-full rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white hover:bg-amber-600 active:bg-amber-700 transition"
-          >
+        <%!-- sticky next bar --%>
+        <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
+          <.glow_button valid={step1_can_proceed?(@job_type, @service_category, @account_code, @garden)} type="button" phx-click="next">
             Next: schedule →
-          </button>
+          </.glow_button>
         </div>
+
       </div>
 
-      <%!-- Step 2 --%>
-      <div :if={@step == 2} class="px-4 space-y-5 pt-2 pb-40">
-        <%!-- Header --%>
-        <div class="flex items-center justify-between">
-          <button type="button" phx-click="back" class="text-stone-400 hover:text-stone-600 p-1 -ml-1">
-            <.icon name="hero-arrow-left" class="h-5 w-5" />
+      <%!-- ── Step 2 ─────────────────────────────────────────────── --%>
+      <div :if={@step == 2} style="padding:0 16px 160px;">
+
+        <%!-- header --%>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 22px;">
+          <button type="button" phx-click="back" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
-          <span class="text-xs font-medium text-stone-400">Step 2 of 2</span>
+          <span style="font-size:12px;font-weight:600;color:#6E675A;">Step 2 of 2</span>
         </div>
 
-        <%!-- Step 1 summary pill --%>
-        <div class="rounded-xl border border-stone-100 bg-stone-50 px-3 py-2.5 flex items-center gap-2 flex-wrap">
-          <span :if={@service_category} class="rounded-full bg-stone-200 px-2.5 py-0.5 text-xs font-semibold text-stone-700">
-            {category_label(@service_category)}
-          </span>
-          <span :if={@account_code} class="rounded-full bg-stone-200 px-2.5 py-0.5 text-xs font-semibold text-stone-700">
-            {account_code_label(@account_code)}
-          </span>
-          <span :if={@job_type == :shift} class="rounded-full bg-stone-200 px-2.5 py-0.5 text-xs font-semibold text-stone-700">
-            Shift
-          </span>
-          <span :if={@garden && @garden.customer} class="text-xs text-stone-500">
-            {customer_display(@garden.customer)}
-          </span>
-          <span :if={@garden} class="text-xs text-stone-500">{@garden.name || "Unnamed site"}</span>
+        <%!-- step 1 summary chips --%>
+        <div style="border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:10px 13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+          <span :if={@service_category} style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;">{category_label(@service_category)}</span>
+          <span :if={@account_code} style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;">{account_code_label(@account_code)}</span>
+          <span :if={@job_type == :shift} style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;">Shift</span>
+          <span :if={@garden} style="font-size:12.5px;color:#9A9384;">{@garden.name || "Unnamed site"}</span>
         </div>
 
-        <form phx-change="update_step2" class="space-y-5">
-          <%!-- When? --%>
+        <form phx-change="update_step2" style="display:flex;flex-direction:column;gap:20px;">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">When?</p>
-            <div class="flex gap-3">
-              <div class="flex-1">
-                <input
-                  type="date"
-                  name="scheduled_for"
-                  value={@scheduled_for}
-                  class="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 focus:border-amber-400 focus:outline-none"
-                />
-              </div>
-              <div class="flex items-center gap-1">
-                <input
-                  type="number"
-                  name="duration_h"
-                  value={@duration_h}
-                  min="0"
-                  max="23"
-                  class="w-14 rounded-xl border border-stone-200 bg-white px-2 py-2.5 text-sm text-stone-900 text-center focus:border-amber-400 focus:outline-none"
-                />
-                <span class="text-xs text-stone-400">h</span>
-                <input
-                  type="number"
-                  name="duration_m"
-                  value={@duration_m}
-                  min="0"
-                  max="59"
-                  class="w-14 rounded-xl border border-stone-200 bg-white px-2 py-2.5 text-sm text-stone-900 text-center focus:border-amber-400 focus:outline-none"
-                />
-                <span class="text-xs text-stone-400">m</span>
+            <label class="dark-label">When?</label>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <input type="date" name="scheduled_for" value={@scheduled_for} class="dark-input" style="flex:1;" />
+              <div style="display:flex;align-items:center;gap:4px;flex:0 0 auto;">
+                <input type="number" name="duration_h" value={@duration_h} min="0" max="23" class="dark-input" style="width:52px;text-align:center;padding:10px 6px;" />
+                <span style="font-size:12px;color:#6E675A;font-weight:600;">h</span>
+                <input type="number" name="duration_m" value={@duration_m} min="0" max="59" class="dark-input" style="width:52px;text-align:center;padding:10px 6px;" />
+                <span style="font-size:12px;color:#6E675A;font-weight:600;">m</span>
               </div>
             </div>
           </div>
 
-          <%!-- Notes --%>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Notes</p>
-            <textarea
-              name="notes"
-              rows="3"
-              maxlength="2000"
-              class="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 focus:border-amber-400 focus:outline-none resize-none"
-            >{@notes}</textarea>
+            <label class="dark-label">Notes</label>
+            <textarea name="notes" rows="3" maxlength="2000" class="dark-textarea">{@notes}</textarea>
           </div>
         </form>
 
-        <p :if={@save_error} class="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+        <p :if={@save_error}
+          style="margin-top:16px;border-radius:12px;border:1.5px solid rgba(232,126,126,0.3);background:rgba(232,126,126,0.08);padding:10px 13px;font-size:13px;color:#E87E7E;">
           {@save_error}
         </p>
 
-        <%!-- Sticky create --%>
-        <div class="fixed bottom-16 left-0 right-0 bg-white border-t border-stone-200 px-4 py-3">
-          <button
-            type="button"
-            phx-click="save"
-            phx-throttle="2000"
-            class="w-full rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white hover:bg-amber-600 active:bg-amber-700 transition"
-          >
-            Create job
-          </button>
+        <%!-- sticky schedule bar --%>
+        <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
+          <.glow_button valid={true} type="button" phx-click="save" phx-throttle="2000">
+            Schedule
+          </.glow_button>
         </div>
+
       </div>
 
-      <%!-- Engagement sheet --%>
-      <div
-        :if={@show_engagement_sheet}
-        id="engagement-sheet"
-        class="fixed inset-0 z-40 flex flex-col justify-end"
-        phx-window-keydown="close_engagement_sheet"
-        phx-key="Escape"
-      >
-        <div class="absolute inset-0 bg-black/40" phx-click="close_engagement_sheet"></div>
-        <div class="relative z-10 bg-white rounded-t-2xl px-4 pt-4 pb-8 max-h-[80dvh] flex flex-col">
-          <div class="flex items-center justify-between mb-3">
-            <p class="text-sm font-semibold text-stone-900">Pick engagement</p>
-            <button type="button" phx-click="close_engagement_sheet" class="text-stone-400 hover:text-stone-600">
-              <.icon name="hero-x-mark" class="h-5 w-5" />
+      <%!-- ── Engagement sheet ───────────────────────────────────── --%>
+      <div :if={@show_engagement_sheet}
+        style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
+        phx-window-keydown="close_engagement_sheet" phx-key="Escape">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_engagement_sheet"></div>
+        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick engagement</span>
+            <button type="button" phx-click="close_engagement_sheet" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
-          <input
-            type="text"
-            value={@engagement_search}
-            phx-change="search_engagement"
-            name="engagement_search"
-            phx-debounce="200"
-            class="rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none mb-3"
-          />
-          <div class="overflow-y-auto space-y-2">
-            <button
-              :for={eng <- filtered_engagements(@all_engagements, @engagement_search)}
-              type="button"
-              phx-click="pick_engagement"
-              phx-value-id={eng.id}
-              class={[
-                "w-full rounded-xl border px-3 py-2.5 text-left flex items-center gap-3 transition",
-                if(@engagement && @engagement.id == eng.id,
-                  do: "border-amber-400 bg-amber-50",
-                  else: "border-stone-200 bg-white hover:border-stone-300"
-                )
-              ]}
-            >
-              <div class="w-8 h-8 rounded-lg border border-stone-300 flex items-center justify-center text-base font-bold text-stone-600 font-mono shrink-0">
+          <input type="text" value={@engagement_search} phx-change="search_engagement" name="engagement_search"
+            phx-debounce="200" class="dark-input" style="margin-bottom:12px;" placeholder="Search…" />
+          <div style="overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+            <button :for={eng <- filtered_engagements(@all_engagements, @engagement_search)}
+              type="button" phx-click="pick_engagement" phx-value-id={eng.id}
+              ontouchstart=""
+              style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;#{if @engagement && @engagement.id == eng.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
+              <div style={"width:32px;height:32px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;#{if @engagement && @engagement.id == eng.id, do: "background:rgba(84,181,126,0.14);color:#54B57E;border:1.5px solid #54B57E;", else: "background:rgba(52,48,37,0.5);color:#9A9384;border:1.5px solid rgba(52,48,37,0.58);"}"}>
                 {engagement_initial(eng)}
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-stone-900 truncate">{engagement_title(eng)}</p>
-                <p class="text-xs text-stone-400">{engagement_subtitle(eng)}</p>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{engagement_title(eng)}</p>
+                <p style="font-size:12px;color:#9A9384;margin-top:1px;">{engagement_subtitle(eng)}</p>
               </div>
             </button>
-            <div :if={filtered_engagements(@all_engagements, @engagement_search) == []} class="py-6 text-center text-sm text-stone-400">
+            <div :if={filtered_engagements(@all_engagements, @engagement_search) == []}
+              style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;">
               No engagements found
             </div>
           </div>
         </div>
       </div>
 
-      <%!-- Garden sheet (when no engagement) --%>
-      <div
-        :if={@show_garden_sheet}
-        id="garden-sheet"
-        class="fixed inset-0 z-40 flex flex-col justify-end"
-        phx-window-keydown="close_garden_sheet"
-        phx-key="Escape"
-      >
-        <div class="absolute inset-0 bg-black/40" phx-click="close_garden_sheet"></div>
-        <div class="relative z-10 bg-white rounded-t-2xl px-4 pt-4 pb-8 max-h-[80dvh] flex flex-col">
-          <div class="flex items-center justify-between mb-3">
-            <p class="text-sm font-semibold text-stone-900">Pick garden</p>
-            <button type="button" phx-click="close_garden_sheet" class="text-stone-400 hover:text-stone-600">
-              <.icon name="hero-x-mark" class="h-5 w-5" />
+      <%!-- ── Garden sheet ────────────────────────────────────────── --%>
+      <div :if={@show_garden_sheet}
+        style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
+        phx-window-keydown="close_garden_sheet" phx-key="Escape">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
+        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick garden</span>
+            <button type="button" phx-click="close_garden_sheet" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
-          <input
-            type="text"
-            value={@garden_search}
-            phx-change="search_garden"
-            name="garden_search"
-            phx-debounce="200"
-            class="rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none mb-3"
-          />
-          <div class="overflow-y-auto space-y-2">
-            <button
-              :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
-              type="button"
-              phx-click="pick_garden"
-              phx-value-id={garden.id}
-              class={[
-                "w-full rounded-xl border px-3 py-2.5 text-left transition",
-                if(@garden && @garden.id == garden.id,
-                  do: "border-amber-400 bg-amber-50",
-                  else: "border-stone-200 bg-white hover:border-stone-300"
-                )
-              ]}
-            >
-              <p class="text-sm font-medium text-stone-900">{garden.name || "Unnamed site"}</p>
-              <p :if={garden.street} class="text-xs text-stone-400 mt-0.5">{garden.street}</p>
+          <input type="text" value={@garden_search} phx-change="search_garden" name="garden_search"
+            phx-debounce="200" class="dark-input" style="margin-bottom:12px;" placeholder="Search…" />
+          <div style="overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+            <button :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
+              type="button" phx-click="pick_garden" phx-value-id={garden.id}
+              ontouchstart=""
+              style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;cursor:pointer;#{if @garden && @garden.id == garden.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
+              <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;">{garden.name || "Unnamed site"}</p>
+              <p :if={garden.street} style="font-size:12px;color:#9A9384;margin-top:1px;">{garden.street}</p>
             </button>
-            <div :if={filtered_gardens(@all_gardens, @garden_search) == []} class="py-6 text-center text-sm text-stone-400">
+            <div :if={filtered_gardens(@all_gardens, @garden_search) == []}
+              style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;">
               No gardens found
             </div>
           </div>
         </div>
       </div>
 
-      <%!-- Materials sheet --%>
-      <div
-        :if={@show_materials_sheet}
-        id="materials-sheet"
-        class="fixed inset-0 z-40 flex flex-col justify-end"
-        phx-window-keydown="close_materials_sheet"
-        phx-key="Escape"
-      >
-        <div class="absolute inset-0 bg-black/40" phx-click="close_materials_sheet"></div>
-        <div class="relative z-10 bg-white rounded-t-2xl px-4 pt-4 pb-8 max-h-[90dvh] flex flex-col gap-3">
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-semibold text-stone-900">Add material or plant</p>
-            <button type="button" phx-click="close_materials_sheet" class="text-stone-400 hover:text-stone-600">
-              <.icon name="hero-x-mark" class="h-5 w-5" />
+      <%!-- ── Materials sheet ───────────────────────────────────── --%>
+      <div :if={@show_materials_sheet}
+        style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
+        phx-window-keydown="close_materials_sheet" phx-key="Escape">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_materials_sheet"></div>
+        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:90dvh;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add material or plant</span>
+            <button type="button" phx-click="close_materials_sheet" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
 
-          <div class="relative">
-            <input
-              type="text"
-              value={@catalog_search}
-              phx-change="search_catalog"
-              name="catalog_search"
-              phx-debounce="300"
-              class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none"
-            />
-            <div
-              :if={@catalog_results != []}
-              class="absolute z-10 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden"
-            >
-              <button
-                :for={item <- @catalog_results}
-                type="button"
-                phx-click="pick_catalog_item"
-                phx-value-id={item.id}
-                class="flex w-full flex-col px-3 py-2.5 text-left text-sm hover:bg-stone-50 border-b border-stone-100 last:border-0"
-              >
-                <div class="flex items-baseline justify-between gap-2">
-                  <span class="font-medium italic text-stone-800">{catalog_item_title(item)}</span>
-                  <span class="shrink-0 text-xs text-stone-400">{item.supplier_catalog.supplier.name}</span>
+          <div style="position:relative;">
+            <input type="text" value={@catalog_search} phx-change="search_catalog" name="catalog_search"
+              phx-debounce="300" class="dark-input" placeholder="Search catalogue…" />
+            <div :if={@catalog_results != []}
+              style="position:absolute;z-index:10;top:calc(100% + 4px);width:100%;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow:hidden;">
+              <button :for={item <- @catalog_results}
+                type="button" phx-click="pick_catalog_item" phx-value-id={item.id}
+                ontouchstart=""
+                style="display:flex;flex-direction:column;width:100%;padding:10px 13px;text-align:left;border:none;background:transparent;border-bottom:1px solid rgba(52,48,37,0.4);cursor:pointer;">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+                  <span style="font-size:13.5px;font-weight:600;font-style:italic;color:#F4EFE2;">{catalog_item_title(item)}</span>
+                  <span style="font-size:11.5px;color:#9A9384;white-space:nowrap;">{item.supplier_catalog.supplier.name}</span>
                 </div>
-                <span class="text-xs text-stone-400">
+                <span style="font-size:12px;color:#9A9384;margin-top:2px;">
                   {item.name}{if item.format_description, do: " · #{item.format_description}"}
                 </span>
               </button>
             </div>
           </div>
 
-          <div :if={@selected_catalog_item} class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
-            <p class="text-sm font-medium italic text-amber-900">{catalog_item_title(@selected_catalog_item)}</p>
-            <p class="text-xs text-amber-700 mt-0.5">{@selected_catalog_item.name}</p>
+          <div :if={@selected_catalog_item}
+            style="border-radius:12px;border:1.5px solid rgba(84,181,126,0.4);background:rgba(84,181,126,0.08);padding:10px 13px;">
+            <p style="font-size:13.5px;font-weight:600;font-style:italic;color:#6BCB93;">{catalog_item_title(@selected_catalog_item)}</p>
+            <p style="font-size:12px;color:#9A9384;margin-top:2px;">{@selected_catalog_item.name}</p>
           </div>
 
-          <div class="flex items-center gap-3">
-            <label class="text-xs font-medium text-stone-500 shrink-0">Qty</label>
-            <input
-              type="number"
-              name="add_qty"
-              value={@add_qty}
-              min="0.01"
-              step="0.01"
-              phx-change="set_add_qty"
-              class="w-24 rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-900 text-center focus:border-amber-400 focus:outline-none"
-            />
-            <button
-              type="button"
-              phx-click="add_material"
-              disabled={is_nil(@selected_catalog_item)}
-              class="flex-1 rounded-xl bg-amber-500 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            >
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:12px;font-weight:600;color:#6E675A;white-space:nowrap;">Qty</span>
+            <input type="number" name="add_qty" value={@add_qty} min="0.01" step="0.01" phx-change="set_add_qty"
+              class="dark-input" style="width:80px;text-align:center;" />
+            <button type="button" phx-click="add_material" disabled={is_nil(@selected_catalog_item)}
+              ontouchstart=""
+              style={"flex:1;border-radius:12px;padding:11px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;background:#54B57E;color:#0C1F15;transition:opacity .12s ease;#{if is_nil(@selected_catalog_item), do: "opacity:0.4;cursor:not-allowed;", else: "opacity:1;"}"}>
               Add to job
             </button>
           </div>
         </div>
       </div>
+
     </div>
     """
   end
@@ -566,7 +414,7 @@ defmodule OpenSauceWeb.JobLive.New do
         _ -> socket
       end
 
-    {:noreply, socket}
+    {:noreply, assign(socket, service_error: nil, garden_error: nil)}
   end
 
   def handle_event("open_engagement_sheet", _params, socket) do
@@ -594,7 +442,9 @@ defmodule OpenSauceWeb.JobLive.New do
      socket
      |> assign(:engagement, eng)
      |> assign(:garden, garden)
-     |> assign(:show_engagement_sheet, false)}
+     |> assign(:show_engagement_sheet, false)
+     |> assign(:service_error, nil)
+     |> assign(:garden_error, nil)}
   end
 
   def handle_event("toggle_engagement", _params, socket) do
@@ -610,19 +460,19 @@ defmodule OpenSauceWeb.JobLive.New do
         |> assign(:garden, nil)
       end
 
-    {:noreply, socket}
+    {:noreply, assign(socket, service_error: nil, garden_error: nil)}
   end
 
   def handle_event("set_category", %{"service_category" => ""}, socket) do
-    {:noreply, assign(socket, service_category: nil, step1_error: nil)}
+    {:noreply, assign(socket, service_category: nil, service_error: nil)}
   end
 
   def handle_event("set_category", %{"service_category" => cat}, socket) do
-    {:noreply, assign(socket, service_category: String.to_existing_atom(cat), step1_error: nil)}
+    {:noreply, assign(socket, service_category: String.to_existing_atom(cat), service_error: nil)}
   end
 
   def handle_event("set_account_code", %{"code" => code}, socket) do
-    {:noreply, assign(socket, :account_code, String.to_existing_atom(code))}
+    {:noreply, assign(socket, account_code: String.to_existing_atom(code), service_error: nil)}
   end
 
   def handle_event("open_garden_sheet", _params, socket) do
@@ -643,7 +493,8 @@ defmodule OpenSauceWeb.JobLive.New do
     {:noreply,
      socket
      |> assign(:garden, garden)
-     |> assign(:show_garden_sheet, false)}
+     |> assign(:show_garden_sheet, false)
+     |> assign(:garden_error, nil)}
   end
 
   def handle_event("open_materials_sheet", _params, socket) do
@@ -730,12 +581,12 @@ defmodule OpenSauceWeb.JobLive.New do
   end
 
   def handle_event("next", _params, socket) do
-    case validate_step1(socket.assigns) do
-      :ok ->
-        {:noreply, assign(socket, step: 2, step1_error: nil, save_error: nil)}
+    {service_error, garden_error} = step1_errors(socket.assigns)
 
-      {:error, msg} ->
-        {:noreply, assign(socket, :step1_error, msg)}
+    if is_nil(service_error) and is_nil(garden_error) do
+      {:noreply, assign(socket, step: 2, service_error: nil, garden_error: nil, save_error: nil)}
+    else
+      {:noreply, assign(socket, service_error: service_error, garden_error: garden_error)}
     end
   end
 
@@ -749,7 +600,8 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:scheduled_for, Map.get(params, "scheduled_for", socket.assigns.scheduled_for))
      |> assign(:duration_h, Map.get(params, "duration_h", socket.assigns.duration_h))
      |> assign(:duration_m, Map.get(params, "duration_m", socket.assigns.duration_m))
-     |> assign(:notes, Map.get(params, "notes", socket.assigns.notes))}
+     |> assign(:notes, Map.get(params, "notes", socket.assigns.notes))
+     |> assign(:save_error, nil)}
   end
 
   def handle_event("save", _params, socket) do
@@ -775,21 +627,22 @@ defmodule OpenSauceWeb.JobLive.New do
     end
   end
 
-  defp validate_step1(%{job_type: :shift}), do: :ok
+  defp step1_can_proceed?(:shift, _cat, _code, _garden), do: true
+  defp step1_can_proceed?(:internal_work, _cat, code, _garden), do: not is_nil(code)
+  defp step1_can_proceed?(:client_work, cat, _code, garden), do: not is_nil(cat) and not is_nil(garden)
 
-  defp validate_step1(%{job_type: :internal_work, account_code: nil}),
-    do: {:error, "Select an account code"}
+  defp step1_errors(%{job_type: :shift}), do: {nil, nil}
 
-  defp validate_step1(%{job_type: :internal_work}), do: :ok
+  defp step1_errors(%{job_type: :internal_work, account_code: nil}),
+    do: {"Select an account code", nil}
 
-  defp validate_step1(%{job_type: :client_work, service_category: nil}),
-    do: {:error, "Select a service category"}
+  defp step1_errors(%{job_type: :internal_work}), do: {nil, nil}
 
-  defp validate_step1(%{job_type: :client_work, service_category: cat, garden: nil})
-       when cat in @addressable_categories,
-       do: {:error, "A garden is required for #{Phoenix.Naming.humanize(cat)} jobs"}
-
-  defp validate_step1(%{job_type: :client_work}), do: :ok
+  defp step1_errors(%{job_type: :client_work} = a) do
+    service_error = if is_nil(a.service_category), do: "Select a service", else: nil
+    garden_error = if is_nil(a.garden), do: "Select a garden", else: nil
+    {service_error, garden_error}
+  end
 
   defp build_job_params(assigns) do
     params = %{type: assigns.job_type, notes: assigns.notes}

@@ -42,7 +42,7 @@ defmodule OpenSauceWeb.MobileSignInLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="min-height:100dvh;background:#16140E;font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+    <div class="dark-screen" style="min-height:100dvh;background:#16140E;font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
       <.flash_group flash={@flash} />
 
       <%!-- L1: enter email --%>

@@ -18,103 +18,18 @@ defmodule OpenSauceWeb.Layouts do
   attr :current_user, :any, default: nil
   attr :flash, :map, default: %{}
   attr :page_title, :string, default: nil
+  attr :main_bg, :string, default: "bg-stone-50"
   slot :inner_block, required: true
 
   def mobile_shell(assigns) do
     ~H"""
-    <div class="flex flex-col bg-stone-50" style="height: 100dvh">
-      <header class="flex-none flex items-center justify-between px-4 bg-white border-b border-stone-200 h-11 shrink-0">
-        <span class="text-sm font-semibold text-stone-900 truncate max-w-[70%]">
-          {@page_title || "OpenSauce"}
-        </span>
-
-        <div :if={@current_user} class="relative">
-          <button
-            type="button"
-            class="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-800 transition"
-            phx-click={JS.toggle(to: "#mobile-user-menu")}
-            phx-click-away={JS.hide(to: "#mobile-user-menu")}
-            aria-haspopup="menu"
-          >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"
-              />
-              <circle cx="12" cy="7" r="4" stroke-width="2" stroke-linecap="round" />
-            </svg>
-          </button>
-          <div
-            id="mobile-user-menu"
-            class="hidden absolute right-0 mt-1 w-44 rounded-lg border border-stone-200 bg-white py-1 shadow-lg z-50"
-            role="menu"
-          >
-            <p class="px-3 py-2 text-xs text-stone-400 truncate">{@current_user.email}</p>
-            <div class="border-t border-stone-100" />
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition"
-              phx-click={
-                JS.hide(to: "#mobile-user-menu")
-                |> JS.show(to: "#sign-out-sheet")
-              }
-              role="menuitem"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <%!-- Sign-out confirmation sheet --%>
-      <div
-        id="sign-out-sheet"
-        class="hidden fixed inset-0 z-50 flex items-end justify-center"
-        role="dialog"
-        aria-label="Sign out confirmation"
-      >
-        <div
-          class="absolute inset-0 bg-black/30"
-          phx-click={JS.hide(to: "#sign-out-sheet")}
-          aria-hidden="true"
-        />
-        <div class="relative w-full bg-white rounded-t-2xl px-6 pt-6 pb-10 space-y-5 max-w-lg"
-          style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom))">
-          <div class="space-y-1">
-            <p class="text-base font-semibold text-stone-900">Sign out?</p>
-            <p class="text-sm text-stone-500">
-              You'll need a new magic link to sign back in.
-            </p>
-          </div>
-          <div class="flex flex-col gap-3">
-            <.link
-              href={~p"/sign-out"}
-              method="delete"
-              id="confirm-sign-out"
-              class="flex w-full items-center justify-center rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-700 transition"
-            >
-              Sign out
-            </.link>
-            <button
-              type="button"
-              id="cancel-sign-out"
-              class="flex w-full items-center justify-center rounded-xl border border-stone-200 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 transition"
-              phx-click={JS.hide(to: "#sign-out-sheet")}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <main class="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-20">
+    <div class="flex flex-col" style="height: 100dvh; background: #16140E">
+      <main class={["mobile-scroll flex-1 min-h-0 overflow-y-auto pb-20", @main_bg]}>
         <.flash_group flash={@flash} />
         {render_slot(@inner_block)}
       </main>
 
-      <.bottom_nav current_path={@current_path} />
+      <.bottom_nav current_path={@current_path} current_user={@current_user} />
     </div>
     """
   end

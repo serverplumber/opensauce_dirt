@@ -114,9 +114,9 @@ defmodule OpenSauceWeb.Components.Core do
               class={[
                 if(@fullscreen,
                   do:
-                    "relative hidden bg-white transition print:m-0 print:border-0 print:shadow-none",
+                    "relative hidden bg-[#16140E] transition print:m-0 print:border-0 print:shadow-none",
                   else:
-                    "ring-stone-700/20 relative hidden rounded-lg bg-white shadow-lg ring-1 transition"
+                    "ring-[rgba(52,48,37,0.58)] relative hidden rounded-2xl bg-[#211E16] shadow-lg ring-1 transition"
                 ),
                 "duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in",
                 "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -131,7 +131,7 @@ defmodule OpenSauceWeb.Components.Core do
               <button
                 type="button"
                 phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                class="absolute top-4 right-4 rounded-sm p-1 opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-stone-400 focus:ring-offset-2 print:hidden"
+                class="absolute top-4 right-4 rounded-sm p-1 text-[#6E675A] opacity-70 transition-opacity hover:opacity-100 hover:text-[#9A9384] focus:outline-none focus:ring-2 focus:ring-[#54B57E] focus:ring-offset-2 focus:ring-offset-[#211E16] print:hidden"
                 aria-label={gettext("close")}
               >
                 <.icon name="hero-x-mark-solid" class="h-5 w-5" />
@@ -142,11 +142,11 @@ defmodule OpenSauceWeb.Components.Core do
                   <h2
                     :if={@title}
                     id={"#{@id}-title"}
-                    class="text-lg font-semibold leading-none tracking-tight text-stone-900"
+                    class="font-['Bricolage_Grotesque',sans-serif] text-lg font-bold leading-none tracking-tight text-[#F4EFE2]"
                   >
                     {@title}
                   </h2>
-                  <p :if={@description} id={"#{@id}-description"} class="text-sm text-stone-600">
+                  <p :if={@description} id={"#{@id}-description"} class="text-sm text-[#9A9384]">
                     {@description}
                   </p>
                 </div>

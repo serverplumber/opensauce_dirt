@@ -9,101 +9,136 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.simple_form
-        for={@form}
-        id="job-form"
-        phx-target={@myself}
-        phx-change="validate"
-        phx-submit="save"
-      >
-        <div class="mt-4 space-y-4">
-          <.input
-            field={@form[:type]}
-            type="select"
-            label="Type"
-            options={[
-              {"Client work", :client_work},
-              {"Shift", :shift},
-              {"Internal work", :internal_work}
-            ]}
-          />
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+      <.form for={@form} id="job-form" phx-target={@myself} phx-change="validate" phx-submit="save">
+        <div style="display:flex;flex-direction:column;gap:20px;padding:4px 0 0;">
 
-          <%!-- Client work fields --%>
-          <div :if={@job_type == :client_work} class="space-y-4">
-            <.input
-              field={@form[:engagement_id]}
-              type="select"
-              label="Engagement"
-              options={[{"— none —", ""}] ++ Enum.map(@engagements, &{engagement_label(&1), &1.id})}
-            />
-
-            <.input
-              field={@form[:service_category]}
-              type="select"
-              label="Service category"
-              options={[
-                {"Installation", :installation},
-                {"Delivery", :delivery},
-                {"Pruning", :pruning},
-                {"Consultation", :consultation},
-                {"Design", :design},
-                {"Opening", :opening},
-                {"Winterization", :winterization},
-                {"Nursery run", :nursery_run},
-                {"Other", :other}
-              ]}
-              prompt="Select category"
-            />
-
-            <.input
-              field={@form[:garden_id]}
-              type="select"
-              label="Garden / Site"
-              options={[{"— none —", ""}] ++ Enum.map(@gardens, &{garden_label(&1), &1.id})}
-            />
-
-            <.input
-              :if={@upstream_jobs != []}
-              name="job[upstream_job_id]"
-              id="job_upstream_job_id"
-              type="select"
-              label="Cherry-pick materials from"
-              options={[{"— none —", ""}] ++ Enum.map(@upstream_jobs, &{upstream_job_label(&1), &1.id})}
-              value=""
-            />
+          <%!-- type --%>
+          <div>
+            <label class="dark-label" for={@form[:type].id}>Type</label>
+            <select class="dark-select" name={@form[:type].name} id={@form[:type].id}>
+              <option value="client_work" selected={@job_type == :client_work}>Client work</option>
+              <option value="shift" selected={@job_type == :shift}>Shift</option>
+              <option value="internal_work" selected={@job_type == :internal_work}>Internal work</option>
+            </select>
           </div>
 
-          <%!-- Internal work fields --%>
+          <%!-- client_work fields --%>
+          <div :if={@job_type == :client_work} style="display:flex;flex-direction:column;gap:20px;">
+            <div>
+              <label class="dark-label" for={@form[:engagement_id].id}>Engagement</label>
+              <select class="dark-select" name={@form[:engagement_id].name} id={@form[:engagement_id].id}>
+                <option value="">— none —</option>
+                <option
+                  :for={e <- @engagements}
+                  value={e.id}
+                  selected={to_string(@form[:engagement_id].value) == e.id}
+                >
+                  {engagement_label(e)}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="dark-label" for={@form[:service_category].id}>Service</label>
+              <select class="dark-select" name={@form[:service_category].name} id={@form[:service_category].id}>
+                <option value="">Select category</option>
+                <option
+                  :for={{label, val} <- service_category_options()}
+                  value={val}
+                  selected={to_string(@form[:service_category].value) == to_string(val)}
+                >
+                  {label}
+                </option>
+              </select>
+              <span :for={msg <- @form[:service_category].errors} class="dark-field-error">{msg}</span>
+            </div>
+
+            <div :if={@gardens != []}>
+              <label class="dark-label" for={@form[:garden_id].id}>Site</label>
+              <select class="dark-select" name={@form[:garden_id].name} id={@form[:garden_id].id}>
+                <option value="">— none —</option>
+                <option
+                  :for={g <- @gardens}
+                  value={g.id}
+                  selected={to_string(@form[:garden_id].value) == g.id}
+                >
+                  {garden_label(g)}
+                </option>
+              </select>
+            </div>
+
+            <div :if={@upstream_jobs != []}>
+              <label class="dark-label" for="job_upstream_job_id">Cherry-pick materials from</label>
+              <select class="dark-select" name="job[upstream_job_id]" id="job_upstream_job_id">
+                <option value="">— none —</option>
+                <option :for={j <- @upstream_jobs} value={j.id}>{upstream_job_label(j)}</option>
+              </select>
+            </div>
+          </div>
+
+          <%!-- internal_work fields --%>
           <div :if={@job_type == :internal_work}>
-            <.input
-              field={@form[:account_code]}
-              type="select"
-              label="Account code"
-              options={[
-                {"Production", :production},
-                {"Maintenance", :maintenance}
-              ]}
-              prompt="Select code"
+            <label class="dark-label" for={@form[:account_code].id}>Account code</label>
+            <select class="dark-select" name={@form[:account_code].name} id={@form[:account_code].id}>
+              <option value="">Select code</option>
+              <option value="production" selected={@form[:account_code].value == :production}>Production</option>
+              <option value="maintenance" selected={@form[:account_code].value == :maintenance}>Maintenance</option>
+            </select>
+            <span :for={msg <- @form[:account_code].errors} class="dark-field-error">{msg}</span>
+          </div>
+
+          <%!-- staff member --%>
+          <div>
+            <label class="dark-label" for={@form[:actor_id].id}>Staff member</label>
+            <select class="dark-select" name={@form[:actor_id].name} id={@form[:actor_id].id}>
+              <option value="">— none —</option>
+              <option
+                :for={m <- @members}
+                value={m.user_id}
+                selected={to_string(@form[:actor_id].value) == m.user_id}
+              >
+                {member_label(m)}
+              </option>
+            </select>
+          </div>
+
+          <%!-- date --%>
+          <div>
+            <label class="dark-label" for={@form[:scheduled_for].id}>Date</label>
+            <input
+              type="date"
+              class="dark-input"
+              name={@form[:scheduled_for].name}
+              id={@form[:scheduled_for].id}
+              value={Phoenix.HTML.Form.normalize_value("date", @form[:scheduled_for].value)}
             />
           </div>
 
-          <.input
-            field={@form[:actor_id]}
-            type="select"
-            label="Staff member"
-            options={[{"— none —", ""}] ++ Enum.map(@members, &{member_label(&1), &1.user_id})}
-          />
+          <%!-- notes --%>
+          <div>
+            <label class="dark-label" for={@form[:notes].id}>Notes</label>
+            <textarea
+              class="dark-textarea"
+              name={@form[:notes].name}
+              id={@form[:notes].id}
+              rows="3"
+            ><%= Phoenix.HTML.Form.normalize_value("textarea", @form[:notes].value) %></textarea>
+          </div>
 
-          <.input field={@form[:scheduled_for]} type="date" label="Date" />
+          <%!-- submit --%>
+          <div style="padding-top:4px;">
+            <.glow_button
+              valid={form_valid?(@form, @job_type)}
+              type="submit"
+              phx-disable-with="Saving…"
+            >
+              {if @job, do: "Save changes", else: "Schedule"}
+            </.glow_button>
+          </div>
 
-          <.input field={@form[:notes]} type="textarea" label="Notes" rows="3" />
         </div>
-
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">{if @job, do: "Save", else: "Create Job"}</.button>
-        </:actions>
-      </.simple_form>
+      </.form>
     </div>
     """
   end
@@ -256,6 +291,29 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
       %{garden: garden} when not is_nil(garden) -> [garden]
       _ -> []
     end
+  end
+
+  defp form_valid?(form, :client_work) do
+    form[:service_category].value not in [nil, ""]
+  end
+
+  defp form_valid?(form, :internal_work) do
+    form[:account_code].value not in [nil, ""]
+  end
+
+  defp form_valid?(_form, :shift), do: true
+
+  defp service_category_options do
+    [
+      {"Installation", :installation},
+      {"Delivery", :delivery},
+      {"Pruning", :pruning},
+      {"Consultation", :consultation},
+      {"Design", :design},
+      {"Opening", :opening},
+      {"Winterization", :winterization},
+      {"Maintenance", :maintenance}
+    ]
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
