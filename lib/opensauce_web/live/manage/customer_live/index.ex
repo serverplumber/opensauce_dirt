@@ -7,37 +7,50 @@ defmodule OpenSauceWeb.CustomerLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-lg mx-auto space-y-4">
-      <div class="flex items-center justify-between pt-1">
-        <h1 class="text-lg font-semibold text-stone-900">Customers</h1>
-        <.link navigate={~p"/manage/customers/new"} class="text-sm font-medium text-amber-600 hover:text-amber-700">
-          + New
-        </.link>
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+
+      <%!-- header --%>
+      <div style="padding:12px 16px 14px;">
+        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
+          Customers
+        </h1>
       </div>
 
-      <div id="customers" phx-update="stream" class="space-y-2">
-        <div :for={{dom_id, customer} <- @streams.customers} id={dom_id}>
-          <.link
-            navigate={~p"/manage/customers/#{customer.reference}"}
-            class="flex items-center gap-3 bg-white rounded-xl border border-stone-200 px-4 py-3 hover:bg-stone-50 active:bg-stone-100"
-          >
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-stone-900 truncate">{customer.full_name}</p>
-              <p :if={customer.company_name_nickname} class="text-xs text-stone-500 truncate">
+      <%!-- list --%>
+      <div id="customers" phx-update="stream" style="padding:0 16px 100px;">
+        <div :for={{dom_id, customer} <- @streams.customers} id={dom_id} class="jcard" style="cursor:pointer;">
+          <.link navigate={~p"/manage/customers/#{customer.reference}"} style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
+            <div style="flex:1;min-width:0;">
+              <p style="font-size:15px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {customer.full_name}
+              </p>
+              <p :if={customer.company_name_nickname} style="font-size:12.5px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                 {customer.company_name_nickname}
               </p>
-              <p class="text-xs text-stone-400 mt-0.5">
+              <p style="font-size:12px;color:#6E675A;margin-top:3px;">
                 {garden_count_label(customer.garden_addresses)}
               </p>
             </div>
-            <.icon name="hero-chevron-right" class="h-4 w-4 text-stone-300 shrink-0" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex:0 0 auto;">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </.link>
         </div>
+
+        <p :if={@customer_count == 0} style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;">
+          No customers yet
+        </p>
       </div>
 
-      <p :if={@customer_count == 0} class="text-sm text-stone-400 text-center py-8">
-        No customers yet
-      </p>
+      <%!-- FAB --%>
+      <.link navigate={~p"/manage/customers/new"}>
+        <button class="fab" ontouchstart="" aria-label="New customer">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </.link>
+
     </div>
     """
   end
@@ -66,7 +79,9 @@ defmodule OpenSauceWeb.CustomerLive.Index do
   end
 
   defp apply_action(socket, :index, _params) do
-    assign(socket, :page_title, "Customers")
+    socket
+    |> assign(:page_title, "Customers")
+    |> assign(:main_bg, "bg-[#16140E]")
   end
 
   defp customer_index_trail(_), do: [Navigation.root(:customers)]

@@ -9,7 +9,8 @@ defmodule OpenSauceWeb.CustomerLive.New do
     "province" => "",
     "zip" => "",
     "notes" => "",
-    "is_billing" => "false"
+    "is_billing" => "false",
+    "is_garden" => "true"
   }
 
   @impl true
@@ -31,215 +32,299 @@ defmodule OpenSauceWeb.CustomerLive.New do
      |> assign(:gardens, [])
      |> assign(:billing_index, nil)
      |> assign(:draft, @empty_draft)
-     |> assign(:show_garden_sheet, false)}
+     |> assign(:show_garden_sheet, false)
+     |> assign(:customer_type, :individual)
+     |> assign(:garden_error, nil)}
   end
 
   @impl true
   def handle_params(_params, _url, socket) do
-    {:noreply, socket}
+    {:noreply, assign(socket, :main_bg, "bg-[#16140E]")}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-lg mx-auto space-y-4 pb-8">
-      <div class="flex items-center gap-3 pt-1">
-        <.link navigate={~p"/manage/customers"} class="text-stone-500 hover:text-stone-700 p-1 -ml-1">
-          <.icon name="hero-arrow-left" class="h-5 w-5" />
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+
+      <%!-- header --%>
+      <div style="padding:12px 16px 14px;display:flex;align-items:center;gap:12px;">
+        <.link navigate={~p"/manage/customers"}>
+          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </.link>
-        <h1 class="text-lg font-semibold text-stone-900">New Customer</h1>
+        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;margin:0;">
+          New Customer
+        </h1>
       </div>
 
       <.form for={@form} id="customer-form" phx-submit="save" phx-change="validate">
-        <%!-- Contact section --%>
-        <div class="space-y-4 bg-white rounded-xl border border-stone-200 p-4 mb-4">
-          <h2 class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Contact</h2>
+        <div style="padding:0 16px 140px;display:flex;flex-direction:column;gap:20px;">
 
-          <.input
-            field={@form[:type]}
-            type="radiogroup"
-            options={[{"Individual", :individual}, {"Company", :company}]}
-            value={@form[:type].value || :individual}
-          />
-
-          <.input
-            field={@form[:company_name_nickname]}
-            type="text"
-            label={if company_type?(@form), do: "Company name", else: "Nickname"}
-          />
-
-          <div class="grid grid-cols-2 gap-3">
-            <.input field={@form[:first_name]} type="text" label="First name" />
-            <.input field={@form[:last_name]} type="text" label="Last name" />
-          </div>
-
-          <.input field={@form[:email]} type="email" label="Email" />
-          <.input field={@form[:phone]} type="tel" label="Phone" />
-        </div>
-
-        <%!-- Gardens section --%>
-        <div class="space-y-3 bg-white rounded-xl border border-stone-200 p-4 mb-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Gardens</h2>
-            <button
-              type="button"
-              phx-click="open_garden_sheet"
-              class="text-sm font-medium text-amber-600 hover:text-amber-700 active:text-amber-800"
-            >
-              + Add garden
-            </button>
-          </div>
-
-          <div :if={Enum.empty?(@gardens)} class="text-sm text-stone-400 text-center py-3">
-            Add at least one garden
-          </div>
-
-          <div :for={{garden, i} <- Enum.with_index(@gardens)} id={"garden-#{i}"} class="rounded-lg border border-stone-200 p-3">
-            <div class="flex items-start gap-2">
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-stone-900 truncate">
-                  {if garden["name"] != "", do: garden["name"], else: "Unnamed garden"}
-                </p>
-                <p :if={short_address(garden) != ""} class="text-xs text-stone-500 mt-0.5 truncate">
-                  {short_address(garden)}
-                </p>
-              </div>
+          <%!-- type toggle --%>
+          <div>
+            <span class="dark-label">Type</span>
+            <div style="display:flex;gap:8px;">
               <button
+                :for={{type_val, label} <- [{:individual, "Individual"}, {:company, "Company"}]}
                 type="button"
-                phx-click="remove_garden"
-                phx-value-index={i}
-                class="text-stone-300 hover:text-red-400 shrink-0 p-0.5"
-                aria-label="Remove garden"
+                phx-click="set_type"
+                phx-value-type={type_val}
+                ontouchstart=""
+                style={"flex:1;border-radius:12px;border:1.5px solid;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;transition:background .12s ease,color .12s ease,border-color .12s ease;#{if @customer_type == type_val, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#211E16;color:#9A9384;border-color:rgba(52,48,37,0.58);"}"}
               >
-                <.icon name="hero-x-mark" class="h-4 w-4" />
+                {label}
+              </button>
+            </div>
+            <input type="hidden" name="customer[type]" value={@customer_type} />
+          </div>
+
+          <%!-- company name / nickname --%>
+          <div>
+            <label class="dark-label" for={@form[:company_name_nickname].id}>
+              {if @customer_type == :company, do: "Company name", else: "Nickname"}
+            </label>
+            <input
+              class="dark-input"
+              type="text"
+              name={@form[:company_name_nickname].name}
+              id={@form[:company_name_nickname].id}
+              value={@form[:company_name_nickname].value || ""}
+              phx-debounce="300"
+            />
+            <span :for={msg <- @form[:company_name_nickname].errors} class="dark-field-error">{elem(msg, 0)}</span>
+          </div>
+
+          <%!-- first / last name --%>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label class="dark-label" for={@form[:first_name].id}>First name</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={@form[:first_name].name}
+                id={@form[:first_name].id}
+                value={@form[:first_name].value || ""}
+                phx-debounce="300"
+              />
+              <span :for={msg <- @form[:first_name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:last_name].id}>Last name</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={@form[:last_name].name}
+                id={@form[:last_name].id}
+                value={@form[:last_name].value || ""}
+                phx-debounce="300"
+              />
+              <span :for={msg <- @form[:last_name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+            </div>
+          </div>
+
+          <%!-- email --%>
+          <div>
+            <label class="dark-label" for={@form[:email].id}>Email</label>
+            <input
+              class="dark-input"
+              type="email"
+              name={@form[:email].name}
+              id={@form[:email].id}
+              value={@form[:email].value || ""}
+              phx-debounce="300"
+            />
+            <span :for={msg <- @form[:email].errors} class="dark-field-error">{elem(msg, 0)}</span>
+          </div>
+
+          <%!-- phone --%>
+          <div>
+            <label class="dark-label" for={@form[:phone].id}>Phone</label>
+            <input
+              class="dark-input"
+              type="tel"
+              name={@form[:phone].name}
+              id={@form[:phone].id}
+              value={@form[:phone].value || ""}
+              phx-debounce="300"
+            />
+            <span :for={msg <- @form[:phone].errors} class="dark-field-error">{elem(msg, 0)}</span>
+          </div>
+
+          <%!-- gardens --%>
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span class="dark-label" style="margin-bottom:0;">Gardens</span>
+              <button type="button" phx-click="open_garden_sheet"
+                style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                Add
               </button>
             </div>
 
-            <button
-              :if={length(@gardens) > 1}
-              type="button"
-              phx-click="set_billing"
-              phx-value-index={i}
-              class={"mt-2 flex items-center gap-1.5 text-xs " <> if(@billing_index == i, do: "text-amber-600 font-medium", else: "text-stone-400 hover:text-stone-600")}
-            >
-              <.icon
-                name={if @billing_index == i, do: "hero-star-solid", else: "hero-star"}
-                class="h-3.5 w-3.5"
-              />
-              {if @billing_index == i, do: "Billing address", else: "Use as billing"}
+            <button :if={Enum.empty?(@gardens)} type="button" phx-click="open_garden_sheet" ontouchstart=""
+              style={"width:100%;border-radius:12px;border:1.5px dashed;padding:14px;text-align:center;background:transparent;cursor:pointer;#{if @garden_error, do: "border-color:#E87E7E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
+              <p style={"font-size:13px;#{if @garden_error, do: "color:#E87E7E;", else: "color:#6E675A;"}"}>{@garden_error || "Add at least one garden"}</p>
             </button>
 
-            <span
-              :if={length(@gardens) == 1}
-              class="mt-2 flex items-center gap-1.5 text-xs text-amber-600 font-medium"
-            >
-              <.icon name="hero-star-solid" class="h-3.5 w-3.5" />
-              Billing address
-            </span>
-          </div>
-        </div>
-
-        <.button type="submit" variant={:primary} class="w-full" phx-disable-with="Saving…">
-          Create customer
-        </.button>
-      </.form>
-    </div>
-
-    <%!-- H2 · Add garden slide-up sheet --%>
-    <div
-      :if={@show_garden_sheet}
-      id="garden-sheet"
-      class="fixed inset-0 z-50"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Add garden"
-    >
-      <div class="absolute inset-0 bg-black/40" phx-click="close_garden_sheet"></div>
-      <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[85dvh] flex flex-col">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-stone-100 shrink-0">
-          <h3 class="text-base font-semibold text-stone-900">Add garden</h3>
-          <button
-            type="button"
-            phx-click="close_garden_sheet"
-            class="text-stone-400 hover:text-stone-600 p-1 -mr-1"
-          >
-            <.icon name="hero-x-mark" class="h-5 w-5" />
-          </button>
-        </div>
-
-        <.form
-          for={:garden}
-          id="garden-draft-form"
-          phx-submit="add_garden"
-          class="flex-1 overflow-y-auto p-4 space-y-4"
-        >
-          <.input
-            name="garden[name]"
-            id="draft-name"
-            value={@draft["name"]}
-            label="Garden name"
-            placeholder="e.g. North Field"
-          />
-          <.input name="garden[street]" id="draft-street" value={@draft["street"]} label="Street" />
-          <div class="grid grid-cols-2 gap-3">
-            <.input name="garden[city]" id="draft-city" value={@draft["city"]} label="City" />
-            <.input
-              name="garden[province]"
-              id="draft-province"
-              value={@draft["province"]}
-              label="Province"
-            />
-          </div>
-          <.input name="garden[zip]" id="draft-zip" value={@draft["zip"]} label="Postal code" />
-          <.input
-            name="garden[notes]"
-            id="draft-notes"
-            value={@draft["notes"]}
-            label="Notes"
-            placeholder="Gate code, access info…"
-          />
-
-          <label class="flex items-center justify-between rounded-xl border border-stone-200 px-4 py-3 cursor-pointer">
-            <div>
-              <p class="text-sm font-medium text-stone-900">Billing address</p>
-              <p class="text-xs text-stone-500 mt-0.5">Use this garden for invoices</p>
+            <div :if={not Enum.empty?(@gardens)} style="display:flex;flex-direction:column;gap:8px;">
+              <div :for={{garden, i} <- Enum.with_index(@gardens)} id={"garden-#{i}"} class="jcard">
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      {if garden["name"] != "", do: garden["name"], else: "Unnamed garden"}
+                    </p>
+                    <p :if={short_address(garden) != ""} style="font-size:12px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      {short_address(garden)}
+                    </p>
+                    <p style="font-size:11.5px;color:#6E675A;margin-top:3px;">
+                      {if garden["is_garden"] == "true", do: "Outdoor", else: "Indoor"}
+                    </p>
+                  </div>
+                  <button type="button" phx-click="remove_garden" phx-value-index={i}
+                    style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+                <div style="margin-top:8px;">
+                  <span :if={length(@gardens) == 1 or @billing_index == i}
+                    style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#54B57E;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Billing address
+                  </span>
+                  <button :if={length(@gardens) > 1 and @billing_index != i}
+                    type="button" phx-click="set_billing" phx-value-index={i} ontouchstart=""
+                    style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Use as billing
+                  </button>
+                </div>
+              </div>
             </div>
-            <button
-              type="button"
-              phx-click="toggle_draft_billing"
-              class={"relative inline-flex h-6 w-11 items-center rounded-full transition-colors " <> if(@draft["is_billing"] == "true", do: "bg-amber-500", else: "bg-stone-200")}
-              role="switch"
-              aria-checked={@draft["is_billing"] == "true"}
-            >
-              <span class={"inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform " <> if(@draft["is_billing"] == "true", do: "translate-x-6", else: "translate-x-1")} />
-            </button>
-            <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
-          </label>
+          </div>
 
-          <div class="flex gap-3 pt-2 pb-safe">
-            <button
-              type="button"
-              phx-click="close_garden_sheet"
-              class="flex-1 rounded-xl border border-stone-200 py-3 text-sm font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-medium text-white hover:bg-amber-600 active:bg-amber-700"
-            >
-              Add garden
+        </div>
+
+        <%!-- sticky CTA --%>
+        <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
+          <.glow_button valid={customer_can_submit?(@form, @customer_type)} type="submit" phx-disable-with="Saving…">
+            Create customer
+          </.glow_button>
+        </div>
+
+      </.form>
+
+      <%!-- add garden sheet --%>
+      <div :if={@show_garden_sheet}
+        id="garden-sheet"
+        style="position:fixed;inset:0;z-index:50;"
+        role="dialog" aria-modal="true" aria-label="Add garden">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
+            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">Add garden</h3>
+            <button type="button" phx-click="close_garden_sheet" ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </button>
           </div>
-        </.form>
+
+          <.form for={:garden} id="garden-draft-form" phx-submit="add_garden" phx-change="update_draft"
+            style="flex:1;overflow-y:auto;padding:16px 16px calc(74px + 16px);display:flex;flex-direction:column;gap:16px;">
+
+            <div>
+              <label class="dark-label" for="draft-name">Garden name</label>
+              <input class="dark-input" type="text" name="garden[name]" id="draft-name" value={@draft["name"]} placeholder="e.g. North Field" />
+              <div style="display:flex;gap:8px;margin-top:10px;">
+                <button
+                  :for={{flag, label} <- [{"true", "Outdoor"}, {"false", "Indoor"}]}
+                  type="button"
+                  phx-click="toggle_draft_location"
+                  phx-value-outdoor={flag}
+                  ontouchstart=""
+                  style={"flex:1;border-radius:10px;border:1.5px solid;padding:9px;font-size:13px;font-weight:700;cursor:pointer;transition:background .12s ease,color .12s ease,border-color .12s ease;#{if @draft["is_garden"] == flag, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#16140E;color:#9A9384;border-color:rgba(52,48,37,0.58);"}"}
+                >
+                  {label}
+                </button>
+              </div>
+              <input type="hidden" name="garden[is_garden]" value={@draft["is_garden"]} />
+            </div>
+            <div>
+              <label class="dark-label" for="draft-street">Street</label>
+              <input class="dark-input" type="text" name="garden[street]" id="draft-street" value={@draft["street"]} />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label" for="draft-city">City</label>
+                <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} />
+              </div>
+              <div>
+                <label class="dark-label" for="draft-province">Province</label>
+                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} />
+              </div>
+            </div>
+            <div>
+              <label class="dark-label" for="draft-zip">Postal code</label>
+              <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} />
+            </div>
+            <div>
+              <label class="dark-label" for="draft-notes">Notes</label>
+              <textarea class="dark-textarea" name="garden[notes]" id="draft-notes" rows="2" placeholder="Gate code, access info…"><%= @draft["notes"] %></textarea>
+            </div>
+
+            <%!-- billing toggle --%>
+            <div style="display:flex;align-items:center;justify-content:space-between;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);padding:12px 14px;">
+              <p style="font-size:14px;font-weight:600;color:#F4EFE2;">Billing address</p>
+              <button type="button" phx-click="toggle_draft_billing" ontouchstart=""
+                style={"position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @draft["is_billing"] == "true", do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
+                role="switch" aria-checked={@draft["is_billing"] == "true"}>
+                <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}></span>
+              </button>
+              <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
+            </div>
+
+            <div style="display:flex;gap:10px;padding-bottom:8px;">
+              <button type="button" phx-click="close_garden_sheet" ontouchstart=""
+                style="flex:1;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:transparent;padding:13px;font-size:13.5px;font-weight:700;color:#9A9384;cursor:pointer;">
+                Cancel
+              </button>
+              <button type="submit" ontouchstart=""
+                style="flex:1;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
+                Add garden
+              </button>
+            </div>
+
+          </.form>
+        </div>
       </div>
+
     </div>
     """
   end
 
   @impl true
+  def handle_event("set_type", %{"type" => type}, socket) do
+    {:noreply, assign(socket, :customer_type, String.to_existing_atom(type))}
+  end
+
   def handle_event("validate", %{"customer" => params}, socket) do
-    form = AshPhoenix.Form.validate(socket.assigns.form.source, params)
+    params = Map.put_new(params, "type", to_string(socket.assigns.customer_type))
+    ash_form = socket.assigns.form.source
+    form = AshPhoenix.Form.validate(ash_form, params, errors: ash_form.submitted_once?)
     {:noreply, assign(socket, form: to_form(form))}
   end
 
@@ -251,9 +336,19 @@ defmodule OpenSauceWeb.CustomerLive.New do
     {:noreply, assign(socket, show_garden_sheet: false)}
   end
 
+  def handle_event("toggle_draft_location", %{"outdoor" => flag}, socket) do
+    {:noreply, assign(socket, draft: Map.put(socket.assigns.draft, "is_garden", flag))}
+  end
+
   def handle_event("add_garden", %{"garden" => params}, socket) do
     is_billing = params["is_billing"] == "true"
-    garden = Map.put(params, "is_garden", "true")
+    is_outdoor = Map.get(params, "is_garden", "true") == "true"
+
+    garden =
+      params
+      |> Map.put("is_garden", to_string(is_outdoor))
+      |> Map.put("is_indoor", to_string(!is_outdoor))
+
     new_index = length(socket.assigns.gardens)
 
     billing_index =
@@ -268,7 +363,8 @@ defmodule OpenSauceWeb.CustomerLive.New do
      |> assign(:gardens, socket.assigns.gardens ++ [garden])
      |> assign(:billing_index, billing_index)
      |> assign(:show_garden_sheet, false)
-     |> assign(:draft, @empty_draft)}
+     |> assign(:draft, @empty_draft)
+     |> assign(:garden_error, nil)}
   end
 
   def handle_event("remove_garden", %{"index" => idx_str}, socket) do
@@ -290,12 +386,22 @@ defmodule OpenSauceWeb.CustomerLive.New do
     {:noreply, assign(socket, billing_index: String.to_integer(idx_str))}
   end
 
+  def handle_event("update_draft", %{"garden" => params}, socket) do
+    {:noreply, assign(socket, :draft, Map.merge(socket.assigns.draft, params))}
+  end
+
   def handle_event("toggle_draft_billing", _params, socket) do
     new_val = if socket.assigns.draft["is_billing"] == "true", do: "false", else: "true"
     {:noreply, assign(socket, draft: Map.put(socket.assigns.draft, "is_billing", new_val))}
   end
 
+  def handle_event("save", _params, socket) when socket.assigns.gardens == [] do
+    {:noreply, assign(socket, :garden_error, "At least one garden is required")}
+  end
+
   def handle_event("save", %{"customer" => params}, socket) do
+    params = Map.put_new(params, "type", to_string(socket.assigns.customer_type))
+
     gardens_with_billing =
       socket.assigns.gardens
       |> Enum.with_index()
@@ -317,12 +423,14 @@ defmodule OpenSauceWeb.CustomerLive.New do
     end
   end
 
-  defp company_type?(form) do
-    case Phoenix.HTML.Form.input_value(form, :type) do
-      :company -> true
-      "company" -> true
-      _ -> false
-    end
+  defp customer_can_submit?(form, :company) do
+    val = form[:company_name_nickname].value
+    val != nil and val != ""
+  end
+
+  defp customer_can_submit?(form, _individual) do
+    val = form[:first_name].value
+    val != nil and val != ""
   end
 
   defp short_address(g) do

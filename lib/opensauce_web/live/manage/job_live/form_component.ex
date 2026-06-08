@@ -51,7 +51,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
                   {label}
                 </option>
               </select>
-              <span :for={msg <- @form[:service_category].errors} class="dark-field-error">{msg}</span>
+              <span :for={msg <- @form[:service_category].errors} class="dark-field-error">{elem(msg, 0)}</span>
             </div>
 
             <div :if={@gardens != []}>
@@ -85,7 +85,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
               <option value="production" selected={@form[:account_code].value == :production}>Production</option>
               <option value="maintenance" selected={@form[:account_code].value == :maintenance}>Maintenance</option>
             </select>
-            <span :for={msg <- @form[:account_code].errors} class="dark-field-error">{msg}</span>
+            <span :for={msg <- @form[:account_code].errors} class="dark-field-error">{elem(msg, 0)}</span>
           </div>
 
           <%!-- staff member --%>
