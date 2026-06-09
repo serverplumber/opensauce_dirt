@@ -172,9 +172,12 @@ defmodule OpenSauceWeb.CustomerLive.Show do
               <div style="display:flex;align-items:flex-start;gap:10px;">
                 <div style="flex:1;min-width:0;">
                   <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {if e.garden, do: e.garden.name || "Unnamed site", else: "No site"}
+                    {e.scope_title || (if e.garden, do: e.garden.name || "Unnamed site", else: "No site")}
                   </p>
-                  <p :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:12px;color:#9A9384;margin-top:2px;">
+                  <p style="font-size:12px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {if e.garden, do: e.garden.name || "—", else: "—"}
+                  </p>
+                  <p :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:12px;color:#9A9384;margin-top:1px;">
                     {format_term(e.term_start, e.term_end)}
                   </p>
                 </div>

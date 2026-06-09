@@ -24,6 +24,7 @@ defmodule OpenSauce.CRM.Engagement do
     default_accept [
       :garden_id,
       :customer_id,
+      :scope_title,
       :scope_description,
       :install_price,
       :maintenance_price_annual,
@@ -74,6 +75,11 @@ defmodule OpenSauce.CRM.Engagement do
 
   attributes do
     uuid_primary_key :id
+
+    attribute :scope_title, :string do
+      allow_nil? true
+      public? true
+    end
 
     attribute :scope_description, :string do
       allow_nil? true

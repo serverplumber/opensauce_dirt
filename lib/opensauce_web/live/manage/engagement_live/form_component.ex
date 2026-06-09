@@ -38,6 +38,19 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
             </select>
           </div>
 
+          <%!-- title --%>
+          <div>
+            <label class="dark-label" for={@form[:scope_title].id}>Title</label>
+            <input
+              class="dark-input"
+              type="text"
+              name={@form[:scope_title].name}
+              id={@form[:scope_title].id}
+              value={@form[:scope_title].value || ""}
+              placeholder="e.g. Spring install — front garden"
+            />
+          </div>
+
           <%!-- scope --%>
           <div>
             <label class="dark-label" for={@form[:scope_description].id}>Scope</label>
@@ -365,12 +378,13 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp form_valid?(form, standalone, customer_id) do
+    title_set? = form[:scope_title].value not in [nil, ""]
     garden_set? = form[:garden_id].value not in [nil, ""]
     scope_set? = form[:scope_description].value not in [nil, ""]
     term_set? = form[:term_start].value not in [nil, ""]
     customer_set? = not standalone or customer_id != ""
 
-    garden_set? and scope_set? and term_set? and customer_set?
+    title_set? and garden_set? and scope_set? and term_set? and customer_set?
   end
 
   defp status_options do
