@@ -51,12 +51,59 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:notes, "")
      |> assign(:service_error, nil)
      |> assign(:garden_error, nil)
-     |> assign(:save_error, nil)}
+     |> assign(:save_error, nil)
+     |> assign(:back_to, ~p"/manage/jobs")}
   end
 
   @impl true
-  def handle_params(_params, _uri, socket) do
-    {:noreply, assign(socket, page_title: "New Job", main_bg: "bg-[#16140E]")}
+  def handle_params(params, _uri, socket) do
+    garden_id = Map.get(params, "garden_id")
+    customer_ref = Map.get(params, "customer_ref")
+    engagement_id = Map.get(params, "engagement_id")
+
+    back_to =
+      if customer_ref,
+        do: ~p"/manage/customers/#{customer_ref}",
+        else: ~p"/manage/jobs"
+
+    socket =
+      if customer_ref do
+        customer_engagements =
+          Enum.filter(socket.assigns.all_engagements, fn eng ->
+            eng.customer && eng.customer.reference == customer_ref
+          end)
+
+        socket
+        |> assign(:all_engagements, customer_engagements)
+        |> assign(:engagement_enabled, customer_engagements != [])
+      else
+        socket
+      end
+
+    socket =
+      cond do
+        engagement_id ->
+          eng = Enum.find(socket.assigns.all_engagements, &(&1.id == engagement_id))
+          garden = eng && eng.garden
+
+          socket
+          |> assign(:engagement, eng)
+          |> assign(:garden, garden)
+          |> assign(:engagement_enabled, true)
+
+        garden_id ->
+          garden = Enum.find(socket.assigns.all_gardens, &(&1.id == garden_id))
+          assign(socket, :garden, garden)
+
+        true ->
+          socket
+      end
+
+    {:noreply,
+     socket
+     |> assign(:page_title, "New Job")
+     |> assign(:main_bg, "bg-[#16140E]")
+     |> assign(:back_to, back_to)}
   end
 
   @impl true
@@ -69,7 +116,7 @@ defmodule OpenSauceWeb.JobLive.New do
 
         <%!-- header --%>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 22px;">
-          <.link navigate={~p"/manage/jobs"} style="color:#6E675A;line-height:0;padding:4px;">
+          <.link navigate={@back_to} style="color:#6E675A;line-height:0;padding:4px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
@@ -616,7 +663,7 @@ defmodule OpenSauceWeb.JobLive.New do
         {:noreply,
          socket
          |> put_flash(:info, "Job created")
-         |> push_navigate(to: ~p"/manage/jobs")}
+         |> push_navigate(to: socket.assigns.back_to)}
 
       {:error, %Ash.Error.Invalid{} = err} ->
         msg = err.errors |> Enum.map(& &1.message) |> Enum.join(", ")

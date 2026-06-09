@@ -18,267 +18,292 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-lg mx-auto space-y-4 pb-36">
-      <%!-- Back + edit row --%>
-      <div class="flex items-center justify-between pt-1">
-        <.link navigate={~p"/manage/customers"} class="text-stone-500 hover:text-stone-700 p-1 -ml-1">
-          <.icon name="hero-arrow-left" class="h-5 w-5" />
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+
+      <%!-- nav row --%>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
+        <.link navigate={~p"/manage/customers"}>
+          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </.link>
-        <.link
-          patch={~p"/manage/customers/#{@customer.reference}/edit"}
-          class="text-sm font-medium text-stone-500 hover:text-stone-700"
-        >
-          Edit
+        <.link patch={~p"/manage/customers/#{@customer.reference}/edit"}>
+          <button type="button" style="font-size:13.5px;font-weight:700;color:#6E675A;background:none;border:none;cursor:pointer;padding:4px;" ontouchstart="">Edit</button>
         </.link>
       </div>
 
-      <%!-- Identity card --%>
-      <div class="bg-white rounded-xl border border-stone-200 px-4 py-4 space-y-4">
-        <div>
-          <p class="text-xl font-bold text-stone-900">{@customer.full_name}</p>
-          <p :if={@customer.type == :company and @customer.company_name_nickname} class="text-sm text-stone-500 mt-0.5">
-            {@customer.company_name_nickname}
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <a
-            :if={@customer.phone}
-            href={"tel:#{@customer.phone}"}
-            class="flex-1 flex items-center justify-center gap-2 rounded-xl border border-stone-200 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100"
-          >
-            <.icon name="hero-phone" class="h-4 w-4 text-stone-500" />
-            Call
-          </a>
-          <a
-            :if={@customer.email}
-            href={"mailto:#{@customer.email}"}
-            class="flex-1 flex items-center justify-center gap-2 rounded-xl border border-stone-200 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100"
-          >
-            <.icon name="hero-envelope" class="h-4 w-4 text-stone-500" />
-            Email
-          </a>
-          <div
-            :if={is_nil(@customer.phone) and is_nil(@customer.email)}
-            class="flex-1 text-sm text-stone-400 text-center py-2.5"
-          >
-            No contact info
-          </div>
+      <%!-- name header --%>
+      <div style="padding:14px 16px 16px;text-align:center;">
+        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;margin:0;">
+          {@customer.company_name_nickname || @customer.full_name}
+        </h1>
+        <p :if={@customer.company_name_nickname} style="font-size:13px;color:#9A9384;margin-top:4px;">
+          {@customer.full_name}
+        </p>
+      </div>
+
+      <%!-- contact buttons --%>
+      <div style="display:flex;gap:10px;padding:0 16px 20px;">
+        <a :if={@customer.phone} href={"tel:#{@customer.phone}"} ontouchstart=""
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:11px;font-size:13.5px;font-weight:700;color:#F4EFE2;text-decoration:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#54B57E;">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .94h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Call
+        </a>
+        <a :if={@customer.email} href={"mailto:#{@customer.email}"} ontouchstart=""
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:11px;font-size:13.5px;font-weight:700;color:#F4EFE2;text-decoration:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#54B57E;">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Email
+        </a>
+        <div :if={is_nil(@customer.phone) and is_nil(@customer.email)}
+          style="flex:1;text-align:center;font-size:13px;color:#6E675A;padding:11px;">
+          No contact info
         </div>
       </div>
 
-      <%!-- KPI row --%>
-      <div class="grid grid-cols-3 gap-3">
-        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
-          <p class="text-2xl font-bold text-stone-900">{length(@customer.garden_addresses)}</p>
-          <p class="text-xs text-stone-500 mt-0.5">Gardens</p>
-        </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
-          <p class="text-2xl font-bold text-stone-900">
-            {length(@customer.engagements)}/{Enum.sum(Map.values(@open_jobs_by_garden))}
+      <%!-- 3 count squares --%>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px 24px;">
+        <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;">
+          <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;color:#54B57E;line-height:1;">
+            {length(@customer.garden_addresses)}
           </p>
-          <p class="text-xs text-stone-500 mt-0.5">Eng · Jobs</p>
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Gardens</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
-          <p class="text-sm font-bold text-stone-900 leading-tight">
+        <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;">
+          <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;color:#54B57E;line-height:1;">
+            {length(@customer.engagements)}<span style="font-size:14px;color:#54B57E;">/{length(@all_jobs)}</span>
+          </p>
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Eng · Jobs</p>
+        </div>
+        <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;">
+          <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:#54B57E;line-height:1.2;">
             {format_due_billed(@customer.invoices)}
           </p>
-          <p class="text-xs text-stone-500 mt-0.5">Due / Billed</p>
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Due · Billed</p>
         </div>
       </div>
 
-      <%!-- Gardens --%>
-      <div class="bg-white rounded-xl border border-stone-200">
-        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
-          <h2 class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Gardens</h2>
-          <button
-            type="button"
-            phx-click="open_garden_sheet"
-            class="text-amber-600 hover:text-amber-700 p-1 -mr-1"
-            aria-label="Add garden"
-          >
-            <.icon name="hero-plus" class="h-4 w-4" />
-          </button>
-        </div>
-        <div
-          :for={addr <- @customer.garden_addresses}
-          class="px-4 py-3 border-b border-stone-100 last:border-0"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-              <.icon
-                :if={addr.is_billing}
-                name="hero-document-currency-dollar"
-                class="h-4 w-4 text-amber-500 shrink-0"
-              />
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-stone-900 truncate">
-                  {addr.name || "Unnamed garden"}
-                </p>
-                <p :if={addr.full_address} class="text-xs text-stone-500 mt-0.5 truncate">
-                  {addr.full_address}
-                </p>
-                <p :if={addr.notes} class="text-xs text-stone-400 mt-0.5 italic truncate">
-                  {addr.notes}
-                </p>
+      <div style="padding:0 16px 100px;display:flex;flex-direction:column;gap:24px;">
+
+        <%!-- gardens --%>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="dark-label" style="margin-bottom:0;">Gardens</span>
+            <button type="button" phx-click="open_garden_sheet" ontouchstart=""
+              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+              Add
+            </button>
+          </div>
+          <div :if={Enum.empty?(@customer.garden_addresses)}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+            No gardens yet
+          </div>
+          <div :if={not Enum.empty?(@customer.garden_addresses)} style="display:flex;flex-direction:column;gap:8px;">
+            <div :for={addr <- @customer.garden_addresses} class="jcard">
+              <div style="display:flex;align-items:flex-start;gap:10px;">
+                <div style="flex:1;min-width:0;">
+                  <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {addr.name || "Unnamed garden"}
+                  </p>
+                  <p style="font-size:11.5px;color:#6E675A;margin-top:2px;">
+                    {if addr.is_indoor, do: "Indoor", else: "Outdoor"}
+                  </p>
+                  <p :if={addr.full_address} style="font-size:12px;color:#9A9384;margin-top:2px;display:flex;align-items:center;gap:4px;overflow:hidden;">
+                    <svg :if={addr.is_billing} width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;color:#54B57E;">
+                      <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{addr.full_address}</span>
+                  </p>
+                  <p :if={addr.is_billing and is_nil(addr.full_address)} style="font-size:12px;color:#9A9384;margin-top:2px;display:flex;align-items:center;gap:4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;color:#54B57E;">
+                      <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Billing address
+                  </p>
+                  <p :if={addr.notes} style="font-size:12px;color:#6E675A;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;">
+                    {addr.notes}
+                  </p>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
+                  <span :if={Map.get(@open_jobs_by_garden, addr.id, 0) > 0} class="pill sched">
+                    {Map.get(@open_jobs_by_garden, addr.id)} open
+                  </span>
+                  <.link navigate={~p"/manage/jobs/new?garden_id=#{addr.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
+                    <div style="width:48px;border-radius:10px;background:#54B57E;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#0C1F15;">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <span style="font-size:10px;font-weight:700;letter-spacing:0.01em;">+ Job</span>
+                    </div>
+                  </.link>
+                </div>
               </div>
             </div>
-            <span
-              :if={Map.get(@open_jobs_by_garden, addr.id, 0) > 0}
-              class="shrink-0 text-xs font-semibold text-stone-600 bg-stone-100 rounded-full px-2 py-0.5"
-            >
-              {Map.get(@open_jobs_by_garden, addr.id)} open
-            </span>
           </div>
         </div>
-        <div
-          :if={Enum.empty?(@customer.garden_addresses)}
-          class="px-4 py-4 text-sm text-stone-400 text-center"
-        >
-          No gardens — tap + to add one
-        </div>
-      </div>
 
-      <%!-- Engagements --%>
-      <div class="bg-white rounded-xl border border-stone-200">
-        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
-          <h2 class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Engagements</h2>
-          <.link
-            patch={~p"/manage/customers/#{@customer.reference}/engagements/new"}
-            class="text-amber-600 hover:text-amber-700 p-1 -mr-1"
-            aria-label="New engagement"
-          >
-            <.icon name="hero-plus" class="h-4 w-4" />
-          </.link>
-        </div>
-        <div
-          :for={e <- @customer.engagements}
-          class="px-4 py-3 border-b border-stone-100 last:border-0"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-stone-900 truncate">
-                {if e.garden, do: e.garden.name || "Garden", else: "—"}
-              </p>
-              <p
-                :if={format_term(e.term_start, e.term_end) != "—"}
-                class="text-xs text-stone-500 mt-0.5"
-              >
-                {format_term(e.term_start, e.term_end)}
-              </p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <.badge text={e.status} colors={[{e.status, engagement_status_class(e.status)}]} />
-              <button
-                type="button"
-                phx-click="open_schedule_job"
-                phx-value-id={e.id}
-                class="text-stone-400 hover:text-stone-600 p-1"
-                title="Schedule job"
-              >
-                <.icon name="hero-calendar" class="h-4 w-4" />
+        <%!-- engagements --%>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="dark-label" style="margin-bottom:0;">Engagements</span>
+            <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
+              <button type="button" ontouchstart=""
+                style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                Add
               </button>
-              <.link
-                patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit"}
-                class="text-stone-400 hover:text-stone-600 p-1"
-              >
-                <.icon name="hero-pencil-square" class="h-4 w-4" />
-              </.link>
+            </.link>
+          </div>
+          <div :if={Enum.empty?(@customer.engagements)}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+            No engagements yet
+          </div>
+          <div :if={not Enum.empty?(@customer.engagements)} style="display:flex;flex-direction:column;gap:8px;">
+            <div :for={e <- @customer.engagements} class="jcard">
+              <div style="display:flex;align-items:flex-start;gap:10px;">
+                <div style="flex:1;min-width:0;">
+                  <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {if e.garden, do: e.garden.name || "Unnamed site", else: "No site"}
+                  </p>
+                  <p :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:12px;color:#9A9384;margin-top:2px;">
+                    {format_term(e.term_start, e.term_end)}
+                  </p>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>
+                    <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit"}>
+                      <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    </.link>
+                  </div>
+                  <.link navigate={~p"/manage/jobs/new?engagement_id=#{e.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
+                    <div style="width:48px;border-radius:10px;background:#54B57E;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#0C1F15;">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <span style="font-size:10px;font-weight:700;letter-spacing:0.01em;">+ Job</span>
+                    </div>
+                  </.link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div
-          :if={Enum.empty?(@customer.engagements)}
-          class="px-4 py-4 text-sm text-stone-400 text-center"
-        >
-          No engagements yet
-        </div>
-      </div>
-    </div>
 
-    <%!-- Sticky bottom CTA (above bottom nav) --%>
-    <div class="fixed bottom-16 left-0 right-0 px-4 pb-2 bg-gradient-to-t from-stone-50 via-stone-50/95 to-transparent pt-4 pointer-events-none">
-      <.link
-        navigate={~p"/manage/jobs/new"}
-        class="pointer-events-auto block w-full rounded-xl bg-amber-500 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-amber-600 active:bg-amber-700"
-      >
-        New Job
-      </.link>
-    </div>
-
-    <%!-- Add garden slide-up sheet --%>
-    <div
-      :if={@show_garden_sheet}
-      id="garden-sheet"
-      class="fixed inset-0 z-50"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Add garden"
-    >
-      <div class="absolute inset-0 bg-black/40" phx-click="close_garden_sheet"></div>
-      <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[85dvh] flex flex-col">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-stone-100 shrink-0">
-          <h3 class="text-base font-semibold text-stone-900">Add garden</h3>
-          <button
-            type="button"
-            phx-click="close_garden_sheet"
-            class="text-stone-400 hover:text-stone-600 p-1 -mr-1"
-          >
-            <.icon name="hero-x-mark" class="h-5 w-5" />
-          </button>
-        </div>
-        <.form
-          for={:garden}
-          id="garden-draft-form"
-          phx-submit="add_garden"
-          class="flex-1 overflow-y-auto p-4 space-y-4"
-        >
-          <.input name="garden[name]" id="draft-name" value={@draft["name"]} label="Garden name" />
-          <.input name="garden[street]" id="draft-street" value={@draft["street"]} label="Street" />
-          <div class="grid grid-cols-2 gap-3">
-            <.input name="garden[city]" id="draft-city" value={@draft["city"]} label="City" />
-            <.input name="garden[province]" id="draft-province" value={@draft["province"]} label="Province" />
+        <%!-- jobs --%>
+        <div>
+          <div style="margin-bottom:10px;">
+            <span class="dark-label" style="margin-bottom:0;">Jobs</span>
           </div>
-          <.input name="garden[zip]" id="draft-zip" value={@draft["zip"]} label="Postal code" />
-          <.input
-            name="garden[notes]"
-            id="draft-notes"
-            value={@draft["notes"]}
-            label="Notes"
-          />
-          <label class="flex items-center justify-between rounded-xl border border-stone-200 px-4 py-3 cursor-pointer">
+          <div :if={Enum.empty?(@all_jobs)}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+            No jobs yet
+          </div>
+          <div :if={not Enum.empty?(@all_jobs)} style="display:flex;flex-direction:column;gap:8px;">
+            <.link :for={job <- @all_jobs} navigate={~p"/manage/jobs/#{job.id}"} style="display:block;text-decoration:none;">
+              <div class={"jcard#{if job.status == :in_progress, do: " live", else: ""}"}>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="flex:1;min-width:0;">
+                    <div class="jcat" style="margin-bottom:4px;">
+                      <span class="catdot" style={"background:#{job_category_color(job.service_category)}"}></span>
+                      <span style="font-size:12px;">{job_category_label(job.service_category)}</span>
+                    </div>
+                    <p :if={job.garden} style="font-size:13.5px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      {job.garden.name || "Unnamed site"}
+                    </p>
+                    <p :if={job.scheduled_for} style="font-size:12px;color:#9A9384;margin-top:2px;">
+                      {Calendar.strftime(job.scheduled_for, "%-d %B %Y")}
+                    </p>
+                  </div>
+                  <span class={"pill #{job_pill_class(job.status)}"}>{job_status_label(job.status)}</span>
+                </div>
+              </div>
+            </.link>
+          </div>
+        </div>
+
+      </div>
+
+      <%!-- add garden sheet --%>
+      <div :if={@show_garden_sheet}
+        id="garden-sheet"
+        style="position:fixed;inset:0;z-index:50;"
+        role="dialog" aria-modal="true" aria-label="Add garden">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
+            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">Add garden</h3>
+            <button type="button" phx-click="close_garden_sheet" ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <.form for={:garden} id="garden-draft-form" phx-submit="add_garden"
+            style="flex:1;overflow-y:auto;padding:16px 16px calc(74px + 16px);display:flex;flex-direction:column;gap:16px;">
             <div>
-              <p class="text-sm font-medium text-stone-900">Billing address</p>
-              <p class="text-xs text-stone-500 mt-0.5">Use this garden for invoices</p>
+              <label class="dark-label" for="draft-name">Garden name</label>
+              <input class="dark-input" type="text" name="garden[name]" id="draft-name" value={@draft["name"]} placeholder="e.g. North Field" />
             </div>
-            <button
-              type="button"
-              phx-click="toggle_draft_billing"
-              class={"relative inline-flex h-6 w-11 items-center rounded-full transition-colors " <> if(@draft["is_billing"] == "true", do: "bg-amber-500", else: "bg-stone-200")}
-              role="switch"
-              aria-checked={@draft["is_billing"] == "true"}
-            >
-              <span class={"inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform " <> if(@draft["is_billing"] == "true", do: "translate-x-6", else: "translate-x-1")} />
-            </button>
-            <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
-          </label>
-          <div class="flex gap-3 pt-2">
-            <button
-              type="button"
-              phx-click="close_garden_sheet"
-              class="flex-1 rounded-xl border border-stone-200 py-3 text-sm font-medium text-stone-700 hover:bg-stone-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-medium text-white hover:bg-amber-600"
-            >
-              Add garden
-            </button>
-          </div>
-        </.form>
+            <div>
+              <label class="dark-label" for="draft-street">Street</label>
+              <input class="dark-input" type="text" name="garden[street]" id="draft-street" value={@draft["street"]} />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label" for="draft-city">City</label>
+                <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} />
+              </div>
+              <div>
+                <label class="dark-label" for="draft-province">Province</label>
+                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} />
+              </div>
+            </div>
+            <div>
+              <label class="dark-label" for="draft-zip">Postal code</label>
+              <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} />
+            </div>
+            <div>
+              <label class="dark-label" for="draft-notes">Notes</label>
+              <textarea class="dark-textarea" name="garden[notes]" id="draft-notes" rows="2" placeholder="Gate code, access info…"><%= @draft["notes"] %></textarea>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);padding:12px 14px;">
+              <p style="font-size:14px;font-weight:600;color:#F4EFE2;">Billing address</p>
+              <button type="button" phx-click="toggle_draft_billing" ontouchstart=""
+                style={"position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @draft["is_billing"] == "true", do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
+                role="switch" aria-checked={@draft["is_billing"] == "true"}>
+                <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}></span>
+              </button>
+              <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
+            </div>
+            <div style="display:flex;gap:10px;padding-bottom:8px;">
+              <button type="button" phx-click="close_garden_sheet" ontouchstart=""
+                style="flex:1;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:transparent;padding:13px;font-size:13.5px;font-weight:700;color:#9A9384;cursor:pointer;">
+                Cancel
+              </button>
+              <button type="submit" ontouchstart=""
+                style="flex:1;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
+                Add garden
+              </button>
+            </div>
+          </.form>
+        </div>
       </div>
-    </div>
 
     <%!-- Edit customer modal --%>
     <.modal
@@ -371,6 +396,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         current_member={@current_member}
       />
     </.modal>
+
+    </div>
     """
   end
 
@@ -396,12 +423,19 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         Enum.find(customer.engagements, &(&1.id == params["engagement_id"]))
       end
 
+    all_jobs =
+      customer.engagements
+      |> Enum.flat_map(& &1.jobs)
+      |> Enum.sort_by(& &1.scheduled_for, {:desc, Date})
+
     socket =
       socket
       |> assign(:page_title, short_name(customer))
+      |> assign(:main_bg, "bg-[#16140E]")
       |> assign(:customer, customer)
       |> assign(:engagement, engagement)
       |> assign(:engagement_id, params["engagement_id"])
+      |> assign(:all_jobs, all_jobs)
       |> assign(:open_jobs_by_garden, open_jobs_by_garden(customer, socket))
 
     {:noreply, Navigation.assign(socket, :customers, customer_trail(customer))}
@@ -527,7 +561,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         :full_name,
         garden_addresses: [:name, :full_address, :is_billing, :notes, :is_indoor],
         invoices: [:amount, :status],
-        engagements: [:total_quoted_value, :materials, garden: [:name]]
+        engagements: [:total_quoted_value, :materials, garden: [:name], jobs: [garden: [:name]]]
       ]
     )
   end
@@ -573,11 +607,37 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp format_term(nil, end_date), do: "Until #{Date.to_iso8601(end_date)}"
   defp format_term(start, end_date), do: "#{Date.to_iso8601(start)} → #{Date.to_iso8601(end_date)}"
 
-  defp engagement_status_class(:draft), do: "text-gray-600 bg-gray-100"
-  defp engagement_status_class(:proposed), do: "text-amber-700 bg-amber-100"
-  defp engagement_status_class(:signed), do: "text-blue-700 bg-blue-100"
-  defp engagement_status_class(:in_progress), do: "text-green-700 bg-green-100"
-  defp engagement_status_class(:completed), do: "text-emerald-700 bg-emerald-100"
-  defp engagement_status_class(:cancelled), do: "text-red-700 bg-red-100"
-  defp engagement_status_class(_), do: "text-gray-600 bg-gray-100"
+  defp engagement_pill_class(:signed), do: "live"
+  defp engagement_pill_class(:in_progress), do: "live"
+  defp engagement_pill_class(:completed), do: "done"
+  defp engagement_pill_class(:cancelled), do: "cancel"
+  defp engagement_pill_class(_), do: "sched"
+
+  defp job_pill_class(:in_progress), do: "live"
+  defp job_pill_class(:completed), do: "done"
+  defp job_pill_class(:cancelled), do: "cancel"
+  defp job_pill_class(_), do: "sched"
+
+  defp job_status_label(:scheduled), do: "Scheduled"
+  defp job_status_label(:in_progress), do: "Live"
+  defp job_status_label(:completed), do: "Done"
+  defp job_status_label(:cancelled), do: "Cancelled"
+  defp job_status_label(_), do: "—"
+
+  defp job_category_color(:installation), do: "#DB9258"
+  defp job_category_color(:delivery), do: "#DB9258"
+  defp job_category_color(:consultation), do: "#5AB4D8"
+  defp job_category_color(:design), do: "#5AB4D8"
+  defp job_category_color(_), do: "#54B57E"
+
+  defp job_category_label(nil), do: "—"
+  defp job_category_label(:installation), do: "Installation"
+  defp job_category_label(:delivery), do: "Delivery"
+  defp job_category_label(:pruning), do: "Pruning"
+  defp job_category_label(:consultation), do: "Consultation"
+  defp job_category_label(:design), do: "Design"
+  defp job_category_label(:opening), do: "Opening"
+  defp job_category_label(:winterization), do: "Winterization"
+  defp job_category_label(:maintenance), do: "Maintenance"
+  defp job_category_label(other), do: to_string(other)
 end
