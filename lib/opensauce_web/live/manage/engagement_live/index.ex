@@ -77,6 +77,7 @@ defmodule OpenSauceWeb.EngagementLive.Index do
         engagement={nil}
         customer={nil}
         current_member={@current_member}
+        currency={@organisation.currency}
         patch={~p"/manage/engagements"}
       />
     </.modal>

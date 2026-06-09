@@ -155,7 +155,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Engagements</span>
-            <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
+            <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
               <button type="button" ontouchstart=""
                 style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -181,7 +181,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
                   <div style="display:flex;align-items:center;gap:8px;">
                     <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>
-                    <.link patch={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit"}>
+                    <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit"}>
                       <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -324,44 +324,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       />
     </.modal>
 
-    <%!-- New engagement modal --%>
-    <.modal
-      :if={@live_action == :new_engagement}
-      id="engagement-new-modal"
-      title="New Engagement"
-      max_width="max-w-2xl"
-      show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
-    >
-      <.live_component
-        module={OpenSauceWeb.EngagementLive.FormComponent}
-        id="engagement-new"
-        current_member={@current_member}
-        engagement={nil}
-        customer={@customer}
-        patch={~p"/manage/customers/#{@customer.reference}"}
-      />
-    </.modal>
-
-    <%!-- Edit engagement modal --%>
-    <.modal
-      :if={@live_action == :edit_engagement}
-      id="engagement-edit-modal"
-      title="Edit Engagement"
-      max_width="max-w-2xl"
-      show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
-    >
-      <.live_component
-        module={OpenSauceWeb.EngagementLive.FormComponent}
-        id={"engagement-#{@engagement && @engagement.id}"}
-        current_member={@current_member}
-        engagement={@engagement}
-        customer={@customer}
-        patch={~p"/manage/customers/#{@customer.reference}"}
-      />
-    </.modal>
-
     <%!-- Engagement materials modal --%>
     <.modal
       :if={@live_action == :engagement_materials}
@@ -405,7 +367,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:engagement, nil)
      |> assign(:engagement_id, nil)
      |> assign(:schedule_job_engagement, nil)
      |> assign(:show_garden_sheet, false)
@@ -416,12 +377,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   @impl true
   def handle_params(%{"reference" => reference} = params, _, socket) do
     customer = load_customer(reference, socket)
-    live_action = socket.assigns.live_action
-
-    engagement =
-      if live_action == :edit_engagement do
-        Enum.find(customer.engagements, &(&1.id == params["engagement_id"]))
-      end
 
     all_jobs =
       customer.engagements
@@ -433,7 +388,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       |> assign(:page_title, short_name(customer))
       |> assign(:main_bg, "bg-[#16140E]")
       |> assign(:customer, customer)
-      |> assign(:engagement, engagement)
       |> assign(:engagement_id, params["engagement_id"])
       |> assign(:all_jobs, all_jobs)
       |> assign(:open_jobs_by_garden, open_jobs_by_garden(customer, socket))
@@ -535,10 +489,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   @impl true
   def handle_info({OpenSauceWeb.CustomerLive.FormComponent, {:saved, customer}}, socket) do
     {:noreply, assign(socket, :customer, load_customer(customer.reference, socket))}
-  end
-
-  def handle_info({OpenSauceWeb.EngagementLive.FormComponent, {:saved, _engagement}}, socket) do
-    {:noreply, assign(socket, :customer, load_customer(socket.assigns.customer.reference, socket))}
   end
 
   def handle_info(
