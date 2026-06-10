@@ -38,6 +38,7 @@ defmodule OpenSauce.CRM do
     resource OpenSauce.CRM.EngagementMaterial do
       define :list_engagement_materials, action: :read
       define :create_engagement_material, action: :create
+      define :update_engagement_material, action: :update
       define :destroy_engagement_material, action: :destroy
     end
 

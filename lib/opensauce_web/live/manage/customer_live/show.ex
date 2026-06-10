@@ -170,7 +170,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           <div :if={not Enum.empty?(@customer.engagements)} style="display:flex;flex-direction:column;gap:8px;">
             <div :for={e <- @customer.engagements} class="jcard">
               <div style="display:flex;align-items:flex-start;gap:10px;">
-                <div style="flex:1;min-width:0;">
+                <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}"} style="flex:1;min-width:0;text-decoration:none;">
                   <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {e.scope_title || (if e.garden, do: e.garden.name || "Unnamed site", else: "No site")}
                   </p>
@@ -180,7 +180,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                   <p :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:12px;color:#9A9384;margin-top:1px;">
                     {format_term(e.term_start, e.term_end)}
                   </p>
-                </div>
+                </.link>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
                   <div style="display:flex;align-items:center;gap:8px;">
                     <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>

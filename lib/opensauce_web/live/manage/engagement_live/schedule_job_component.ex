@@ -8,69 +8,76 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-6">
-      <.simple_form
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;">
+      <.form
         for={@form}
         id="schedule-job-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
+        style="display:flex;flex-direction:column;gap:16px;"
       >
-        <div class="grid grid-cols-2 gap-3">
-          <.input field={@form[:date]} type="date" label="Job date" />
-          <.input
-            field={@form[:service_category]}
-            type="select"
-            label="Category"
-            options={[
-              {"Installation", "installation"},
-              {"Delivery", "delivery"},
-              {"Pruning", "pruning"},
-              {"Consultation", "consultation"},
-              {"Design", "design"},
-              {"Opening", "opening"},
-              {"Winterization", "winterization"},
-              {"Nursery run", "nursery_run"},
-              {"Other", "other"}
-            ]}
-          />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label class="dark-label" for="job_date">Job date</label>
+            <input
+              class="dark-input"
+              type="date"
+              id="job_date"
+              name="job[date]"
+              value={@form["date"]}
+            />
+          </div>
+          <div>
+            <label class="dark-label" for="job_service_category">Category</label>
+            <select class="dark-select" id="job_service_category" name="job[service_category]">
+              <option :for={{label, val} <- service_category_options()}
+                value={val} selected={@form["service_category"] == val}>
+                {label}
+              </option>
+            </select>
+          </div>
         </div>
 
-        <div :if={@to_date != nil} class="rounded-md border border-stone-200 p-3 space-y-2">
-          <div class="flex items-baseline justify-between">
-            <span class="text-sm font-medium text-stone-700">
-              Scheduled materials ({length(@preview_materials)})
+        <%!-- materials preview --%>
+        <div :if={@to_date != nil}
+          style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:12px;font-weight:700;color:#9A9384;">
+              Materials ({length(@preview_materials)})
             </span>
-            <span :if={@from_date} class="text-xs text-stone-400">
-              {format_date(@from_date)} → {format_date(@to_date)}
-            </span>
-            <span :if={@from_date == nil} class="text-xs text-stone-400">
-              up to {format_date(@to_date)}
+            <span style="font-size:11px;color:#6E675A;">
+              {if @from_date, do: "#{@from_date} → #{@to_date}", else: "up to #{@to_date}"}
             </span>
           </div>
-          <div :if={@preview_materials == []} class="text-sm text-stone-400">
-            No materials scheduled in this range.
-          </div>
-          <div class="space-y-1">
-            <div
-              :for={em <- @preview_materials}
-              class="flex items-center gap-2 text-sm py-0.5"
-            >
-              <span class="text-stone-400 text-xs w-20 shrink-0">
-                {format_date(em.scheduled_date)}
+          <p :if={@preview_materials == []} style="font-size:13px;color:#6E675A;">
+            No materials scheduled for this date.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div :for={em <- @preview_materials} style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:#6E675A;width:68px;flex-shrink:0;">
+                {em.scheduled_date}
               </span>
-              <span class="font-medium italic">{catalog_item_title(em.supplier_catalog_item)}</span>
-              <span class="text-stone-500 text-xs">
-                {em.quantity}{if em.supplier_catalog_item.format_description, do: " · #{em.supplier_catalog_item.format_description}"}
+              <span style="font-size:13px;font-style:italic;color:#F4EFE2;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {catalog_item_title(em.supplier_catalog_item)}
+              </span>
+              <span style="font-size:12px;color:#9A9384;flex-shrink:0;">
+                ×{em.quantity}
               </span>
             </div>
           </div>
         </div>
 
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Creating...">Create job</.button>
-        </:actions>
-      </.simple_form>
+        <div>
+          <.glow_button
+            valid={@to_date != nil}
+            type="submit"
+            phx-disable-with="Creating…"
+          >
+            Create job
+          </.glow_button>
+        </div>
+      </.form>
     </div>
     """
   end
@@ -193,9 +200,23 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
     |> Enum.sort_by(& &1.scheduled_date, Date)
   end
 
-  defp blank_form, do: to_form(%{"date" => "", "service_category" => "consultation"}, as: "job")
+  defp blank_form, do: to_form(%{"date" => "", "service_category" => "installation"}, as: "job")
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp service_category_options do
+    [
+      {"Installation", "installation"},
+      {"Delivery", "delivery"},
+      {"Pruning", "pruning"},
+      {"Consultation", "consultation"},
+      {"Design", "design"},
+      {"Opening", "opening"},
+      {"Winterization", "winterization"},
+      {"Nursery run", "nursery_run"},
+      {"Other", "other"}
+    ]
+  end
 
   defp catalog_item_title(item) do
     [item.latin_name, item.cultivar]

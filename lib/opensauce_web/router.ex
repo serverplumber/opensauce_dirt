@@ -183,8 +183,9 @@ defmodule OpenSauceWeb.Router do
       live "/manage/customers/:reference/edit", CustomerLive.Show, :edit
       live "/manage/customers/:reference/engagements", CustomerLive.Show, :engagements
       live "/manage/customers/:reference/engagements/new", EngagementLive.New, :new
+      live "/manage/customers/:reference/engagements/:engagement_id", EngagementLive.Show, :show
       live "/manage/customers/:reference/engagements/:engagement_id/edit", EngagementLive.New, :edit
-      live "/manage/customers/:reference/engagements/:engagement_id/materials", CustomerLive.Show, :engagement_materials
+      live "/manage/customers/:reference/engagements/:engagement_id/materials", EngagementLive.Materials, :index
 
       # Production
     end

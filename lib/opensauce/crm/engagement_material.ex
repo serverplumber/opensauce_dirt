@@ -19,6 +19,11 @@ defmodule OpenSauce.CRM.EngagementMaterial do
       primary? true
       accept [:engagement_id, :supplier_catalog_item_id, :quantity, :note, :scheduled_date, :organisation_id]
     end
+
+    update :update do
+      primary? true
+      accept [:quantity, :scheduled_date, :note]
+    end
   end
 
   policies do
