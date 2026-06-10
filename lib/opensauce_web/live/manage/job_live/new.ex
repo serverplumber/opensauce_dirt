@@ -34,6 +34,7 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:service_category, nil)
      |> assign(:account_code, nil)
      |> assign(:all_engagements, all_engagements)
+     |> assign(:filtered_engagements, all_engagements)
      |> assign(:all_gardens, all_gardens)
      |> assign(:engagement_search, "")
      |> assign(:show_engagement_sheet, false)
@@ -45,9 +46,7 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:catalog_results, [])
      |> assign(:selected_catalog_item, nil)
      |> assign(:add_qty, "1")
-     |> assign(:scheduled_for, "")
-     |> assign(:duration_h, "")
-     |> assign(:duration_m, "")
+     |> assign(:due_by_week, "")
      |> assign(:notes, "")
      |> assign(:service_error, nil)
      |> assign(:garden_error, nil)
@@ -75,6 +74,7 @@ defmodule OpenSauceWeb.JobLive.New do
 
         socket
         |> assign(:all_engagements, customer_engagements)
+        |> assign(:filtered_engagements, customer_engagements)
         |> assign(:engagement_enabled, customer_engagements != [])
       else
         socket
@@ -115,7 +115,7 @@ defmodule OpenSauceWeb.JobLive.New do
       <div :if={@step == 1} style="padding:0 16px 160px;">
 
         <%!-- header --%>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 2px 14px;">
           <.link navigate={@back_to} style="color:#6E675A;line-height:0;padding:4px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -125,7 +125,7 @@ defmodule OpenSauceWeb.JobLive.New do
         </div>
 
         <%!-- type segmented control --%>
-        <div style="margin-bottom:24px;display:flex;gap:4px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:13px;padding:4px;">
+        <div style="margin-bottom:16px;display:flex;gap:4px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:13px;padding:4px;">
           <button
             :for={{val, label} <- [{:client_work, "Client"}, {:shift, "Shift"}, {:internal_work, "Internal"}]}
             type="button"
@@ -138,11 +138,11 @@ defmodule OpenSauceWeb.JobLive.New do
         </div>
 
         <%!-- client work fields --%>
-        <div :if={@job_type == :client_work} style="display:flex;flex-direction:column;gap:20px;">
+        <div :if={@job_type == :client_work} style="display:flex;flex-direction:column;gap:14px;">
 
           <%!-- engagement --%>
           <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
               <span class="dark-label" style="margin-bottom:0;">Engagement</span>
               <button
                 type="button"
@@ -167,7 +167,7 @@ defmodule OpenSauceWeb.JobLive.New do
                 <button type="button" phx-click="open_engagement_sheet" style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;">change</button>
               </div>
               <button :if={is_nil(@engagement)} type="button" phx-click="open_engagement_sheet"
-                style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:11px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
+                style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
                 ontouchstart="">
                 Pick an engagement…
               </button>
@@ -192,7 +192,7 @@ defmodule OpenSauceWeb.JobLive.New do
               </button>
             </div>
             <button :if={is_nil(@garden)} type="button" phx-click="open_garden_sheet"
-              style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:11px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
+              style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
               ontouchstart="">
               Pick a garden…
             </button>
@@ -263,7 +263,7 @@ defmodule OpenSauceWeb.JobLive.New do
         <%!-- sticky next bar --%>
         <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
           <.glow_button valid={step1_can_proceed?(@job_type, @service_category, @account_code, @garden)} type="button" phx-click="next">
-            Next: schedule →
+            Next: due date →
           </.glow_button>
         </div>
 
@@ -292,16 +292,11 @@ defmodule OpenSauceWeb.JobLive.New do
 
         <form phx-change="update_step2" style="display:flex;flex-direction:column;gap:20px;">
           <div>
-            <label class="dark-label">When?</label>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <input type="date" name="scheduled_for" value={@scheduled_for} class="dark-input" style="flex:1;" />
-              <div style="display:flex;align-items:center;gap:4px;flex:0 0 auto;">
-                <input type="number" name="duration_h" value={@duration_h} min="0" max="23" class="dark-input" style="width:52px;text-align:center;padding:10px 6px;" />
-                <span style="font-size:12px;color:#6E675A;font-weight:600;">h</span>
-                <input type="number" name="duration_m" value={@duration_m} min="0" max="59" class="dark-input" style="width:52px;text-align:center;padding:10px 6px;" />
-                <span style="font-size:12px;color:#6E675A;font-weight:600;">m</span>
-              </div>
-            </div>
+            <label class="dark-label">Due by</label>
+            <input type="week" name="due_by_week" value={@due_by_week} class="dark-input" />
+            <p :if={@due_by_week != ""} style="font-size:12px;color:#9A9384;margin-top:6px;">
+              Week of {week_label(@due_by_week)}
+            </p>
           </div>
 
           <div>
@@ -318,7 +313,7 @@ defmodule OpenSauceWeb.JobLive.New do
         <%!-- sticky schedule bar --%>
         <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
           <.glow_button valid={true} type="button" phx-click="save" phx-throttle="2000">
-            Schedule
+            Create job
           </.glow_button>
         </div>
 
@@ -336,10 +331,12 @@ defmodule OpenSauceWeb.JobLive.New do
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
-          <input type="text" value={@engagement_search} phx-change="search_engagement" name="engagement_search"
-            phx-debounce="200" class="dark-input" style="margin-bottom:12px;" placeholder="Search…" />
-          <div style="overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
-            <button :for={eng <- filtered_engagements(@all_engagements, @engagement_search)}
+          <form phx-change="search_engagement" style="margin-bottom:12px;flex-shrink:0;">
+            <input type="text" value={@engagement_search} name="engagement_search"
+              phx-debounce="300" class="dark-input" placeholder="Search…" />
+          </form>
+          <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
+            <button :for={eng <- @filtered_engagements}
               type="button" phx-click="pick_engagement" phx-value-id={eng.id}
               ontouchstart=""
               style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;#{if @engagement && @engagement.id == eng.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
@@ -351,7 +348,7 @@ defmodule OpenSauceWeb.JobLive.New do
                 <p style="font-size:12px;color:#9A9384;margin-top:1px;">{engagement_subtitle(eng)}</p>
               </div>
             </button>
-            <div :if={filtered_engagements(@all_engagements, @engagement_search) == []}
+            <div :if={@filtered_engagements == []}
               style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;">
               No engagements found
             </div>
@@ -371,9 +368,11 @@ defmodule OpenSauceWeb.JobLive.New do
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
-          <input type="text" value={@garden_search} phx-change="search_garden" name="garden_search"
-            phx-debounce="200" class="dark-input" style="margin-bottom:12px;" placeholder="Search…" />
-          <div style="overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+          <form phx-change="search_garden" style="margin-bottom:12px;flex-shrink:0;">
+            <input type="text" value={@garden_search} name="garden_search"
+              phx-debounce="300" class="dark-input" placeholder="Search…" />
+          </form>
+          <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
             <button :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
               type="button" phx-click="pick_garden" phx-value-id={garden.id}
               ontouchstart=""
@@ -473,7 +472,25 @@ defmodule OpenSauceWeb.JobLive.New do
   end
 
   def handle_event("search_engagement", %{"engagement_search" => q}, socket) do
-    {:noreply, assign(socket, :engagement_search, q)}
+    q = String.trim(q)
+    member = socket.assigns.current_member
+
+    engagements =
+      if String.length(q) >= 2 do
+        CRM.search_engagements!(q,
+          actor: member,
+          tenant: member.organisation_id,
+          load: [garden: [:customer], customer: []]
+        )
+        |> scope_to_base(socket.assigns.all_engagements)
+      else
+        socket.assigns.all_engagements
+      end
+
+    {:noreply,
+     socket
+     |> assign(:engagement_search, q)
+     |> assign(:filtered_engagements, engagements)}
   end
 
   def handle_event("pick_engagement", %{"id" => id}, socket) do
@@ -644,9 +661,7 @@ defmodule OpenSauceWeb.JobLive.New do
   def handle_event("update_step2", params, socket) do
     {:noreply,
      socket
-     |> assign(:scheduled_for, Map.get(params, "scheduled_for", socket.assigns.scheduled_for))
-     |> assign(:duration_h, Map.get(params, "duration_h", socket.assigns.duration_h))
-     |> assign(:duration_m, Map.get(params, "duration_m", socket.assigns.duration_m))
+     |> assign(:due_by_week, Map.get(params, "due_by_week", socket.assigns.due_by_week))
      |> assign(:notes, Map.get(params, "notes", socket.assigns.notes))
      |> assign(:save_error, nil)}
   end
@@ -719,32 +734,34 @@ defmodule OpenSauceWeb.JobLive.New do
       end
 
     params =
-      case assigns.scheduled_for do
-        "" -> params
-        d -> Map.put(params, :scheduled_for, Date.from_iso8601!(d))
-      end
-
-    params =
-      case duration_minutes(assigns.duration_h, assigns.duration_m) do
+      case week_last_day(assigns.due_by_week) do
         nil -> params
-        mins -> Map.put(params, :duration_estimate, mins)
+        date -> Map.put(params, :due_by, date)
       end
 
     params
   end
 
-  defp duration_minutes("", ""), do: nil
-  defp duration_minutes("", m), do: duration_minutes("0", m)
-  defp duration_minutes(h, ""), do: duration_minutes(h, "0")
+  defp week_last_day(""), do: nil
 
-  defp duration_minutes(h, m) do
-    with {h_int, ""} <- Integer.parse(h),
-         {m_int, ""} <- Integer.parse(m),
-         mins = h_int * 60 + m_int,
-         true <- mins > 0 do
-      mins
-    else
-      _ -> nil
+  defp week_last_day(week_str) do
+    case Regex.run(~r/^(\d{4})-W(\d{2})$/, week_str) do
+      [_, year_s, week_s] ->
+        year = String.to_integer(year_s)
+        week = String.to_integer(week_s)
+        jan4 = Date.new!(year, 1, 4)
+        monday_wk1 = Date.add(jan4, -(Date.day_of_week(jan4) - 1))
+        Date.add(monday_wk1, (week - 1) * 7 + 6)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp week_label(week_str) do
+    case week_last_day(week_str) do
+      nil -> ""
+      sunday -> Calendar.strftime(sunday, "%d %b %Y")
     end
   end
 
@@ -776,22 +793,9 @@ defmodule OpenSauceWeb.JobLive.New do
     _ -> []
   end
 
-  defp filtered_engagements(engagements, ""), do: engagements
-
-  defp filtered_engagements(engagements, q) do
-    q = String.downcase(q)
-
-    Enum.filter(engagements, fn eng ->
-      customer_match =
-        eng.customer &&
-          (downcase_contains(eng.customer.first_name, q) or
-             downcase_contains(eng.customer.last_name, q) or
-             downcase_contains(eng.customer.company_name_nickname, q))
-
-      garden_match = eng.garden && downcase_contains(eng.garden.name, q)
-
-      customer_match || garden_match
-    end)
+  defp scope_to_base(results, base) do
+    base_ids = MapSet.new(base, & &1.id)
+    Enum.filter(results, &MapSet.member?(base_ids, &1.id))
   end
 
   defp filtered_gardens(gardens, ""), do: gardens
@@ -831,17 +835,18 @@ defmodule OpenSauceWeb.JobLive.New do
     String.first(name) |> String.upcase()
   end
 
+  defp engagement_title(%{customer: nil, scope_title: t}) when is_binary(t), do: t
   defp engagement_title(%{customer: nil} = e), do: "Engagement #{String.slice(e.id, 0, 8)}"
 
-  defp engagement_title(%{customer: c, garden: nil}), do: customer_display(c)
+  defp engagement_title(%{customer: c, scope_title: t}) when is_binary(t),
+    do: "#{customer_display(c)} · #{t}"
 
-  defp engagement_title(%{customer: c, garden: g}),
-    do: "#{customer_display(c)} · #{g.name || "Unnamed site"}"
+  defp engagement_title(%{customer: c}), do: customer_display(c)
 
   defp engagement_subtitle(%{garden: nil}), do: "No site"
 
   defp engagement_subtitle(%{garden: g}) do
-    [g.street, g.city] |> Enum.reject(&is_nil/1) |> Enum.join(", ")
+    [g.name, g.street] |> Enum.reject(&is_nil/1) |> Enum.join(" · ")
   end
 
   defp customer_display(c) do

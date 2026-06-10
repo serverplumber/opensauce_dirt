@@ -37,6 +37,20 @@ defmodule OpenSauce.CRM.Engagement do
 
     defaults [:read, :destroy]
 
+    read :search do
+      argument :query, :string, allow_nil?: false
+
+      filter expr(
+               fragment("? ILIKE '%' || ? || '%'", scope_title, ^arg(:query)) or
+                 fragment("? ILIKE '%' || ? || '%'", customer.company_name_nickname, ^arg(:query)) or
+                 fragment("? ILIKE '%' || ? || '%'", customer.first_name, ^arg(:query)) or
+                 fragment("? ILIKE '%' || ? || '%'", customer.last_name, ^arg(:query)) or
+                 fragment("? ILIKE '%' || ? || '%'", garden.name, ^arg(:query))
+             )
+
+      prepare build(limit: 50)
+    end
+
     create :create do
       primary? true
     end

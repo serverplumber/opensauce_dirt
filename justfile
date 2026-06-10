@@ -36,10 +36,11 @@ nuke:
     mix ash.reset
     mix ash.codegen initial_schema
     mix ash.migrate
-    find priv/repo/manual_migrations -name '*.exs' -exec mix run {} \; 2>/dev/null || true
+    mix ecto.migrate --migrations-path priv/repo/manual_migrations
 
 unnuke:
     rm -rf priv/repo/migrations priv/resource_snapshots
     git restore priv/repo/migrations priv/resource_snapshots
     mix ash.reset
     mix ash.migrate
+    mix ecto.migrate --migrations-path priv/repo/manual_migrations

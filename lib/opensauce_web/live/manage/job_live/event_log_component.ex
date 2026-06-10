@@ -209,6 +209,7 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
     if values == [], do: nil, else: Enum.max(values)
   end
 
+  # :scheduling — no actions; must be placed on calendar first (becomes :scheduled)
   # :scheduled — can arrive or cancel (not yet complete-able)
   # :in_progress, next=departure — on site: can depart, complete, or cancel
   # :in_progress, next=arrival — between pairs: can arrive again, complete, or cancel

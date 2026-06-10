@@ -42,7 +42,7 @@ defmodule OpenSauce.Orders.Job do
 
     read :at_garden do
       argument :garden_id, :uuid, allow_nil?: false
-      filter expr(garden_id == ^arg(:garden_id) and status in [:scheduled, :in_progress])
+      filter expr(garden_id == ^arg(:garden_id) and status in [:scheduling, :scheduled, :in_progress])
       prepare build(sort: [scheduled_for: :asc])
     end
 
@@ -57,6 +57,7 @@ defmodule OpenSauce.Orders.Job do
         :containing_shift_id,
         :actor_id,
         :scheduled_for,
+        :due_by,
         :duration_estimate,
         :status,
         :notes,
@@ -75,6 +76,7 @@ defmodule OpenSauce.Orders.Job do
         :containing_shift_id,
         :actor_id,
         :scheduled_for,
+        :due_by,
         :duration_estimate,
         :status,
         :notes
@@ -163,15 +165,21 @@ defmodule OpenSauce.Orders.Job do
       public? true
     end
 
-    # planned     — on the schedule, not yet underway
+    # scheduling  — identified but not yet placed on the calendar; use due_by for the deadline
+    # scheduled   — on the calendar with a confirmed scheduled_for date
     # in_progress — triggered when an arrival event is logged
     # completed   — manually marked done; ready for invoicing
     # cancelled   — job did not happen
     attribute :status, :atom do
       allow_nil? false
       public? true
-      default :scheduled
-      constraints one_of: [:scheduled, :in_progress, :completed, :cancelled]
+      default :scheduling
+      constraints one_of: [:scheduling, :scheduled, :in_progress, :completed, :cancelled]
+    end
+
+    attribute :due_by, :date do
+      allow_nil? true
+      public? true
     end
 
     attribute :duration_estimate, :integer do

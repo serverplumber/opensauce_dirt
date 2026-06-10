@@ -179,6 +179,59 @@ defmodule OpenSauceWeb.Components.Core do
   end
 
   @doc """
+  Renders a dark bottom-sheet drawer with a search input and a scrollable slot for list items.
+
+  ## Examples
+
+      <.bottom_sheet title="Pick garden" on_cancel={JS.push("close_garden_sheet")}
+        search_value={@garden_search} search_name="garden_search" search_event="search_garden">
+        <button :for={g <- @gardens} phx-click="pick_garden" phx-value-id={g.id}>…</button>
+      </.bottom_sheet>
+  """
+  attr :title, :string, required: true
+  attr :on_cancel, :string, required: true
+  attr :search_value, :string, default: ""
+  attr :search_name, :string, default: "search"
+  attr :search_event, :string, default: "search"
+  attr :search_placeholder, :string, default: "Search…"
+  slot :inner_block, required: true
+
+  def bottom_sheet(assigns) do
+    ~H"""
+    <div
+      style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
+      phx-window-keydown={@on_cancel}
+      phx-key="Escape"
+    >
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click={@on_cancel}></div>
+      <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <span style="font-size:15px;font-weight:700;color:#F4EFE2;">{@title}</span>
+          <button type="button" phx-click={@on_cancel} style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <form phx-change={@search_event} style="margin-bottom:12px;flex-shrink:0;">
+          <input
+            type="text"
+            value={@search_value}
+            name={@search_name}
+            phx-debounce="300"
+            class="dark-input"
+            placeholder={@search_placeholder}
+          />
+        </form>
+        <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
+          {render_slot(@inner_block)}
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
   Renders flash notices.
 
   ## Examples

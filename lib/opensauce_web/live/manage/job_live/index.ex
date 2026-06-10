@@ -311,6 +311,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         <span :if={@job.status == :in_progress} class="pill live">
           <span class="dot pulse"></span>On site
         </span>
+        <span :if={@job.status == :scheduling} class="pill cancel">Place</span>
         <span :if={@job.status == :scheduled} class="pill sched">
           <span class="dot"></span>Scheduled
         </span>

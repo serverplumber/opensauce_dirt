@@ -45,6 +45,7 @@ defmodule OpenSauce.CRM do
     resource OpenSauce.CRM.Engagement do
       define :get_engagement_by_id, action: :read, get_by: [:id]
       define :list_engagements, action: :read
+      define :search_engagements, action: :search, args: [:query]
       define :create_engagement, action: :create
       define :update_engagement, action: :update
       define :sign_engagement, action: :sign

@@ -344,23 +344,27 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   end
 
   defp job_sort_order(:in_progress), do: 0
-  defp job_sort_order(:scheduled), do: 1
-  defp job_sort_order(:completed), do: 2
-  defp job_sort_order(:cancelled), do: 3
+  defp job_sort_order(:scheduling), do: 1
+  defp job_sort_order(:scheduled), do: 2
+  defp job_sort_order(:completed), do: 3
+  defp job_sort_order(:cancelled), do: 4
   defp job_sort_order(_), do: 1
 
   defp job_accent(:in_progress), do: "#54B57E"
+  defp job_accent(:scheduling), do: "#DB9258"
   defp job_accent(:completed), do: "#5AB4D8"
   defp job_accent(:cancelled), do: "#6E675A"
   defp job_accent(_), do: "#DB9258"
 
   defp job_pill_class(:in_progress), do: "live"
+  defp job_pill_class(:scheduling), do: "cancel"
   defp job_pill_class(:scheduled), do: "sched"
   defp job_pill_class(:completed), do: "done"
   defp job_pill_class(:cancelled), do: "cancel"
   defp job_pill_class(_), do: "sched"
 
   defp job_status_label(:in_progress), do: "On site"
+  defp job_status_label(:scheduling), do: "Place"
   defp job_status_label(:scheduled), do: "Scheduled"
   defp job_status_label(:completed), do: "Done"
   defp job_status_label(:cancelled), do: "Cancelled"

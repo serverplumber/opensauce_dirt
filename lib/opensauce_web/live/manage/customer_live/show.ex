@@ -567,10 +567,12 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp engagement_pill_class(_), do: "sched"
 
   defp job_pill_class(:in_progress), do: "live"
+  defp job_pill_class(:scheduling), do: "cancel"
   defp job_pill_class(:completed), do: "done"
   defp job_pill_class(:cancelled), do: "cancel"
   defp job_pill_class(_), do: "sched"
 
+  defp job_status_label(:scheduling), do: "Place"
   defp job_status_label(:scheduled), do: "Scheduled"
   defp job_status_label(:in_progress), do: "Live"
   defp job_status_label(:completed), do: "Done"

@@ -129,6 +129,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
            Orders.create_job(
              %{
                type: :client_work,
+               status: :scheduled,
                garden_id: engagement.garden_id,
                engagement_id: engagement.id,
                scheduled_for: to_date,
