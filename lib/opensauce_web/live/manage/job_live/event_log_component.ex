@@ -45,6 +45,9 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
 
           <:actions>
             <div class="flex flex-wrap gap-2">
+              <.link navigate={~p"/manage/jobs/#{@job.id}/materials"}>
+                <.button type="button" variant={:outline}>Edit materials</.button>
+              </.link>
               <.button
                 :if={@events != []}
                 type="button"

@@ -137,8 +137,10 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette
       ] do
-      # Job creation
+      # Job creation, detail + materials
       live "/manage/jobs/new", JobLive.New, :index
+      live "/manage/jobs/:id/materials", JobLive.Materials, :index
+      live "/manage/jobs/:id", JobLive.Show, :show
 
       # Today dashboard
       live "/manage/today", TodayLive, :index
@@ -184,8 +186,14 @@ defmodule OpenSauceWeb.Router do
       live "/manage/customers/:reference/engagements", CustomerLive.Show, :engagements
       live "/manage/customers/:reference/engagements/new", EngagementLive.New, :new
       live "/manage/customers/:reference/engagements/:engagement_id", EngagementLive.Show, :show
-      live "/manage/customers/:reference/engagements/:engagement_id/edit", EngagementLive.New, :edit
-      live "/manage/customers/:reference/engagements/:engagement_id/materials", EngagementLive.Materials, :index
+
+      live "/manage/customers/:reference/engagements/:engagement_id/edit",
+           EngagementLive.New,
+           :edit
+
+      live "/manage/customers/:reference/engagements/:engagement_id/materials",
+           EngagementLive.Materials,
+           :index
 
       # Production
     end

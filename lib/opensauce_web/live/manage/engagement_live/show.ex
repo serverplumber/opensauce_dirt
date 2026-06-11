@@ -238,22 +238,26 @@ defmodule OpenSauceWeb.EngagementLive.Show do
             No jobs yet
           </div>
           <div :if={@engagement.jobs != []} style="display:flex;flex-direction:column;gap:8px;">
-            <div :for={job <- Enum.sort_by(@engagement.jobs, &{job_sort_order(&1.status), &1.scheduled_for})} class="jcard">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style={"width:3px;border-radius:2px;align-self:stretch;background:#{job_accent(job.status)};flex-shrink:0;"}></div>
-                <div style="flex:1;min-width:0;">
-                  <p style="font-size:14px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {job_title(job)}
-                  </p>
-                  <p style="font-size:12px;color:#9A9384;margin-top:2px;">
-                    {job_meta(job)}
-                  </p>
+            <.link :for={job <- Enum.sort_by(@engagement.jobs, &{job_sort_order(&1.status), &1.scheduled_for})}
+              navigate={~p"/manage/jobs/#{job.id}/materials"}
+              style="text-decoration:none;">
+              <div class="jcard">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style={"width:3px;border-radius:2px;align-self:stretch;background:#{job_accent(job.status)};flex-shrink:0;"}></div>
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-size:14px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      {job_title(job)}
+                    </p>
+                    <p style="font-size:12px;color:#9A9384;margin-top:2px;">
+                      {job_meta(job)}
+                    </p>
+                  </div>
+                  <span class={"pill #{job_pill_class(job.status)}"} style="flex-shrink:0;">
+                    {job_status_label(job.status)}
+                  </span>
                 </div>
-                <span class={"pill #{job_pill_class(job.status)}"} style="flex-shrink:0;">
-                  {job_status_label(job.status)}
-                </span>
               </div>
-            </div>
+            </.link>
           </div>
         </div>
 

@@ -41,11 +41,9 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:show_garden_sheet, false)
      |> assign(:garden_search, "")
      |> assign(:show_materials_sheet, false)
-     |> assign(:draft_materials, [])
+     |> assign(:draft_map, %{})
      |> assign(:catalog_search, "")
      |> assign(:catalog_results, [])
-     |> assign(:selected_catalog_item, nil)
-     |> assign(:add_qty, "1")
      |> assign(:due_by_week, "")
      |> assign(:notes, "")
      |> assign(:service_error, nil)
@@ -241,18 +239,18 @@ defmodule OpenSauceWeb.JobLive.New do
               Add
             </button>
           </div>
-          <div :if={@draft_materials == []}
+          <div :if={@draft_map == %{}}
             style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
             No materials added
           </div>
-          <div :if={@draft_materials != []} style="display:flex;flex-direction:column;gap:8px;">
-            <div :for={{{item, qty}, idx} <- Enum.with_index(@draft_materials)}
+          <div :if={@draft_map != %{}} style="display:flex;flex-direction:column;gap:8px;">
+            <div :for={{_id, {item, qty}} <- @draft_map}
               style="border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:10px 13px;display:flex;align-items:center;gap:10px;">
               <div style="flex:1;min-width:0;">
                 <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{catalog_item_title(item)}</p>
-                <p style="font-size:12px;color:#9A9384;margin-top:1px;">{item.name} · qty {format_qty(qty)}</p>
+                <p style="font-size:12px;color:#9A9384;margin-top:1px;">{item.name} · ×{format_qty(qty)}</p>
               </div>
-              <button type="button" phx-click="remove_material" phx-value-index={idx}
+              <button type="button" phx-click="remove_material" phx-value-id={item.id}
                 style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               </button>
@@ -393,49 +391,58 @@ defmodule OpenSauceWeb.JobLive.New do
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
         phx-window-keydown="close_materials_sheet" phx-key="Escape">
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_materials_sheet"></div>
-        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:90dvh;display:flex;flex-direction:column;gap:14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:90dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0;">
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add material or plant</span>
-            <button type="button" phx-click="close_materials_sheet" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button type="button" phx-click="close_materials_sheet" ontouchstart="" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
-
-          <div style="position:relative;">
-            <input type="text" value={@catalog_search} phx-change="search_catalog" name="catalog_search"
+          <form phx-change="search_catalog" style="margin-bottom:12px;flex-shrink:0;">
+            <input type="text" value={@catalog_search} name="catalog_search"
               phx-debounce="300" class="dark-input" placeholder="Search catalogue…" />
-            <div :if={@catalog_results != []}
-              style="position:absolute;z-index:10;top:calc(100% + 4px);width:100%;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow:hidden;">
-              <button :for={item <- @catalog_results}
-                type="button" phx-click="pick_catalog_item" phx-value-id={item.id}
-                ontouchstart=""
-                style="display:flex;flex-direction:column;width:100%;padding:10px 13px;text-align:left;border:none;background:transparent;border-bottom:1px solid rgba(52,48,37,0.4);cursor:pointer;">
-                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
-                  <span style="font-size:13.5px;font-weight:600;font-style:italic;color:#F4EFE2;">{catalog_item_title(item)}</span>
-                  <span style="font-size:11.5px;color:#9A9384;white-space:nowrap;">{item.supplier_catalog.supplier.name}</span>
-                </div>
-                <span style="font-size:12px;color:#9A9384;margin-top:2px;">
-                  {item.name}{if item.format_description, do: " · #{item.format_description}"}
-                </span>
-              </button>
+          </form>
+          <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
+            <div :if={@catalog_search != "" and @catalog_results == []}
+              style="padding:20px;text-align:center;font-size:13px;color:#6E675A;">
+              No results
             </div>
-          </div>
-
-          <div :if={@selected_catalog_item}
-            style="border-radius:12px;border:1.5px solid rgba(84,181,126,0.4);background:rgba(84,181,126,0.08);padding:10px 13px;">
-            <p style="font-size:13.5px;font-weight:600;font-style:italic;color:#6BCB93;">{catalog_item_title(@selected_catalog_item)}</p>
-            <p style="font-size:12px;color:#9A9384;margin-top:2px;">{@selected_catalog_item.name}</p>
-          </div>
-
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:12px;font-weight:600;color:#6E675A;white-space:nowrap;">Qty</span>
-            <input type="number" name="add_qty" value={@add_qty} min="0.01" step="0.01" phx-change="set_add_qty"
-              class="dark-input" style="width:80px;text-align:center;" />
-            <button type="button" phx-click="add_material" disabled={is_nil(@selected_catalog_item)}
-              ontouchstart=""
-              style={"flex:1;border-radius:12px;padding:11px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;background:#54B57E;color:#0C1F15;transition:opacity .12s ease;#{if is_nil(@selected_catalog_item), do: "opacity:0.4;cursor:not-allowed;", else: "opacity:1;"}"}>
-              Add to job
-            </button>
+            <div :if={@catalog_search == "" and @draft_map == %{}}
+              style="padding:20px;text-align:center;font-size:13px;color:#6E675A;">
+              Search to add materials
+            </div>
+            <div :for={item <- @catalog_results}
+              style={"background:#16140E;border-radius:12px;padding:11px 13px;border:1px solid #{if Map.has_key?(@draft_map, item.id), do: "#54B57E", else: "rgba(52,48,37,0.58)"};"}>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+                <p style="font-size:13.5px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{catalog_item_title(item)}</p>
+                <span style="font-size:11px;color:#9A9384;flex-shrink:0;">{item.supplier_catalog.supplier.name}</span>
+              </div>
+              <p style="font-size:11px;color:#6E675A;margin-top:2px;">
+                {item.name}{if item.format_description, do: " · #{item.format_description}"}
+              </p>
+              <div :if={Map.has_key?(@draft_map, item.id)} style="display:flex;align-items:center;gap:4px;margin-top:8px;">
+                <button :if={item.min_order_qty && item.min_order_qty > 1}
+                  type="button" phx-click="draft_sub_flat" phx-value-id={item.id} ontouchstart=""
+                  style={draft_btn_style()}>−f</button>
+                <button type="button" phx-click="draft_sub_one" phx-value-id={item.id} ontouchstart=""
+                  style={draft_btn_style()}>−1</button>
+                <div style="min-width:40px;text-align:center;">
+                  <span style="font-size:16px;font-weight:700;color:#F4EFE2;">{elem(Map.get(@draft_map, item.id), 1)}</span>
+                </div>
+                <button type="button" phx-click="draft_add_one" phx-value-id={item.id} ontouchstart=""
+                  style={draft_btn_style()}>+1</button>
+                <button :if={item.min_order_qty && item.min_order_qty > 1}
+                  type="button" phx-click="draft_add_flat" phx-value-id={item.id} ontouchstart=""
+                  style={draft_btn_style()}>+f</button>
+              </div>
+              <div :if={!Map.has_key?(@draft_map, item.id)} style="display:flex;gap:6px;margin-top:8px;">
+                <button :if={item.min_order_qty && item.min_order_qty > 1}
+                  type="button" phx-click="draft_add_flat" phx-value-id={item.id} ontouchstart=""
+                  style={draft_add_btn_style()}>+ flat</button>
+                <button type="button" phx-click="draft_add_one" phx-value-id={item.id} ontouchstart=""
+                  style={draft_add_btn_style()}>+ 1</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -566,9 +573,7 @@ defmodule OpenSauceWeb.JobLive.New do
      socket
      |> assign(:show_materials_sheet, true)
      |> assign(:catalog_search, "")
-     |> assign(:catalog_results, [])
-     |> assign(:selected_catalog_item, nil)
-     |> assign(:add_qty, "1")}
+     |> assign(:catalog_results, [])}
   end
 
   def handle_event("close_materials_sheet", _params, socket) do
@@ -593,55 +598,28 @@ defmodule OpenSauceWeb.JobLive.New do
     {:noreply, assign(socket, catalog_search: q, catalog_results: results, selected_catalog_item: nil)}
   end
 
-  def handle_event("pick_catalog_item", %{"id" => id}, socket) do
-    member = socket.assigns.current_member
-
-    item =
-      Ash.get!(Inventory.SupplierCatalogItem, id,
-        actor: member,
-        tenant: member.organisation_id,
-        load: [supplier_catalog: [:supplier]]
-      )
-
-    {:noreply,
-     socket
-     |> assign(:selected_catalog_item, item)
-     |> assign(:catalog_results, [])
-     |> assign(:catalog_search, "")}
+  def handle_event("draft_add_one", %{"id" => id}, socket) do
+    item = find_catalog_result(socket.assigns.catalog_results, id)
+    {:noreply, adjust_draft(socket, id, item, +1)}
   end
 
-  def handle_event("set_add_qty", %{"add_qty" => qty}, socket) do
-    {:noreply, assign(socket, :add_qty, qty)}
+  def handle_event("draft_add_flat", %{"id" => id}, socket) do
+    item = find_catalog_result(socket.assigns.catalog_results, id)
+    {:noreply, adjust_draft(socket, id, item, +draft_flat_size(item))}
   end
 
-  def handle_event("add_material", _params, socket) do
-    item = socket.assigns.selected_catalog_item
-
-    if is_nil(item) do
-      {:noreply, socket}
-    else
-      qty =
-        case Decimal.parse(socket.assigns.add_qty) do
-          {d, ""} -> d
-          _ -> Decimal.new(1)
-        end
-
-      draft = socket.assigns.draft_materials ++ [{item, qty}]
-
-      {:noreply,
-       socket
-       |> assign(:draft_materials, draft)
-       |> assign(:selected_catalog_item, nil)
-       |> assign(:add_qty, "1")
-       |> assign(:catalog_search, "")
-       |> assign(:catalog_results, [])}
-    end
+  def handle_event("draft_sub_one", %{"id" => id}, socket) do
+    item = find_catalog_result(socket.assigns.catalog_results, id)
+    {:noreply, adjust_draft(socket, id, item, -1)}
   end
 
-  def handle_event("remove_material", %{"index" => idx}, socket) do
-    idx = String.to_integer(idx)
-    draft = List.delete_at(socket.assigns.draft_materials, idx)
-    {:noreply, assign(socket, :draft_materials, draft)}
+  def handle_event("draft_sub_flat", %{"id" => id}, socket) do
+    item = find_catalog_result(socket.assigns.catalog_results, id)
+    {:noreply, adjust_draft(socket, id, item, -draft_flat_size(item))}
+  end
+
+  def handle_event("remove_material", %{"id" => id}, socket) do
+    {:noreply, assign(socket, :draft_map, Map.delete(socket.assigns.draft_map, id))}
   end
 
   def handle_event("next", _params, socket) do
@@ -673,7 +651,7 @@ defmodule OpenSauceWeb.JobLive.New do
 
     case Orders.create_job(params, actor: member, tenant: member.organisation_id) do
       {:ok, job} ->
-        write_job_materials(job, socket.assigns.draft_materials, member)
+        write_job_materials(job, socket.assigns.draft_map, member)
 
         {:noreply,
          socket
@@ -765,10 +743,10 @@ defmodule OpenSauceWeb.JobLive.New do
     end
   end
 
-  defp write_job_materials(_job, [], _member), do: :ok
+  defp write_job_materials(_job, draft_map, _member) when draft_map == %{}, do: :ok
 
-  defp write_job_materials(job, draft_materials, member) do
-    Enum.each(draft_materials, fn {item, qty} ->
+  defp write_job_materials(job, draft_map, member) do
+    Enum.each(draft_map, fn {_id, {item, qty}} ->
       Orders.create_job_material(
         %{job_id: job.id, supplier_catalog_item_id: item.id, quantity: qty},
         actor: member,
@@ -776,6 +754,35 @@ defmodule OpenSauceWeb.JobLive.New do
       )
     end)
   end
+
+  defp adjust_draft(socket, id, item, delta) do
+    map = socket.assigns.draft_map
+
+    new_qty =
+      case Map.get(map, id) do
+        nil -> max(delta, 1)
+        {_item, qty} -> Decimal.to_integer(Decimal.round(Decimal.add(qty, Decimal.new(delta)), 0))
+      end
+
+    if new_qty <= 0 do
+      assign(socket, :draft_map, Map.delete(map, id))
+    else
+      entry = {item || elem(Map.get(map, id), 0), Decimal.new(new_qty)}
+      assign(socket, :draft_map, Map.put(map, id, entry))
+    end
+  end
+
+  defp find_catalog_result(results, id), do: Enum.find(results, &(&1.id == id))
+
+  defp draft_flat_size(nil), do: 1
+  defp draft_flat_size(%{min_order_qty: nil}), do: 1
+  defp draft_flat_size(%{min_order_qty: n}), do: n
+
+  defp draft_btn_style,
+    do: "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
+
+  defp draft_add_btn_style,
+    do: "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
 
   defp load_engagements(member) do
     CRM.list_engagements!(

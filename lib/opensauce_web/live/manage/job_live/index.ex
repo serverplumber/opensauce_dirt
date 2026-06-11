@@ -3,13 +3,13 @@ defmodule OpenSauceWeb.JobLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Orders
+  alias OpenSauceWeb.JobLive.EventLogComponent
   alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- page header --%>
       <div style="padding:12px 22px 14px;">
         <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;">
@@ -18,16 +18,35 @@ defmodule OpenSauceWeb.JobLive.Index do
 
         <%!-- segmented control --%>
         <div style="margin-top:14px;display:flex;gap:4px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:13px;padding:4px;">
-          <button class={["seg-tab", @tab == :today && "seg-tab--on"]} type="button" phx-click="set_tab" phx-value-tab="today">
-            Today
-            <span :if={@counts.today > 0} style="font-size:11px;font-weight:700;opacity:0.7;">{@counts.today}</span>
+          <button
+            class={["seg-tab", @tab == :scheduled && "seg-tab--on"]}
+            type="button"
+            phx-click="set_tab"
+            phx-value-tab="scheduled"
+          >
+            Scheduled
+            <span :if={@counts.scheduled > 0} style="font-size:11px;font-weight:700;opacity:0.7;">
+              {@counts.scheduled}
+            </span>
           </button>
-          <button class={["seg-tab", @tab == :upcoming && "seg-tab--on"]} type="button" phx-click="set_tab" phx-value-tab="upcoming">
-            Upcoming
-            <span :if={@counts.upcoming > 0} style="font-size:11px;font-weight:700;opacity:0.7;">{@counts.upcoming}</span>
+          <button
+            class={["seg-tab", @tab == :unscheduled && "seg-tab--on"]}
+            type="button"
+            phx-click="set_tab"
+            phx-value-tab="unscheduled"
+          >
+            Unscheduled
+            <span :if={@counts.unscheduled > 0} style="font-size:11px;font-weight:700;opacity:0.7;">
+              {@counts.unscheduled}
+            </span>
           </button>
-          <button class={["seg-tab", @tab == :done && "seg-tab--on"]} type="button" phx-click="set_tab" phx-value-tab="done">
-            Done
+          <button
+            class={["seg-tab", @tab == :history && "seg-tab--on"]}
+            type="button"
+            phx-click="set_tab"
+            phx-value-tab="history"
+          >
+            History
           </button>
         </div>
       </div>
@@ -35,25 +54,12 @@ defmodule OpenSauceWeb.JobLive.Index do
       <%!-- job list --%>
       <% today = Date.utc_today() %>
       <div style="padding:4px 16px 100px;">
-        <%!-- today tab: single group --%>
-        <div :if={@tab == :today}>
-          <div :if={@counts.today > 0}>
-            <div class="dayrow">
-              <span class="dl">Today</span>
-              <span class="line"></span>
-              <span class="dn">{day_date_label(today, today)}</span>
-            </div>
-            <.job_card :for={job <- jobs_for_tab(@jobs, :today, today)} job={job} />
-          </div>
-          <div :if={@counts.today == 0} style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;">
-            Nothing scheduled for today
-          </div>
-        </div>
-
-        <%!-- upcoming tab: grouped by date --%>
-        <div :if={@tab == :upcoming}>
-          <div :if={@counts.upcoming > 0}>
-            <div :for={{date, date_jobs} <- group_by_date(jobs_for_tab(@jobs, :upcoming, today))}>
+        <%!-- scheduled tab: grouped by date ascending --%>
+        <div :if={@tab == :scheduled}>
+          <div :if={@counts.scheduled > 0}>
+            <div :for={
+              {date, date_jobs} <- group_scheduled(jobs_for_tab(@jobs, :scheduled, today), today)
+            }>
               <div class="dayrow">
                 <span class="dl">{day_group_label(date, today)}</span>
                 <span class="line"></span>
@@ -62,28 +68,59 @@ defmodule OpenSauceWeb.JobLive.Index do
               <.job_card :for={job <- date_jobs} job={job} />
             </div>
           </div>
-          <div :if={@counts.upcoming == 0} style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;">
-            Nothing upcoming
+          <div
+            :if={@counts.scheduled == 0}
+            style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;"
+          >
+            Nothing scheduled
           </div>
         </div>
 
-        <%!-- done tab: flat list --%>
-        <div :if={@tab == :done}>
-          <div :if={@counts.done > 0}>
-            <.job_card :for={job <- jobs_for_tab(@jobs, :done, today)} job={job} />
+        <%!-- unscheduled tab: flat list --%>
+        <div :if={@tab == :unscheduled}>
+          <div :if={@counts.unscheduled > 0}>
+            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} />
           </div>
-          <div :if={@counts.done == 0} style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;">
-            No completed jobs yet
+          <div
+            :if={@counts.unscheduled == 0}
+            style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;"
+          >
+            No unscheduled jobs
+          </div>
+        </div>
+
+        <%!-- history tab: grouped by date descending --%>
+        <div :if={@tab == :history}>
+          <div :if={@counts.history > 0}>
+            <div :for={{date, date_jobs} <- group_history(jobs_for_tab(@jobs, :history, today))}>
+              <div class="dayrow">
+                <span class="dl">{history_group_label(date, today)}</span>
+                <span class="line"></span>
+                <span :if={date != nil} class="dn">{day_date_label(date, today)}</span>
+              </div>
+              <.job_card :for={job <- date_jobs} job={job} />
+            </div>
+          </div>
+          <div
+            :if={@counts.history == 0}
+            style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;"
+          >
+            No history yet
           </div>
         </div>
       </div>
-
     </div>
 
     <%!-- floating action button --%>
-    <button class="fab" type="button" phx-click={JS.patch(~p"/manage/jobs/new")} ontouchstart="" title="New job">
+    <button
+      class="fab"
+      type="button"
+      phx-click={JS.patch(~p"/manage/jobs/new")}
+      ontouchstart=""
+      title="New job"
+    >
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.4" stroke-linecap="round" />
       </svg>
     </button>
 
@@ -160,7 +197,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     {:ok,
      socket
      |> assign(
-       tab: :today,
+       tab: :scheduled,
        materials_job_id: nil,
        event_log_job: nil,
        event_log_events: [],
@@ -179,14 +216,14 @@ defmodule OpenSauceWeb.JobLive.Index do
     |> assign(:page_title, "Jobs")
     |> assign(:main_bg, "bg-[#16140E]")
     |> assign(:job, nil)
-    |> then(&Navigation.assign(&1, :jobs, [Navigation.root(:jobs)]))
+    |> Navigation.assign(:jobs, [Navigation.root(:jobs)])
   end
 
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Job")
     |> assign(:job, nil)
-    |> then(&Navigation.assign(&1, :jobs, [Navigation.root(:jobs), Navigation.page(:jobs, :new_job)]))
+    |> Navigation.assign(:jobs, [Navigation.root(:jobs), Navigation.page(:jobs, :new_job)])
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -202,7 +239,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     socket
     |> assign(:page_title, "Edit Job")
     |> assign(:job, job)
-    |> then(&Navigation.assign(&1, :jobs, [Navigation.root(:jobs)]))
+    |> Navigation.assign(:jobs, [Navigation.root(:jobs)])
   end
 
   @impl true
@@ -211,7 +248,7 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
-  def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:manage_event_materials, event}}, socket) do
+  def handle_info({EventLogComponent, {:manage_event_materials, event}}, socket) do
     {:noreply,
      socket
      |> assign(event_log_job: nil, event_log_events: [])
@@ -219,7 +256,7 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
-  def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:event_logged, event}}, socket) do
+  def handle_info({EventLogComponent, {:event_logged, event}}, socket) do
     member = socket.assigns.current_member
     job = socket.assigns.event_log_job
 
@@ -231,7 +268,7 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   @impl true
-  def handle_info({OpenSauceWeb.JobLive.EventLogComponent, {:status_changed, status}}, socket) do
+  def handle_info({EventLogComponent, {:status_changed, status}}, socket) do
     member = socket.assigns.current_member
     job = socket.assigns.event_log_job
     opts = [actor: member, tenant: member.organisation_id]
@@ -283,12 +320,14 @@ defmodule OpenSauceWeb.JobLive.Index do
     {:noreply, assign(socket, :tab, String.to_existing_atom(tab))}
   end
 
+  defp card_click(%{status: :scheduling, id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
+  defp card_click(%{id: id}), do: JS.push("open_event_log", value: %{id: id})
+
   defp job_card(assigns) do
     ~H"""
     <div
       class={["jcard", @job.status == :in_progress && "live"]}
-      phx-click="open_event_log"
-      phx-value-id={@job.id}
+      phx-click={card_click(@job)}
       ontouchstart=""
     >
       <%!-- top: who + status pill --%>
@@ -302,7 +341,11 @@ defmodule OpenSauceWeb.JobLive.Index do
             style="margin-top:4px;font-size:12.5px;color:#9A9384;line-height:1.3;display:flex;align-items:center;gap:5px;"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;">
-              <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" stroke="#9A9384" stroke-width="1.6" />
+              <path
+                d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
+                stroke="#9A9384"
+                stroke-width="1.6"
+              />
               <circle cx="12" cy="10" r="2.4" stroke="#9A9384" stroke-width="1.6" />
             </svg>
             {job_where_text(@job)}
@@ -311,7 +354,18 @@ defmodule OpenSauceWeb.JobLive.Index do
         <span :if={@job.status == :in_progress} class="pill live">
           <span class="dot pulse"></span>On site
         </span>
-        <span :if={@job.status == :scheduling} class="pill cancel">Place</span>
+        <div :if={@job.status == :scheduling} style="display:flex;gap:6px;flex-shrink:0;">
+          <span class="pill cancel">Place</span>
+          <button
+            class="pill live"
+            type="button"
+            style="border:none;cursor:pointer;"
+            phx-click={JS.push("open_event_log", value: %{id: @job.id})}
+            ontouchstart=""
+          >
+            Start
+          </button>
+        </div>
         <span :if={@job.status == :scheduled} class="pill sched">
           <span class="dot"></span>Scheduled
         </span>
@@ -334,14 +388,22 @@ defmodule OpenSauceWeb.JobLive.Index do
         <button class="open" type="button" phx-click="open_event_log" phx-value-id={@job.id}>
           Open
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M9 6l6 6-6 6" stroke="#54B57E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            <path
+              d="M9 6l6 6-6 6"
+              stroke="#54B57E"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
       </div>
 
       <%!-- crew row (scheduled + crew present) --%>
       <div
-        :if={@job.status != :in_progress && @job.staff_assignments != [] && @job.staff_assignments != nil}
+        :if={
+          @job.status != :in_progress && @job.staff_assignments != [] && @job.staff_assignments != nil
+        }
         class="crewrow"
       >
         <div class="avs">
@@ -358,33 +420,65 @@ defmodule OpenSauceWeb.JobLive.Index do
     """
   end
 
-  defp jobs_for_tab(jobs, :today, today) do
-    jobs
-    |> Enum.filter(&job_today?(&1, today))
-    |> Enum.sort_by(fn j -> if j.status == :in_progress, do: 0, else: 1 end)
+  defp jobs_for_tab(jobs, :scheduled, today) do
+    Enum.filter(jobs, &job_scheduled?(&1, today))
   end
 
-  defp jobs_for_tab(jobs, :upcoming, today) do
-    jobs
-    |> Enum.filter(&job_upcoming?(&1, today))
-    |> Enum.sort_by(& &1.scheduled_for, Date)
+  defp jobs_for_tab(jobs, :unscheduled, _today) do
+    Enum.filter(jobs, &job_unscheduled?/1)
   end
 
-  defp jobs_for_tab(jobs, :done, _today) do
-    Enum.filter(jobs, &job_done?/1)
+  defp jobs_for_tab(jobs, :history, today) do
+    Enum.filter(jobs, &job_history?(&1, today))
   end
 
-  defp group_by_date(jobs) do
-    jobs
-    |> Enum.group_by(& &1.scheduled_for)
-    |> Enum.sort_by(fn {date, _} -> date end, Date)
+  defp group_scheduled(jobs, today) do
+    today_jobs =
+      jobs
+      |> Enum.filter(fn j ->
+        j.status == :in_progress or
+          (j.scheduled_for && Date.compare(j.scheduled_for, today) == :eq)
+      end)
+      |> Enum.sort_by(fn j -> if j.status == :in_progress, do: 0, else: 1 end)
+
+    future_groups =
+      jobs
+      |> Enum.filter(fn j ->
+        j.status == :scheduled and j.scheduled_for != nil and
+          Date.after?(j.scheduled_for, today)
+      end)
+      |> Enum.group_by(& &1.scheduled_for)
+      |> Enum.sort_by(fn {date, _} -> date end, Date)
+
+    today_group = if today_jobs == [], do: [], else: [{today, today_jobs}]
+    today_group ++ future_groups
+  end
+
+  defp group_history(jobs) do
+    {dated, undated} = Enum.split_with(jobs, &(&1.scheduled_for != nil))
+
+    dated_groups =
+      dated
+      |> Enum.group_by(& &1.scheduled_for)
+      |> Enum.sort_by(fn {date, _} -> date end, {:desc, Date})
+
+    if undated == [], do: dated_groups, else: dated_groups ++ [{nil, undated}]
   end
 
   defp day_group_label(date, today) do
     cond do
+      Date.compare(date, today) == :eq -> "Today"
       Date.compare(date, Date.add(today, 1)) == :eq -> "Tomorrow"
       true -> Calendar.strftime(date, "%A")
     end
+  end
+
+  defp history_group_label(nil, _today), do: "Undated"
+
+  defp history_group_label(date, today) do
+    if Date.compare(date, Date.add(today, -1)) == :eq,
+      do: "Yesterday",
+      else: Calendar.strftime(date, "%A")
   end
 
   defp day_date_label(date, today) do
@@ -397,7 +491,10 @@ defmodule OpenSauceWeb.JobLive.Index do
 
   defp job_who(job) do
     cl = customer_label(job)
-    if cl != "", do: cl, else: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job"
+
+    if cl == "",
+      do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job",
+      else: cl
   end
 
   defp job_where_text(%{garden: nil}), do: nil
@@ -424,12 +521,12 @@ defmodule OpenSauceWeb.JobLive.Index do
       |> Enum.take(3)
       |> Enum.map(fn sa ->
         dt = sa.member && sa.member.display_title
-        if is_binary(dt) and dt != "", do: String.split(dt) |> hd(), else: nil
+        if is_binary(dt) and dt != "", do: dt |> String.split() |> hd()
       end)
       |> Enum.reject(&is_nil/1)
       |> Enum.join(" + ")
 
-    if names != "", do: "on the clock · #{names}", else: "on the clock"
+    if names == "", do: "on the clock", else: "on the clock · #{names}"
   end
 
   defp category_color(:installation), do: "#DB9258"
@@ -451,26 +548,27 @@ defmodule OpenSauceWeb.JobLive.Index do
     today = Date.utc_today()
 
     counts = %{
-      today: Enum.count(jobs, &job_today?(&1, today)),
-      upcoming: Enum.count(jobs, &job_upcoming?(&1, today)),
-      done: Enum.count(jobs, &job_done?/1)
+      scheduled: Enum.count(jobs, &job_scheduled?(&1, today)),
+      unscheduled: Enum.count(jobs, &job_unscheduled?/1),
+      history: Enum.count(jobs, &job_history?(&1, today))
     }
 
     socket |> assign(:jobs, jobs) |> assign(:counts, counts)
   end
 
-  defp job_today?(job, today) do
+  defp job_scheduled?(job, today) do
     job.status == :in_progress or
-      (job.scheduled_for && Date.compare(job.scheduled_for, today) == :eq &&
+      (job.scheduled_for != nil and Date.compare(job.scheduled_for, today) != :lt and
          job.status == :scheduled)
   end
 
-  defp job_upcoming?(job, today) do
-    job.status == :scheduled and job.scheduled_for != nil and
-      Date.compare(job.scheduled_for, today) == :gt
-  end
+  defp job_unscheduled?(job), do: job.status == :scheduling
 
-  defp job_done?(job), do: job.status in [:completed, :cancelled]
+  defp job_history?(job, today) do
+    job.status in [:completed, :cancelled] or
+      (job.scheduled_for != nil and Date.before?(job.scheduled_for, today) and
+         job.status not in [:scheduling])
+  end
 
   defp event_log_title(job) do
     site = site_label(job)
