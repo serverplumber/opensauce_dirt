@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.JobLive.New do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.Accounts
   alias OpenSauce.CRM
   alias OpenSauce.Inventory
   alias OpenSauce.Orders
@@ -22,6 +23,7 @@ defmodule OpenSauceWeb.JobLive.New do
     member = socket.assigns.current_member
     all_engagements = load_engagements(member)
     all_gardens = load_gardens(member)
+    org_members = load_org_members(member)
 
     {:ok,
      socket
@@ -49,6 +51,9 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:service_error, nil)
      |> assign(:garden_error, nil)
      |> assign(:save_error, nil)
+     |> assign(:org_members, org_members)
+     |> assign(:draft_crew, [])
+     |> assign(:show_crew_sheet, false)
      |> assign(:back_to, ~p"/manage/jobs")}
   end
 
@@ -108,15 +113,18 @@ defmodule OpenSauceWeb.JobLive.New do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- ── Step 1 ─────────────────────────────────────────────── --%>
       <div :if={@step == 1} style="padding:0 16px 160px;">
-
         <%!-- header --%>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 2px 14px;">
           <.link navigate={@back_to} style="color:#6E675A;line-height:0;padding:4px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path
+                d="M18 6L6 18M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
             </svg>
           </.link>
           <span style="font-size:12px;font-weight:600;color:#6E675A;">Step 1 of 2</span>
@@ -125,7 +133,13 @@ defmodule OpenSauceWeb.JobLive.New do
         <%!-- type segmented control --%>
         <div style="margin-bottom:16px;display:flex;gap:4px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:13px;padding:4px;">
           <button
-            :for={{val, label} <- [{:client_work, "Client"}, {:shift, "Shift"}, {:internal_work, "Internal"}]}
+            :for={
+              {val, label} <- [
+                {:client_work, "Client"},
+                {:shift, "Shift"},
+                {:internal_work, "Internal"}
+              ]
+            }
             type="button"
             phx-click="set_type"
             phx-value-type={val}
@@ -137,7 +151,6 @@ defmodule OpenSauceWeb.JobLive.New do
 
         <%!-- client work fields --%>
         <div :if={@job_type == :client_work} style="display:flex;flex-direction:column;gap:14px;">
-
           <%!-- engagement --%>
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -150,23 +163,41 @@ defmodule OpenSauceWeb.JobLive.New do
                 style={"position:relative;display:inline-flex;width:36px;height:20px;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @engagement_enabled, do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
                 ontouchstart=""
               >
-                <span style={"display:inline-block;width:14px;height:14px;border-radius:50%;background:#F4EFE2;box-shadow:0 1px 2px rgba(0,0,0,0.4);position:absolute;top:3px;transition:left .12s ease;#{if @engagement_enabled, do: "left:19px;", else: "left:3px;"}"}></span>
+                <span style={"display:inline-block;width:14px;height:14px;border-radius:50%;background:#F4EFE2;box-shadow:0 1px 2px rgba(0,0,0,0.4);position:absolute;top:3px;transition:left .12s ease;#{if @engagement_enabled, do: "left:19px;", else: "left:3px;"}"}>
+                </span>
               </button>
             </div>
             <div :if={@engagement_enabled}>
-              <div :if={@engagement} style="border-radius:14px;border:1.5px solid #54B57E;background:rgba(84,181,126,0.10);padding:11px 13px;display:flex;align-items:center;gap:12px;">
+              <div
+                :if={@engagement}
+                style="border-radius:14px;border:1.5px solid #54B57E;background:rgba(84,181,126,0.10);padding:11px 13px;display:flex;align-items:center;gap:12px;"
+              >
                 <div style="width:36px;height:36px;border-radius:10px;border:1.5px solid #54B57E;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;color:#54B57E;flex:0 0 auto;">
                   {engagement_initial(@engagement)}
                 </div>
                 <div style="flex:1;min-width:0;">
-                  <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{engagement_title(@engagement)}</p>
-                  <p style="font-size:12px;color:#9A9384;margin-top:2px;">{engagement_subtitle(@engagement)}</p>
+                  <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {engagement_title(@engagement)}
+                  </p>
+                  <p style="font-size:12px;color:#9A9384;margin-top:2px;">
+                    {engagement_subtitle(@engagement)}
+                  </p>
                 </div>
-                <button type="button" phx-click="open_engagement_sheet" style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;">change</button>
+                <button
+                  type="button"
+                  phx-click="open_engagement_sheet"
+                  style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;"
+                >
+                  change
+                </button>
               </div>
-              <button :if={is_nil(@engagement)} type="button" phx-click="open_engagement_sheet"
+              <button
+                :if={is_nil(@engagement)}
+                type="button"
+                phx-click="open_engagement_sheet"
                 style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
-                ontouchstart="">
+                ontouchstart=""
+              >
                 Pick an engagement…
               </button>
             </div>
@@ -175,23 +206,56 @@ defmodule OpenSauceWeb.JobLive.New do
           <%!-- garden / site --%>
           <div>
             <span class="dark-label">Garden / site</span>
-            <div :if={@garden} style={"border-radius:14px;border:1.5px solid;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;#{if garden_from_engagement?(@garden, @engagement), do: "border-color:rgba(52,48,37,0.58);background:#211E16;", else: "border-color:#54B57E;background:rgba(84,181,126,0.10);"}"}>
+            <div
+              :if={@garden}
+              style={"border-radius:14px;border:1.5px solid;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;#{if garden_from_engagement?(@garden, @engagement), do: "border-color:rgba(52,48,37,0.58);background:#211E16;", else: "border-color:#54B57E;background:rgba(84,181,126,0.10);"}"}
+            >
               <div style="flex:1;min-width:0;">
-                <p style="font-size:14px;font-weight:700;color:#F4EFE2;">{@garden.name || "Unnamed site"}</p>
-                <p :if={@garden.street} style="font-size:12px;color:#9A9384;margin-top:2px;">{@garden.street}</p>
-                <p :if={garden_from_engagement?(@garden, @engagement)} style="font-size:11.5px;color:#6E675A;margin-top:2px;">from engagement</p>
+                <p style="font-size:14px;font-weight:700;color:#F4EFE2;">
+                  {@garden.name || "Unnamed site"}
+                </p>
+                <p :if={@garden.street} style="font-size:12px;color:#9A9384;margin-top:2px;">
+                  {@garden.street}
+                </p>
+                <p
+                  :if={garden_from_engagement?(@garden, @engagement)}
+                  style="font-size:11.5px;color:#6E675A;margin-top:2px;"
+                >
+                  from engagement
+                </p>
               </div>
-              <svg :if={garden_from_engagement?(@garden, @engagement)} width="18" height="18" viewBox="0 0 24 24" fill="none" style="color:#54B57E;flex:0 0 auto;">
-                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg
+                :if={garden_from_engagement?(@garden, @engagement)}
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                style="color:#54B57E;flex:0 0 auto;"
+              >
+                <path
+                  d="M20 6L9 17l-5-5"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
-              <button :if={not garden_from_engagement?(@garden, @engagement)} type="button" phx-click="open_garden_sheet"
-                style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;">
+              <button
+                :if={not garden_from_engagement?(@garden, @engagement)}
+                type="button"
+                phx-click="open_garden_sheet"
+                style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;"
+              >
                 change
               </button>
             </div>
-            <button :if={is_nil(@garden)} type="button" phx-click="open_garden_sheet"
+            <button
+              :if={is_nil(@garden)}
+              type="button"
+              phx-click="open_garden_sheet"
               style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
-              ontouchstart="">
+              ontouchstart=""
+            >
               Pick a garden…
             </button>
             <span :if={@garden_error} class="dark-field-error">{@garden_error}</span>
@@ -203,12 +267,17 @@ defmodule OpenSauceWeb.JobLive.New do
             <form phx-change="set_category">
               <select name="service_category" id="service_category_select" class="dark-select">
                 <option value="">— pick one —</option>
-                <option :for={{cat, label} <- @service_categories} value={cat} selected={@service_category == cat}>{label}</option>
+                <option
+                  :for={{cat, label} <- @service_categories}
+                  value={cat}
+                  selected={@service_category == cat}
+                >
+                  {label}
+                </option>
               </select>
             </form>
             <span :if={@service_error} class="dark-field-error">{@service_error}</span>
           </div>
-
         </div>
 
         <%!-- internal work fields --%>
@@ -233,26 +302,55 @@ defmodule OpenSauceWeb.JobLive.New do
         <div :if={@job_type != :shift} style="margin-top:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Materials &amp; plants</span>
-            <button type="button" phx-click="open_materials_sheet"
-              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <button
+              type="button"
+              phx-click="open_materials_sheet"
+              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
+              </svg>
               Add
             </button>
           </div>
-          <div :if={@draft_map == %{}}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={@draft_map == %{}}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No materials added
           </div>
           <div :if={@draft_map != %{}} style="display:flex;flex-direction:column;gap:8px;">
-            <div :for={{_id, {item, qty}} <- @draft_map}
-              style="border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:10px 13px;display:flex;align-items:center;gap:10px;">
+            <div
+              :for={{_id, {item, qty}} <- @draft_map}
+              style="border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:10px 13px;display:flex;align-items:center;gap:10px;"
+            >
               <div style="flex:1;min-width:0;">
-                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{catalog_item_title(item)}</p>
-                <p style="font-size:12px;color:#9A9384;margin-top:1px;">{item.name} · ×{format_qty(qty)}</p>
+                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  {catalog_item_title(item)}
+                </p>
+                <p style="font-size:12px;color:#9A9384;margin-top:1px;">
+                  {item.name} · ×{format_qty(qty)}
+                </p>
               </div>
-              <button type="button" phx-click="remove_material" phx-value-id={item.id}
-                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <button
+                type="button"
+                phx-click="remove_material"
+                phx-value-id={item.id}
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
               </button>
             </div>
           </div>
@@ -260,21 +358,33 @@ defmodule OpenSauceWeb.JobLive.New do
 
         <%!-- sticky next bar --%>
         <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
-          <.glow_button valid={step1_can_proceed?(@job_type, @service_category, @account_code, @garden)} type="button" phx-click="next">
+          <.glow_button
+            valid={step1_can_proceed?(@job_type, @service_category, @account_code, @garden)}
+            type="button"
+            phx-click="next"
+          >
             Next: due date →
           </.glow_button>
         </div>
-
       </div>
 
       <%!-- ── Step 2 ─────────────────────────────────────────────── --%>
       <div :if={@step == 2} style="padding:0 16px 160px;">
-
         <%!-- header --%>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 22px;">
-          <button type="button" phx-click="back" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+          <button
+            type="button"
+            phx-click="back"
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M19 12H5M12 19l-7-7 7-7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
           <span style="font-size:12px;font-weight:600;color:#6E675A;">Step 2 of 2</span>
@@ -282,10 +392,27 @@ defmodule OpenSauceWeb.JobLive.New do
 
         <%!-- step 1 summary chips --%>
         <div style="border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:10px 13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
-          <span :if={@service_category} style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;">{category_label(@service_category)}</span>
-          <span :if={@account_code} style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;">{account_code_label(@account_code)}</span>
-          <span :if={@job_type == :shift} style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;">Shift</span>
-          <span :if={@garden} style="font-size:12.5px;color:#9A9384;">{@garden.name || "Unnamed site"}</span>
+          <span
+            :if={@service_category}
+            style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;"
+          >
+            {category_label(@service_category)}
+          </span>
+          <span
+            :if={@account_code}
+            style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;"
+          >
+            {account_code_label(@account_code)}
+          </span>
+          <span
+            :if={@job_type == :shift}
+            style="border-radius:999px;background:rgba(84,181,126,0.14);padding:3px 10px;font-size:11.5px;font-weight:700;color:#6BCB93;"
+          >
+            Shift
+          </span>
+          <span :if={@garden} style="font-size:12.5px;color:#9A9384;">
+            {@garden.name || "Unnamed site"}
+          </span>
         </div>
 
         <form phx-change="update_step2" style="display:flex;flex-direction:column;gap:20px;">
@@ -303,8 +430,69 @@ defmodule OpenSauceWeb.JobLive.New do
           </div>
         </form>
 
-        <p :if={@save_error}
-          style="margin-top:16px;border-radius:12px;border:1.5px solid rgba(232,126,126,0.3);background:rgba(232,126,126,0.08);padding:10px 13px;font-size:13px;color:#E87E7E;">
+        <%!-- crew --%>
+        <div style="margin-top:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span class="dark-label" style="margin-bottom:0;">Crew</span>
+            <button
+              type="button"
+              phx-click="open_crew_sheet"
+              ontouchstart=""
+              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
+              </svg>
+              add
+            </button>
+          </div>
+          <div
+            :if={@draft_crew == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
+            No crew assigned
+          </div>
+          <div :if={@draft_crew != []} style="display:flex;flex-direction:column;gap:6px;">
+            <div
+              :for={m <- @draft_crew}
+              style="background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;"
+            >
+              <div class="av" style={"background:#{crew_color(m.id)}"}>
+                {crew_initial(m)}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13px;font-weight:600;color:#F4EFE2;">{staff_name(m)}</p>
+                <p style="font-size:11px;color:#6E675A;margin-top:1px;">{role_label(m.role)}</p>
+              </div>
+              <button
+                type="button"
+                phx-click="remove_crew"
+                phx-value-id={m.id}
+                ontouchstart=""
+                style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p
+          :if={@save_error}
+          style="margin-top:16px;border-radius:12px;border:1.5px solid rgba(232,126,126,0.3);background:rgba(232,126,126,0.08);padding:10px 13px;font-size:13px;color:#E87E7E;"
+        >
           {@save_error}
         </p>
 
@@ -314,40 +502,71 @@ defmodule OpenSauceWeb.JobLive.New do
             Create job
           </.glow_button>
         </div>
-
       </div>
 
       <%!-- ── Engagement sheet ───────────────────────────────────── --%>
-      <div :if={@show_engagement_sheet}
+      <div
+        :if={@show_engagement_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_engagement_sheet" phx-key="Escape">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_engagement_sheet"></div>
+        phx-window-keydown="close_engagement_sheet"
+        phx-key="Escape"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click="close_engagement_sheet"
+        >
+        </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick engagement</span>
-            <button type="button" phx-click="close_engagement_sheet" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <button
+              type="button"
+              phx-click="close_engagement_sheet"
+              style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
             </button>
           </div>
           <form phx-change="search_engagement" style="margin-bottom:12px;flex-shrink:0;">
-            <input type="text" value={@engagement_search} name="engagement_search"
-              phx-debounce="300" class="dark-input" placeholder="Search…" />
+            <input
+              type="text"
+              value={@engagement_search}
+              name="engagement_search"
+              phx-debounce="300"
+              class="dark-input"
+              placeholder="Search…"
+            />
           </form>
           <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
-            <button :for={eng <- @filtered_engagements}
-              type="button" phx-click="pick_engagement" phx-value-id={eng.id}
+            <button
+              :for={eng <- @filtered_engagements}
+              type="button"
+              phx-click="pick_engagement"
+              phx-value-id={eng.id}
               ontouchstart=""
-              style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;#{if @engagement && @engagement.id == eng.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
+              style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;#{if @engagement && @engagement.id == eng.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
+            >
               <div style={"width:32px;height:32px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;#{if @engagement && @engagement.id == eng.id, do: "background:rgba(84,181,126,0.14);color:#54B57E;border:1.5px solid #54B57E;", else: "background:rgba(52,48,37,0.5);color:#9A9384;border:1.5px solid rgba(52,48,37,0.58);"}"}>
                 {engagement_initial(eng)}
               </div>
               <div style="flex:1;min-width:0;">
-                <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{engagement_title(eng)}</p>
+                <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  {engagement_title(eng)}
+                </p>
                 <p style="font-size:12px;color:#9A9384;margin-top:1px;">{engagement_subtitle(eng)}</p>
               </div>
             </button>
-            <div :if={@filtered_engagements == []}
-              style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;">
+            <div
+              :if={@filtered_engagements == []}
+              style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;"
+            >
               No engagements found
             </div>
           </div>
@@ -355,98 +574,275 @@ defmodule OpenSauceWeb.JobLive.New do
       </div>
 
       <%!-- ── Garden sheet ────────────────────────────────────────── --%>
-      <div :if={@show_garden_sheet}
+      <div
+        :if={@show_garden_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_garden_sheet" phx-key="Escape">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
+        phx-window-keydown="close_garden_sheet"
+        phx-key="Escape"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click="close_garden_sheet"
+        >
+        </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick garden</span>
-            <button type="button" phx-click="close_garden_sheet" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <button
+              type="button"
+              phx-click="close_garden_sheet"
+              style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
             </button>
           </div>
           <form phx-change="search_garden" style="margin-bottom:12px;flex-shrink:0;">
-            <input type="text" value={@garden_search} name="garden_search"
-              phx-debounce="300" class="dark-input" placeholder="Search…" />
+            <input
+              type="text"
+              value={@garden_search}
+              name="garden_search"
+              phx-debounce="300"
+              class="dark-input"
+              placeholder="Search…"
+            />
           </form>
           <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
-            <button :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
-              type="button" phx-click="pick_garden" phx-value-id={garden.id}
+            <button
+              :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
+              type="button"
+              phx-click="pick_garden"
+              phx-value-id={garden.id}
               ontouchstart=""
-              style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;cursor:pointer;#{if @garden && @garden.id == garden.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
-              <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;">{garden.name || "Unnamed site"}</p>
-              <p :if={garden.street} style="font-size:12px;color:#9A9384;margin-top:1px;">{garden.street}</p>
+              style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;cursor:pointer;#{if @garden && @garden.id == garden.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
+            >
+              <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;">
+                {garden.name || "Unnamed site"}
+              </p>
+              <p :if={garden.street} style="font-size:12px;color:#9A9384;margin-top:1px;">
+                {garden.street}
+              </p>
             </button>
-            <div :if={filtered_gardens(@all_gardens, @garden_search) == []}
-              style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;">
+            <div
+              :if={filtered_gardens(@all_gardens, @garden_search) == []}
+              style="padding:24px;text-align:center;font-size:13.5px;color:#6E675A;"
+            >
               No gardens found
             </div>
           </div>
         </div>
       </div>
 
-      <%!-- ── Materials sheet ───────────────────────────────────── --%>
-      <div :if={@show_materials_sheet}
+      <%!-- ── Crew sheet ──────────────────────────────────────────── --%>
+      <div
+        :if={@show_crew_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_materials_sheet" phx-key="Escape">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_materials_sheet"></div>
-        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:90dvh;display:flex;flex-direction:column;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0;">
-            <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add material or plant</span>
-            <button type="button" phx-click="close_materials_sheet" ontouchstart="" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        phx-window-keydown="close_crew_sheet"
+        phx-key="Escape"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click="close_crew_sheet"
+        >
+        </div>
+        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">
+            <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add crew</span>
+            <button
+              type="button"
+              phx-click="close_crew_sheet"
+              style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
             </button>
           </div>
-          <form phx-change="search_catalog" style="margin-bottom:12px;flex-shrink:0;">
-            <input type="text" value={@catalog_search} name="catalog_search"
-              phx-debounce="300" class="dark-input" placeholder="Search catalogue…" />
-          </form>
-          <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
-            <div :if={@catalog_search != "" and @catalog_results == []}
-              style="padding:20px;text-align:center;font-size:13px;color:#6E675A;">
-              No results
+          <div
+            class="mobile-scroll"
+            style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;"
+          >
+            <div
+              :if={available_crew(@org_members, @draft_crew) == []}
+              style="padding:24px;text-align:center;font-size:13px;color:#6E675A;"
+            >
+              All members already added
             </div>
-            <div :if={@catalog_search == "" and @draft_map == %{}}
-              style="padding:20px;text-align:center;font-size:13px;color:#6E675A;">
-              Search to add materials
-            </div>
-            <div :for={item <- @catalog_results}
-              style={"background:#16140E;border-radius:12px;padding:11px 13px;border:1px solid #{if Map.has_key?(@draft_map, item.id), do: "#54B57E", else: "rgba(52,48,37,0.58)"};"}>
-              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
-                <p style="font-size:13.5px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{catalog_item_title(item)}</p>
-                <span style="font-size:11px;color:#9A9384;flex-shrink:0;">{item.supplier_catalog.supplier.name}</span>
+            <div
+              :for={m <- available_crew(@org_members, @draft_crew)}
+              phx-click="pick_crew"
+              phx-value-id={m.id}
+              ontouchstart=""
+              style="background:#16140E;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;cursor:pointer;"
+            >
+              <div class="av" style={"background:#{crew_color(m.id)}"}>
+                {crew_initial(m)}
               </div>
-              <p style="font-size:11px;color:#6E675A;margin-top:2px;">
-                {item.name}{if item.format_description, do: " · #{item.format_description}"}
-              </p>
-              <div :if={Map.has_key?(@draft_map, item.id)} style="display:flex;align-items:center;gap:4px;margin-top:8px;">
-                <button :if={item.min_order_qty && item.min_order_qty > 1}
-                  type="button" phx-click="draft_sub_flat" phx-value-id={item.id} ontouchstart=""
-                  style={draft_btn_style()}>−f</button>
-                <button type="button" phx-click="draft_sub_one" phx-value-id={item.id} ontouchstart=""
-                  style={draft_btn_style()}>−1</button>
-                <div style="min-width:40px;text-align:center;">
-                  <span style="font-size:16px;font-weight:700;color:#F4EFE2;">{elem(Map.get(@draft_map, item.id), 1)}</span>
-                </div>
-                <button type="button" phx-click="draft_add_one" phx-value-id={item.id} ontouchstart=""
-                  style={draft_btn_style()}>+1</button>
-                <button :if={item.min_order_qty && item.min_order_qty > 1}
-                  type="button" phx-click="draft_add_flat" phx-value-id={item.id} ontouchstart=""
-                  style={draft_btn_style()}>+f</button>
-              </div>
-              <div :if={!Map.has_key?(@draft_map, item.id)} style="display:flex;gap:6px;margin-top:8px;">
-                <button :if={item.min_order_qty && item.min_order_qty > 1}
-                  type="button" phx-click="draft_add_flat" phx-value-id={item.id} ontouchstart=""
-                  style={draft_add_btn_style()}>+ flat</button>
-                <button type="button" phx-click="draft_add_one" phx-value-id={item.id} ontouchstart=""
-                  style={draft_add_btn_style()}>+ 1</button>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13px;font-weight:600;color:#F4EFE2;">{staff_name(m)}</p>
+                <p style="font-size:11px;color:#6E675A;margin-top:1px;">{role_label(m.role)}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      <%!-- ── Materials sheet ───────────────────────────────────── --%>
+      <div
+        :if={@show_materials_sheet}
+        style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
+        phx-window-keydown="close_materials_sheet"
+        phx-key="Escape"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click="close_materials_sheet"
+        >
+        </div>
+        <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:90dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0;">
+            <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add material or plant</span>
+            <button
+              type="button"
+              phx-click="close_materials_sheet"
+              ontouchstart=""
+              style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <form phx-change="search_catalog" style="margin-bottom:12px;flex-shrink:0;">
+            <input
+              type="text"
+              value={@catalog_search}
+              name="catalog_search"
+              phx-debounce="300"
+              class="dark-input"
+              placeholder="Search catalogue…"
+            />
+          </form>
+          <div style="overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:8px;">
+            <div
+              :if={@catalog_search != "" and @catalog_results == []}
+              style="padding:20px;text-align:center;font-size:13px;color:#6E675A;"
+            >
+              No results
+            </div>
+            <div
+              :if={@catalog_search == "" and @draft_map == %{}}
+              style="padding:20px;text-align:center;font-size:13px;color:#6E675A;"
+            >
+              Search to add materials
+            </div>
+            <div
+              :for={item <- @catalog_results}
+              style={"background:#16140E;border-radius:12px;padding:11px 13px;border:1px solid #{if Map.has_key?(@draft_map, item.id), do: "#54B57E", else: "rgba(52,48,37,0.58)"};"}
+            >
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+                <p style="font-size:13.5px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  {catalog_item_title(item)}
+                </p>
+                <span style="font-size:11px;color:#9A9384;flex-shrink:0;">
+                  {item.supplier_catalog.supplier.name}
+                </span>
+              </div>
+              <p style="font-size:11px;color:#6E675A;margin-top:2px;">
+                {item.name}{if item.format_description, do: " · #{item.format_description}"}
+              </p>
+              <div
+                :if={Map.has_key?(@draft_map, item.id)}
+                style="display:flex;align-items:center;gap:4px;margin-top:8px;"
+              >
+                <button
+                  :if={item.min_order_qty && item.min_order_qty > 1}
+                  type="button"
+                  phx-click="draft_sub_flat"
+                  phx-value-id={item.id}
+                  ontouchstart=""
+                  style={draft_btn_style()}
+                >
+                  −f
+                </button>
+                <button
+                  type="button"
+                  phx-click="draft_sub_one"
+                  phx-value-id={item.id}
+                  ontouchstart=""
+                  style={draft_btn_style()}
+                >
+                  −1
+                </button>
+                <div style="min-width:40px;text-align:center;">
+                  <span style="font-size:16px;font-weight:700;color:#F4EFE2;">
+                    {elem(Map.get(@draft_map, item.id), 1)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  phx-click="draft_add_one"
+                  phx-value-id={item.id}
+                  ontouchstart=""
+                  style={draft_btn_style()}
+                >
+                  +1
+                </button>
+                <button
+                  :if={item.min_order_qty && item.min_order_qty > 1}
+                  type="button"
+                  phx-click="draft_add_flat"
+                  phx-value-id={item.id}
+                  ontouchstart=""
+                  style={draft_btn_style()}
+                >
+                  +f
+                </button>
+              </div>
+              <div
+                :if={!Map.has_key?(@draft_map, item.id)}
+                style="display:flex;gap:6px;margin-top:8px;"
+              >
+                <button
+                  :if={item.min_order_qty && item.min_order_qty > 1}
+                  type="button"
+                  phx-click="draft_add_flat"
+                  phx-value-id={item.id}
+                  ontouchstart=""
+                  style={draft_add_btn_style()}
+                >
+                  + flat
+                </button>
+                <button
+                  type="button"
+                  phx-click="draft_add_one"
+                  phx-value-id={item.id}
+                  ontouchstart=""
+                  style={draft_add_btn_style()}
+                >
+                  + 1
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     """
   end
@@ -484,7 +880,8 @@ defmodule OpenSauceWeb.JobLive.New do
 
     engagements =
       if String.length(q) >= 2 do
-        CRM.search_engagements!(q,
+        q
+        |> CRM.search_engagements!(
           actor: member,
           tenant: member.organisation_id,
           load: [garden: [:customer], customer: []]
@@ -566,6 +963,31 @@ defmodule OpenSauceWeb.JobLive.New do
      |> assign(:garden, garden)
      |> assign(:show_garden_sheet, false)
      |> assign(:garden_error, nil)}
+  end
+
+  def handle_event("open_crew_sheet", _params, socket) do
+    {:noreply, assign(socket, show_crew_sheet: true)}
+  end
+
+  def handle_event("close_crew_sheet", _params, socket) do
+    {:noreply, assign(socket, show_crew_sheet: false)}
+  end
+
+  def handle_event("pick_crew", %{"id" => id}, socket) do
+    member = Enum.find(socket.assigns.org_members, &(&1.id == id))
+
+    if member do
+      {:noreply,
+       socket
+       |> assign(:draft_crew, socket.assigns.draft_crew ++ [member])
+       |> assign(:show_crew_sheet, false)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("remove_crew", %{"id" => id}, socket) do
+    {:noreply, assign(socket, :draft_crew, Enum.reject(socket.assigns.draft_crew, &(&1.id == id)))}
   end
 
   def handle_event("open_materials_sheet", _params, socket) do
@@ -652,6 +1074,7 @@ defmodule OpenSauceWeb.JobLive.New do
     case Orders.create_job(params, actor: member, tenant: member.organisation_id) do
       {:ok, job} ->
         write_job_materials(job, socket.assigns.draft_map, member)
+        write_job_staff(job, socket.assigns.draft_crew, member)
 
         {:noreply,
          socket
@@ -659,7 +1082,7 @@ defmodule OpenSauceWeb.JobLive.New do
          |> push_navigate(to: socket.assigns.back_to)}
 
       {:error, %Ash.Error.Invalid{} = err} ->
-        msg = err.errors |> Enum.map(& &1.message) |> Enum.join(", ")
+        msg = Enum.map_join(err.errors, ", ", & &1.message)
         {:noreply, assign(socket, :save_error, msg)}
 
       {:error, _} ->
@@ -669,18 +1092,18 @@ defmodule OpenSauceWeb.JobLive.New do
 
   defp step1_can_proceed?(:shift, _cat, _code, _garden), do: true
   defp step1_can_proceed?(:internal_work, _cat, code, _garden), do: not is_nil(code)
+
   defp step1_can_proceed?(:client_work, cat, _code, garden), do: not is_nil(cat) and not is_nil(garden)
 
   defp step1_errors(%{job_type: :shift}), do: {nil, nil}
 
-  defp step1_errors(%{job_type: :internal_work, account_code: nil}),
-    do: {"Select an account code", nil}
+  defp step1_errors(%{job_type: :internal_work, account_code: nil}), do: {"Select an account code", nil}
 
   defp step1_errors(%{job_type: :internal_work}), do: {nil, nil}
 
   defp step1_errors(%{job_type: :client_work} = a) do
-    service_error = if is_nil(a.service_category), do: "Select a service", else: nil
-    garden_error = if is_nil(a.garden), do: "Select a garden", else: nil
+    service_error = if is_nil(a.service_category), do: "Select a service"
+    garden_error = if is_nil(a.garden), do: "Select a garden"
     {service_error, garden_error}
   end
 
@@ -743,6 +1166,50 @@ defmodule OpenSauceWeb.JobLive.New do
     end
   end
 
+  defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
+  defp staff_name(_), do: "?"
+
+  defp crew_initial(member) do
+    n = staff_name(member)
+    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
+  end
+
+  defp crew_color(member_id) do
+    colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
+    Enum.at(colors, :erlang.phash2(member_id, length(colors)))
+  end
+
+  defp role_label(:owner), do: "Owner"
+  defp role_label(:manager), do: "Manager"
+  defp role_label(:staff), do: "Staff"
+  defp role_label(_), do: "—"
+
+  defp available_crew(org_members, draft_crew) do
+    selected = MapSet.new(draft_crew, & &1.id)
+    Enum.reject(org_members, &MapSet.member?(selected, &1.id))
+  end
+
+  defp write_job_staff(_job, [], _member), do: :ok
+
+  defp write_job_staff(job, crew, member) do
+    Enum.each(crew, fn m ->
+      Orders.assign_job_staff(
+        %{job_id: job.id, member_id: m.id, organisation_id: member.organisation_id},
+        actor: member,
+        tenant: member.organisation_id
+      )
+    end)
+  end
+
+  defp load_org_members(member) do
+    Accounts.list_members_for_organisation!(member.organisation_id,
+      actor: member,
+      tenant: member.organisation_id
+    )
+  rescue
+    _ -> []
+  end
+
   defp write_job_materials(_job, draft_map, _member) when draft_map == %{}, do: :ok
 
   defp write_job_materials(job, draft_map, member) do
@@ -779,10 +1246,12 @@ defmodule OpenSauceWeb.JobLive.New do
   defp draft_flat_size(%{min_order_qty: n}), do: n
 
   defp draft_btn_style,
-    do: "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
+    do:
+      "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
 
   defp draft_add_btn_style,
-    do: "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
+    do:
+      "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
 
   defp load_engagements(member) do
     CRM.list_engagements!(
@@ -839,14 +1308,13 @@ defmodule OpenSauceWeb.JobLive.New do
 
   defp engagement_initial(%{customer: c}) do
     name = c.company_name_nickname || c.first_name || "?"
-    String.first(name) |> String.upcase()
+    name |> String.first() |> String.upcase()
   end
 
   defp engagement_title(%{customer: nil, scope_title: t}) when is_binary(t), do: t
   defp engagement_title(%{customer: nil} = e), do: "Engagement #{String.slice(e.id, 0, 8)}"
 
-  defp engagement_title(%{customer: c, scope_title: t}) when is_binary(t),
-    do: "#{customer_display(c)} · #{t}"
+  defp engagement_title(%{customer: c, scope_title: t}) when is_binary(t), do: "#{customer_display(c)} · #{t}"
 
   defp engagement_title(%{customer: c}), do: customer_display(c)
 

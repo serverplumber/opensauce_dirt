@@ -24,7 +24,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
       Orders.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
-        load: [:garden, engagement: [:customer], staff_assignments: [:member]]
+        load: [:garden, engagement: [:customer], staff_assignments: [member: [:user]]]
       )
 
     {:noreply,
@@ -56,15 +56,28 @@ defmodule OpenSauceWeb.JobLive.Arrive do
         :error -> nil
       end
 
-    Orders.log_job_event!(
-      %{
-        job_id: job.id,
-        timestamp: now,
-        data: %{type: :arrival, odometer_km: odometer_km},
-        organisation_id: member.organisation_id
-      },
-      opts
-    )
+    event =
+      Orders.log_job_event!(
+        %{
+          job_id: job.id,
+          timestamp: now,
+          data: %{type: :arrival, odometer_km: odometer_km},
+          organisation_id: member.organisation_id
+        },
+        opts
+      )
+
+    Enum.each(job.staff_assignments, fn sa ->
+      Orders.log_job_event_staff(
+        %{
+          job_event_id: event.id,
+          member_id: sa.member_id,
+          man_hour_rate: sa.member.labor_hourly_rate,
+          organisation_id: member.organisation_id
+        },
+        opts
+      )
+    end)
 
     if job.status in [:scheduling, :scheduled] do
       Orders.mark_job_in_progress(job, opts)
@@ -238,19 +251,20 @@ defmodule OpenSauceWeb.JobLive.Arrive do
     Enum.join(parts, " · ")
   end
 
-  defp crew_initial(%{display_title: dt}) when is_binary(dt) and dt != "" do
-    dt |> String.trim() |> String.first() |> String.upcase()
-  end
+  defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
+  defp staff_name(_), do: "?"
 
-  defp crew_initial(_), do: "?"
+  defp crew_initial(member) do
+    n = staff_name(member)
+    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
+  end
 
   defp crew_color(member_id) do
     colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
     Enum.at(colors, :erlang.phash2(member_id, length(colors)))
   end
 
-  defp member_name(%{display_title: dt}) when is_binary(dt) and dt != "", do: dt
-  defp member_name(_), do: "—"
+  defp member_name(member), do: staff_name(member)
 
   defp fmt_dur(minutes) when minutes < 60, do: "#{minutes}m"
 

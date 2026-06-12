@@ -31,7 +31,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
         load: [
           :garden,
           engagement: [:customer],
-          staff_assignments: [:member],
+          staff_assignments: [member: [:user]],
           materials: [supplier_catalog_item: [supplier_catalog: [:supplier]]]
         ]
       )
@@ -166,16 +166,29 @@ defmodule OpenSauceWeb.JobLive.Closeout do
 
     note = if socket.assigns.note == "", do: nil, else: socket.assigns.note
 
-    Orders.log_job_event!(
-      %{
-        job_id: job.id,
-        timestamp: now,
-        data: %{type: :departure, odometer_km: odometer_km},
-        note: note,
-        organisation_id: member.organisation_id
-      },
-      opts
-    )
+    event =
+      Orders.log_job_event!(
+        %{
+          job_id: job.id,
+          timestamp: now,
+          data: %{type: :departure, odometer_km: odometer_km},
+          note: note,
+          organisation_id: member.organisation_id
+        },
+        opts
+      )
+
+    Enum.each(job.staff_assignments, fn sa ->
+      Orders.log_job_event_staff(
+        %{
+          job_event_id: event.id,
+          member_id: sa.member_id,
+          man_hour_rate: sa.member.labor_hourly_rate,
+          organisation_id: member.organisation_id
+        },
+        opts
+      )
+    end)
 
     Orders.complete_job(job, opts)
 
@@ -429,7 +442,6 @@ defmodule OpenSauceWeb.JobLive.Closeout do
         <%!-- sheet --%>
         <div
           style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 100px;max-height:85vh;display:flex;flex-direction:column;"
-          onclick="event.stopPropagation()"
         >
           <%!-- sheet handle + header --%>
           <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);flex-shrink:0;">
@@ -547,7 +559,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
           </p>
           <p style="font-size:11px;color:#6E675A;margin-top:2px;">
             {supplier_label(@item)}
-            <span :if={@from_plan} style="color:#54B57E;"> · plan:   {@planned_qty}</span>
+            <span :if={@from_plan} style="color:#54B57E;"> · plan:       {@planned_qty}</span>
           </p>
         </div>
         <button
@@ -621,19 +633,20 @@ defmodule OpenSauceWeb.JobLive.Closeout do
   defp garden_label(%{garden: %{name: n}}) when is_binary(n) and n != "", do: n
   defp garden_label(_), do: "No site"
 
-  defp crew_initial(%{display_title: dt}) when is_binary(dt) and dt != "" do
-    dt |> String.trim() |> String.first() |> String.upcase()
-  end
+  defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
+  defp staff_name(_), do: "?"
 
-  defp crew_initial(_), do: "?"
+  defp crew_initial(member) do
+    n = staff_name(member)
+    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
+  end
 
   defp crew_color(member_id) do
     colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
     Enum.at(colors, :erlang.phash2(member_id, length(colors)))
   end
 
-  defp member_name(%{display_title: dt}) when is_binary(dt) and dt != "", do: dt
-  defp member_name(_), do: "—"
+  defp member_name(member), do: staff_name(member)
 
   defp stepper_btn_style,
     do:

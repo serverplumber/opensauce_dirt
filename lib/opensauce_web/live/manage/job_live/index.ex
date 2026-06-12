@@ -502,11 +502,13 @@ defmodule OpenSauceWeb.JobLive.Index do
     if parts == [], do: nil, else: Enum.join(parts, " · ")
   end
 
-  defp crew_initial(%{display_title: dt}) when is_binary(dt) and dt != "" do
-    dt |> String.trim() |> String.first() |> String.upcase()
-  end
+  defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
+  defp staff_name(_), do: "?"
 
-  defp crew_initial(_), do: "?"
+  defp crew_initial(member) do
+    n = staff_name(member)
+    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
+  end
 
   defp crew_color(member_id) do
     colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
@@ -517,11 +519,8 @@ defmodule OpenSauceWeb.JobLive.Index do
     names =
       job.staff_assignments
       |> Enum.take(3)
-      |> Enum.map(fn sa ->
-        dt = sa.member && sa.member.display_title
-        if is_binary(dt) and dt != "", do: dt |> String.split() |> hd()
-      end)
-      |> Enum.reject(&is_nil/1)
+      |> Enum.map(fn sa -> staff_name(sa.member) end)
+      |> Enum.reject(&(&1 == "?"))
       |> Enum.join(" + ")
 
     if names == "", do: "on the clock", else: "on the clock · #{names}"
@@ -540,7 +539,7 @@ defmodule OpenSauceWeb.JobLive.Index do
       Orders.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
-        load: [:garden, engagement: [:customer], staff_assignments: [:member]]
+        load: [:garden, engagement: [:customer], staff_assignments: [member: [:user]]]
       )
 
     today = Date.utc_today()
