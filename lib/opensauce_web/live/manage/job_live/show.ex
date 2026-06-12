@@ -27,18 +27,30 @@ defmodule OpenSauceWeb.JobLive.Show do
         ]
       )
 
+    events =
+      if job.status == :in_progress do
+        Orders.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
+      else
+        []
+      end
+
+    arrival =
+      events |> Enum.filter(&match?(%{data: %Ash.Union{type: :arrival}}, &1)) |> List.last()
+
     {:noreply,
      socket
      |> assign(:job, job)
      |> assign(:page_title, page_title(job))
      |> assign(:materials_cost, materials_cost(job.materials))
+     |> assign(:arrived_at, arrival && arrival.timestamp)
+     |> assign(:arrival_odo, arrival && arrival.data.value.odometer_km)
      |> Navigation.assign(:jobs, [Navigation.root(:jobs)])}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:100px;">
+    <div style={"font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:#{if @job.status == :in_progress, do: "150px", else: "100px"};"}>
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
         <.link navigate={~p"/manage/jobs"}>
@@ -84,9 +96,19 @@ defmodule OpenSauceWeb.JobLive.Show do
             <span :if={@job.status == :in_progress} class="pill live" style="flex-shrink:0;">
               <span class="dot pulse"></span>On site
             </span>
-            <span :if={@job.status == :scheduling} class="pill cancel" style="flex-shrink:0;">
-              Place
-            </span>
+            <div :if={@job.status == :scheduling} style="display:flex;gap:6px;flex-shrink:0;">
+              <span class="pill cancel">Place</span>
+              <.link navigate={~p"/manage/jobs/#{@job.id}/arrive"}>
+                <button
+                  class="pill live"
+                  type="button"
+                  style="border:none;cursor:pointer;"
+                  ontouchstart=""
+                >
+                  Start
+                </button>
+              </.link>
+            </div>
             <span :if={@job.status == :scheduled} class="pill sched" style="flex-shrink:0;">
               <span class="dot"></span>Scheduled
             </span>
@@ -155,6 +177,32 @@ defmodule OpenSauceWeb.JobLive.Show do
             <span :if={length(@job.staff_assignments) > 6} style="font-size:11px;color:#6E675A;">
               +{length(@job.staff_assignments) - 6}
             </span>
+          </div>
+        </div>
+
+        <%!-- B4 on-site hero --%>
+        <div
+          :if={@job.status == :in_progress}
+          style="background:rgba(84,181,126,0.08);border-radius:12px;border:1.5px solid #54B57E;padding:12px 14px;"
+        >
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="min-width:0;flex:1;">
+              <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#54B57E;">
+                On site · {elapsed_label(@arrived_at)}
+              </p>
+              <p style="font-size:11px;color:#9A9384;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {arrival_line(@arrived_at, @arrival_odo, @job)}
+              </p>
+            </div>
+            <.link navigate={~p"/manage/jobs/#{@job.id}/closeout"}>
+              <button
+                type="button"
+                ontouchstart=""
+                style="font-size:13px;font-weight:700;color:#0C1F15;background:#54B57E;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;flex-shrink:0;"
+              >
+                leave →
+              </button>
+            </.link>
           </div>
         </div>
 
@@ -227,7 +275,53 @@ defmodule OpenSauceWeb.JobLive.Show do
         </div>
       </div>
     </div>
+
+    <%!-- sticky leave CTA — only for in-progress jobs --%>
+    <div
+      :if={@job.status == :in_progress}
+      style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;z-index:10;"
+    >
+      <.glow_button href={~p"/manage/jobs/#{@job.id}/closeout"} valid={true}>
+        Leave job · log distance →
+      </.glow_button>
+    </div>
     """
+  end
+
+  defp elapsed_label(nil), do: "—"
+
+  defp elapsed_label(arrived_at) do
+    secs = DateTime.diff(DateTime.utc_now(), arrived_at, :second)
+    h = div(secs, 3600)
+    m = div(rem(secs, 3600), 60)
+
+    cond do
+      h == 0 -> "#{m}m"
+      m == 0 -> "#{h}h"
+      true -> "#{h}h #{m}m"
+    end
+  end
+
+  defp arrival_line(nil, _odo, _job), do: "—"
+
+  defp arrival_line(arrived_at, odo, job) do
+    crew =
+      (job.staff_assignments || [])
+      |> Enum.take(3)
+      |> Enum.map(fn sa ->
+        dt = sa.member && sa.member.display_title
+        if is_binary(dt) and dt != "", do: dt |> String.split() |> hd()
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.join(" + ")
+
+    [
+      "arrived #{Calendar.strftime(arrived_at, "%H:%M")}",
+      odo && "odo #{odo} km",
+      crew != "" && crew
+    ]
+    |> Enum.reject(&(is_nil(&1) or &1 == false))
+    |> Enum.join(" · ")
   end
 
   defp page_title(%{service_category: cat}) when not is_nil(cat), do: Phoenix.Naming.humanize(cat)

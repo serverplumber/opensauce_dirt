@@ -321,6 +321,7 @@ defmodule OpenSauceWeb.JobLive.Index do
   end
 
   defp card_click(%{status: :scheduling, id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
+  defp card_click(%{status: :in_progress, id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
   defp card_click(%{id: id}), do: JS.push("open_event_log", value: %{id: id})
 
   defp job_card(assigns) do
@@ -385,18 +386,15 @@ defmodule OpenSauceWeb.JobLive.Index do
       <%!-- live strip (in-progress) --%>
       <div :if={@job.status == :in_progress} class="live-strip">
         <span class="lbl">{live_strip_label(@job)}</span>
-        <button class="open" type="button" phx-click="open_event_log" phx-value-id={@job.id}>
-          Open
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M9 6l6 6-6 6"
-              stroke="#54B57E"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </button>
+        <.link
+          navigate={~p"/manage/jobs/#{@job.id}/closeout"}
+          onclick="event.stopPropagation()"
+          ontouchstart=""
+        >
+          <button class="open" type="button" style="border:none;background:none;cursor:pointer;">
+            Leave →
+          </button>
+        </.link>
       </div>
 
       <%!-- crew row (scheduled + crew present) --%>

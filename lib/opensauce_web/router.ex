@@ -109,6 +109,7 @@ defmodule OpenSauceWeb.Router do
       # Job Routes
       live "/manage/jobs", JobLive.Index, :index
       live "/manage/jobs/:id/edit", JobLive.Index, :edit
+      live "/manage/jobs/:id/closeout", JobLive.Closeout, :index
 
       # Venue Routes
       live "/manage/venues", VenueLive.Index, :index
@@ -137,8 +138,9 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveSettings,
         OpenSauceWeb.LiveCommandPalette
       ] do
-      # Job creation, detail + materials
+      # Job creation, detail, arrive + materials
       live "/manage/jobs/new", JobLive.New, :index
+      live "/manage/jobs/:id/arrive", JobLive.Arrive, :index
       live "/manage/jobs/:id/materials", JobLive.Materials, :index
       live "/manage/jobs/:id", JobLive.Show, :show
 
