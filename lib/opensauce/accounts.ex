@@ -19,6 +19,8 @@ defmodule OpenSauce.Accounts do
       define :list_members_for_organisation, action: :list_for_organisation, args: [:organisation_id]
       define :get_member_by_user_and_organisation, action: :get_by_user_and_organisation, args: [:user_id, :organisation_id]
       define :update_organisation_member, action: :update
+      define :suspend_organisation_member, action: :suspend
+      define :activate_organisation_member, action: :activate
       define :delete_organisation_member, action: :destroy
     end
 
@@ -27,6 +29,7 @@ defmodule OpenSauce.Accounts do
     resource OpenSauce.Accounts.User do
       define :create_user, action: :create
       define :get_user_by_email, args: [:email], action: :get_by_email
+      define :update_user, action: :update
     end
 
     resource OpenSauce.Accounts.ApiKey do

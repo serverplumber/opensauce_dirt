@@ -32,7 +32,8 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # Any authenticated member regardless of role.
   def on_mount(:live_member_required, _params, session, socket) do
     case load_member(socket, session) do
-      {:ok, member} -> {:cont, assign(socket, :current_member, member)}
+      {:ok, member, user} -> {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user)}
+      :suspended -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
       :no_org -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/org/pick")}
       :error -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
     end
@@ -41,11 +42,14 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # Staff, managers, and owners.
   def on_mount(:live_staff_required, _params, session, socket) do
     case load_member(socket, session) do
-      {:ok, %{role: role} = member} when role in [:staff, :manager, :owner] ->
-        {:cont, assign(socket, :current_member, member)}
+      {:ok, %{role: role} = member, user} when role in [:staff, :manager, :owner] ->
+        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user)}
 
-      {:ok, _} ->
+      {:ok, _, _} ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+
+      :suspended ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
 
       :no_org ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/org/pick")}
@@ -58,11 +62,14 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # Managers and owners only.
   def on_mount(:live_manager_required, _params, session, socket) do
     case load_member(socket, session) do
-      {:ok, %{role: role} = member} when role in [:manager, :owner] ->
-        {:cont, assign(socket, :current_member, member)}
+      {:ok, %{role: role} = member, user} when role in [:manager, :owner] ->
+        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user)}
 
-      {:ok, _} ->
+      {:ok, _, _} ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+
+      :suspended ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
 
       :no_org ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/org/pick")}
@@ -75,10 +82,15 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # --
 
   defp load_member(socket, session) do
-    with %{id: user_id} <- socket.assigns[:current_user],
+    with %{id: user_id} = raw_user <- socket.assigns[:current_user],
          org_id when is_binary(org_id) <- session["organisation_id"],
          {:ok, member} <- Accounts.get_member_by_user_and_organisation(user_id, org_id) do
-      {:ok, member}
+      if member.status == :suspended do
+        :suspended
+      else
+        user = Ash.load!(raw_user, [:initials], authorize?: false, domain: Accounts)
+        {:ok, member, user}
+      end
     else
       _ ->
         if socket.assigns[:current_user], do: :no_org, else: :error

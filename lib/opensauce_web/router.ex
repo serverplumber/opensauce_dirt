@@ -117,6 +117,9 @@ defmodule OpenSauceWeb.Router do
       live "/manage/venues/:id", VenueLive.Show, :show
       live "/manage/venues/:id/edit", VenueLive.Show, :edit
 
+      # Org edit (owner-accessible via account page)
+      live "/manage/org", OrgLive, :index
+
       # Settings Routes
       live "/manage/settings", SettingsLive.Index, :index
       live "/manage/settings/general", SettingsLive.Index, :general
@@ -146,6 +149,9 @@ defmodule OpenSauceWeb.Router do
 
       # Today dashboard
       live "/manage/today", TodayLive, :index
+
+      # Account
+      live "/manage/account", AccountLive, :index
 
       # Inventory
       live "/manage/inventory", InventoryLive.Index, :index

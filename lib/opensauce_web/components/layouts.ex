@@ -16,6 +16,7 @@ defmodule OpenSauceWeb.Layouts do
 
   attr :current_path, :string, default: ""
   attr :current_user, :any, default: nil
+  attr :current_member, :any, default: nil
   attr :flash, :map, default: %{}
   attr :page_title, :string, default: nil
   attr :main_bg, :string, default: "bg-stone-50"
@@ -29,7 +30,7 @@ defmodule OpenSauceWeb.Layouts do
         {render_slot(@inner_block)}
       </main>
 
-      <.bottom_nav current_path={@current_path} current_user={@current_user} />
+      <.bottom_nav current_path={@current_path} current_user={@current_user} current_member={@current_member} />
     </div>
     """
   end

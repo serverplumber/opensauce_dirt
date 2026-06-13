@@ -200,6 +200,7 @@ defmodule OpenSauceWeb.Components.Page do
 
   attr :current_path, :string, default: ""
   attr :current_user, :any, default: nil
+  attr :current_member, :any, default: nil
 
   def bottom_nav(assigns) do
     more_active =
@@ -287,17 +288,27 @@ defmodule OpenSauceWeb.Components.Page do
               </.link>
             </li>
           </ul>
-          <div class="mt-2 pt-2" style="border-top: 1px solid rgba(52,48,37,0.58)">
-            <button
-              type="button"
-              phx-click={hide_more_sheet() |> JS.show(to: "#sign-out-sheet")}
-              class="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-medium text-[#9A9384] hover:bg-[#2B2820] hover:text-[#F4EFE2] transition"
+          <div :if={@current_user} class="mt-2 pt-2" style="border-top: 1px solid rgba(52,48,37,0.58)">
+            <.link
+              navigate={~p"/manage/account"}
+              phx-click={hide_more_sheet()}
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-[#2B2820]"
             >
-              Sign out
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+              <div style={"width:36px;height:36px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;color:#fff;#{user_monogram_gradient(@current_member)}"}>
+                {user_monogram_initial(@current_user)}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13.5px;font-weight:600;color:#F4EFE2;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  {user_display_name(@current_user)}
+                </div>
+                <div style="margin-top:2px;display:flex;align-items:center;gap:6px;">
+                  <span style={"font-size:10.5px;font-weight:700;letter-spacing:0.03em;padding:2px 7px;border-radius:999px;#{role_pill_style(@current_member)}"}>
+                    {role_label(@current_member)}
+                  </span>
+                </div>
+              </div>
+              <.chevron_right_icon />
+            </.link>
           </div>
           <div class="h-safe-bottom" />
         </div>
@@ -464,6 +475,40 @@ defmodule OpenSauceWeb.Components.Page do
     </svg>
     """
   end
+
+  defp user_display_name(nil), do: ""
+
+  defp user_display_name(user) do
+    first = user.first_name
+    last = user.last_name
+
+    cond do
+      first && last -> "#{first} #{last}"
+      first -> first
+      true -> user.email |> to_string() |> String.split("@") |> hd() |> String.capitalize()
+    end
+  end
+
+  defp user_monogram_initial(nil), do: "?"
+  defp user_monogram_initial(%{initials: initials}) when is_binary(initials), do: initials
+
+  defp user_monogram_initial(user) do
+    user.email |> to_string() |> String.split("@") |> hd() |> String.first() |> String.upcase()
+  end
+
+  defp user_monogram_gradient(%{role: role}) when role in [:owner, :manager],
+    do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
+
+  defp user_monogram_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
+
+  defp role_pill_style(%{role: role}) when role in [:owner, :manager],
+    do: "background:rgba(219,146,88,0.16);color:#DB9258;"
+
+  defp role_pill_style(_), do: "background:rgba(84,181,126,0.14);color:#54B57E;"
+
+  defp role_label(%{role: :owner}), do: "Owner"
+  defp role_label(%{role: :manager}), do: "Manager"
+  defp role_label(_), do: "Field crew"
 
   defp chevron_right_icon(assigns) do
     ~H"""

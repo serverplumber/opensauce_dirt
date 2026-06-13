@@ -44,11 +44,11 @@ After any resource change, run `mix ash.codegen <migration_name>` to update both
 
 ### Web Layer
 
-- **Router**: `lib/opensauce_web/router.ex` — staff routes under `/manage/`, split into manager-only and staff-accessible session groups
-- **LiveViews**: `lib/opensauce_web/live/manage/` — jobs, customers, engagements, inventory, purchasing, invoices, settings
-- **Components**: `lib/opensauce_web/components/` — core, forms, data_vis, page, layouts
-- **Navigation**: `lib/opensauce_web/navigation.ex` — section definitions with sub-links; `live_nav.ex` maps URL prefixes to nav sections
-- Auth via `on_mount` hooks using AshAuthenticationPhoenix
+- **Router**: `lib/opensauce_web/router.ex` — staff routes under `/manage/`, split into manager-only (`admin_routes`) and staff-accessible (`manage_routes`) session groups
+- **LiveViews**: `lib/opensauce_web/live/manage/` — jobs, customers, engagements, inventory, purchasing, invoices, account, org; plus legacy `settings_live/` (desktop scaffolding, being migrated out)
+- **Components**: `lib/opensauce_web/components/` — `core.ex` (shared UI primitives), `page.ex` (bottom nav shell + legacy desktop layout components), `layouts.ex` (`mobile_shell` is the active layout; `sidebar_layout` is defunct)
+- **Navigation**: bottom nav bar defined in `page.ex`; `live_nav.ex` maps URL prefixes to active nav tab
+- Auth via `on_mount` hooks in `live_user_auth.ex` — actor is `OrganisationMember`, not `User`; suspended members are redirected to sign-in
 
 ### Key Business Flows
 
@@ -65,9 +65,25 @@ After any resource change, run `mix ash.codegen <migration_name>` to update both
 - **LiveView tests** use `Phoenix.LiveViewTest` with `live/2`, `element/2`, `render_click/1`, `form/3`, `render_submit/1`
 - Tests use PostgreSQL sandbox in manual mode (async-compatible)
 
+## Product strategy: mobile only
+
+**This is a mobile field app. There is no desktop product.**
+
+The codebase contains a legacy desktop UI — `sidebar_layout` in `layouts.ex`, the light-theme `surface`/`section`/`two_column` components in `page.ex`, and the `settings_live/` LiveViews (org form, members, API keys, calendar feed, CSV import/export). That code was scaffolding used to get the data model stood up quickly. It is now defunct.
+
+**Rules:**
+- Never use `sidebar_layout`, `surface`, `section`, `two_column`, or `toggle_bar` for new work.
+- Never use light-theme Tailwind classes (`bg-white`, `text-stone-*`, `border-gray-*`, etc.) on any screen a user will see.
+- Every new screen and every migrated screen uses the dark soil palette, bottom nav shell (`mobile_shell`), and the patterns described below.
+- When a feature request touches something that only exists in the desktop `settings_live/` screens, port the behaviour to a mobile screen as part of that task — do not leave it in the old desktop code.
+
+**Desktop code as reference only:** The `settings_live/` components are useful for understanding what business logic already exists (Ash actions, form flow, validation). Read them for behaviour; never copy their markup or use their components.
+
+**Future desktop:** A proper wide-screen UI may be built later, from scratch, for workflows that genuinely don't fit a phone (bulk data editing, reporting dashboards, etc.). That is a separate future project. Do not design current mobile screens to accommodate it.
+
 ## Mobile UI Theme
 
-The entire app is a **dark-first mobile field app**. There is no desktop version — forget it ever existed. All screens use the dark soil palette, Bricolage Grotesque headings, and Hanken Grotesk body text.
+The entire app is a **dark-first mobile field app**. All screens use the dark soil palette, Bricolage Grotesque headings, and Hanken Grotesk body text.
 
 ### Palette
 
@@ -131,7 +147,15 @@ The `<.modal>` component (`core.ex`) is globally dark-themed: `#211E16` backgrou
 
 ### Navigation
 
-Bottom nav bar (`page.ex`) — `#211E16` bg, 74px tall. Active tab: `#54B57E`. Inactive: `#6E675A`. The More sheet slides up from the bottom and contains Sign Out. Nav highlights based on URL prefix via `live_nav.ex`.
+Bottom nav bar (`page.ex`) — `#211E16` bg, 74px tall. Active tab: `#54B57E`. Inactive: `#6E675A`. Nav highlights based on URL prefix via `live_nav.ex`.
+
+**More sheet** slides up from the bottom and contains overflow nav links (Inventory, Engagements, Venues, Invoices, Settings) plus a user identity card at the bottom showing the user's avatar monogram, display name, and role pill — tapping it navigates to `/manage/account`.
+
+**Account screen** (`/manage/account`) — user's name (editable), org info (read-only), switch org (if multiple memberships), sign out. Owners get a pencil icon to navigate to `/manage/org`.
+
+**Org screen** (`/manage/org`, manager+) — edit org fields (name, currency, tax mode, overhead, mileage, email from), manage staff (add, edit role/rate/title, suspend/activate). Suspension sets `OrganisationMember.status = :suspended` and blocks login; the row is never deleted (historical data).
+
+**Bottom sheets** (`z-[60]`) are used for forms that overlay the current screen (invite member, edit member, sign-out confirmation). They must use `z-[60]` to clear the bottom nav at `z-50`.
 
 **Sticky CTAs** sit directly above the nav bar at `position:fixed; bottom:74px`. Background `#16140E` with a `rgba(52,48,37,0.58)` top border. Always use `<.glow_button>` here.
 

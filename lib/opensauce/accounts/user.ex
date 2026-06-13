@@ -35,6 +35,10 @@ defmodule OpenSauce.Accounts.User do
   actions do
     defaults [:read, create: [:email]]
 
+    update :update do
+      accept [:first_name, :last_name, :email]
+    end
+
     read :get_by_subject do
       argument :subject, :string, allow_nil?: false
       get? true
@@ -70,7 +74,39 @@ defmodule OpenSauce.Accounts.User do
       public? true
     end
 
+    attribute :first_name, :string do
+      public? true
+      allow_nil? true
+      constraints max_length: 100
+    end
+
+    attribute :last_name, :string do
+      public? true
+      allow_nil? true
+      constraints max_length: 100
+    end
+
     timestamps()
+  end
+
+  calculations do
+    calculate :initials, :string, fn records, _ ->
+      Enum.map(records, fn user ->
+        cond do
+          user.first_name && user.last_name ->
+            (String.first(user.first_name) <> String.first(user.last_name)) |> String.upcase()
+          user.first_name ->
+            user.first_name
+            |> String.split(~r/[\s\-]+/, trim: true)
+            |> Enum.map(&String.first/1)
+            |> Enum.take(2)
+            |> Enum.join()
+            |> String.upcase()
+          true ->
+            user.email |> to_string() |> String.split("@") |> hd() |> String.first() |> String.upcase()
+        end
+      end)
+    end
   end
 
   identities do

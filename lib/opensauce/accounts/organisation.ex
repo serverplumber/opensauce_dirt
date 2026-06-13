@@ -26,6 +26,10 @@ defmodule OpenSauce.Accounts.Organisation do
                on_missing: :destroy
              )
     end
+
+    update :update_settings do
+      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address]
+    end
   end
 
   policies do

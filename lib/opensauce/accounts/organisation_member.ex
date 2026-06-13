@@ -14,7 +14,17 @@ defmodule OpenSauce.Accounts.OrganisationMember do
   end
 
   actions do
-    defaults [:read, :destroy, create: [:role, :display_title, :user_id, :organisation_id], update: [:role, :display_title, :labor_hourly_rate]]
+    defaults [:read, :destroy, create: [:role, :display_title, :user_id, :organisation_id, :status], update: [:role, :display_title, :labor_hourly_rate]]
+
+    update :suspend do
+      accept []
+      change set_attribute(:status, :suspended)
+    end
+
+    update :activate do
+      accept []
+      change set_attribute(:status, :active)
+    end
 
     read :get_by_user_and_organisation do
       argument :user_id, :uuid, allow_nil?: false
@@ -63,6 +73,13 @@ defmodule OpenSauce.Accounts.OrganisationMember do
       allow_nil? false
       default 0
       constraints min: 0
+    end
+
+    attribute :status, :atom do
+      public? true
+      allow_nil? false
+      default :active
+      constraints one_of: [:active, :suspended]
     end
 
     timestamps()
