@@ -14,8 +14,21 @@ defmodule OpenSauce.Accounts.Organisation do
   actions do
     defaults [:read, :destroy, create: [:name, :slug]]
 
+    @new_fields [
+      :legal_name,
+      :website,
+      :phone,
+      :payment_info,
+      :invoice_terms,
+      :invoice_footer,
+      :contact_name,
+      :contact_title,
+      :contact_phone,
+      :contact_email
+    ]
+
     update :update do
-      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :head_office_venue_id]
+      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :head_office_venue_id] ++ @new_fields
 
       argument :address, :map, allow_nil?: true
 
@@ -28,7 +41,7 @@ defmodule OpenSauce.Accounts.Organisation do
     end
 
     update :update_settings do
-      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address]
+      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address] ++ @new_fields
     end
   end
 
@@ -86,6 +99,56 @@ defmodule OpenSauce.Accounts.Organisation do
 
     attribute :email_from_address, :string do
       public? true
+    end
+
+    attribute :legal_name, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :website, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :phone, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :payment_info, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :invoice_terms, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :invoice_footer, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :contact_name, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :contact_title, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :contact_phone, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :contact_email, :string do
+      public? true
+      allow_nil? true
     end
 
     timestamps()

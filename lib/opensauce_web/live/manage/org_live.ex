@@ -9,7 +9,7 @@ defmodule OpenSauceWeb.OrgLive do
   @impl true
   def mount(_params, _session, socket) do
     member = socket.assigns.current_member
-    org = Accounts.get_organisation!(member.organisation_id, authorize?: false)
+    org = Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
     members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
     form = Form.for_update(org, :update_settings, authorize?: false, domain: Accounts, as: "org")
 
@@ -35,28 +35,34 @@ defmodule OpenSauceWeb.OrgLive do
   # -- Org form --
 
   @impl true
-  def handle_event("validate_org", %{"org" => params}, socket) do
-    form = Form.validate(socket.assigns.form.source, params)
+  def handle_event("validate_org", params, socket) do
+    org_params = Map.get(params, "org", %{})
+    form = Form.validate(socket.assigns.form.source, org_params)
     {:noreply, assign(socket, :form, to_form(form))}
   end
 
   @impl true
-  def handle_event("save_org", %{"org" => params}, socket) do
-    case Form.submit(socket.assigns.form.source, params: params) do
-      {:ok, updated_org} ->
-        form = Form.for_update(updated_org, :update_settings, authorize?: false, domain: Accounts, as: "org")
+  def handle_event("save_org", params, socket) do
+    org_params = Map.get(params, "org", %{})
+    address_params = params |> Map.get("address", %{}) |> nilify_map_values()
+    member = socket.assigns.current_member
 
-        {:noreply,
-         socket
-         |> assign(:org, updated_org)
-         |> assign(:form, to_form(form))
-         |> put_flash(:info, "Organisation updated.")}
+    with {:ok, updated_org} <- Form.submit(socket.assigns.form.source, params: org_params),
+         {:ok, updated_org} <- Accounts.update_organisation(updated_org, %{address: address_params}, actor: member) do
+      updated_org = Accounts.get_organisation!(updated_org.id, authorize?: false, load: [:address])
+      form = Form.for_update(updated_org, :update_settings, authorize?: false, domain: Accounts, as: "org")
 
-      {:error, form} ->
-        {:noreply,
-         socket
-         |> assign(:form, to_form(form))
-         |> put_flash(:error, "Could not save — check the fields below.")}
+      {:noreply,
+       socket
+       |> assign(:org, updated_org)
+       |> assign(:form, to_form(form))
+       |> put_flash(:info, "Organisation updated.")}
+    else
+      {:error, %AshPhoenix.Form{} = form} ->
+        {:noreply, socket |> assign(:form, to_form(form)) |> put_flash(:error, "Could not save — check the fields below.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not save.")}
     end
   end
 
@@ -659,19 +665,60 @@ defmodule OpenSauceWeb.OrgLive do
           {@org.name}
         </div>
 
-        <%!-- General: name only --%>
+        <%!-- General: names + address --%>
         <div>
           <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">General</p>
-          <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;">
-            <label class="dark-label" for={@form[:name].id}>Organisation name</label>
-            <input
-              class="dark-input"
-              type="text"
-              name={@form[:name].name}
-              id={@form[:name].id}
-              value={@form[:name].value || ""}
-            />
-            <span :for={msg <- @form[:name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+          <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label class="dark-label" for={@form[:name].id}>Trading name</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={@form[:name].name}
+                id={@form[:name].id}
+                value={@form[:name].value || ""}
+                placeholder="Toto Gardens"
+              />
+              <span :for={msg <- @form[:name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:legal_name].id}>Legal name <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <input
+                class="dark-input"
+                type="text"
+                name={@form[:legal_name].name}
+                id={@form[:legal_name].id}
+                value={@form[:legal_name].value || ""}
+                placeholder="1308-8393 Inc."
+              />
+            </div>
+
+            <div style="height:1px;background:rgba(52,48,37,0.58);"></div>
+
+            <div>
+              <label class="dark-label">Street</label>
+              <input class="dark-input" type="text" name="address[street]" value={addr(@org.address, :street)} placeholder="123 Main St"/>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label">City</label>
+                <input class="dark-input" type="text" name="address[city]" value={addr(@org.address, :city)} placeholder="Ottawa"/>
+              </div>
+              <div>
+                <label class="dark-label">Province / State</label>
+                <input class="dark-input" type="text" name="address[province]" value={addr(@org.address, :province)} placeholder="ON"/>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label">Postal code</label>
+                <input class="dark-input" type="text" name="address[zip]" value={addr(@org.address, :zip)} placeholder="K1A 0A0"/>
+              </div>
+              <div>
+                <label class="dark-label">Country</label>
+                <input class="dark-input" type="text" name="address[country]" value={addr(@org.address, :country)} placeholder="Canada"/>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -913,6 +960,126 @@ defmodule OpenSauceWeb.OrgLive do
           </div>
         </div>
 
+        <%!-- Invoice --%>
+        <div>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Invoice</p>
+          <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label class="dark-label" for={@form[:payment_info].id}>Payment info</label>
+              <textarea
+                class="dark-textarea"
+                name={@form[:payment_info].name}
+                id={@form[:payment_info].id}
+                rows="3"
+                placeholder="E.g. E-transfer to pay@example.com — include invoice number in memo"
+              >{@form[:payment_info].value || ""}</textarea>
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:invoice_terms].id}>Terms</label>
+              <textarea
+                class="dark-textarea"
+                name={@form[:invoice_terms].name}
+                id={@form[:invoice_terms].id}
+                rows="3"
+                placeholder="E.g. Payment due within 30 days. Overdue balances subject to 1.5% monthly interest."
+              >{@form[:invoice_terms].value || ""}</textarea>
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:invoice_footer].id}>Footer</label>
+              <textarea
+                class="dark-textarea"
+                name={@form[:invoice_footer].name}
+                id={@form[:invoice_footer].id}
+                rows="2"
+                placeholder="E.g. Thank you for your business!"
+              >{@form[:invoice_footer].value || ""}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <%!-- Contact --%>
+        <div>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Contact</p>
+          <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label" for={@form[:phone].id}>Phone</label>
+                <input
+                  class="dark-input"
+                  type="tel"
+                  name={@form[:phone].name}
+                  id={@form[:phone].id}
+                  value={@form[:phone].value || ""}
+                  placeholder="613-555-0100"
+                />
+              </div>
+              <div>
+                <label class="dark-label" for={@form[:website].id}>Website</label>
+                <input
+                  class="dark-input"
+                  type="url"
+                  name={@form[:website].name}
+                  id={@form[:website].id}
+                  value={@form[:website].value || ""}
+                  placeholder="totogardens.ca"
+                />
+              </div>
+            </div>
+
+            <div style="height:1px;background:rgba(52,48,37,0.58);"></div>
+            <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Point of contact</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label" for={@form[:contact_name].id}>Name</label>
+                <input
+                  class="dark-input"
+                  type="text"
+                  name={@form[:contact_name].name}
+                  id={@form[:contact_name].id}
+                  value={@form[:contact_name].value || ""}
+                  placeholder="Jane Smith"
+                />
+              </div>
+              <div>
+                <label class="dark-label" for={@form[:contact_title].id}>Title</label>
+                <input
+                  class="dark-input"
+                  type="text"
+                  name={@form[:contact_title].name}
+                  id={@form[:contact_title].id}
+                  value={@form[:contact_title].value || ""}
+                  placeholder="Office Manager"
+                />
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label" for={@form[:contact_phone].id}>Phone</label>
+                <input
+                  class="dark-input"
+                  type="tel"
+                  name={@form[:contact_phone].name}
+                  id={@form[:contact_phone].id}
+                  value={@form[:contact_phone].value || ""}
+                  placeholder="613-555-0101"
+                />
+              </div>
+              <div>
+                <label class="dark-label" for={@form[:contact_email].id}>Email</label>
+                <input
+                  class="dark-input"
+                  type="email"
+                  name={@form[:contact_email].name}
+                  id={@form[:contact_email].id}
+                  value={@form[:contact_email].value || ""}
+                  placeholder="jane@example.com"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <%!-- Email --%>
         <div>
           <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Email</p>
@@ -1020,6 +1187,11 @@ defmodule OpenSauceWeb.OrgLive do
 
   defp nilify(""), do: nil
   defp nilify(s), do: s
+
+  defp nilify_map_values(map), do: Map.new(map, fn {k, v} -> {k, nilify(v)} end)
+
+  defp addr(nil, _), do: ""
+  defp addr(address, field), do: Map.get(address, field) || ""
 
   defp parse_rate(nil), do: 0
   defp parse_rate(""), do: 0
