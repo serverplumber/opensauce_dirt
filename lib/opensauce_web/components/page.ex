@@ -191,7 +191,6 @@ defmodule OpenSauceWeb.Components.Page do
   @more_sections [
     %{label: "Purchasing", path: "/manage/purchasing"},
     %{label: "Inventory", path: "/manage/inventory"},
-    %{label: "Engagements", path: "/manage/engagements"},
     %{label: "Venues", path: "/manage/venues"},
     %{label: "Invoices", path: "/manage/invoices"}
   ]
@@ -446,10 +445,7 @@ defmodule OpenSauceWeb.Components.Page do
           <.nav_tab
             navigate={~p"/manage/customers"}
             label="Clients"
-            active={
-              String.starts_with?(@current_path, "/manage/customers") or
-                String.starts_with?(@current_path, "/manage/engagements")
-            }
+            active={String.starts_with?(@current_path, "/manage/customers")}
           >
             <:icon><.customers_icon /></:icon>
           </.nav_tab>

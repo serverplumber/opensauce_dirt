@@ -23,12 +23,12 @@ defmodule OpenSauce.Accounts.TaxRate do
 
     create :create do
       primary? true
-      accept [:name, :rate, :is_compound, :position]
+      accept [:name, :rate, :is_compound, :position, :registration_number]
     end
 
     update :update do
       primary? true
-      accept [:name, :rate, :is_compound, :position]
+      accept [:name, :rate, :is_compound, :position, :registration_number]
     end
   end
 
@@ -69,6 +69,11 @@ defmodule OpenSauce.Accounts.TaxRate do
       public? true
       allow_nil? false
       default 0
+    end
+
+    attribute :registration_number, :string do
+      public? true
+      allow_nil? true
     end
 
     timestamps()
