@@ -76,6 +76,7 @@ defmodule OpenSauce.Orders.Job do
         :containing_shift_id,
         :actor_id,
         :scheduled_for,
+        :start_time,
         :due_by,
         :duration_estimate,
         :status,
@@ -161,6 +162,11 @@ defmodule OpenSauce.Orders.Job do
     end
 
     attribute :scheduled_for, :date do
+      allow_nil? true
+      public? true
+    end
+
+    attribute :start_time, :time do
       allow_nil? true
       public? true
     end

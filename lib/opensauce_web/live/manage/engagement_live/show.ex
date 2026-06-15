@@ -12,8 +12,9 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   end
 
   @impl true
-  def handle_params(%{"reference" => reference, "engagement_id" => engagement_id}, _uri, socket) do
+  def handle_params(%{"reference" => reference, "engagement_id" => engagement_id} = params, _uri, socket) do
     member = socket.assigns.current_member
+    return_to = Map.get(params, "return_to", ~p"/manage/customers/#{reference}")
 
     engagement =
       Ash.get!(CRM.Engagement, engagement_id,
@@ -33,6 +34,7 @@ defmodule OpenSauceWeb.EngagementLive.Show do
     {:noreply,
      socket
      |> assign(:reference, reference)
+     |> assign(:return_to, return_to)
      |> assign(:engagement, engagement)
      |> assign(:images, images)
      |> assign(:materials_cost, materials_cost(engagement.materials))
@@ -84,7 +86,7 @@ defmodule OpenSauceWeb.EngagementLive.Show do
 
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
-        <.link navigate={~p"/manage/customers/#{@reference}"}>
+        <.link navigate={@return_to}>
           <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

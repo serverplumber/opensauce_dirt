@@ -909,4 +909,78 @@ defmodule OpenSauceWeb.Components.Core do
     |> JS.remove_class("overflow-hidden", to: "body")
     |> JS.pop_focus()
   end
+
+  # -------------------------------------------------------------------------
+  # Member identity components
+  # -------------------------------------------------------------------------
+
+  attr :member, :any, required: true
+  attr :size, :integer, default: 36
+  attr :initials, :string, default: nil
+
+  def member_avatar(assigns) do
+    assigns =
+      assigns
+      |> assign(:auto_initials, member_initials(assigns.member))
+      |> assign(:border_radius, round(assigns.size * 0.27))
+      |> assign(:font_size, round(assigns.size * 0.39))
+
+    ~H"""
+    <div style={"width:#{@size}px;height:#{@size}px;border-radius:#{@border_radius}px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:#{@font_size}px;letter-spacing:-0.01em;color:#fff;#{member_gradient(@member.role)}"}>
+      {@initials || @auto_initials}
+    </div>
+    """
+  end
+
+  attr :member, :any, required: true
+  attr :rest, :global
+  slot :trailing
+
+  def member_card(assigns) do
+    ~H"""
+    <div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;" {@rest}>
+      <.member_avatar member={@member} />
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {member_display_name(@member)}
+        </p>
+        <p style="font-size:11px;color:#6E675A;margin-top:1px;">
+          {member_subtitle(@member)}
+        </p>
+      </div>
+      <div :if={@trailing != []} style="flex-shrink:0;">
+        {render_slot(@trailing)}
+      </div>
+    </div>
+    """
+  end
+
+  defp member_initials(%{user: %{first_name: f, last_name: l}}) when is_binary(f) and is_binary(l),
+    do: (String.first(f) <> String.first(l)) |> String.upcase()
+
+  defp member_initials(%{user: %{first_name: f}}) when is_binary(f) and f != "",
+    do: f |> String.first() |> String.upcase()
+
+  defp member_initials(%{user: %{email: e}}),
+    do: e |> to_string() |> String.split("@") |> hd() |> String.first() |> String.upcase()
+
+  defp member_initials(_), do: "?"
+
+  defp member_display_name(%{user: %{first_name: f, last_name: l}})
+       when is_binary(f) and is_binary(l),
+       do: "#{f} #{l}"
+
+  defp member_display_name(%{user: %{first_name: f}}) when is_binary(f) and f != "", do: f
+  defp member_display_name(%{user: %{email: e}}), do: to_string(e)
+  defp member_display_name(_), do: "—"
+
+  defp member_subtitle(%{display_title: t}) when is_binary(t) and t != "", do: t
+  defp member_subtitle(%{role: :owner}), do: "Owner"
+  defp member_subtitle(%{role: :manager}), do: "Manager"
+  defp member_subtitle(_), do: "Staff"
+
+  defp member_gradient(role) when role in [:owner, :manager],
+    do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
+
+  defp member_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
 end

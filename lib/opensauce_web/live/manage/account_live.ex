@@ -56,9 +56,7 @@ defmodule OpenSauceWeb.AccountLive do
 
       <%!-- Hero: avatar + name + email + role --%>
       <div style="display:flex;align-items:center;gap:14px;padding:4px 0;">
-        <div style={"width:56px;height:56px;border-radius:14px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;color:#fff;letter-spacing:-0.02em;#{hero_monogram_gradient(@current_member)}"}>
-          {@current_user.initials}
-        </div>
+        <.member_avatar member={@current_member} initials={@current_user.initials} size={56} />
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
             {hero_display_name(@current_user)}
@@ -127,23 +125,21 @@ defmodule OpenSauceWeb.AccountLive do
         </div>
       </div>
 
-      <%!-- Organisation --%>
+      <%!-- Organisations --%>
       <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
-            Organisation
-          </p>
-          <.link :if={@current_member.role == :owner} navigate={~p"/manage/org"} style="color:#6E675A;line-height:0;padding:4px;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-          </.link>
-        </div>
+        <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
+          Organisations
+        </p>
         <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;">
-          <div style="padding:14px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
+          <div style="padding:14px 16px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;justify-content:space-between;">
             <div style="font-size:16px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
               {@org.name}
             </div>
+            <.link :if={@current_member.role == :owner} navigate={~p"/manage/org"} style="color:#6E675A;line-height:0;padding:4px;flex-shrink:0;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </.link>
           </div>
           <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;">
             <.org_row label="Currency" value={to_string(@org.currency)} />
@@ -154,10 +150,8 @@ defmodule OpenSauceWeb.AccountLive do
         </div>
       </div>
 
-      <%!-- Actions --%>
-      <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:12px;">
+      <div :if={@memberships_count > 1} style="padding-bottom:12px;">
         <.link
-          :if={@memberships_count > 1}
           navigate={~p"/org/pick"}
           style="display:flex;align-items:center;justify-content:space-between;background:#211E16;border-radius:14px;border:1px solid rgba(52,48,37,0.58);padding:14px 16px;text-decoration:none;"
         >
@@ -166,18 +160,6 @@ defmodule OpenSauceWeb.AccountLive do
             <path d="M9 6l6 6-6 6" stroke="#6E675A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </.link>
-
-        <button
-          type="button"
-          ontouchstart=""
-          phx-click={JS.show(to: "#sign-out-sheet")}
-          style="display:flex;align-items:center;justify-content:space-between;background:#211E16;border-radius:14px;border:1px solid rgba(52,48,37,0.58);padding:14px 16px;width:100%;text-align:left;cursor:pointer;"
-        >
-          <span style="font-size:14px;font-weight:600;color:#E87E7E;">Sign out</span>
-          <svg width="18" height="18" fill="none" stroke="#E87E7E" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </button>
       </div>
     </div>
     """
@@ -202,11 +184,6 @@ defmodule OpenSauceWeb.AccountLive do
       true -> user.email |> to_string() |> String.split("@") |> hd() |> String.capitalize()
     end
   end
-
-  defp hero_monogram_gradient(%{role: role}) when role in [:owner, :manager],
-    do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
-
-  defp hero_monogram_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
 
   defp role_pill_style(%{role: role}) when role in [:owner, :manager],
     do: "background:rgba(219,146,88,0.16);color:#DB9258;"

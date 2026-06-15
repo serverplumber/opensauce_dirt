@@ -189,18 +189,19 @@ defmodule OpenSauceWeb.Components.Page do
   # -------------------------------------------------------------------------
 
   @more_sections [
+    %{label: "Purchasing", path: "/manage/purchasing"},
     %{label: "Inventory", path: "/manage/inventory"},
     %{label: "Engagements", path: "/manage/engagements"},
     %{label: "Venues", path: "/manage/venues"},
-    %{label: "Invoices", path: "/manage/invoices"},
-    %{label: "Settings", path: "/manage/settings"}
+    %{label: "Invoices", path: "/manage/invoices"}
   ]
 
-  @primary_prefixes ["/manage/today", "/manage/jobs", "/manage/customers", "/manage/purchasing"]
+  @primary_prefixes ["/manage/today", "/manage/schedule", "/manage/jobs", "/manage/customers", "/manage/purchasing"]
 
   attr :current_path, :string, default: ""
   attr :current_user, :any, default: nil
   attr :current_member, :any, default: nil
+  attr :memberships, :list, default: []
 
   def bottom_nav(assigns) do
     more_active =
@@ -211,6 +212,101 @@ defmodule OpenSauceWeb.Components.Page do
 
     ~H"""
     <div>
+      <%!-- User sheet --%>
+      <div
+        id="user-sheet"
+        class="hidden fixed inset-0 z-50 flex items-end justify-center"
+        role="dialog"
+        aria-label="Account"
+      >
+        <div
+          class="absolute inset-0 bg-black/50"
+          phx-click={hide_user_sheet()}
+          aria-hidden="true"
+        />
+        <div
+          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl"
+          style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(1.5rem,env(safe-area-inset-bottom))"
+        >
+          <%!-- User header --%>
+          <div style="display:flex;align-items:center;gap:12px;padding:18px 18px 14px;">
+            <div style={"width:44px;height:44px;border-radius:12px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;letter-spacing:-0.01em;color:#fff;#{user_monogram_gradient(@current_member)}"}>
+              {user_monogram_initial(@current_user)}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:15px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {user_display_name(@current_user)}
+              </div>
+              <div style="margin-top:2px;font-size:12px;color:#6E675A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {@current_user && @current_user.email}
+              </div>
+            </div>
+            <button
+              type="button"
+              phx-click={hide_user_sheet()}
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <%!-- Org list --%>
+          <div :if={length(@memberships) > 1} style="border-top:1px solid rgba(52,48,37,0.58);padding:10px 8px 6px;">
+            <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;padding:0 10px 6px;">
+              Organisations
+            </p>
+            <div>
+              <% current_org_id = @current_member && @current_member.organisation_id %>
+              <a
+                :for={m <- @memberships}
+                href={if m.organisation_id != current_org_id, do: ~p"/org/pick/#{m.organisation_id}", else: nil}
+                style={"display:flex;align-items:center;gap:10px;border-radius:10px;padding:9px 10px;text-decoration:none;#{if m.organisation_id == current_org_id, do: "background:rgba(84,181,126,0.10);", else: ""}"}
+              >
+                <div style={"width:30px;height:30px;border-radius:8px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:13px;color:#fff;#{org_monogram_gradient(m.role)}"}>
+                  {m.organisation.name |> String.trim() |> String.first() |> String.upcase()}
+                </div>
+                <span style={"flex:1;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;#{if m.organisation_id == current_org_id, do: "color:#54B57E;", else: "color:#F4EFE2;"}"}>
+                  {m.organisation.name}
+                </span>
+                <svg :if={m.organisation_id == current_org_id} width="14" height="14" fill="none" stroke="#54B57E" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                <svg :if={m.organisation_id != current_org_id} width="14" height="14" fill="none" stroke="#6E675A" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <%!-- Settings + Sign out --%>
+          <div style="border-top:1px solid rgba(52,48,37,0.58);padding:6px 8px 4px;">
+            <.link
+              navigate={~p"/manage/account"}
+              phx-click={hide_user_sheet()}
+              style="display:flex;align-items:center;justify-content:space-between;border-radius:10px;padding:11px 10px;text-decoration:none;"
+            >
+              <span style="font-size:13.5px;font-weight:600;color:#F4EFE2;">Account & profile</span>
+              <svg width="14" height="14" fill="none" stroke="#6E675A" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </.link>
+            <button
+              type="button"
+              ontouchstart=""
+              phx-click={JS.hide(to: "#user-sheet") |> show_sign_out_sheet()}
+              style="display:flex;align-items:center;justify-content:space-between;border-radius:10px;padding:11px 10px;width:100%;background:none;border:none;cursor:pointer;"
+            >
+              <span style="font-size:13.5px;font-weight:600;color:#E87E7E;">Sign out</span>
+              <svg width="14" height="14" fill="none" stroke="#E87E7E" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <%!-- Sign-out confirmation sheet --%>
       <div
         id="sign-out-sheet"
@@ -220,7 +316,7 @@ defmodule OpenSauceWeb.Components.Page do
       >
         <div
           class="absolute inset-0 bg-black/50"
-          phx-click={JS.hide(to: "#sign-out-sheet")}
+          phx-click={hide_sign_out_sheet()}
           aria-hidden="true"
         />
         <div
@@ -246,7 +342,7 @@ defmodule OpenSauceWeb.Components.Page do
               type="button"
               class="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium text-[#9A9384] hover:bg-[#2B2820] hover:text-[#F4EFE2] transition"
               style="border: 1.5px solid rgba(52,48,37,0.58)"
-              phx-click={JS.hide(to: "#sign-out-sheet")}
+              phx-click={hide_sign_out_sheet()}
             >
               Cancel
             </button>
@@ -289,15 +385,16 @@ defmodule OpenSauceWeb.Components.Page do
             </li>
           </ul>
           <div :if={@current_user} class="mt-2 pt-2" style="border-top: 1px solid rgba(52,48,37,0.58)">
-            <.link
-              navigate={~p"/manage/account"}
-              phx-click={hide_more_sheet()}
+            <button
+              type="button"
+              ontouchstart=""
+              phx-click={hide_more_sheet() |> show_user_sheet()}
               class="flex w-full items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-[#2B2820]"
             >
               <div style={"width:36px;height:36px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;color:#fff;#{user_monogram_gradient(@current_member)}"}>
                 {user_monogram_initial(@current_user)}
               </div>
-              <div style="flex:1;min-width:0;">
+              <div style="flex:1;min-width:0;text-align:left;">
                 <div style="font-size:13.5px;font-weight:600;color:#F4EFE2;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                   {user_display_name(@current_user)}
                 </div>
@@ -308,7 +405,7 @@ defmodule OpenSauceWeb.Components.Page do
                 </div>
               </div>
               <.chevron_right_icon />
-            </.link>
+            </button>
           </div>
           <div class="h-safe-bottom" />
         </div>
@@ -316,6 +413,7 @@ defmodule OpenSauceWeb.Components.Page do
 
       <%!-- Bottom nav bar --%>
       <nav
+        id="bottom-nav"
         class="fixed bottom-0 inset-x-0 z-50 bg-[#211E16]"
         aria-label="Primary navigation"
         style="border-top: 1.5px solid rgba(52,48,37,0.58); padding-bottom: env(safe-area-inset-bottom)"
@@ -323,10 +421,18 @@ defmodule OpenSauceWeb.Components.Page do
         <div class="flex">
           <.nav_tab
             navigate={~p"/manage/today"}
-            label="Today"
+            label="Home"
             active={String.starts_with?(@current_path, "/manage/today")}
           >
-            <:icon><.today_icon /></:icon>
+            <:icon><.home_icon /></:icon>
+          </.nav_tab>
+
+          <.nav_tab
+            navigate={~p"/manage/schedule"}
+            label="Schedule"
+            active={String.starts_with?(@current_path, "/manage/schedule")}
+          >
+            <:icon><.schedule_icon /></:icon>
           </.nav_tab>
 
           <.nav_tab
@@ -339,21 +445,13 @@ defmodule OpenSauceWeb.Components.Page do
 
           <.nav_tab
             navigate={~p"/manage/customers"}
-            label="Customers"
+            label="Clients"
             active={
               String.starts_with?(@current_path, "/manage/customers") or
                 String.starts_with?(@current_path, "/manage/engagements")
             }
           >
             <:icon><.customers_icon /></:icon>
-          </.nav_tab>
-
-          <.nav_tab
-            navigate={~p"/manage/purchasing"}
-            label="POs"
-            active={String.starts_with?(@current_path, "/manage/purchasing")}
-          >
-            <:icon><.purchasing_icon /></:icon>
           </.nav_tab>
 
           <button
@@ -399,6 +497,7 @@ defmodule OpenSauceWeb.Components.Page do
 
   defp toggle_more_sheet(js \\ %JS{}) do
     js
+    |> JS.hide(to: "#user-sheet")
     |> JS.toggle(to: "#more-backdrop")
     |> JS.toggle(to: "#more-sheet")
     |> JS.toggle_class("!text-[#54B57E]", to: "#more-tab")
@@ -411,14 +510,57 @@ defmodule OpenSauceWeb.Components.Page do
     |> JS.remove_class("!text-[#54B57E]", to: "#more-tab")
   end
 
-  defp today_icon(assigns) do
+  defp show_user_sheet(js \\ %JS{}) do
+    js
+    |> JS.show(to: "#user-sheet", display: "flex")
+    |> JS.add_class("hidden", to: "#bottom-nav")
+  end
+
+  defp hide_user_sheet(js \\ %JS{}) do
+    js
+    |> JS.hide(to: "#user-sheet")
+    |> JS.remove_class("hidden", to: "#bottom-nav")
+  end
+
+  defp show_sign_out_sheet(js \\ %JS{}) do
+    js
+    |> JS.show(to: "#sign-out-sheet", display: "flex")
+    |> JS.add_class("hidden", to: "#bottom-nav")
+  end
+
+  defp hide_sign_out_sheet(js \\ %JS{}) do
+    js
+    |> JS.hide(to: "#sign-out-sheet")
+    |> JS.remove_class("hidden", to: "#bottom-nav")
+  end
+
+  defp home_icon(assigns) do
     ~H"""
     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="1.75"
-        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 110 10A5 5 0 0112 7z"
+        d="M3 12l2-2m0 0l7-7 7 7m-9 9V12h4v7m5-7v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7"
+      />
+    </svg>
+    """
+  end
+
+  defp schedule_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.75"
+        d="M9 14h.01M12 14h.01M15 14h.01"
       />
     </svg>
     """
@@ -500,6 +642,10 @@ defmodule OpenSauceWeb.Components.Page do
     do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
 
   defp user_monogram_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
+
+  defp org_monogram_gradient(:owner), do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
+  defp org_monogram_gradient(:manager), do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
+  defp org_monogram_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
 
   defp role_pill_style(%{role: role}) when role in [:owner, :manager],
     do: "background:rgba(219,146,88,0.16);color:#DB9258;"

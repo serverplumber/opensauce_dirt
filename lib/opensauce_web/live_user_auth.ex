@@ -32,7 +32,8 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # Any authenticated member regardless of role.
   def on_mount(:live_member_required, _params, session, socket) do
     case load_member(socket, session) do
-      {:ok, member, user} -> {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user)}
+      {:ok, member, user, memberships} ->
+        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user) |> assign(:memberships, memberships)}
       :suspended -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
       :no_org -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/org/pick")}
       :error -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
@@ -42,10 +43,10 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # Staff, managers, and owners.
   def on_mount(:live_staff_required, _params, session, socket) do
     case load_member(socket, session) do
-      {:ok, %{role: role} = member, user} when role in [:staff, :manager, :owner] ->
-        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user)}
+      {:ok, %{role: role} = member, user, memberships} when role in [:staff, :manager, :owner] ->
+        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user) |> assign(:memberships, memberships)}
 
-      {:ok, _, _} ->
+      {:ok, _, _, _} ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
 
       :suspended ->
@@ -62,10 +63,10 @@ defmodule OpenSauceWeb.LiveUserAuth do
   # Managers and owners only.
   def on_mount(:live_manager_required, _params, session, socket) do
     case load_member(socket, session) do
-      {:ok, %{role: role} = member, user} when role in [:manager, :owner] ->
-        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user)}
+      {:ok, %{role: role} = member, user, memberships} when role in [:manager, :owner] ->
+        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user) |> assign(:memberships, memberships)}
 
-      {:ok, _, _} ->
+      {:ok, _, _, _} ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
 
       :suspended ->
@@ -89,7 +90,8 @@ defmodule OpenSauceWeb.LiveUserAuth do
         :suspended
       else
         user = Ash.load!(raw_user, [:initials], authorize?: false, domain: Accounts)
-        {:ok, member, user}
+        memberships = Accounts.list_memberships_for_user!(user_id, authorize?: false)
+        {:ok, member, user, memberships}
       end
     else
       _ ->

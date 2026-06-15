@@ -1,8 +1,7 @@
-defmodule OpenSauceWeb.TodayLive do
+defmodule OpenSauceWeb.ScheduleLive do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  alias OpenSauce.CRM
   alias OpenSauce.Orders
 
   @impl true
@@ -10,21 +9,25 @@ defmodule OpenSauceWeb.TodayLive do
     {:ok,
      socket
      |> assign(
-       page_title: "Home",
+       page_title: "Scheduling",
        main_bg: "bg-[#16140E]",
+       view: :week,
        offset: 0,
-       search: "",
        place_job: nil,
        place_day: nil,
        place_minutes: 420,
        place_duration: 120
      )
-     |> load_jobs()
-     |> load_engagements()}
+     |> load_jobs()}
   end
 
   @impl true
   def handle_params(_params, _url, socket), do: {:noreply, socket}
+
+  @impl true
+  def handle_event("set_view", %{"view" => view}, socket) do
+    {:noreply, assign(socket, view: String.to_existing_atom(view), offset: 0)}
+  end
 
   @impl true
   def handle_event("nav", %{"dir" => "prev"}, socket) do
@@ -34,11 +37,6 @@ defmodule OpenSauceWeb.TodayLive do
   @impl true
   def handle_event("nav", %{"dir" => "next"}, socket) do
     {:noreply, assign(socket, :offset, socket.assigns.offset + 1)}
-  end
-
-  @impl true
-  def handle_event("search", %{"q" => q}, socket) do
-    {:noreply, assign(socket, :search, q)}
   end
 
   @impl true
@@ -104,6 +102,7 @@ defmodule OpenSauceWeb.TodayLive do
     minutes = socket.assigns.place_minutes
     duration = socket.assigns.place_duration
     start_time = Time.new!(div(minutes, 60), rem(minutes, 60), 0)
+
     new_status = if job.status == :scheduling, do: :scheduled, else: job.status
 
     Orders.update_job(
@@ -121,34 +120,37 @@ defmodule OpenSauceWeb.TodayLive do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
       <% today = Date.utc_today() %>
-      <% target = Date.add(today, @offset) %>
 
       <%!-- Header --%>
-      <div style="padding:14px 16px 10px;">
-        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;margin:0 0 10px;">
-          Home
-        </h1>
-
-        <%!-- Search --%>
-        <form phx-change="search" style="position:relative;margin-bottom:14px;">
-          <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6E675A;line-height:0;pointer-events:none;">
-            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8" stroke-width="2" />
-              <path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round" />
-            </svg>
+      <div style="padding:12px 22px 10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;">
+            Scheduling
+          </h1>
+          <div style="display:flex;gap:3px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:10px;padding:3px;">
+            <button
+              class={["seg-tab", @view == :week && "seg-tab--on"]}
+              style="padding:4px 12px;font-size:12px;"
+              type="button"
+              phx-click="set_view"
+              phx-value-view="week"
+            >
+              W
+            </button>
+            <button
+              class={["seg-tab", @view == :day && "seg-tab--on"]}
+              style="padding:4px 12px;font-size:12px;"
+              type="button"
+              phx-click="set_view"
+              phx-value-view="day"
+            >
+              D
+            </button>
           </div>
-          <input
-            type="search"
-            name="q"
-            value={@search}
-            placeholder="Search plants…"
-            autocomplete="off"
-            style="width:100%;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:10px 14px 10px 38px;color:#F4EFE2;font-size:14px;outline:none;box-sizing:border-box;-webkit-appearance:none;"
-          />
-        </form>
+        </div>
 
-        <%!-- Day navigation --%>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <%!-- Period navigation --%>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
           <button
             type="button"
             phx-click="nav"
@@ -157,12 +159,19 @@ defmodule OpenSauceWeb.TodayLive do
             style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(52,48,37,0.58);border-radius:8px;background:#211E16;color:#9A9384;cursor:pointer;flex-shrink:0;"
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.2"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
+
           <div style="flex:1;text-align:center;font-size:13.5px;font-weight:600;color:#9A9384;letter-spacing:-0.01em;">
-            {day_label(@offset, today)}
+            {if @view == :week, do: week_label(@offset), else: day_label(@offset, today)}
           </div>
+
           <button
             type="button"
             phx-click="nav"
@@ -171,22 +180,58 @@ defmodule OpenSauceWeb.TodayLive do
             style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(52,48,37,0.58);border-radius:8px;background:#211E16;color:#9A9384;cursor:pointer;flex-shrink:0;"
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
       </div>
 
-      <%!-- Day schedule --%>
       <div style="padding:0 16px 100px;">
-        <% day_jobs = jobs_for_date(@jobs, target, today) %>
-        <div
-          :if={day_jobs == []}
-          style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;"
-        >
-          Nothing scheduled
+        <%!-- Week view --%>
+        <div :if={@view == :week}>
+          <% days = week_days(@offset) %>
+          <div :for={date <- days}>
+            <% day_jobs = jobs_for_date(@jobs, date, today) %>
+            <div class="dayrow">
+              <span
+                class="dl"
+                style={if date == today, do: "color:#54B57E;", else: ""}
+              >
+                {Calendar.strftime(date, "%a")}
+              </span>
+              <span
+                class="line"
+                style={if date == today, do: "background:rgba(84,181,126,0.35);", else: ""}
+              >
+              </span>
+              <span class="dn">{Calendar.strftime(date, "%-d %b")}</span>
+            </div>
+            <div :if={day_jobs == []} style="padding:0 2px 10px;">
+              <span style="font-size:12.5px;color:#3D3829;">–</span>
+            </div>
+            <div :if={day_jobs != []} style="display:flex;flex-wrap:wrap;gap:5px;padding-bottom:10px;">
+              <.sched_chip :for={job <- day_jobs} job={job} />
+            </div>
+          </div>
         </div>
-        <.sched_card :for={job <- day_jobs} job={job} />
+
+        <%!-- Day view --%>
+        <div :if={@view == :day}>
+          <% target = Date.add(today, @offset) %>
+          <% day_jobs = jobs_for_date(@jobs, target, today) %>
+          <div
+            :if={day_jobs == []}
+            style="margin-top:32px;text-align:center;color:#6E675A;font-size:14px;font-weight:600;"
+          >
+            Nothing scheduled
+          </div>
+          <.sched_card :for={job <- day_jobs} job={job} open_drawer />
+        </div>
 
         <%!-- Unscheduled --%>
         <% unsched = unscheduled_jobs(@jobs) %>
@@ -195,7 +240,8 @@ defmodule OpenSauceWeb.TodayLive do
             <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
               Unscheduled{if unsched != [], do: " · #{length(unsched)}", else: ""}
             </span>
-            <div style="flex:1;height:1px;background:rgba(52,48,37,0.58);"></div>
+            <div style="flex:1;height:1px;background:rgba(52,48,37,0.58);">
+            </div>
           </div>
           <div
             :if={unsched == []}
@@ -205,46 +251,24 @@ defmodule OpenSauceWeb.TodayLive do
           </div>
           <.sched_card :for={job <- unsched} job={job} show_due />
         </div>
-
-        <%!-- Engagements --%>
-        <div style="margin-top:20px;">
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 2px 10px;">
-            <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
-              Engagements{if @engagements != [], do: " · #{length(@engagements)}", else: ""}
-            </span>
-            <div style="flex:1;height:1px;background:rgba(52,48,37,0.58);"></div>
-          </div>
-          <div
-            :if={@engagements == []}
-            style="text-align:center;color:#6E675A;font-size:13px;font-weight:500;padding:4px 0 16px;"
-          >
-            None
-          </div>
-          <.eng_card :for={e <- @engagements} engagement={e} />
-        </div>
       </div>
-
-      <%!-- Action FAB --%>
-      <button class="fab" type="button" ontouchstart="" title="Action">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.4" stroke-linecap="round" />
-        </svg>
-      </button>
 
       <%!-- Place sheet --%>
       <div
         :if={@place_job}
         class="fixed inset-0 z-[60] flex items-end justify-center"
         role="dialog"
-        aria-label="Schedule"
+        aria-label="Place job"
       >
         <div class="absolute inset-0 bg-black/50" phx-click="place_close" aria-hidden="true" />
         <div
           class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl px-5 pt-4 space-y-5"
           style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(2rem,env(safe-area-inset-bottom))"
         >
+          <%!-- handle --%>
           <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto;"></div>
 
+          <%!-- title + close --%>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;margin:0;">
               Schedule
@@ -255,11 +279,17 @@ defmodule OpenSauceWeb.TodayLive do
               style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
+          <%!-- day chips --%>
           <div style="display:flex;gap:5px;">
             <button
               :for={day <- Enum.map(0..6, &Date.add(today, &1))}
@@ -284,6 +314,7 @@ defmodule OpenSauceWeb.TodayLive do
             </button>
           </div>
 
+          <%!-- start time slider --%>
           <div>
             <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">
               <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
@@ -306,6 +337,7 @@ defmodule OpenSauceWeb.TodayLive do
             </form>
           </div>
 
+          <%!-- duration slider --%>
           <div>
             <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">
               <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
@@ -328,10 +360,12 @@ defmodule OpenSauceWeb.TodayLive do
             </form>
           </div>
 
+          <%!-- confirm --%>
           <.leaf_button phx-click="place_confirm">
             {Calendar.strftime(@place_day, "%a %-d %b")} · {format_minutes(@place_minutes)}
           </.leaf_button>
 
+          <%!-- unschedule --%>
           <button
             :if={@place_job.scheduled_for != nil}
             type="button"
@@ -348,16 +382,50 @@ defmodule OpenSauceWeb.TodayLive do
   end
 
   attr :job, :any, required: true
+
+  defp sched_chip(assigns) do
+    ~H"""
+    <div
+      phx-click="place_open"
+      phx-value-id={@job.id}
+      ontouchstart=""
+      style={
+        "flex:0 0 calc(25% - 4px);min-width:0;padding:7px 8px;border-radius:8px;cursor:pointer;overflow:hidden;" <>
+          if @job.status == :in_progress,
+            do: "background:#211E16;border:1.5px solid #54B57E;",
+            else: "background:#211E16;border:1.5px solid rgba(52,48,37,0.58);"
+      }
+    >
+      <div style="font-size:10px;font-weight:700;color:#54B57E;letter-spacing:0.02em;line-height:1;margin-bottom:3px;">
+        {if @job.start_time, do: Calendar.strftime(@job.start_time, "%H:%M"), else: "·"}
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#F4EFE2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">
+        {chip_who(@job)}
+      </div>
+      <div
+        :if={chip_where(@job)}
+        style="font-size:10.5px;color:#9A9384;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;"
+      >
+        {chip_where(@job)}
+      </div>
+    </div>
+    """
+  end
+
+  attr :job, :any, required: true
   attr :show_due, :boolean, default: false
+  attr :open_drawer, :boolean, default: false
 
   defp sched_card(assigns) do
     ~H"""
     <div
       class={["jcard", @job.status == :in_progress && "live"]}
       phx-click={
-        if @job.status != :scheduling,
-          do: JS.navigate(~p"/manage/jobs/#{@job.id}?return_to=/manage/today")
+        if @open_drawer,
+          do: "place_open",
+          else: if(@job.status != :scheduling, do: JS.navigate(~p"/manage/jobs/#{@job.id}"))
       }
+      phx-value-id={@job.id}
       ontouchstart=""
     >
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
@@ -437,25 +505,37 @@ defmodule OpenSauceWeb.TodayLive do
     assign(socket, :jobs, jobs)
   end
 
-  defp load_engagements(socket) do
-    member = socket.assigns.current_member
+  defp week_days(offset) do
+    today = Date.utc_today()
+    dow = Date.day_of_week(today)
+    monday = Date.add(today, -(dow - 1))
+    week_start = Date.add(monday, offset * 7)
+    Enum.map(0..6, &Date.add(week_start, &1))
+  end
 
-    engagements =
-      CRM.list_engagements!(
-        actor: member,
-        tenant: member.organisation_id,
-        load: [:customer, :garden]
-      )
-      |> Enum.reject(&(&1.status in [:completed, :cancelled]))
-      |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
+  defp week_label(offset) do
+    today = Date.utc_today()
+    dow = Date.day_of_week(today)
+    monday = Date.add(today, -(dow - 1))
+    week_start = Date.add(monday, offset * 7)
+    week_end = Date.add(week_start, 6)
 
-    assign(socket, :engagements, engagements)
+    start_str =
+      if week_start.month == week_end.month,
+        do: Calendar.strftime(week_start, "%-d"),
+        else: Calendar.strftime(week_start, "%-d %b")
+
+    "#{start_str}–#{Calendar.strftime(week_end, "%-d %b")}"
   end
 
   defp day_label(0, today), do: "Today · #{Calendar.strftime(today, "%-d %b")}"
   defp day_label(1, today), do: "Tomorrow · #{Calendar.strftime(Date.add(today, 1), "%-d %b")}"
-  defp day_label(-1, today), do: "Yesterday · #{Calendar.strftime(Date.add(today, -1), "%-d %b")}"
-  defp day_label(offset, today), do: Calendar.strftime(Date.add(today, offset), "%A · %-d %b")
+
+  defp day_label(-1, today),
+    do: "Yesterday · #{Calendar.strftime(Date.add(today, -1), "%-d %b")}"
+
+  defp day_label(offset, today),
+    do: Calendar.strftime(Date.add(today, offset), "%A · %-d %b")
 
   defp jobs_for_date(jobs, date, today) do
     jobs
@@ -519,79 +599,15 @@ defmodule OpenSauceWeb.TodayLive do
     "#{String.pad_leading(to_string(h), 2, "0")}:#{String.pad_leading(to_string(m), 2, "0")}"
   end
 
-  attr :engagement, :any, required: true
-
-  defp eng_card(assigns) do
-    ~H"""
-    <.link
-      navigate={~p"/manage/customers/#{@engagement.customer.reference}/engagements/#{@engagement.id}?return_to=/manage/today"}
-      style="display:block;text-decoration:none;"
-    >
-      <div class="jcard">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-          <div style="min-width:0;flex:1;">
-            <div style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:#F4EFE2;">
-              {eng_customer_name(@engagement)}
-            </div>
-            <div
-              :if={@engagement.garden && @engagement.garden.name}
-              style="margin-top:4px;font-size:12.5px;color:#9A9384;line-height:1.3;display:flex;align-items:center;gap:5px;"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;">
-                <path
-                  d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
-                  stroke="#9A9384"
-                  stroke-width="1.6"
-                />
-                <circle cx="12" cy="10" r="2.4" stroke="#9A9384" stroke-width="1.6" />
-              </svg>
-              {@engagement.garden.name}
-            </div>
-          </div>
-          <span style={"font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;flex-shrink:0;background:#{eng_status_bg(@engagement.status)};color:#{eng_status_color(@engagement.status)};"}>
-            {eng_status_label(@engagement.status)}
-          </span>
-        </div>
-        <div
-          :if={@engagement.scope_title}
-          style="margin-top:8px;font-size:12.5px;color:#9A9384;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-        >
-          {@engagement.scope_title}
-        </div>
-        <div
-          :if={!@engagement.scope_title}
-          style="margin-top:8px;font-size:12.5px;color:#6E675A;"
-        >
-          No title
-        </div>
-      </div>
-    </.link>
-    """
+  defp chip_who(job) do
+    cl = customer_label(job)
+    if cl == "", do: (job.garden && job.garden.name) || "Job", else: cl
   end
 
-  defp eng_customer_name(%{customer: %{company_name_nickname: nick}}) when not is_nil(nick), do: nick
-  defp eng_customer_name(%{customer: %{first_name: f, last_name: l}}), do: "#{f} #{l}"
-  defp eng_customer_name(_), do: "Unknown client"
-
-  defp eng_status_label(:draft), do: "Draft"
-  defp eng_status_label(:proposed), do: "Proposed"
-  defp eng_status_label(:signed), do: "Signed"
-  defp eng_status_label(:in_progress), do: "Active"
-  defp eng_status_label(:completed), do: "Complete"
-  defp eng_status_label(:cancelled), do: "Cancelled"
-  defp eng_status_label(other), do: to_string(other)
-
-  defp eng_status_color(:draft), do: "#9A9384"
-  defp eng_status_color(:proposed), do: "#DB9258"
-  defp eng_status_color(:signed), do: "#5AB4D8"
-  defp eng_status_color(:in_progress), do: "#54B57E"
-  defp eng_status_color(_), do: "#6E675A"
-
-  defp eng_status_bg(:draft), do: "rgba(154,147,132,0.12)"
-  defp eng_status_bg(:proposed), do: "rgba(219,146,88,0.12)"
-  defp eng_status_bg(:signed), do: "rgba(90,180,216,0.12)"
-  defp eng_status_bg(:in_progress), do: "rgba(84,181,126,0.12)"
-  defp eng_status_bg(_), do: "rgba(110,103,90,0.12)"
+  defp chip_where(job) do
+    cl = customer_label(job)
+    if cl != "" && job.garden && job.garden.name, do: job.garden.name, else: nil
+  end
 
   defp job_who(job) do
     cl = customer_label(job)

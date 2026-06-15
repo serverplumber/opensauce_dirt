@@ -147,6 +147,9 @@ defmodule OpenSauceWeb.Router do
       live "/manage/jobs/:id/materials", JobLive.Materials, :index
       live "/manage/jobs/:id", JobLive.Show, :show
 
+      # Scheduling board
+      live "/manage/schedule", ScheduleLive, :index
+
       # Today dashboard
       live "/manage/today", TodayLive, :index
 

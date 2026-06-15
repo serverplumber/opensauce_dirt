@@ -185,7 +185,8 @@ defmodule OpenSauceWeb.JobLive.New do
                 </div>
                 <button
                   type="button"
-                  phx-click="open_engagement_sheet"
+                  phx-click={JS.push("open_engagement_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
+                  ontouchstart=""
                   style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;"
                 >
                   change
@@ -194,9 +195,9 @@ defmodule OpenSauceWeb.JobLive.New do
               <button
                 :if={is_nil(@engagement)}
                 type="button"
-                phx-click="open_engagement_sheet"
-                style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
+                phx-click={JS.push("open_engagement_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
                 ontouchstart=""
+                style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
               >
                 Pick an engagement…
               </button>
@@ -243,7 +244,8 @@ defmodule OpenSauceWeb.JobLive.New do
               <button
                 :if={not garden_from_engagement?(@garden, @engagement)}
                 type="button"
-                phx-click="open_garden_sheet"
+                phx-click={JS.push("open_garden_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
+                ontouchstart=""
                 style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;"
               >
                 change
@@ -252,9 +254,9 @@ defmodule OpenSauceWeb.JobLive.New do
             <button
               :if={is_nil(@garden)}
               type="button"
-              phx-click="open_garden_sheet"
-              style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
+              phx-click={JS.push("open_garden_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
               ontouchstart=""
+              style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
             >
               Pick a garden…
             </button>
@@ -304,7 +306,8 @@ defmodule OpenSauceWeb.JobLive.New do
             <span class="dark-label" style="margin-bottom:0;">Materials &amp; plants</span>
             <button
               type="button"
-              phx-click="open_materials_sheet"
+              phx-click={JS.push("open_materials_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
+              ontouchstart=""
               style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -436,7 +439,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <span class="dark-label" style="margin-bottom:0;">Crew</span>
             <button
               type="button"
-              phx-click="open_crew_sheet"
+              phx-click={JS.push("open_crew_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
               ontouchstart=""
               style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
             >
@@ -460,31 +463,28 @@ defmodule OpenSauceWeb.JobLive.New do
           <div :if={@draft_crew != []} style="display:flex;flex-direction:column;gap:6px;">
             <div
               :for={m <- @draft_crew}
-              style="background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;"
+              style="background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);"
             >
-              <div class="av" style={"background:#{crew_color(m.id)}"}>
-                {crew_initial(m)}
-              </div>
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:13px;font-weight:600;color:#F4EFE2;">{staff_name(m)}</p>
-                <p style="font-size:11px;color:#6E675A;margin-top:1px;">{role_label(m.role)}</p>
-              </div>
-              <button
-                type="button"
-                phx-click="remove_crew"
-                phx-value-id={m.id}
-                ontouchstart=""
-                style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M18 6L6 18M6 6l12 12"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
+              <.member_card member={m}>
+                <:trailing>
+                  <button
+                    type="button"
+                    phx-click="remove_crew"
+                    phx-value-id={m.id}
+                    ontouchstart=""
+                    style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </:trailing>
+              </.member_card>
             </div>
           </div>
         </div>
@@ -508,12 +508,10 @@ defmodule OpenSauceWeb.JobLive.New do
       <div
         :if={@show_engagement_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_engagement_sheet"
-        phx-key="Escape"
       >
         <div
           style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
-          phx-click="close_engagement_sheet"
+          phx-click={JS.push("close_engagement_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
         >
         </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
@@ -521,7 +519,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick engagement</span>
             <button
               type="button"
-              phx-click="close_engagement_sheet"
+              phx-click={JS.push("close_engagement_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -548,8 +546,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <button
               :for={eng <- @filtered_engagements}
               type="button"
-              phx-click="pick_engagement"
-              phx-value-id={eng.id}
+              phx-click={JS.push("pick_engagement", value: %{"id" => eng.id}) |> JS.remove_class("hidden", to: "#bottom-nav")}
               ontouchstart=""
               style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;#{if @engagement && @engagement.id == eng.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
             >
@@ -577,12 +574,10 @@ defmodule OpenSauceWeb.JobLive.New do
       <div
         :if={@show_garden_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_garden_sheet"
-        phx-key="Escape"
       >
         <div
           style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
-          phx-click="close_garden_sheet"
+          phx-click={JS.push("close_garden_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
         >
         </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
@@ -590,7 +585,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick garden</span>
             <button
               type="button"
-              phx-click="close_garden_sheet"
+              phx-click={JS.push("close_garden_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -617,8 +612,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <button
               :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
               type="button"
-              phx-click="pick_garden"
-              phx-value-id={garden.id}
+              phx-click={JS.push("pick_garden", value: %{"id" => garden.id}) |> JS.remove_class("hidden", to: "#bottom-nav")}
               ontouchstart=""
               style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;cursor:pointer;#{if @garden && @garden.id == garden.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
             >
@@ -643,12 +637,10 @@ defmodule OpenSauceWeb.JobLive.New do
       <div
         :if={@show_crew_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_crew_sheet"
-        phx-key="Escape"
       >
         <div
           style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
-          phx-click="close_crew_sheet"
+          phx-click={JS.push("close_crew_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
         >
         </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
@@ -656,7 +648,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add crew</span>
             <button
               type="button"
-              phx-click="close_crew_sheet"
+              phx-click={JS.push("close_crew_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -679,21 +671,16 @@ defmodule OpenSauceWeb.JobLive.New do
             >
               All members already added
             </div>
-            <div
+            <.member_card
               :for={m <- available_crew(@org_members, @draft_crew)}
-              phx-click="pick_crew"
-              phx-value-id={m.id}
+              member={m}
+              phx-click={
+                JS.push("pick_crew", value: %{"id" => m.id})
+                |> JS.remove_class("hidden", to: "#bottom-nav")
+              }
               ontouchstart=""
-              style="background:#16140E;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;cursor:pointer;"
-            >
-              <div class="av" style={"background:#{crew_color(m.id)}"}>
-                {crew_initial(m)}
-              </div>
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:13px;font-weight:600;color:#F4EFE2;">{staff_name(m)}</p>
-                <p style="font-size:11px;color:#6E675A;margin-top:1px;">{role_label(m.role)}</p>
-              </div>
-            </div>
+              style="background:#16140E;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);cursor:pointer;"
+            />
           </div>
         </div>
       </div>
@@ -702,12 +689,10 @@ defmodule OpenSauceWeb.JobLive.New do
       <div
         :if={@show_materials_sheet}
         style="position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;"
-        phx-window-keydown="close_materials_sheet"
-        phx-key="Escape"
       >
         <div
           style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
-          phx-click="close_materials_sheet"
+          phx-click={JS.push("close_materials_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
         >
         </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:90dvh;display:flex;flex-direction:column;">
@@ -715,7 +700,7 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add material or plant</span>
             <button
               type="button"
-              phx-click="close_materials_sheet"
+              phx-click={JS.push("close_materials_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
               ontouchstart=""
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
@@ -1166,24 +1151,6 @@ defmodule OpenSauceWeb.JobLive.New do
     end
   end
 
-  defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
-  defp staff_name(_), do: "?"
-
-  defp crew_initial(member) do
-    n = staff_name(member)
-    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
-  end
-
-  defp crew_color(member_id) do
-    colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
-    Enum.at(colors, :erlang.phash2(member_id, length(colors)))
-  end
-
-  defp role_label(:owner), do: "Owner"
-  defp role_label(:manager), do: "Manager"
-  defp role_label(:staff), do: "Staff"
-  defp role_label(_), do: "—"
-
   defp available_crew(org_members, draft_crew) do
     selected = MapSet.new(draft_crew, & &1.id)
     Enum.reject(org_members, &MapSet.member?(selected, &1.id))
@@ -1202,10 +1169,7 @@ defmodule OpenSauceWeb.JobLive.New do
   end
 
   defp load_org_members(member) do
-    Accounts.list_members_for_organisation!(member.organisation_id,
-      actor: member,
-      tenant: member.organisation_id
-    )
+    Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
   rescue
     _ -> []
   end

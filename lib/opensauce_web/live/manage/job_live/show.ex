@@ -17,8 +17,9 @@ defmodule OpenSauceWeb.JobLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _uri, socket) do
+  def handle_params(%{"id" => id} = params, _uri, socket) do
     member = socket.assigns.current_member
+    return_to = Map.get(params, "return_to", ~p"/manage/jobs")
 
     job =
       Orders.get_job_by_id!(id,
@@ -45,6 +46,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     {:noreply,
      socket
      |> assign(:job, job)
+     |> assign(:return_to, return_to)
      |> assign(:page_title, page_title(job))
      |> assign(:materials_cost, materials_cost(job.materials))
      |> assign(:arrived_at, arrival && arrival.timestamp)
@@ -98,7 +100,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     <div style={"font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:#{if @job.status == :in_progress, do: "150px", else: "100px"};"}>
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
-        <.link navigate={~p"/manage/jobs"}>
+        <.link navigate={@return_to}>
           <button
             type="button"
             ontouchstart=""

@@ -23,8 +23,7 @@ defmodule OpenSauceWeb.OrgLive do
      |> assign(:show_invite_sheet, false)
      |> assign(:show_edit_sheet, false)
      |> assign(:editing_member, nil)
-     |> assign(:invite_params, %{"email" => "", "role" => "staff", "display_title" => "", "labor_hourly_rate" => "0"})
-     |> assign(:edit_params, %{})}
+     |> assign(:invite_params, %{"email" => "", "role" => "staff", "display_title" => "", "labor_hourly_rate" => "0"})}
   end
 
   # -- Org form --
@@ -126,42 +125,18 @@ defmodule OpenSauceWeb.OrgLive do
   @impl true
   def handle_event("open_edit", %{"id" => id}, socket) do
     member = Enum.find(socket.assigns.members, &(&1.id == id))
-
-    edit_params = %{
-      "first_name" => member.user.first_name || "",
-      "last_name" => member.user.last_name || "",
-      "email" => to_string(member.user.email),
-      "role" => to_string(member.role),
-      "display_title" => member.display_title || "",
-      "labor_hourly_rate" => to_string(member.labor_hourly_rate)
-    }
-
-    {:noreply,
-     socket
-     |> assign(:show_edit_sheet, true)
-     |> assign(:editing_member, member)
-     |> assign(:edit_params, edit_params)}
+    {:noreply, socket |> assign(:show_edit_sheet, true) |> assign(:editing_member, member)}
   end
 
   @impl true
   def handle_event("close_edit", _, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_edit_sheet, false)
-     |> assign(:editing_member, nil)
-     |> assign(:edit_params, %{})}
+    {:noreply, socket |> assign(:show_edit_sheet, false) |> assign(:editing_member, nil)}
   end
 
   @impl true
-  def handle_event("update_edit_field", %{"field" => field, "value" => value}, socket) do
-    {:noreply, assign(socket, :edit_params, Map.put(socket.assigns.edit_params, field, value))}
-  end
-
-  @impl true
-  def handle_event("save_member", _, socket) do
+  def handle_event("save_member", %{"member" => p}, socket) do
     actor = socket.assigns.current_member
     member = socket.assigns.editing_member
-    p = socket.assigns.edit_params
 
     with {:ok, _} <-
            Accounts.update_organisation_member(
@@ -190,7 +165,6 @@ defmodule OpenSauceWeb.OrgLive do
        |> assign(:members, members)
        |> assign(:show_edit_sheet, false)
        |> assign(:editing_member, nil)
-       |> assign(:edit_params, %{})
        |> put_flash(:info, "Member updated.")}
     else
       {:error, _} ->
@@ -349,103 +323,90 @@ defmodule OpenSauceWeb.OrgLive do
             </div>
           </div>
 
-          <%!-- Scrollable fields --%>
-          <div style="overflow-y:auto;flex:1;min-height:0;padding:0 20px 12px;display:flex;flex-direction:column;gap:12px;">
+          <form phx-submit="save_member" style="display:contents;">
+            <%!-- Scrollable fields --%>
+            <div style="overflow-y:auto;flex:1;min-height:0;padding:0 20px 12px;display:flex;flex-direction:column;gap:12px;">
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label class="dark-label">First name</label>
+                  <input
+                    class="dark-input"
+                    type="text"
+                    name="member[first_name]"
+                    value={@editing_member.user.first_name || ""}
+                    placeholder="First name"
+                  />
+                </div>
+                <div>
+                  <label class="dark-label">Last name</label>
+                  <input
+                    class="dark-input"
+                    type="text"
+                    name="member[last_name]"
+                    value={@editing_member.user.last_name || ""}
+                    placeholder="Last name"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label class="dark-label">First name</label>
+                <label class="dark-label">Email</label>
+                <input
+                  class="dark-input"
+                  type="email"
+                  name="member[email]"
+                  value={to_string(@editing_member.user.email)}
+                  placeholder="member@example.com"
+                />
+              </div>
+
+              <div style="height:1px;background:rgba(52,48,37,0.58);margin:4px 0;"></div>
+
+              <div>
+                <label class="dark-label">Role</label>
+                <select class="dark-select" name="member[role]">
+                  <option :for={{label, val} <- role_options(@current_member)}
+                    value={val}
+                    selected={@editing_member.role == val}
+                  >
+                    {label}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="dark-label">Display title <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
                 <input
                   class="dark-input"
                   type="text"
-                  name="first_name"
-                  value={@edit_params["first_name"]}
-                  placeholder="First name"
-                  phx-blur="update_edit_field"
-                  phx-value-field="first_name"
+                  name="member[display_title]"
+                  value={@editing_member.display_title || ""}
+                  placeholder="e.g. Lead Gardener"
                 />
               </div>
+
               <div>
-                <label class="dark-label">Last name</label>
+                <label class="dark-label">Hourly rate</label>
                 <input
                   class="dark-input"
-                  type="text"
-                  name="last_name"
-                  value={@edit_params["last_name"]}
-                  placeholder="Last name"
-                  phx-blur="update_edit_field"
-                  phx-value-field="last_name"
+                  type="number"
+                  name="member[labor_hourly_rate]"
+                  value={@editing_member.labor_hourly_rate}
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
                 />
               </div>
             </div>
 
-            <div>
-              <label class="dark-label">Email</label>
-              <input
-                class="dark-input"
-                type="email"
-                name="email"
-                value={@edit_params["email"]}
-                placeholder="member@example.com"
-                phx-blur="update_edit_field"
-                phx-value-field="email"
-              />
+            <%!-- Fixed footer --%>
+            <div style="padding:16px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom));flex-shrink:0;">
+              <.glow_button type="submit" valid={true}>
+                Save changes
+              </.glow_button>
             </div>
-
-            <div style="height:1px;background:rgba(52,48,37,0.58);margin:4px 0;"></div>
-
-            <div>
-              <label class="dark-label">Role</label>
-              <select
-                class="dark-select"
-                name="role"
-                phx-change="update_edit_field"
-                phx-value-field="role"
-              >
-                <option :for={{label, val} <- role_options(@current_member)}
-                  value={val}
-                  selected={@edit_params["role"] == to_string(val)}
-                >
-                  {label}
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label class="dark-label">Display title <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
-              <input
-                class="dark-input"
-                type="text"
-                name="display_title"
-                value={@edit_params["display_title"]}
-                placeholder="e.g. Lead Gardener"
-                phx-blur="update_edit_field"
-                phx-value-field="display_title"
-              />
-            </div>
-
-            <div>
-              <label class="dark-label">Hourly rate</label>
-              <input
-                class="dark-input"
-                type="number"
-                name="labor_hourly_rate"
-                value={@edit_params["labor_hourly_rate"]}
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                phx-blur="update_edit_field"
-                phx-value-field="labor_hourly_rate"
-              />
-            </div>
-          </div>
-
-          <%!-- Fixed footer --%>
-          <div style="padding:16px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom));flex-shrink:0;">
-            <.glow_button type="button" phx-click="save_member" valid={true}>
-              Save changes
-            </.glow_button>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -614,18 +575,18 @@ defmodule OpenSauceWeb.OrgLive do
                 <div style={"font-size:13.5px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;#{if m.status == :suspended, do: "color:#6E675A;", else: "color:#F4EFE2;"}"}>
                   {member_display_name(m)}
                 </div>
-                <div style="margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                  <span style={"font-size:10.5px;font-weight:700;letter-spacing:0.03em;padding:2px 7px;border-radius:999px;#{role_pill_style(m.role)}"}>
-                    {role_label(m.role)}
-                  </span>
-                  <span :if={m.status == :suspended} style="font-size:10.5px;font-weight:700;letter-spacing:0.03em;padding:2px 7px;border-radius:999px;background:rgba(232,126,126,0.14);color:#E87E7E;">
+                <div style={"margin-top:2px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;#{if m.status == :suspended, do: "color:#6E675A;", else: "color:#9A9384;"}"}>
+                  {if m.display_title, do: m.display_title, else: role_label(m.role)}
+                </div>
+                <div :if={m.status == :suspended} style="margin-top:3px;">
+                  <span style="font-size:10.5px;font-weight:700;letter-spacing:0.03em;padding:2px 7px;border-radius:999px;background:rgba(232,126,126,0.14);color:#E87E7E;">
                     Suspended
                   </span>
                 </div>
               </div>
 
-              <%!-- Actions (not for self) --%>
-              <div :if={m.id != @current_member.id && Roles.can_manage_members?(@current_member)} style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <%!-- Actions --%>
+              <div :if={Roles.can_manage_members?(@current_member)} style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                 <button
                   type="button"
                   phx-click="open_edit"
@@ -639,7 +600,7 @@ defmodule OpenSauceWeb.OrgLive do
                   </svg>
                 </button>
                 <button
-                  :if={m.status == :active}
+                  :if={m.id != @current_member.id && m.status == :active}
                   type="button"
                   phx-click="suspend_member"
                   phx-value-id={m.id}
@@ -652,7 +613,7 @@ defmodule OpenSauceWeb.OrgLive do
                   </svg>
                 </button>
                 <button
-                  :if={m.status == :suspended}
+                  :if={m.id != @current_member.id && m.status == :suspended}
                   type="button"
                   phx-click="activate_member"
                   phx-value-id={m.id}
