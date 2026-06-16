@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.Accounts
   alias OpenSauce.CRM
   alias OpenSauceWeb.Navigation
 
@@ -244,7 +245,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       <%!-- add garden sheet --%>
       <div :if={@show_garden_sheet}
         id="garden-sheet"
-        style="position:fixed;inset:0;z-index:50;"
+        style="position:fixed;inset:0;z-index:60;"
         role="dialog" aria-modal="true" aria-label="Add garden">
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
@@ -258,7 +259,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
             </button>
           </div>
           <.form for={:garden} id="garden-draft-form" phx-submit="add_garden"
-            style="flex:1;overflow-y:auto;padding:16px 16px calc(74px + 16px);display:flex;flex-direction:column;gap:16px;">
+            style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;">
             <div>
               <label class="dark-label" for="draft-name">Garden name</label>
               <input class="dark-input" type="text" name="garden[name]" id="draft-name" value={@draft["name"]} placeholder="e.g. North Field" />
@@ -267,43 +268,37 @@ defmodule OpenSauceWeb.CustomerLive.Show do
               <label class="dark-label" for="draft-street">Street</label>
               <input class="dark-input" type="text" name="garden[street]" id="draft-street" value={@draft["street"]} />
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label class="dark-label" for="draft-city">City</label>
+              <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} phx-hook="TitleCase" />
+            </div>
+            <div style="display:grid;grid-template-columns:7rem 1fr auto;gap:12px;align-items:end;">
               <div>
-                <label class="dark-label" for="draft-city">City</label>
-                <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} />
+                <label class="dark-label" for="draft-zip">Postal code</label>
+                <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} phx-hook="FormatPostal" placeholder="K1A 0A0" />
               </div>
               <div>
                 <label class="dark-label" for="draft-province">Province</label>
                 <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} />
               </div>
-            </div>
-            <div>
-              <label class="dark-label" for="draft-zip">Postal code</label>
-              <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} />
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:2px;">
+                <span class="dark-label" style="margin:0;">Billing</span>
+                <button type="button" phx-click="toggle_draft_billing" ontouchstart=""
+                  style={"position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @draft["is_billing"] == "true", do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
+                  role="switch" aria-checked={@draft["is_billing"] == "true"}>
+                  <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}></span>
+                </button>
+                <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
+              </div>
             </div>
             <div>
               <label class="dark-label" for="draft-notes">Notes</label>
               <textarea class="dark-textarea" name="garden[notes]" id="draft-notes" rows="2" placeholder="Gate code, access info…"><%= @draft["notes"] %></textarea>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);padding:12px 14px;">
-              <p style="font-size:14px;font-weight:600;color:#F4EFE2;">Billing address</p>
-              <button type="button" phx-click="toggle_draft_billing" ontouchstart=""
-                style={"position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @draft["is_billing"] == "true", do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
-                role="switch" aria-checked={@draft["is_billing"] == "true"}>
-                <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}></span>
-              </button>
-              <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
-            </div>
-            <div style="display:flex;gap:10px;padding-bottom:8px;">
-              <button type="button" phx-click="close_garden_sheet" ontouchstart=""
-                style="flex:1;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:transparent;padding:13px;font-size:13.5px;font-weight:700;color:#9A9384;cursor:pointer;">
-                Cancel
-              </button>
-              <button type="submit" ontouchstart=""
-                style="flex:1;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
-                Add garden
-              </button>
-            </div>
+            <button type="submit" ontouchstart=""
+              style="width:100%;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
+              Add garden
+            </button>
           </.form>
         </div>
       </div>
@@ -417,7 +412,15 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   @impl true
   def handle_event("open_garden_sheet", _params, socket) do
-    {:noreply, assign(socket, show_garden_sheet: true, draft: @empty_draft)}
+    member = socket.assigns.current_member
+    org = Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
+
+    draft = %{@empty_draft |
+      "city" => (org.address && org.address.city) || "",
+      "province" => (org.address && org.address.province) || ""
+    }
+
+    {:noreply, assign(socket, show_garden_sheet: true, draft: draft)}
   end
 
   def handle_event("close_garden_sheet", _params, socket) do

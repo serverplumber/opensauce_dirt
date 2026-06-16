@@ -697,26 +697,26 @@ defmodule OpenSauceWeb.OrgLive do
 
             <div>
               <label class="dark-label">Street</label>
-              <input class="dark-input" type="text" name="address[street]" value={addr(@org.address, :street)} placeholder="123 Main St"/>
+              <input class="dark-input" id="hq-addr-street" type="text" name="address[street]" value={addr(@org.address, :street)} placeholder="123 Main St"/>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <label class="dark-label">City</label>
-                <input class="dark-input" type="text" name="address[city]" value={addr(@org.address, :city)} placeholder="Ottawa"/>
+                <input class="dark-input" id="hq-addr-city" type="text" name="address[city]" value={addr(@org.address, :city)} placeholder="Ottawa" phx-hook="TitleCase"/>
               </div>
               <div>
                 <label class="dark-label">Province / State</label>
-                <input class="dark-input" type="text" name="address[province]" value={addr(@org.address, :province)} placeholder="ON"/>
+                <input class="dark-input" id="hq-addr-province" type="text" name="address[province]" value={addr(@org.address, :province)} placeholder="ON"/>
               </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <label class="dark-label">Postal code</label>
-                <input class="dark-input" type="text" name="address[zip]" value={addr(@org.address, :zip)} placeholder="K1A 0A0"/>
+                <input class="dark-input" id="hq-addr-zip" type="text" name="address[zip]" value={addr(@org.address, :zip)} placeholder="K1A 0A0" phx-hook="FormatPostal"/>
               </div>
               <div>
                 <label class="dark-label">Country</label>
-                <input class="dark-input" type="text" name="address[country]" value={addr(@org.address, :country)} placeholder="Canada"/>
+                <input class="dark-input" id="hq-addr-country" type="text" name="address[country]" value={addr(@org.address, :country)} placeholder="Canada" phx-hook="TitleCase"/>
               </div>
             </div>
           </div>
@@ -1010,7 +1010,8 @@ defmodule OpenSauceWeb.OrgLive do
                   name={@form[:phone].name}
                   id={@form[:phone].id}
                   value={@form[:phone].value || ""}
-                  placeholder="613-555-0100"
+                  placeholder="(613) 555-0100"
+                  phx-hook="FormatPhone"
                 />
               </div>
               <div>
@@ -1062,7 +1063,8 @@ defmodule OpenSauceWeb.OrgLive do
                   name={@form[:contact_phone].name}
                   id={@form[:contact_phone].id}
                   value={@form[:contact_phone].value || ""}
-                  placeholder="613-555-0101"
+                  placeholder="(613) 555-0101"
+                  phx-hook="FormatPhone"
                 />
               </div>
               <div>

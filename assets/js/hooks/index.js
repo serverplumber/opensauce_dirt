@@ -1,5 +1,6 @@
 import KanbanDragDrop from "./kanban_drag_drop";
 import CommandPalette from "./command_palette";
+import { FormatPhone, FormatPostal, TitleCase } from "./formatters";
 
 const CooldownButton = {
   mounted() {
@@ -41,6 +42,9 @@ const Hooks = {
   CooldownButton,
   KanbanDragDrop,
   CommandPalette,
+  FormatPhone,
+  FormatPostal,
+  TitleCase,
 };
 
 export default Hooks;
