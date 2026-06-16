@@ -153,6 +153,9 @@ defmodule OpenSauceWeb.Router do
       # Today dashboard
       live "/manage/today", TodayLive, :index
 
+      # Shift flows
+      live "/manage/shifts/start", ShiftLive.Start, :index
+
       # Account
       live "/manage/account", AccountLive, :index
 

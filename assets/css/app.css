@@ -291,6 +291,13 @@ button {
   .fab:hover { background: #6BCB93; transform: translateY(-2px); }
 }
 .fab:active { transform: translateY(0); }
+.fab--stop {
+  background: #E87E7E;
+  box-shadow: 0 6px 20px rgba(232,126,126,0.30);
+}
+@media (hover: hover) {
+  .fab--stop:hover { background: #f09090; }
+}
 
 /* Dark form inputs */
 .dark-label {

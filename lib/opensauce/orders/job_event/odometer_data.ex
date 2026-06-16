@@ -5,7 +5,7 @@ defmodule OpenSauce.Orders.JobEvent.OdometerData do
     attribute :type, :atom do
       allow_nil? false
       public? true
-      constraints one_of: [:arrival, :departure]
+      constraints one_of: [:arrival, :departure, :shift_start, :shift_end]
     end
 
     attribute :odometer_km, :integer do

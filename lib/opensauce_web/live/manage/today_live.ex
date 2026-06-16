@@ -117,6 +117,29 @@ defmodule OpenSauceWeb.TodayLive do
   end
 
   @impl true
+  def handle_event("fab_stop_shift", _params, socket) do
+    member = socket.assigns.current_member
+    shift = socket.assigns.active_shift
+    now = DateTime.truncate(DateTime.utc_now(), :second)
+    opts = [actor: member, tenant: member.organisation_id]
+
+    Orders.log_job_event!(
+      %{job_id: shift.id, timestamp: now, data: %{type: :shift_end, odometer_km: nil}, organisation_id: member.organisation_id},
+      opts
+    )
+
+    Orders.complete_job(shift, opts)
+
+    {:noreply, load_jobs(socket)}
+  end
+
+  @impl true
+  def handle_event("fab_manager_action", _params, socket) do
+    # Ad hoc job creation — to be wired up
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
@@ -225,7 +248,42 @@ defmodule OpenSauceWeb.TodayLive do
       </div>
 
       <%!-- Action FAB --%>
-      <button class="fab" type="button" ontouchstart="" title="Action">
+      <% is_manager = @current_member.role in [:manager, :owner] %>
+      <%!-- No active shift: green go for everyone --%>
+      <button
+        :if={is_nil(@active_shift)}
+        class="fab"
+        type="button"
+        ontouchstart=""
+        phx-click={JS.navigate(~p"/manage/shifts/start")}
+        title="Start shift"
+      >
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#0C1F15">
+          <path d="M8 5.5l11 6.5-11 6.5V5.5z" />
+        </svg>
+      </button>
+      <%!-- Shift active, staff: red stop --%>
+      <button
+        :if={@active_shift && !is_manager}
+        class="fab fab--stop"
+        type="button"
+        ontouchstart=""
+        phx-click="fab_stop_shift"
+        title="End shift"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#0C1F15">
+          <rect x="5" y="5" width="14" height="14" rx="2" />
+        </svg>
+      </button>
+      <%!-- Shift active, manager: green + for ad hoc job --%>
+      <button
+        :if={@active_shift && is_manager}
+        class="fab"
+        type="button"
+        ontouchstart=""
+        phx-click="fab_manager_action"
+        title="New job"
+      >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
           <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.4" stroke-linecap="round" />
         </svg>
@@ -434,7 +492,11 @@ defmodule OpenSauceWeb.TodayLive do
         load: [:garden, engagement: [:customer]]
       )
 
-    assign(socket, :jobs, jobs)
+    active_shift = Enum.find(jobs, &(&1.type == :shift && &1.status == :in_progress))
+
+    socket
+    |> assign(:jobs, jobs)
+    |> assign(:active_shift, active_shift)
   end
 
   defp load_engagements(socket) do
