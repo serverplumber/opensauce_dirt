@@ -8,18 +8,26 @@ defmodule OpenSauceWeb.StorageLocationLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.simple_form
-        for={@form}
+      <form
         id={"storage-location-form-#{@id}"}
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
+        style="display:flex;flex-direction:column;gap:16px;"
       >
-        <.input field={@form[:name]} type="text" label="Name" placeholder="Walk-in Fridge" />
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save</.button>
-        </:actions>
-      </.simple_form>
+        <div>
+          <label class="dark-label">Name</label>
+          <input
+            class="dark-input"
+            type="text"
+            name="storage_location[name]"
+            value={@form.params["name"] || ""}
+            placeholder="Walk-in Fridge"
+            required
+          />
+        </div>
+        <.glow_button valid={true} type="submit">Save</.glow_button>
+      </form>
     </div>
     """
   end

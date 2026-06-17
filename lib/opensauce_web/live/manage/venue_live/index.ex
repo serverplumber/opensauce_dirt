@@ -2,178 +2,124 @@ defmodule OpenSauceWeb.VenueLive.Index do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  alias OpenSauce.Accounts.Roles
   alias OpenSauce.Operations
   alias OpenSauceWeb.Navigation
-  alias OpenSauceWeb.StorageLocationLive.FormComponent, as: LocationForm
 
   @impl true
   def render(assigns) do
-    assigns = assign_new(assigns, :nav_sub_links, fn -> [] end)
-
     ~H"""
-    <div class="space-y-6">
-      <.header>
-        <:subtitle>Production sites and storage spaces.</:subtitle>
-        Venues
-        <:actions>
-          <.button variant={:primary} phx-click="new_venue">
-            <.icon name="hero-plus" class="-ml-1 mr-2 h-4 w-4" /> New Venue
-          </.button>
-        </:actions>
-      </.header>
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
 
-      <div
-        :if={@venues == []}
-        class="rounded-md border border-gray-200 bg-white px-4 py-6 text-center text-sm text-stone-500"
-      >
-        No venues yet. Add one to start tracking storage locations.
+      <%!-- header --%>
+      <div style="padding:12px 16px 14px;">
+        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
+          Venues
+        </h1>
+        <p style="font-size:13px;color:#9A9384;margin-top:3px;">Production sites and storage spaces.</p>
       </div>
 
-      <div class="space-y-4">
-        <div :for={venue <- @venues} class="rounded-md border border-gray-200 bg-white">
-          <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <.link
-                  navigate={~p"/manage/venues/#{venue.id}"}
-                  class="text-base font-semibold text-stone-900 hover:underline"
-                >
+      <%!-- list --%>
+      <div style="padding:0 16px 100px;">
+        <p :if={@venues == []} style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;">
+          No venues yet
+        </p>
+
+        <div :for={venue <- @venues} class="jcard" style="cursor:pointer;">
+          <.link
+            navigate={~p"/manage/venues/#{venue.id}"}
+            style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;"
+          >
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <p style="font-size:15px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                   {venue.name}
-                </.link>
+                </p>
                 <span
                   :if={venue.id == @organisation.head_office_venue_id}
-                  class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700"
+                  style="background:rgba(84,181,126,0.15);color:#54B57E;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;letter-spacing:0.04em;"
                 >
-                  Head Office
+                  HQ
                 </span>
               </div>
-              <p :if={venue.address} class="mt-0.5 text-xs text-stone-500">{venue.address}</p>
-            </div>
-            <div class="flex gap-2">
-              <.button
-                :if={Roles.owner?(@current_member) and venue.id != @organisation.head_office_venue_id}
-                size={:sm}
-                variant={:secondary}
-                phx-click="set_head_office"
-                phx-value-id={venue.id}
+              <p
+                :if={venue.address}
+                style="font-size:12.5px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
               >
-                Set as Head Office
-              </.button>
-              <.button size={:sm} variant={:secondary} phx-click="edit_venue" phx-value-id={venue.id}>
-                Edit
-              </.button>
-              <.button
-                size={:sm}
-                variant={:danger}
-                phx-click="delete_venue"
-                phx-value-id={venue.id}
-              >
-                Delete
-              </.button>
+                {venue.address}
+              </p>
+              <p style="font-size:12px;color:#6E675A;margin-top:3px;">
+                {location_count_label(venue.storage_locations)}
+              </p>
             </div>
-          </div>
-
-          <div class="flex items-center justify-between border-b border-gray-100 px-4 py-2">
-            <span class="text-xs font-medium uppercase tracking-wide text-stone-500">
-              Storage Locations
-            </span>
-            <.button
-              size={:sm}
-              variant={:secondary}
-              phx-click="new_location"
-              phx-value-venue-id={venue.id}
-            >
-              <.icon name="hero-plus" class="-ml-0.5 mr-1 h-3 w-3" /> Add
-            </.button>
-          </div>
-
-          <p
-            :if={venue.storage_locations == []}
-            class="px-4 py-3 text-sm text-stone-400"
-          >
-            No storage locations yet.
-          </p>
-
-          <ul :if={venue.storage_locations != []} class="divide-y divide-gray-100">
-            <li
-              :for={loc <- venue.storage_locations}
-              class="flex items-center justify-between px-4 py-2 text-sm text-stone-800"
-            >
-              {loc.name}
-              <div class="flex gap-2">
-                <.button
-                  size={:sm}
-                  variant={:secondary}
-                  phx-click="edit_location"
-                  phx-value-id={loc.id}
-                  phx-value-venue-id={venue.id}
-                >
-                  Edit
-                </.button>
-                <.button
-                  size={:sm}
-                  variant={:danger}
-                  phx-click="delete_location"
-                  phx-value-id={loc.id}
-                  phx-value-venue-id={venue.id}
-                >
-                  Delete
-                </.button>
-              </div>
-            </li>
-          </ul>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex:0 0 auto;">
+              <path
+                d="M9 18l6-6-6-6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </.link>
         </div>
       </div>
+
+      <%!-- FAB --%>
+      <button class="fab" ontouchstart="" aria-label="New venue" phx-click="new_venue">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <%!-- new / edit venue modal --%>
+      <.modal
+        :if={@active_modal == :venue}
+        id="venue-modal"
+        show
+        title={if @editing_venue, do: "Edit Venue", else: "New Venue"}
+        on_cancel={JS.push("close_modal")}
+      >
+        <form
+          id="venue-form"
+          phx-change="validate_venue"
+          phx-submit="save_venue"
+          style="display:flex;flex-direction:column;gap:16px;"
+        >
+          <div>
+            <label class="dark-label">Name</label>
+            <input
+              class="dark-input"
+              type="text"
+              name="venue[name]"
+              value={@form.params["name"] || ""}
+              placeholder="Nursery"
+              required
+            />
+          </div>
+          <div>
+            <label class="dark-label">Address</label>
+            <input
+              class="dark-input"
+              type="text"
+              name="venue[address]"
+              value={@form.params["address"] || ""}
+              placeholder="123 Baker St"
+            />
+          </div>
+          <.glow_button valid={true} type="submit">Save</.glow_button>
+        </form>
+      </.modal>
     </div>
-
-    <.modal
-      :if={@active_modal == :venue}
-      id="venue-modal"
-      show
-      title={if @editing_venue, do: "Edit Venue", else: "New Venue"}
-      on_cancel={JS.push("close_modal")}
-    >
-      <.simple_form for={@form} id="venue-form" phx-change="validate_venue" phx-submit="save_venue">
-        <.input field={@form[:name]} type="text" label="Name" placeholder="Main Kitchen" />
-        <.input field={@form[:address]} type="text" label="Address" placeholder="123 Baker St" />
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save</.button>
-        </:actions>
-      </.simple_form>
-    </.modal>
-
-    <.modal
-      :if={@active_modal == :location}
-      id="location-modal"
-      show
-      title={if @location_action == :edit, do: "Edit Location", else: "New Location"}
-      on_cancel={JS.push("close_modal")}
-    >
-      <.live_component
-        module={LocationForm}
-        id="location-form"
-        action={@location_action}
-        location={@editing_location}
-        venue={@active_venue}
-        opts={@opts}
-      />
-    </.modal>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    o = opts(socket)
-
     {:ok,
      socket
-     |> assign(:opts, o)
+     |> assign(:opts, opts(socket))
      |> assign(:active_modal, nil)
      |> assign(:editing_venue, nil)
-     |> assign(:active_venue, nil)
-     |> assign(:location_action, nil)
-     |> assign(:editing_location, nil)
      |> assign(:form, empty_form())}
   end
 
@@ -183,6 +129,7 @@ defmodule OpenSauceWeb.VenueLive.Index do
      socket
      |> assign(:venues, load_venues(socket))
      |> assign(:page_title, "Venues")
+     |> assign(:main_bg, "bg-[#16140E]")
      |> Navigation.assign(:venues, [Navigation.root(:venues)])}
   end
 
@@ -193,42 +140,6 @@ defmodule OpenSauceWeb.VenueLive.Index do
      |> assign(:active_modal, :venue)
      |> assign(:editing_venue, nil)
      |> assign(:form, empty_form())}
-  end
-
-  @impl true
-  def handle_event("edit_venue", %{"id" => id}, socket) do
-    venue = Enum.find(socket.assigns.venues, &(&1.id == id))
-
-    {:noreply,
-     socket
-     |> assign(:active_modal, :venue)
-     |> assign(:editing_venue, venue)
-     |> assign(:form, venue_form(venue))}
-  end
-
-  @impl true
-  def handle_event("delete_venue", %{"id" => id}, socket) do
-    venue = Enum.find(socket.assigns.venues, &(&1.id == id))
-    Operations.delete_venue!(venue, socket.assigns.opts)
-
-    {:noreply,
-     socket
-     |> assign(:venues, load_venues(socket))
-     |> put_flash(:info, "Venue deleted.")}
-  end
-
-  @impl true
-  def handle_event("set_head_office", %{"id" => venue_id}, socket) do
-    org = socket.assigns.organisation
-    actor = socket.assigns.current_member
-
-    case Ash.update(org, %{head_office_venue_id: venue_id}, action: :update, actor: actor) do
-      {:ok, updated_org} ->
-        {:noreply, socket |> assign(:organisation, updated_org) |> put_flash(:info, "Head office updated.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not update head office.")}
-    end
   end
 
   @impl true
@@ -260,76 +171,11 @@ defmodule OpenSauceWeb.VenueLive.Index do
   end
 
   @impl true
-  def handle_event("new_location", %{"venue-id" => venue_id}, socket) do
-    venue = Enum.find(socket.assigns.venues, &(&1.id == venue_id))
-
-    {:noreply,
-     socket
-     |> assign(:active_modal, :location)
-     |> assign(:active_venue, venue)
-     |> assign(:location_action, :new)
-     |> assign(:editing_location, nil)}
-  end
-
-  @impl true
-  def handle_event("edit_location", %{"id" => loc_id, "venue-id" => venue_id}, socket) do
-    venue = Enum.find(socket.assigns.venues, &(&1.id == venue_id))
-    loc = venue && Enum.find(venue.storage_locations, &(&1.id == loc_id))
-
-    case loc do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Location not found.")}
-
-      _ ->
-        {:noreply,
-         socket
-         |> assign(:active_modal, :location)
-         |> assign(:active_venue, venue)
-         |> assign(:location_action, :edit)
-         |> assign(:editing_location, loc)}
-    end
-  end
-
-  @impl true
-  def handle_event("delete_location", %{"id" => loc_id, "venue-id" => venue_id}, socket) do
-    venue = Enum.find(socket.assigns.venues, &(&1.id == venue_id))
-    loc = venue && Enum.find(venue.storage_locations, &(&1.id == loc_id))
-
-    case loc do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Location not found.")}
-
-      _ ->
-        Operations.delete_storage_location!(loc, socket.assigns.opts)
-
-        {:noreply,
-         socket
-         |> assign(:venues, load_venues(socket))
-         |> put_flash(:info, "Location deleted.")}
-    end
-  end
-
-  @impl true
   def handle_event("close_modal", _, socket) do
     {:noreply,
      socket
      |> assign(:active_modal, nil)
-     |> assign(:editing_venue, nil)
-     |> assign(:active_venue, nil)
-     |> assign(:location_action, nil)
-     |> assign(:editing_location, nil)}
-  end
-
-  @impl true
-  def handle_info({LocationForm, {:location_saved, _loc}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:venues, load_venues(socket))
-     |> assign(:active_modal, nil)
-     |> assign(:active_venue, nil)
-     |> assign(:location_action, nil)
-     |> assign(:editing_location, nil)
-     |> put_flash(:info, "Location saved.")}
+     |> assign(:editing_venue, nil)}
   end
 
   defp load_venues(socket) do
@@ -339,9 +185,12 @@ defmodule OpenSauceWeb.VenueLive.Index do
   end
 
   defp empty_form, do: to_form(%{"name" => "", "address" => ""}, as: "venue")
-  defp venue_form(v), do: to_form(%{"name" => v.name, "address" => v.address || ""}, as: "venue")
 
   defp opts(socket) do
     [actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id]
   end
+
+  defp location_count_label([]), do: "No storage locations"
+  defp location_count_label([_]), do: "1 storage location"
+  defp location_count_label(locs), do: "#{length(locs)} storage locations"
 end

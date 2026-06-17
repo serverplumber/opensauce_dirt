@@ -8,19 +8,36 @@ defmodule OpenSauceWeb.VenueLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.simple_form
-        for={@form}
+      <form
         id={"venue-form-#{@venue.id}"}
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
+        style="display:flex;flex-direction:column;gap:16px;"
       >
-        <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:address]} type="text" label="Address" />
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save</.button>
-        </:actions>
-      </.simple_form>
+        <div>
+          <label class="dark-label">Name</label>
+          <input
+            class="dark-input"
+            type="text"
+            name="venue[name]"
+            value={@form.params["name"] || ""}
+            placeholder="Nursery"
+            required
+          />
+        </div>
+        <div>
+          <label class="dark-label">Address</label>
+          <input
+            class="dark-input"
+            type="text"
+            name="venue[address]"
+            value={@form.params["address"] || ""}
+            placeholder="123 Baker St"
+          />
+        </div>
+        <.glow_button valid={true} type="submit">Save</.glow_button>
+      </form>
     </div>
     """
   end
@@ -46,7 +63,7 @@ defmodule OpenSauceWeb.VenueLive.FormComponent do
         {:noreply, socket}
 
       {:error, _} ->
-        {:noreply, socket}
+        {:noreply, put_flash(socket, :error, "Could not save venue.")}
     end
   end
 

@@ -256,25 +256,42 @@ defmodule OpenSauceWeb.Components.Core do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class={[
-        "group fixed right-2 bottom-4 z-50 mr-2 w-80 rounded-md p-4 shadow-xl ring-1 sm:w-96",
-        if(@kind == :info, do: "bg-white fill-stone-900 text-stone-900 ring-gray-200", else: ""),
-        if(@kind == :error, do: "bg-white text-stone-900 ring-gray-200", else: "")
-      ]}
+      style={
+        "position:fixed;bottom:86px;left:16px;right:16px;z-index:70;" <>
+          "background:#211E16;border-radius:14px;" <>
+          "border:1.5px solid #{if @kind == :info, do: "rgba(84,181,126,0.35)", else: "rgba(232,126,126,0.35)"};" <>
+          "padding:12px 44px 12px 48px;" <>
+          "box-shadow:0 8px 32px rgba(0,0,0,0.5);" <>
+          "font-family:'Hanken Grotesk',system-ui,sans-serif;" <>
+          "cursor:pointer;"
+      }
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <%!-- <.icon :if={@kind == :info} name="hero-information-circle-mini bg-blue-500" class="h-4 w-4" /> --%>
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini bg-rose-500" class="h-4 w-4" />
+      <%!-- accent bar --%>
+      <div style={
+        "position:absolute;left:16px;top:50%;transform:translateY(-50%);" <>
+          "width:3px;height:60%;border-radius:2px;" <>
+          "background:#{if @kind == :info, do: "#54B57E", else: "#E87E7E"};"
+      }>
+      </div>
+      <%!-- title (connection errors only) --%>
+      <p
+        :if={@title}
+        style={"font-size:13px;font-weight:700;color:#{if @kind == :info, do: "#6BCB93", else: "#E87E7E"};margin-bottom:2px;"}
+      >
         {@title}
       </p>
-      <p class="mt-0.5 text-xs leading-5 text-stone-600">{msg}</p>
+      <%!-- message --%>
+      <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;line-height:1.4;">{msg}</p>
+      <%!-- dismiss --%>
       <button
         type="button"
-        class="group absolute top-1 right-2 p-1 opacity-40 transition-all group-hover:opacity-100"
+        style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6E675A;line-height:0;padding:4px;"
         aria-label={gettext("close")}
       >
-        <.icon name="hero-x-mark-solid" class="h-4 w-4" />
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
       </button>
     </div>
     """
@@ -293,8 +310,8 @@ defmodule OpenSauceWeb.Components.Core do
   def flash_group(assigns) do
     ~H"""
     <div id={@id}>
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
-      <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
