@@ -502,7 +502,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     if parts == [], do: nil, else: Enum.join(parts, " · ")
   end
 
-  defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
+  defp staff_name(%{user: %{email: e}}), do: e |> to_string() |> String.split("@") |> hd()
   defp staff_name(_), do: "?"
 
   defp crew_initial(member) do
@@ -541,6 +541,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         tenant: member.organisation_id,
         load: [:garden, engagement: [:customer], staff_assignments: [member: [:user]]]
       )
+      |> Enum.reject(&(&1.type == :shift))
 
     today = Date.utc_today()
 

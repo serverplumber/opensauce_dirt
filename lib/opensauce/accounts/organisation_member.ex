@@ -86,8 +86,8 @@ defmodule OpenSauce.Accounts.OrganisationMember do
   end
 
   relationships do
-    belongs_to :user, OpenSauce.Accounts.User, allow_nil?: false
-    belongs_to :organisation, OpenSauce.Accounts.Organisation, allow_nil?: false
+    belongs_to :user, OpenSauce.Accounts.User, allow_nil?: false, public?: true
+    belongs_to :organisation, OpenSauce.Accounts.Organisation, allow_nil?: false, public?: true
   end
 
   identities do

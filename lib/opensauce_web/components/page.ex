@@ -195,12 +195,13 @@ defmodule OpenSauceWeb.Components.Page do
     %{label: "Invoices", path: "/manage/invoices"}
   ]
 
-  @primary_prefixes ["/manage/today", "/manage/schedule", "/manage/jobs", "/manage/customers", "/manage/purchasing"]
+  @primary_prefixes ["/manage/today", "/manage/schedule", "/manage/jobs", "/manage/customers", "/manage/shifts", "/manage/purchasing"]
 
   attr :current_path, :string, default: ""
   attr :current_user, :any, default: nil
   attr :current_member, :any, default: nil
   attr :memberships, :list, default: []
+  attr :active_shift, :any, default: nil
 
   def bottom_nav(assigns) do
     more_active =
@@ -443,11 +444,21 @@ defmodule OpenSauceWeb.Components.Page do
           </.nav_tab>
 
           <.nav_tab
+            :if={is_nil(@active_shift)}
             navigate={~p"/manage/customers"}
             label="Clients"
             active={String.starts_with?(@current_path, "/manage/customers")}
           >
             <:icon><.customers_icon /></:icon>
+          </.nav_tab>
+
+          <.nav_tab
+            :if={@active_shift}
+            navigate={~p"/manage/shifts/current"}
+            label="Shift"
+            active={String.starts_with?(@current_path, "/manage/shifts")}
+          >
+            <:icon><.shift_icon /></:icon>
           </.nav_tab>
 
           <button
@@ -584,6 +595,15 @@ defmodule OpenSauceWeb.Components.Page do
         stroke-width="1.75"
         d="M17 20h5v-1a6 6 0 00-9-5.197M9 20H4v-1a6 6 0 0112 0v1zm3-9a4 4 0 100-8 4 4 0 000 8z"
       />
+    </svg>
+    """
+  end
+
+  defp shift_icon(assigns) do
+    ~H"""
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" stroke-width="1.75" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 7v5l3 3" />
     </svg>
     """
   end

@@ -12,6 +12,7 @@ defmodule OpenSauce.Orders do
 
   resources do
     resource OpenSauce.Orders.Job do
+      define :find_active_shift, action: :active_shift
       define :list_jobs, action: :list
       define :list_upcoming_jobs, action: :upcoming
       define :list_jobs_for_shift, action: :for_shift, args: [:shift_id]

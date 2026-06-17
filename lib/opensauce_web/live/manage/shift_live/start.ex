@@ -94,54 +94,58 @@ defmodule OpenSauceWeb.ShiftLive.Start do
 
   @impl true
   def handle_event("start_shift", _params, socket) do
-    member = socket.assigns.current_member
-    now = DateTime.truncate(DateTime.utc_now(), :second)
-    opts = [actor: member, tenant: member.organisation_id]
+    if can_start?(socket.assigns.mode, socket.assigns.odometer, socket.assigns.active_shift) do
+      member = socket.assigns.current_member
+      now = DateTime.truncate(DateTime.utc_now(), :second)
+      opts = [actor: member, tenant: member.organisation_id]
 
-    case socket.assigns.mode do
-      :driving ->
-        odometer_km =
-          case Integer.parse(socket.assigns.odometer) do
-            {n, _} -> n
-            :error -> nil
-          end
+      case socket.assigns.mode do
+        :driving ->
+          odometer_km =
+            case Integer.parse(socket.assigns.odometer) do
+              {n, _} -> n
+              :error -> nil
+            end
 
-        shift =
-          Orders.create_job!(
-            %{
-              type: :shift,
-              status: :in_progress,
-              scheduled_for: Date.utc_today(),
-              organisation_id: member.organisation_id
-            },
-            opts
-          )
+          shift =
+            Orders.create_job!(
+              %{
+                type: :shift,
+                status: :in_progress,
+                scheduled_for: Date.utc_today(),
+                organisation_id: member.organisation_id
+              },
+              opts
+            )
 
-        Orders.log_job_event!(
-          %{
-            job_id: shift.id,
-            timestamp: now,
-            data: %{type: :shift_start, odometer_km: odometer_km},
-            organisation_id: member.organisation_id
-          },
-          opts
-        )
-
-      mode when mode in [:checkin, :riding] ->
-        if socket.assigns.active_shift do
           Orders.log_job_event!(
             %{
-              job_id: socket.assigns.active_shift.id,
+              job_id: shift.id,
               timestamp: now,
-              data: %{type: :work_session_start},
+              data: %{type: :shift_start, odometer_km: odometer_km},
               organisation_id: member.organisation_id
             },
             opts
           )
-        end
-    end
 
-    {:noreply, push_navigate(socket, to: ~p"/manage/today")}
+        mode when mode in [:checkin, :riding] ->
+          if socket.assigns.active_shift do
+            Orders.log_job_event!(
+              %{
+                job_id: socket.assigns.active_shift.id,
+                timestamp: now,
+                data: %{type: :work_session_start},
+                organisation_id: member.organisation_id
+              },
+              opts
+            )
+          end
+      end
+
+      {:noreply, push_navigate(socket, to: ~p"/manage/today")}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -229,7 +233,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin:0 0 6px;">
                 Start odometer
               </p>
-              <form phx-change="update_odometer" style="display:flex;align-items:baseline;gap:8px;">
+              <form phx-change="update_odometer" phx-submit="start_shift" style="display:flex;align-items:baseline;gap:8px;">
                 <input
                   type="number"
                   name="odometer"

@@ -139,7 +139,8 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveCurrentPath,
         OpenSauceWeb.LiveNav,
         OpenSauceWeb.LiveSettings,
-        OpenSauceWeb.LiveCommandPalette
+        OpenSauceWeb.LiveCommandPalette,
+        OpenSauceWeb.LiveShift
       ] do
       # Job creation, detail, arrive + materials
       live "/manage/jobs/new", JobLive.New, :index
@@ -155,6 +156,7 @@ defmodule OpenSauceWeb.Router do
 
       # Shift flows
       live "/manage/shifts/start", ShiftLive.Start, :index
+      live "/manage/shifts/current", ShiftLive.Summary, :index
 
       # Account
       live "/manage/account", AccountLive, :index

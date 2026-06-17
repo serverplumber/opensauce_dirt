@@ -495,7 +495,7 @@ defmodule OpenSauceWeb.TodayLive do
     active_shift = Enum.find(jobs, &(&1.type == :shift && &1.status == :in_progress))
 
     socket
-    |> assign(:jobs, jobs)
+    |> assign(:jobs, Enum.reject(jobs, &(&1.type == :shift)))
     |> assign(:active_shift, active_shift)
   end
 

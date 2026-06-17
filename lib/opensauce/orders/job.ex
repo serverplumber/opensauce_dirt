@@ -40,6 +40,10 @@ defmodule OpenSauce.Orders.Job do
       prepare build(sort: [scheduled_for: :asc])
     end
 
+    read :active_shift do
+      filter expr(type == :shift and status == :in_progress)
+    end
+
     read :at_garden do
       argument :garden_id, :uuid, allow_nil?: false
       filter expr(garden_id == ^arg(:garden_id) and status in [:scheduling, :scheduled, :in_progress])

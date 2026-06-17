@@ -23,6 +23,8 @@ defmodule OpenSauceWeb.Layouts do
   attr :main_bg, :string, default: "bg-stone-50"
   slot :inner_block, required: true
 
+  attr :active_shift, :any, default: nil
+
   def mobile_shell(assigns) do
     ~H"""
     <div class="flex flex-col" style="height: 100dvh; background: #16140E">
@@ -36,6 +38,7 @@ defmodule OpenSauceWeb.Layouts do
         current_user={@current_user}
         current_member={@current_member}
         memberships={@memberships}
+        active_shift={@active_shift}
       />
     </div>
     """
