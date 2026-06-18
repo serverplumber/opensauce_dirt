@@ -6,223 +6,359 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   alias OpenSauce.Accounts
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.Receiving
-  alias OpenSauceWeb.Navigation
 
   import OpenSauceWeb.PurchaseOrderPrint
 
   @impl true
   def render(assigns) do
     ~H"""
-    <.header class="print:hidden">
-      {@po.reference}
-      <:subtitle>
-        <span class={["rounded px-2 py-0.5 text-xs font-medium", status_class(@po.status)]}>
-          {Phoenix.Naming.humanize(@po.status)}
-        </span>
-      </:subtitle>
-      <:actions>
-        <.button variant={:outline} onclick="window.print()">Print</.button>
-        <.link :if={@po.status == :draft} patch={~p"/manage/purchasing/#{@po.reference}/add_item"}>
-          <.button variant={:outline}>Add Item</.button>
-        </.link>
-        <.button
-          :if={@po.status == :draft}
-          phx-click="mark_ordered"
-          variant={:primary}
-          phx-disable-with="Saving…"
-        >
-          Mark Ordered
-        </.button>
-        <.link :if={@po.status == :confirmed} navigate={~p"/manage/purchasing/#{@po.reference}/lineup"}>
-          <.button variant={:primary}>Go to Lineup</.button>
-        </.link>
-      </:actions>
-    </.header>
-
-    <.sub_nav links={@tabs_links} class="print:hidden" />
-
-    <.purchase_order_print po={@po} currency={@organisation.currency} organisation={@organisation} />
-
-    <div class="mt-4 print:hidden">
-      <div :if={@live_action == :show}>
-        <.list>
-          <:item title="Reference"><.kbd>{@po.reference}</.kbd></:item>
-          <:item title="Supplier">{(@po.supplier && @po.supplier.name) || "—"}</:item>
-          <:item title="Status">{Phoenix.Naming.humanize(@po.status)}</:item>
-          <:item title="Ordered">{format_time(@po.ordered_at, @time_zone)}</:item>
-          <:item title="Received">{format_time(@po.received_at, @time_zone)}</:item>
-        </.list>
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+      <%!-- print-only sheet (hidden on mobile) --%>
+      <div class="hidden print:block">
+        <.purchase_order_print po={@po} currency={@organisation.currency} organisation={@organisation} />
       </div>
 
-      <div :if={@live_action in [:items, :add_item]}>
-        <div :if={@po.status == :ordered}>
-          <p class="mb-3 text-sm text-stone-500">
-            Enter the quantity each item the supplier confirmed they have set aside.
-          </p>
-          <form phx-submit="confirm_items" id="confirm-form">
-            <div class="overflow-x-auto rounded-md border border-stone-200">
-              <table class="min-w-full divide-y divide-stone-200 text-sm">
-                <thead class="bg-stone-50">
-                  <tr>
-                    <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-stone-500">SKU</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-stone-500">Plant</th>
-                    <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-stone-500">Ordered</th>
-                    <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-stone-500">Confirmed</th>
-                    <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-stone-500">Price</th>
-                    <th class="px-3 py-2"></th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-stone-100 bg-white">
-                  <tr :for={item <- @po.items}>
-                    <td class="px-3 py-2 font-mono text-stone-700">{item.supplier_sku}</td>
-                    <td class="px-3 py-2 text-stone-600">{plant_label(item)}</td>
-                    <td class="px-3 py-2 text-right text-stone-600">{fmt_qty(item.quantity)}</td>
-                    <td class="px-3 py-2 text-right">
-                      <input
-                        type="number"
-                        name={"confirm[#{item.id}]"}
-                        value={fmt_qty(item.confirmed_qty || item.quantity)}
-                        step="1"
-                        min="0"
-                        class="w-20 rounded border border-stone-300 px-2 py-1 text-right text-sm focus:border-primary-400 focus:outline-none"
-                      />
-                    </td>
-                    <td class="px-3 py-2 text-right text-stone-500">
-                      {format_money(@organisation.currency, item.unit_price || D.new(0))}
-                    </td>
-                    <td class="px-3 py-2">
-                      <span :if={item.is_reservation} class="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">
-                        cherry-pick
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="mt-4 flex justify-end">
-              <.button type="submit" variant={:primary} phx-disable-with="Saving…">
-                Supplier Confirmed
-              </.button>
-            </div>
-          </form>
-        </div>
-
-        <div :if={@po.status != :ordered}>
-          <.table id="po-items" rows={@po.items}>
-            <:col :let={i} label="SKU">
-              <span class="font-mono">{i.supplier_sku}</span>
-            </:col>
-            <:col :let={i} label="Plant">{plant_label(i)}</:col>
-            <:col :let={i} label="Ordered">{fmt_qty(i.quantity)}</:col>
-            <:col :let={i} label="Confirmed">{fmt_qty(i.confirmed_qty) || "—"}</:col>
-            <:col :if={@po.status == :received} :let={i} label="Received">
-              {fmt_qty(i.received_qty) || "—"}
-            </:col>
-            <:col :let={i} label="Price">
-              {format_money(@organisation.currency, i.unit_price || D.new(0))}
-            </:col>
-            <:col :let={i} label="">
-              <span :if={i.is_reservation} class="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">
-                cherry-pick
-              </span>
-            </:col>
-          </.table>
-        </div>
-      </div>
-
-      <div :if={@live_action == :lineup}>
-        <div :if={@po.status == :confirmed}>
-          <p class="mb-4 text-sm text-stone-500">
-            Walk through each item and enter the quantity you're taking. Cherry-pick items are plants to inspect individually.
-          </p>
-          <form phx-submit="finalize_pickup" id="lineup-form">
-            <div class="space-y-2">
-              <div
-                :for={item <- @po.items}
-                class="flex items-center gap-4 rounded-lg border border-stone-200 bg-white px-4 py-3"
-              >
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-mono text-sm font-medium text-stone-800">{item.supplier_sku}</span>
-                    <span :if={item.is_reservation} class="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">
-                      cherry-pick
-                    </span>
-                  </div>
-                  <div class="text-sm text-stone-400">{plant_label(item)}</div>
-                </div>
-                <div class="text-sm text-stone-400">
-                  <span class="font-medium text-stone-600">{fmt_qty(item.confirmed_qty)}</span> confirmed
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-stone-400">Taking</span>
-                  <input
-                    type="number"
-                    name={"lineup[#{item.id}]"}
-                    value={fmt_qty(item.confirmed_qty || item.quantity)}
-                    step="1"
-                    min="0"
-                    class="w-20 rounded border border-stone-300 px-2 py-1 text-right text-sm focus:border-primary-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="mt-6 flex justify-end">
-              <.button type="submit" variant={:primary} phx-disable-with="Finalizing…">
-                Finalize Pickup
-              </.button>
-            </div>
-          </form>
-        </div>
-
-        <div :if={@po.status == :received} class="space-y-2">
-          <div
-            :for={item <- @po.items}
-            class="flex items-center gap-4 rounded-lg border border-stone-100 bg-stone-50 px-4 py-3"
-          >
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <span class="font-mono text-sm font-medium text-stone-700">{item.supplier_sku}</span>
-                <span :if={item.is_reservation} class="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">
-                  cherry-pick
-                </span>
-              </div>
-              <div class="text-sm text-stone-400">{plant_label(item)}</div>
-            </div>
-            <div class="flex gap-6 text-sm">
-              <div class="text-stone-400">
-                Confirmed: <span class="font-medium text-stone-600">{fmt_qty(item.confirmed_qty)}</span>
-              </div>
-              <div class="text-stone-400">
-                Received: <span class="font-medium text-stone-800">{fmt_qty(item.received_qty)}</span>
-              </div>
-            </div>
+      <div class="print:hidden">
+        <%!-- top bar --%>
+        <div style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
+          <.link navigate={~p"/manage/purchasing"}>
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
+          </.link>
+          <div style="flex:1;min-width:0;">
+            <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:19px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {po_supplier_name(@po)}
+            </h1>
+            <p style="font-size:12px;color:#6E675A;margin-top:1px;font-family:monospace;">{@po.reference}</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style={"#{status_badge_style(@po.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
+              {status_label(@po.status)}
+            </span>
+            <button
+              :if={@po.status in [:draft, :ordered]}
+              type="button"
+              onclick="window.print()"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div :if={@po.status not in [:confirmed, :received]} class="py-8 text-center text-sm text-stone-400">
-          Lineup is available once the supplier has confirmed availability.
+        <%!-- PO detail view: show / items / add_item --%>
+        <div :if={@live_action in [:show, :items, :add_item]}>
+          <%!-- ordered / confirmed date chips --%>
+          <div
+            :if={@po.ordered_at || @po.received_at}
+            style="padding:0 16px 12px;display:flex;gap:8px;"
+          >
+            <span :if={@po.ordered_at} style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;">
+              sent {fmt_date(@po.ordered_at)}
+            </span>
+            <span :if={@po.received_at} style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;">
+              received {fmt_date(@po.received_at)}
+            </span>
+          </div>
+
+          <%!-- ordered: inline confirmation form --%>
+          <div :if={@po.status == :ordered} style="padding:0 16px 10px;">
+            <p style="font-size:13px;color:#9A9384;margin-bottom:12px;">
+              Enter the quantity the supplier confirmed they have set aside.
+            </p>
+            <form phx-submit="confirm_items" id="confirm-form" style="display:flex;flex-direction:column;gap:8px;">
+              <div
+                :for={item <- @po.items}
+                style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;"
+              >
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                  <div style="min-width:0;flex:1;">
+                    <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">{plant_label(item)}</p>
+                    <p style="font-size:11.5px;font-family:monospace;color:#6E675A;margin-top:2px;">{item.supplier_sku}</p>
+                  </div>
+                  <span :if={item.is_reservation} style="flex-shrink:0;background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">
+                    cherry-pick
+                  </span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+                  <span style="font-size:12px;color:#9A9384;">ordered: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.quantity)}</span></span>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <label style="font-size:12px;color:#9A9384;">confirmed:</label>
+                    <input
+                      type="number"
+                      name={"confirm[#{item.id}]"}
+                      value={fmt_qty(item.confirmed_qty || item.quantity)}
+                      step="1"
+                      min="0"
+                      style="width:70px;background:#16140E;border:1px solid rgba(52,48,37,0.8);border-radius:8px;padding:5px 8px;font-size:14px;font-weight:600;color:#F4EFE2;text-align:right;"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div style="height:90px;" />
+              <div style="position:fixed;bottom:74px;left:0;right:0;padding:12px 16px;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);">
+                <button
+                  type="submit"
+                  style="width:100%;background:#54B57E;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
+                >
+                  Supplier confirmed →
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <%!-- items list (non-ordered states) --%>
+          <div :if={@po.status != :ordered} style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
+            <p
+              :if={@po.items == []}
+              style="font-size:13.5px;color:#6E675A;text-align:center;padding:32px 0;"
+            >
+              No items yet
+            </p>
+            <div
+              :for={item <- @po.items}
+              style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;"
+            >
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                <div style="min-width:0;flex:1;">
+                  <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">{plant_label(item)}</p>
+                  <p style="font-size:11.5px;font-family:monospace;color:#6E675A;margin-top:2px;">{item.supplier_sku}</p>
+                </div>
+                <span :if={item.is_reservation} style="flex-shrink:0;background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">
+                  cherry-pick
+                </span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                <div style="display:flex;gap:12px;">
+                  <span style="font-size:12px;color:#9A9384;">
+                    ordered: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.quantity)}</span>
+                  </span>
+                  <span :if={item.confirmed_qty} style="font-size:12px;color:#9A9384;">
+                    confirmed: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.confirmed_qty)}</span>
+                  </span>
+                  <span :if={item.received_qty} style="font-size:12px;color:#9A9384;">
+                    received: <span style="color:#54B57E;font-weight:600;">{fmt_qty(item.received_qty)}</span>
+                  </span>
+                </div>
+                <span :if={item.unit_price} style="font-size:12px;color:#6E675A;">
+                  {format_money(@organisation.currency, item.unit_price)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <%!-- spacer for sticky CTA --%>
+          <div :if={@po.status != :ordered} style="height:110px;" />
+
+          <%!-- sticky CTA --%>
+          <div
+            :if={@po.status in [:draft, :confirmed]}
+            style="position:fixed;bottom:74px;left:0;right:0;padding:12px 16px;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);"
+          >
+            <div :if={@po.status == :draft} style="display:flex;gap:8px;">
+              <.link
+                patch={~p"/manage/purchasing/#{@po.reference}/add_item"}
+                style="flex-shrink:0;"
+              >
+                <button
+                  type="button"
+                  ontouchstart=""
+                  style="height:50px;padding:0 16px;background:rgba(52,48,37,0.5);border:1px solid rgba(52,48,37,0.58);border-radius:14px;font-size:14px;font-weight:600;color:#F4EFE2;cursor:pointer;white-space:nowrap;"
+                >
+                  + Add item
+                </button>
+              </.link>
+              <button
+                type="button"
+                phx-click="mark_ordered"
+                ontouchstart=""
+                style="flex:1;height:50px;background:#54B57E;border:none;border-radius:14px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
+              >
+                Send order →
+              </button>
+            </div>
+            <.link :if={@po.status == :confirmed} navigate={~p"/manage/purchasing/#{@po.reference}/lineup"}>
+              <button
+                type="button"
+                ontouchstart=""
+                style="width:100%;height:50px;background:#54B57E;border:none;border-radius:14px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
+              >
+                Go to pickup →
+              </button>
+            </.link>
+          </div>
+        </div>
+
+        <%!-- F3 lineup / pickup screen --%>
+        <div :if={@live_action == :lineup}>
+          <div :if={@po.status == :confirmed} style="padding:0 16px;display:flex;flex-direction:column;gap:10px;">
+            <%!-- supplier hero --%>
+            <div style="background:#211E16;border:2px solid #54B57E;border-radius:16px;padding:14px;">
+              <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#54B57E;margin-bottom:4px;">
+                pickup job
+              </p>
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:19px;font-weight:700;color:#F4EFE2;letter-spacing:-0.02em;">
+                {po_supplier_name(@po)}
+              </p>
+              <p
+                :for={addr <- List.wrap(@po.supplier && @po.supplier.addresses)}
+                style="font-size:13px;color:#9A9384;margin-top:2px;"
+              >
+                {addr_short(addr)}
+              </p>
+              <p style="font-size:12px;color:#6E675A;margin-top:4px;">
+                PO {@po.reference} · {@po.items |> length()} items
+              </p>
+            </div>
+
+            <%!-- tick-as-you-load checklist --%>
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">
+              collect — tick as you load
+            </p>
+
+            <form phx-submit="finalize_pickup" id="lineup-form" style="display:flex;flex-direction:column;gap:8px;">
+              <div
+                :for={item <- @po.items}
+                style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;"
+              >
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">{plant_label(item)}</p>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                      <p style="font-size:12px;color:#9A9384;">
+                        confirmed: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.confirmed_qty || item.quantity)}</span>
+                      </p>
+                      <span :if={item.is_reservation} style="background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:1px 7px;font-size:10px;font-weight:700;">
+                        cherry-pick
+                      </span>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <label style="font-size:12px;color:#6E675A;">taking</label>
+                    <input
+                      type="number"
+                      name={"lineup[#{item.id}]"}
+                      value={fmt_qty(item.confirmed_qty || item.quantity)}
+                      step="1"
+                      min="0"
+                      style="width:64px;background:#16140E;border:1px solid rgba(52,48,37,0.8);border-radius:8px;padding:5px 8px;font-size:14px;font-weight:700;color:#F4EFE2;text-align:right;"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:90px;" />
+
+              <div style="position:fixed;bottom:74px;left:0;right:0;padding:12px 16px;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);">
+                <button
+                  type="submit"
+                  style="width:100%;background:#54B57E;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
+                >
+                  Received & on truck →
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div :if={@po.status == :received} style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
+            <div
+              :for={item <- @po.items}
+              style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;opacity:0.85;"
+            >
+              <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">{plant_label(item)}</p>
+              <div style="display:flex;gap:12px;margin-top:6px;">
+                <span style="font-size:12px;color:#9A9384;">
+                  confirmed: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.confirmed_qty)}</span>
+                </span>
+                <span style="font-size:12px;color:#9A9384;">
+                  received: <span style="color:#54B57E;font-weight:600;">{fmt_qty(item.received_qty)}</span>
+                </span>
+              </div>
+            </div>
+            <div style="height:24px;" />
+          </div>
+
+          <div
+            :if={@po.status not in [:confirmed, :received]}
+            style="padding:60px 16px;text-align:center;"
+          >
+            <p style="font-size:14px;color:#6E675A;">
+              Pickup available once the supplier has confirmed availability.
+            </p>
+          </div>
+        </div>
+
+        <%!-- add item bottom sheet --%>
+        <div
+          :if={@live_action == :add_item}
+          class="fixed inset-0 z-[60] flex flex-col justify-end"
+          role="dialog"
+          aria-label="Add item"
+        >
+          <div
+            class="absolute inset-0 bg-black/65"
+            phx-click={JS.patch(~p"/manage/purchasing/#{@po.reference}")}
+            aria-hidden="true"
+          />
+          <div
+            class="relative w-full bg-[#211E16] mobile-scroll"
+            style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);max-height:82vh;overflow-y:auto;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
+          >
+            <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);position:sticky;top:0;background:#211E16;z-index:1;">
+              <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;" />
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
+                  Add item
+                </span>
+                <.link patch={~p"/manage/purchasing/#{@po.reference}"}>
+                  <button
+                    type="button"
+                    ontouchstart=""
+                    style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </.link>
+              </div>
+            </div>
+            <div style="padding:20px 16px;">
+              <.live_component
+                module={OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent}
+                id="po-item-form"
+                current_member={@current_member}
+                materials={@materials}
+                supplier={@po.supplier}
+                po_id={@po.id}
+                purchase_order_item={nil}
+                patch={~p"/manage/purchasing/#{@po.reference}"}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    <.modal
-      :if={@live_action == :add_item}
-      id="po-item-modal"
-      show
-      title={"Add Item to #{@po.reference}"}
-      on_cancel={JS.patch(~p"/manage/purchasing/#{@po.reference}/items")}
-    >
-      <.live_component
-        module={OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent}
-        id="po-item-form"
-        current_member={@current_member}
-        materials={@materials}
-        supplier={@po.supplier}
-        po_id={@po.id}
-        purchase_order_item={nil}
-        patch={~p"/manage/purchasing/#{@po.reference}/items"}
-      />
-    </.modal>
     """
   end
 
@@ -230,14 +366,19 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   def mount(_params, _session, socket) do
     member = socket.assigns.current_member
 
-    materials =
-      Inventory.list_materials!(
-        actor: member,
-        tenant: member.organisation_id
-      )
+    materials = Inventory.list_materials!(actor: member, tenant: member.organisation_id)
 
+    # Load org with address for print sheet
     organisation =
-      Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
+      if Map.get(socket.assigns, :organisation) do
+        Accounts.get_organisation!(
+          member.organisation_id,
+          authorize?: false,
+          load: [:address]
+        )
+      else
+        Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
+      end
 
     {:ok, assign(socket, materials: materials, organisation: organisation)}
   end
@@ -255,14 +396,11 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
          |> push_navigate(to: ~p"/manage/purchasing")}
 
       {:ok, po} ->
-        live_action = socket.assigns.live_action
-        tabs_links = build_tabs(po, live_action)
-
         {:noreply,
          socket
          |> assign(:po, po)
-         |> assign(:tabs_links, tabs_links)
-         |> Navigation.assign(:purchasing, po_trail(po, live_action))}
+         |> assign(:page_title, po_supplier_name(po))
+         |> assign(:main_bg, "bg-[#16140E]")}
 
       {:error, _} ->
         {:noreply,
@@ -278,14 +416,8 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
     opts = [actor: member, tenant: member.organisation_id]
 
     case Inventory.mark_purchase_order_ordered(socket.assigns.po, opts) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> reload_po()
-         |> put_flash(:info, "PO marked as ordered.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not update status.")}
+      {:ok, _} -> {:noreply, reload_po(socket)}
+      {:error, _} -> {:noreply, socket}
     end
   end
 
@@ -300,14 +432,8 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
     end
 
     case Inventory.confirm_purchase_order(socket.assigns.po, opts) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> reload_po()
-         |> put_flash(:info, "Supplier confirmation saved.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not save confirmations.")}
+      {:ok, _} -> {:noreply, reload_po(socket)}
+      {:error, _} -> {:noreply, socket}
     end
   end
 
@@ -325,77 +451,48 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Pickup finalized. Stock updated.")
-         |> push_navigate(to: ~p"/manage/purchasing/#{socket.assigns.po.reference}")}
+         |> put_flash(:info, "Pickup done. Stock updated.")
+         |> push_navigate(to: ~p"/manage/purchasing")}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not finalize pickup.")}
+        {:noreply, socket}
     end
   end
 
   @impl true
   def handle_info({:po_item_saved, _item}, socket) do
-    {:noreply,
-     socket
-     |> reload_po()
-     |> put_flash(:info, "Item added.")}
+    {:noreply, reload_po(socket)}
   end
 
   defp reload_po(socket) do
     member = socket.assigns.current_member
-    po = Inventory.get_purchase_order_by_reference!(
-      socket.assigns.po.reference,
-      actor: member,
-      tenant: member.organisation_id,
-      load: po_load()
-    )
-    live_action = socket.assigns.live_action
-    socket
-    |> assign(:po, po)
-    |> assign(:tabs_links, build_tabs(po, live_action))
+
+    po =
+      Inventory.get_purchase_order_by_reference!(
+        socket.assigns.po.reference,
+        actor: member,
+        tenant: member.organisation_id,
+        load: po_load()
+      )
+
+    assign(socket, :po, po)
   end
 
   defp po_load do
-    [supplier: [:address], items: [:material, supplier_catalog_item: [], job: [:address]]]
+    [supplier: [:addresses], items: [:material, supplier_catalog_item: [], job: [:address]]]
   end
 
-  defp build_tabs(po, live_action) do
-    base = [
-      %{
-        label: "Overview",
-        navigate: ~p"/manage/purchasing/#{po.reference}",
-        active: live_action == :show
-      },
-      %{
-        label: "Items",
-        navigate: ~p"/manage/purchasing/#{po.reference}/items",
-        active: live_action in [:items, :add_item]
-      }
-    ]
+  defp po_supplier_name(%{supplier: %{name: name}}), do: name
+  defp po_supplier_name(_), do: "Unassigned"
 
-    if po.status in [:confirmed, :received] do
-      base ++
-        [
-          %{
-            label: "Lineup",
-            navigate: ~p"/manage/purchasing/#{po.reference}/lineup",
-            active: live_action == :lineup
-          }
-        ]
-    else
-      base
-    end
-  end
-
-  defp plant_label(%{supplier_catalog_item: %{latin_name: ln, cultivar: cv}})
-       when not is_nil(ln) do
+  defp plant_label(%{supplier_catalog_item: %{latin_name: ln, cultivar: cv}}) when not is_nil(ln) do
     [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
   end
 
   defp plant_label(%{material: %{name: name}}) when not is_nil(name), do: name
-  defp plant_label(_), do: "—"
+  defp plant_label(%{supplier_sku: sku}), do: sku
 
-  defp fmt_qty(nil), do: nil
+  defp fmt_qty(nil), do: "—"
   defp fmt_qty(%D{} = d), do: D.to_string(d)
   defp fmt_qty(n), do: to_string(n)
 
@@ -409,35 +506,28 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
     end
   end
 
-  defp status_class(:draft), do: "bg-stone-100 text-stone-600"
-  defp status_class(:ordered), do: "bg-amber-100 text-amber-700"
-  defp status_class(:confirmed), do: "bg-blue-100 text-blue-700"
-  defp status_class(:received), do: "bg-emerald-100 text-emerald-700"
-  defp status_class(_), do: "bg-stone-100 text-stone-600"
+  defp fmt_date(%DateTime{} = dt), do: Calendar.strftime(dt, "%b %d")
+  defp fmt_date(_), do: "—"
 
-  defp po_trail(po, :items) do
-    [
-      Navigation.root(:purchasing),
-      Navigation.page(:purchasing, :purchase_orders),
-      Navigation.resource(:purchase_order, po),
-      Navigation.page(:purchasing, :po_items, po)
-    ]
+  defp status_label(:draft), do: "draft"
+  defp status_label(:ordered), do: "ordered"
+  defp status_label(:confirmed), do: "confirmed"
+  defp status_label(:received), do: "received"
+  defp status_label(s), do: to_string(s)
+
+  defp addr_short(%{name: name, street: street, city: city})
+       when not is_nil(name) and name != "" do
+    location = [street, city] |> Enum.reject(&(is_nil(&1) or &1 == "")) |> Enum.join(", ")
+    if location != "", do: "#{name} · #{location}", else: name
   end
 
-  defp po_trail(po, :add_item) do
-    [
-      Navigation.root(:purchasing),
-      Navigation.page(:purchasing, :purchase_orders),
-      Navigation.resource(:purchase_order, po),
-      Navigation.page(:purchasing, :po_add_item, po)
-    ]
+  defp addr_short(%{street: street, city: city}) do
+    [street, city] |> Enum.reject(&(is_nil(&1) or &1 == "")) |> Enum.join(", ")
   end
 
-  defp po_trail(po, _) do
-    [
-      Navigation.root(:purchasing),
-      Navigation.page(:purchasing, :purchase_orders),
-      Navigation.resource(:purchase_order, po)
-    ]
-  end
+  defp status_badge_style(:draft), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
+  defp status_badge_style(:ordered), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
+  defp status_badge_style(:confirmed), do: "background:rgba(90,180,216,0.15);color:#5AB4D8;"
+  defp status_badge_style(:received), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
+  defp status_badge_style(_), do: "background:rgba(110,103,90,0.2);color:#9A9384;"
 end

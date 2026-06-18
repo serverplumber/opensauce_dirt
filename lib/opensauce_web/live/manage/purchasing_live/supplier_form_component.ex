@@ -8,40 +8,188 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.simple_form
-        for={@form}
-        id="supplier-form"
-        phx-target={@myself}
-        phx-change="validate"
-        phx-submit="save"
-      >
-        <.input field={@form[:name]} type="text" label="Name" />
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <.input field={@form[:contact_name]} type="text" label="Contact Name" />
-          <.input field={@form[:contact_phone]} type="text" label="Contact Phone" />
+    <form
+      id="supplier-form"
+      phx-target={@myself}
+      phx-change="validate"
+      phx-submit="save"
+      style="display:flex;flex-direction:column;gap:14px;"
+    >
+      <div>
+        <label class="dark-label">Name</label>
+        <input
+          class="dark-input"
+          type="text"
+          name="supplier[name]"
+          value={@form[:name].value || ""}
+          placeholder="Cramer Wholesale"
+        />
+        <span :for={msg <- @form[:name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+      </div>
+
+      <div style="height:1px;background:rgba(52,48,37,0.58);" />
+
+      <div>
+        <label class="dark-label">Contact name <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+        <input
+          class="dark-input"
+          type="text"
+          name="supplier[contact_name]"
+          value={@form[:contact_name].value || ""}
+          placeholder="Jane Smith"
+        />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="dark-label">Email</label>
+          <input
+            class="dark-input"
+            type="email"
+            name="supplier[contact_email]"
+            value={@form[:contact_email].value || ""}
+            placeholder="jane@nursery.com"
+          />
+          <span :for={msg <- @form[:contact_email].errors} class="dark-field-error">{elem(msg, 0)}</span>
         </div>
-        <.input field={@form[:contact_email]} type="email" label="Contact Email" />
+        <div>
+          <label class="dark-label">Phone</label>
+          <input
+            class="dark-input"
+            type="tel"
+            name="supplier[contact_phone]"
+            value={@form[:contact_phone].value || ""}
+            placeholder="+1 555 000 0000"
+          />
+        </div>
+      </div>
 
-        <.inputs_for :let={f_addr} field={@form[:address]}>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="sm:col-span-2">
-              <.input field={f_addr[:street]} type="text" label="Street" />
+      <div style="height:1px;background:rgba(52,48,37,0.58);" />
+
+      <%!-- addresses --%>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <p style="font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#6E675A;">
+          Addresses
+        </p>
+        <button
+          type="button"
+          phx-click="add_address"
+          phx-target={@myself}
+          ontouchstart=""
+          style="font-size:13px;color:#54B57E;background:none;border:none;padding:0;cursor:pointer;"
+        >
+          + Add
+        </button>
+      </div>
+
+      <.inputs_for :let={f_addr} field={@form[:addresses]}>
+        <div style="background:rgba(52,48,37,0.3);border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="flex:1;">
+              <label class="dark-label">Label <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <input
+                class="dark-input"
+                type="text"
+                name={f_addr[:name].name}
+                value={f_addr[:name].value || ""}
+                placeholder="Pickup location, Head office…"
+              />
             </div>
-            <.input field={f_addr[:city]} type="text" label="City" />
-            <.input field={f_addr[:province]} type="text" label="Province" />
-            <.input field={f_addr[:zip]} type="text" label="Postal Code" />
-            <.input field={f_addr[:country]} type="text" label="Country" />
+            <button
+              type="button"
+              phx-click="remove_address"
+              phx-value-index={f_addr.index}
+              phx-target={@myself}
+              ontouchstart=""
+              style="flex-shrink:0;margin-top:18px;color:#E87E7E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
           </div>
-        </.inputs_for>
 
-        <.input field={@form[:notes]} type="textarea" label="Notes" />
+          <div>
+            <label class="dark-label">Street</label>
+            <input
+              class="dark-input"
+              type="text"
+              name={f_addr[:street].name}
+              value={f_addr[:street].value || ""}
+              placeholder="123 Nursery Rd"
+            />
+          </div>
 
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save Supplier</.button>
-        </:actions>
-      </.simple_form>
-    </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label class="dark-label">City</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={f_addr[:city].name}
+                value={f_addr[:city].value || ""}
+                placeholder="Hadlow"
+              />
+            </div>
+            <div>
+              <label class="dark-label">Province / County</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={f_addr[:province].name}
+                value={f_addr[:province].value || ""}
+                placeholder="Kent"
+              />
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label class="dark-label">Postal code</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={f_addr[:zip].name}
+                value={f_addr[:zip].value || ""}
+                placeholder="TN11 0AA"
+              />
+            </div>
+            <div>
+              <label class="dark-label">Country</label>
+              <input
+                class="dark-input"
+                type="text"
+                name={f_addr[:country].name}
+                value={f_addr[:country].value || ""}
+                placeholder="UK"
+              />
+            </div>
+          </div>
+        </div>
+      </.inputs_for>
+
+      <p :if={(@form.source.forms[:addresses] || []) == []} style="font-size:13px;color:#6E675A;text-align:center;padding:8px 0;">
+        No addresses — tap + Add to add one
+      </p>
+
+      <div style="height:1px;background:rgba(52,48,37,0.58);" />
+
+      <div>
+        <label class="dark-label">Notes <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+        <textarea
+          class="dark-textarea"
+          name="supplier[notes]"
+          rows="3"
+          placeholder="Lead times, minimums, preferred contact times…"
+        >{@form[:notes].value}</textarea>
+      </div>
+
+      <div style="margin-top:4px;">
+        <.glow_button type="submit" valid={true}>
+          {if @supplier, do: "Save changes", else: "Add supplier"}
+        </.glow_button>
+      </div>
+    </form>
     """
   end
 
@@ -56,21 +204,30 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
   end
 
   @impl true
+  def handle_event("add_address", _params, socket) do
+    form = Form.add_form(socket.assigns.form, [:addresses])
+    {:noreply, assign(socket, :form, form)}
+  end
+
+  @impl true
+  def handle_event("remove_address", %{"index" => index}, socket) do
+    form = Form.remove_form(socket.assigns.form, [:addresses, String.to_integer(index)])
+    {:noreply, assign(socket, :form, form)}
+  end
+
+  @impl true
   def handle_event("save", %{"supplier" => params}, socket) do
     case Form.submit(socket.assigns.form, params: params) do
       {:ok, supplier} ->
         send(self(), {:supplier_saved, supplier})
-
-        {:noreply, socket |> put_flash(:info, "Supplier saved") |> push_patch(to: socket.assigns.patch)}
+        {:noreply, push_patch(socket, to: socket.assigns.patch)}
 
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
     end
   end
 
-  defp assign_form(%{assigns: %{supplier: supplier}} = socket) do
-    member = socket.assigns.current_member
-
+  defp assign_form(%{assigns: %{supplier: supplier, current_member: member}} = socket) do
     form =
       if supplier do
         Form.for_update(supplier, :update,
@@ -78,11 +235,12 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           actor: member,
           tenant: member.organisation_id,
           forms: [
-            address: [
-              data: supplier.address,
+            addresses: [
+              data: supplier.addresses,
               resource: OpenSauce.CRM.Address,
               create_action: :create,
-              update_action: :update
+              update_action: :update,
+              type: :list
             ]
           ]
         )
@@ -92,10 +250,11 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           actor: member,
           tenant: member.organisation_id,
           forms: [
-            address: [
+            addresses: [
               resource: OpenSauce.CRM.Address,
               create_action: :create,
-              update_action: :update
+              update_action: :update,
+              type: :list
             ]
           ]
         )

@@ -179,7 +179,6 @@ defmodule OpenSauceWeb.Router do
 
       # Purchasing
       live "/manage/purchasing", PurchasingLive.Index, :index
-      live "/manage/purchasing/new", PurchasingLive.Index, :new
       # Specific suppliers routes must come before the catch-all :po_ref
       live "/manage/purchasing/suppliers", PurchasingLive.Suppliers, :index
       live "/manage/purchasing/suppliers/new", PurchasingLive.Suppliers, :new

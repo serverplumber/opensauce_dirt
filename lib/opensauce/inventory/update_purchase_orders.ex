@@ -5,8 +5,8 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
 
   @doc """
   Ensures every upcoming scheduled job has PO items for all its required
-  catalog items. Appends missing items to an existing draft PO, or creates
-  a new draft PO if none exists.
+  catalog items. Groups items by supplier and appends to (or creates) one
+  draft PO per supplier.
 
   Returns {:ok, n} where n is the number of new PO items added.
   """
@@ -18,7 +18,7 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
       Orders.list_upcoming_jobs!(
         actor: actor,
         tenant: tenant,
-        load: [materials: [:supplier_catalog_item]]
+        load: [materials: [supplier_catalog_item: [:supplier_catalog]]]
       )
 
     open_items =
@@ -40,6 +40,7 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
           not MapSet.member?(covered, {job.id, sci.id}),
           do: %{
             job_id: job.id,
+            supplier_id: sci.supplier_catalog && sci.supplier_catalog.supplier_id,
             supplier_catalog_item_id: sci.id,
             supplier_sku: sci.sku,
             quantity: jm.quantity,
@@ -49,21 +50,24 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
     if uncovered == [] do
       {:ok, 0}
     else
-      draft_po =
-        case Inventory.list_draft_purchase_orders!(actor: actor, tenant: tenant) do
-          [po | _] ->
-            po
+      draft_pos = Inventory.list_draft_purchase_orders!(actor: actor, tenant: tenant)
+      draft_by_supplier = Map.new(draft_pos, &{&1.supplier_id, &1})
 
-          [] ->
-            Inventory.create_purchase_order!(%{}, actor: actor, tenant: tenant)
-        end
+      uncovered
+      |> Enum.group_by(& &1.supplier_id)
+      |> Enum.each(fn {supplier_id, items} ->
+        po =
+          Map.get_lazy(draft_by_supplier, supplier_id, fn ->
+            Inventory.create_purchase_order!(%{supplier_id: supplier_id}, actor: actor, tenant: tenant)
+          end)
 
-      Enum.each(uncovered, fn item ->
-        Inventory.create_purchase_order_item!(
-          Map.put(item, :purchase_order_id, draft_po.id),
-          actor: actor,
-          tenant: tenant
-        )
+        Enum.each(items, fn item ->
+          Inventory.create_purchase_order_item!(
+            item |> Map.put(:purchase_order_id, po.id) |> Map.delete(:supplier_id),
+            actor: actor,
+            tenant: tenant
+          )
+        end)
       end)
 
       {:ok, length(uncovered)}
