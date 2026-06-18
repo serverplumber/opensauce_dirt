@@ -111,6 +111,11 @@ defmodule OpenSauce.Orders.Job do
       accept []
       change set_attribute(:status, :cancelled)
     end
+
+    update :assign_invoice do
+      require_atomic? false
+      accept [:invoice_id]
+    end
   end
 
   validations do

@@ -37,138 +37,146 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <form id="invoice-form" phx-change="validate" phx-submit="save" phx-target={@myself} class="space-y-5">
-        <div class="grid grid-cols-2 gap-4">
+    <div style="padding:0 16px;">
+      <form id="invoice-form" phx-change="validate" phx-submit="save" phx-target={@myself} style="display:flex;flex-direction:column;gap:16px;padding-bottom:24px;">
+
+        <%!-- reference + customer --%>
+        <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
-            <label class="block text-xs font-medium text-stone-700 mb-1">Reference</label>
-            <input type="text" name="invoice[reference]" value={@params["reference"]}
-              class="block w-full rounded-md border border-stone-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              required />
+            <label class="dark-label">Reference</label>
+            <input
+              type="text"
+              name="invoice[reference]"
+              value={@params["reference"]}
+              class="dark-input"
+              placeholder="INV-001"
+              required
+            />
           </div>
           <div>
-            <label class="block text-xs font-medium text-stone-700 mb-1">Customer</label>
-            <select name="invoice[customer_id]"
-              class="block w-full rounded-md border border-stone-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
+            <label class="dark-label">Customer</label>
+            <select name="invoice[customer_id]" class="dark-select">
               <option value="">Select customer…</option>
               <option :for={{label, id} <- @customers} value={id} selected={id == @customer_id}>
                 {label}
               </option>
             </select>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-stone-700 mb-1">Issued</label>
-            <input type="date" name="invoice[issued_on]" value={@params["issued_on"]}
-              class="block w-full rounded-md border border-stone-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              required />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-stone-700 mb-1">Due</label>
-            <input type="date" name="invoice[due_on]" value={@params["due_on"]}
-              class="block w-full rounded-md border border-stone-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" />
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <label class="dark-label">Issued</label>
+              <input type="date" name="invoice[issued_on]" value={@params["issued_on"]} class="dark-input" required />
+            </div>
+            <div style="flex:1;">
+              <label class="dark-label">Due <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <input type="date" name="invoice[due_on]" value={@params["due_on"]} class="dark-input" />
+            </div>
           </div>
         </div>
 
+        <%!-- jobs for selected customer --%>
         <div :if={@customer_id && @customer_id != ""}>
-          <div class="mb-2 flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wide text-stone-500">Jobs</span>
-            <span class="text-xs text-stone-400">{length(@selected_jobs)} loaded</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Uninvoiced jobs
+            </p>
+            <p style="font-size:12px;color:#6E675A;">{visible_job_count(@selected_jobs, @hidden_job_ids)} of {length(@selected_jobs)}</p>
           </div>
-          <div class="space-y-1">
+          <div style="display:flex;flex-direction:column;gap:6px;">
             <div
               :for={job <- @selected_jobs}
-              class={[
-                "flex items-center gap-2 rounded-md border px-3 py-2 transition",
-                if(MapSet.member?(@hidden_job_ids, job.id),
-                  do: "border-stone-100 bg-stone-50 opacity-40",
-                  else: "border-stone-200 bg-white"
-                )
-              ]}
+              style={"background:#16140E;border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;#{if MapSet.member?(@hidden_job_ids, job.id), do: "opacity:0.35;", else: ""}"}
             >
               <button
                 type="button"
                 phx-click="toggle_job"
                 phx-value-id={job.id}
                 phx-target={@myself}
-                class="shrink-0 text-stone-300 transition hover:text-stone-500"
+                style="flex-shrink:0;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 title={if MapSet.member?(@hidden_job_ids, job.id), do: "Include", else: "Exclude"}
               >
-                <.icon
-                  name={if MapSet.member?(@hidden_job_ids, job.id), do: "hero-eye-slash", else: "hero-eye"}
-                  class="h-4 w-4"
-                />
+                <svg :if={!MapSet.member?(@hidden_job_ids, job.id)} width="16" height="16" fill="none" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#54B57E" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2"/>
+                </svg>
+                <svg :if={MapSet.member?(@hidden_job_ids, job.id)} width="16" height="16" fill="none" viewBox="0 0 24 24">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="1" y1="1" x2="23" y2="23" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </button>
               <button
                 type="button"
                 phx-click="remove_job"
                 phx-value-id={job.id}
                 phx-target={@myself}
-                class="shrink-0 text-stone-300 transition hover:text-red-400"
+                style="flex-shrink:0;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
               >
-                <.icon name="hero-minus-circle" class="h-4 w-4" />
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
+                  <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </button>
-              <span class="min-w-0 flex-1 text-sm">
-                <span class="font-medium text-stone-700">{format_service_type(job.service_type)}</span>
-                <span class="mx-1 text-stone-300">·</span>
-                <span class="text-stone-500">{format_scheduled(job.scheduled_at)}</span>
-              </span>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  {format_job_label(job)}
+                </p>
+                <p style="font-size:11.5px;color:#9A9384;margin-top:1px;">{format_date(job.scheduled_at)}</p>
+              </div>
               <input
                 type="number"
                 name={"invoice[job_amounts][#{job.id}]"}
                 value={job.amount}
                 step="0.01"
                 min="0"
-                class="w-24 rounded border border-stone-200 px-2 py-1 text-right text-sm focus:border-primary-400 focus:outline-none"
+                style="width:72px;background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:8px;padding:5px 8px;font-size:13px;color:#F4EFE2;text-align:right;outline:none;"
               />
             </div>
-            <div
-              :if={@selected_jobs == []}
-              class="py-4 text-center text-sm text-stone-400"
-            >
-              No unpaid jobs for this customer.
+            <div :if={@selected_jobs == []} style="padding:12px 0;text-align:center;">
+              <p style="font-size:13px;color:#6E675A;">No uninvoiced jobs for this customer.</p>
             </div>
           </div>
         </div>
 
-        <div :if={@customer_id && @customer_id != ""}>
-          <div class="mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wide text-stone-500">Engagement</span>
-          </div>
-          <div
-            :if={@selected_engagement}
-            class={[
-              "flex items-center gap-2 rounded-md border px-3 py-2 transition",
-              if(@engagement_hidden,
-                do: "border-stone-100 bg-stone-50 opacity-40",
-                else: "border-stone-200 bg-white"
-              )
-            ]}
-          >
+        <%!-- engagement --%>
+        <div :if={@customer_id && @customer_id != "" && @selected_engagement}>
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:8px;">
+            Engagement
+          </p>
+          <div style={"background:#16140E;border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;#{if @engagement_hidden, do: "opacity:0.35;", else: ""}"}>
             <button
               type="button"
               phx-click="toggle_engagement"
               phx-target={@myself}
-              class="shrink-0 text-stone-300 transition hover:text-stone-500"
-              title={if @engagement_hidden, do: "Include", else: "Exclude"}
+              style="flex-shrink:0;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
             >
-              <.icon
-                name={if @engagement_hidden, do: "hero-eye-slash", else: "hero-eye"}
-                class="h-4 w-4"
-              />
+              <svg :if={!@engagement_hidden} width="16" height="16" fill="none" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#54B57E" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2"/>
+              </svg>
+              <svg :if={@engagement_hidden} width="16" height="16" fill="none" viewBox="0 0 24 24">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                <line x1="1" y1="1" x2="23" y2="23" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </button>
             <button
               type="button"
               phx-click="remove_engagement"
               phx-target={@myself}
-              class="shrink-0 text-stone-300 transition hover:text-red-400"
+              style="flex-shrink:0;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
             >
-              <.icon name="hero-minus-circle" class="h-4 w-4" />
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </button>
-            <span class="min-w-0 flex-1 text-sm">
-              <span class="font-medium text-stone-700">{@selected_engagement.label}</span>
-              <span :if={@selected_engagement.term} class="mx-1 text-stone-300">·</span>
-              <span :if={@selected_engagement.term} class="text-stone-500">{@selected_engagement.term}</span>
-            </span>
+            <div style="flex:1;min-width:0;">
+              <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {@selected_engagement.label}
+              </p>
+              <p :if={@selected_engagement.term} style="font-size:11.5px;color:#9A9384;margin-top:1px;">
+                {@selected_engagement.term}
+              </p>
+            </div>
             <input type="hidden" name="invoice[engagement_id]" value={@selected_engagement.id} />
             <input
               type="number"
@@ -176,47 +184,52 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
               value={@engagement_amount}
               step="0.01"
               min="0"
-              class="w-24 rounded border border-stone-200 px-2 py-1 text-right text-sm focus:border-primary-400 focus:outline-none"
+              style="width:72px;background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:8px;padding:5px 8px;font-size:13px;color:#F4EFE2;text-align:right;outline:none;"
             />
-          </div>
-          <div :if={!@selected_engagement} class="py-2 text-sm text-stone-400">
-            No engagement linked.
           </div>
         </div>
 
+        <%!-- custom line items --%>
         <div>
-          <div class="mb-2 flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wide text-stone-500">Line Items</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Line items
+            </p>
             <button
               type="button"
               phx-click="add_line_item"
               phx-target={@myself}
-              class="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
+              style="font-size:12px;font-weight:600;color:#54B57E;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;"
             >
-              <.icon name="hero-plus-circle" class="h-3.5 w-3.5" />
-              Add line item
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="#54B57E" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+              Add
             </button>
           </div>
-          <div class="space-y-1">
+          <div style="display:flex;flex-direction:column;gap:6px;">
             <div
               :for={item <- @custom_line_items}
-              class="flex items-center gap-2 rounded-md border border-stone-200 bg-white px-3 py-2"
+              style="background:#16140E;border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:8px;"
             >
               <button
                 type="button"
                 phx-click="remove_line_item"
                 phx-value-id={item.id}
                 phx-target={@myself}
-                class="shrink-0 text-stone-300 transition hover:text-red-400"
+                style="flex-shrink:0;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
               >
-                <.icon name="hero-minus-circle" class="h-4 w-4" />
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
+                  <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </button>
               <input
                 type="text"
                 name={"invoice[line_items][#{item.id}][label]"}
                 value={item.label}
                 placeholder="Description"
-                class="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm focus:border-primary-400 focus:outline-none"
+                style="flex:1;background:transparent;border:none;outline:none;font-size:13px;color:#F4EFE2;"
               />
               <input
                 type="number"
@@ -225,31 +238,36 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                class="w-24 rounded border border-stone-200 px-2 py-1 text-right text-sm focus:border-primary-400 focus:outline-none"
+                style="width:72px;background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:8px;padding:5px 8px;font-size:13px;color:#F4EFE2;text-align:right;outline:none;"
               />
             </div>
-            <div :if={@custom_line_items == []} class="py-2 text-sm text-stone-400">
-              No custom line items.
+            <div :if={@custom_line_items == []} style="padding:4px 0;">
+              <p style="font-size:13px;color:#6E675A;">No custom line items.</p>
             </div>
           </div>
         </div>
 
+        <%!-- notes --%>
         <div>
-          <label class="block text-xs font-medium text-stone-700 mb-1">Notes</label>
-          <textarea
-            name="invoice[notes]"
-            rows="2"
-            class="block w-full rounded-md border border-stone-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-          >{@params["notes"]}</textarea>
+          <label class="dark-label">Notes <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+          <textarea name="invoice[notes]" rows="2" class="dark-textarea">{@params["notes"]}</textarea>
         </div>
 
-        <div class="flex items-center justify-between border-t border-stone-100 pt-4">
-          <span class="text-sm font-semibold text-stone-700">
-            Total: {format_total(@selected_jobs, @hidden_job_ids, @engagement_amount, @engagement_hidden, @custom_line_items, @organisation.currency)}
-          </span>
-          <.button type="submit" variant={:primary} phx-disable-with="Saving…">
-            Save Invoice
-          </.button>
+        <%!-- total + save --%>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;">
+          <div>
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Total</p>
+            <p style="font-size:20px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:#F4EFE2;margin-top:2px;">
+              {format_total(@selected_jobs, @hidden_job_ids, @engagement_amount, @engagement_hidden, @custom_line_items, @organisation.currency)}
+            </p>
+          </div>
+          <.glow_button
+            type="submit"
+            valid={can_save?(@params, @customer_id)}
+            phx-disable-with="Saving…"
+          >
+            Create invoice
+          </.glow_button>
         </div>
       </form>
     </div>
@@ -346,7 +364,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       issued_on: parse_date(params["issued_on"]),
       due_on: parse_date(params["due_on"]),
       amount: total,
-      status: safe_atom(params["status"], :draft),
+      status: :draft,
       notes: params["notes"],
       line_items: line_items_to_save,
       organisation_id: member.organisation_id
@@ -355,7 +373,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     case CRM.create_invoice(attrs, actor: member, tenant: member.organisation_id) do
       {:ok, invoice} ->
         for job <- visible_jobs do
-          Orders.update_job(job.struct, %{invoice_id: invoice.id},
+          Orders.assign_job_invoice(job.struct, %{invoice_id: invoice.id},
             actor: member,
             tenant: member.organisation_id
           )
@@ -369,7 +387,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, error} ->
-        {:noreply, put_flash(socket, :error, "Could not save invoice: #{inspect(error)}")}
+        {:noreply, put_flash(socket, :error, "Could not save: #{inspect(error)}")}
     end
   end
 
@@ -387,22 +405,27 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   end
 
   defp load_customer_data(customer_id, member) do
-    jobs = load_unpaid_jobs(customer_id, member)
+    jobs = load_uninvoiced_jobs(customer_id, member)
     engagement = load_latest_engagement(customer_id, member)
     {jobs, engagement}
   end
 
-  defp load_unpaid_jobs(customer_id, member) do
+  defp load_uninvoiced_jobs(customer_id, member) do
     Orders.Job
-    |> filter(engagement.customer_id == ^customer_id and status in [:scheduled, :in_progress, :completed])
+    |> filter(
+      engagement.customer_id == ^customer_id and
+        status in [:scheduled, :in_progress, :completed] and
+        is_nil(invoice_id)
+    )
     |> Ash.Query.sort(scheduled_for: :asc)
-    |> Ash.Query.load(:materials_cost)
+    |> Ash.Query.load([:materials_cost, :garden])
     |> Ash.read!(actor: member, tenant: member.organisation_id)
     |> Enum.map(fn job ->
       %{
         id: job.id,
         struct: job,
         service_type: job.service_category || job.type,
+        garden_name: job.garden && job.garden.name,
         scheduled_at: job.scheduled_for,
         amount: job.materials_cost |> D.round(2) |> D.to_string()
       }
@@ -431,9 +454,11 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     garden_name = e.garden && e.garden.name
 
     label =
-      if garden_name && garden_name != "",
-        do: garden_name,
-        else: e.status |> Atom.to_string() |> String.replace("_", " ")
+      cond do
+        e.scope_title && e.scope_title != "" -> e.scope_title
+        garden_name && garden_name != "" -> garden_name
+        true -> e.status |> Atom.to_string() |> String.replace("_", " ")
+      end
 
     term =
       cond do
@@ -442,7 +467,13 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
         true -> nil
       end
 
-    %{id: e.id, label: label, term: term, install_price: e.install_price, maintenance_price_annual: e.maintenance_price_annual}
+    %{
+      id: e.id,
+      label: label,
+      term: term,
+      install_price: e.install_price,
+      maintenance_price_annual: e.maintenance_price_annual
+    }
   end
 
   defp default_engagement_amount(nil), do: ""
@@ -480,14 +511,30 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     assign(socket, :custom_line_items, updated)
   end
 
+  defp visible_job_count(jobs, hidden_job_ids) do
+    Enum.count(jobs, fn j -> not MapSet.member?(hidden_job_ids, j.id) end)
+  end
+
+  defp can_save?(params, customer_id) do
+    ref = String.trim(params["reference"] || "")
+    ref != "" && customer_id not in [nil, ""]
+  end
+
+  defp format_job_label(%{service_type: type, garden_name: garden}) when is_binary(garden) and garden != "" do
+    "#{format_service_type(type)} to #{garden}"
+  end
+
+  defp format_job_label(%{service_type: type}), do: format_service_type(type)
+
   defp format_service_type(type) when is_atom(type) do
     type |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
   end
 
-  defp format_scheduled(nil), do: "—"
-  defp format_scheduled(%Date{} = d), do: Date.to_string(d)
-  defp format_scheduled(%DateTime{} = dt), do: dt |> DateTime.to_date() |> Date.to_string()
-  defp format_scheduled(other), do: to_string(other)
+  defp format_service_type(type) when is_binary(type) do
+    type |> String.replace("_", " ") |> String.capitalize()
+  end
+
+  defp format_service_type(_), do: "Job"
 
   defp format_total(jobs, hidden_job_ids, engagement_amount, engagement_hidden, custom_items, currency) do
     job_total =
@@ -522,14 +569,6 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       _ -> nil
     end
   end
-
-  defp safe_atom(s, default) when is_binary(s) do
-    String.to_existing_atom(s)
-  rescue
-    _ -> default
-  end
-
-  defp safe_atom(_, default), do: default
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

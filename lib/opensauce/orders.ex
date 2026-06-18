@@ -20,6 +20,7 @@ defmodule OpenSauce.Orders do
       define :get_job_by_id, action: :read, get_by: [:id]
       define :create_job, action: :create
       define :update_job, action: :update
+      define :assign_job_invoice, action: :assign_invoice
       define :mark_job_in_progress, action: :mark_in_progress
       define :complete_job, action: :complete
       define :cancel_job, action: :cancel
