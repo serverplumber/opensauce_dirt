@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.JobLive.Index do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.Accounts
   alias OpenSauce.Orders
   alias OpenSauceWeb.JobLive.EventLogComponent
   alias OpenSauceWeb.Navigation
@@ -65,7 +66,7 @@ defmodule OpenSauceWeb.JobLive.Index do
                 <span class="line"></span>
                 <span class="dn">{day_date_label(date, today)}</span>
               </div>
-              <.job_card :for={job <- date_jobs} job={job} />
+              <.job_card :for={job <- date_jobs} job={job} org_members={@org_members} />
             </div>
           </div>
           <div
@@ -79,7 +80,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         <%!-- unscheduled tab: flat list --%>
         <div :if={@tab == :unscheduled}>
           <div :if={@counts.unscheduled > 0}>
-            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} />
+            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} org_members={@org_members} />
           </div>
           <div
             :if={@counts.unscheduled == 0}
@@ -98,7 +99,7 @@ defmodule OpenSauceWeb.JobLive.Index do
                 <span class="line"></span>
                 <span :if={date != nil} class="dn">{day_date_label(date, today)}</span>
               </div>
-              <.job_card :for={job <- date_jobs} job={job} />
+              <.job_card :for={job <- date_jobs} job={job} org_members={@org_members} />
             </div>
           </div>
           <div
@@ -198,6 +199,7 @@ defmodule OpenSauceWeb.JobLive.Index do
      socket
      |> assign(
        tab: :scheduled,
+       org_members: [],
        materials_job_id: nil,
        event_log_job: nil,
        event_log_events: [],
@@ -324,6 +326,9 @@ defmodule OpenSauceWeb.JobLive.Index do
   defp card_click(%{status: :in_progress, id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
   defp card_click(%{id: id}), do: JS.push("open_event_log", value: %{id: id})
 
+  attr :job, :map, required: true
+  attr :org_members, :list, default: []
+
   defp job_card(assigns) do
     ~H"""
     <div
@@ -385,7 +390,7 @@ defmodule OpenSauceWeb.JobLive.Index do
 
       <%!-- live strip (in-progress) --%>
       <div :if={@job.status == :in_progress} class="live-strip">
-        <span class="lbl">{live_strip_label(@job)}</span>
+        <span class="lbl">{live_strip_label(@job, @org_members)}</span>
         <.link
           navigate={~p"/manage/jobs/#{@job.id}/closeout"}
           onclick="event.stopPropagation()"
@@ -398,20 +403,17 @@ defmodule OpenSauceWeb.JobLive.Index do
       </div>
 
       <%!-- crew row (scheduled + crew present) --%>
+      <% assigned_ids = if @job.staff_assignments, do: Enum.map(@job.staff_assignments, & &1.member_id), else: [] %>
       <div
-        :if={
-          @job.status != :in_progress && @job.staff_assignments != [] && @job.staff_assignments != nil
-        }
+        :if={@job.status != :in_progress && assigned_ids != []}
         class="crewrow"
       >
         <div class="avs">
-          <div
-            :for={sa <- Enum.take(@job.staff_assignments, 5)}
-            class="av"
-            style={"background:#{crew_color(sa.member_id)}"}
-          >
-            {crew_initial(sa.member)}
-          </div>
+          <.member_avatar
+            :for={m <- @org_members |> Enum.filter(&(&1.id in assigned_ids)) |> Enum.take(5)}
+            member={m}
+            size={26}
+          />
         </div>
       </div>
     </div>
@@ -502,25 +504,25 @@ defmodule OpenSauceWeb.JobLive.Index do
     if parts == [], do: nil, else: Enum.join(parts, " · ")
   end
 
-  defp staff_name(%{user: %{email: e}}), do: e |> to_string() |> String.split("@") |> hd()
-  defp staff_name(_), do: "?"
-
-  defp crew_initial(member) do
-    n = staff_name(member)
-    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
+  defp member_display_name(%{user: %{first_name: f, last_name: l, email: email}}) do
+    cond do
+      f && l -> "#{f} #{l}"
+      f -> f
+      true -> to_string(email)
+    end
   end
 
-  defp crew_color(member_id) do
-    colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
-    Enum.at(colors, :erlang.phash2(member_id, length(colors)))
-  end
+  defp member_display_name(%{user: %{email: email}}), do: to_string(email)
+  defp member_display_name(_), do: "—"
 
-  defp live_strip_label(job) do
+  defp live_strip_label(job, org_members) do
+    assigned_ids = Enum.map(job.staff_assignments, & &1.member_id)
+
     names =
-      job.staff_assignments
+      org_members
+      |> Enum.filter(&(&1.id in assigned_ids))
       |> Enum.take(3)
-      |> Enum.map(fn sa -> staff_name(sa.member) end)
-      |> Enum.reject(&(&1 == "?"))
+      |> Enum.map(&member_display_name/1)
       |> Enum.join(" + ")
 
     if names == "", do: "on the clock", else: "on the clock · #{names}"
@@ -535,11 +537,13 @@ defmodule OpenSauceWeb.JobLive.Index do
   defp load_jobs(socket) do
     member = socket.assigns.current_member
 
+    org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+
     jobs =
       Orders.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
-        load: [:garden, engagement: [:customer], staff_assignments: [member: [:user]]]
+        load: [:garden, :staff_assignments, engagement: [:customer]]
       )
       |> Enum.reject(&(&1.type == :shift))
 
@@ -551,7 +555,7 @@ defmodule OpenSauceWeb.JobLive.Index do
       history: Enum.count(jobs, &job_history?(&1, today))
     }
 
-    socket |> assign(:jobs, jobs) |> assign(:counts, counts)
+    socket |> assign(:jobs, jobs) |> assign(:counts, counts) |> assign(:org_members, org_members)
   end
 
   defp job_scheduled?(job, today) do
