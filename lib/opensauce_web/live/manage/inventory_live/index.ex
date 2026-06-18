@@ -3,128 +3,157 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Inventory
-  alias OpenSauceWeb.Components.Page
   alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:nav_sub_links, fn -> [] end)
-      |> assign_new(:breadcrumbs, fn -> [] end)
-
     ~H"""
-    <Page.page>
-      <.header>
-        Inventory
-        <:subtitle>Materials, stock levels, and pricing.</:subtitle>
-        <:actions>
-          <.link patch={~p"/manage/inventory/new"}>
-            <.button variant={:primary}>New Material</.button>
-          </.link>
-        </:actions>
-      </.header>
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
+      <%!-- header --%>
+      <div style="padding:12px 16px 14px;">
+        <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
+          Inventory
+        </h1>
+        <p style="font-size:13px;color:#9A9384;margin-top:3px;">Materials, stock levels, and pricing.</p>
+      </div>
 
-      <Page.section>
-        <Page.surface>
-          <.table
-            id="materials"
-            rows={@streams.materials}
-            row_id={fn {dom_id, _} -> dom_id end}
-            row_click={fn {_, material} -> JS.navigate(~p"/manage/inventory/#{material.sku}") end}
-          >
-            <:empty>
-              <div class="rounded-md border border-dashed border-stone-200 bg-stone-50 py-10 text-center text-sm text-stone-500">
-                No materials yet. Add your first to start tracking stock.
+      <%!-- material list --%>
+      <div style="padding:0 16px 100px;" id="materials-list" phx-update="stream">
+        <div
+          :for={{dom_id, material} <- @streams.materials}
+          id={dom_id}
+          class="jcard"
+          ontouchstart=""
+          phx-click={JS.navigate(~p"/manage/inventory/#{material.sku}")}
+          style="cursor:pointer;"
+        >
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+            <div style="min-width:0;flex:1;">
+              <p style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {material.name}
+              </p>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+                <span
+                  class="catdot"
+                  style={"background:#{type_color(material.material_type)};"}
+                >
+                </span>
+                <span style="font-size:12px;font-weight:600;color:#6E675A;">
+                  {type_label(material.material_type)}
+                </span>
               </div>
-            </:empty>
-            <:col :let={{_, material}} label="Material">{material.name}</:col>
-            <:col :let={{_, material}} label="SKU">
-              <.kbd>{material.sku}</.kbd>
-            </:col>
-            <:col :let={{_, material}} label="Type">
-              {material.material_type}
-            </:col>
-            <:col :let={{_, material}} label="Stock">
-              {format_amount(material.unit, material.current_stock)}
-            </:col>
-            <:col :let={{_, material}} label="Price">
-              {format_money(@organisation.currency, material.price)} / {material.unit}
-            </:col>
-            <:action :let={{_, material}}>
-              <div class="sr-only">
-                <.link navigate={~p"/manage/inventory/#{material.sku}"}>Show</.link>
-              </div>
-            </:action>
-            <:action :let={{_, material}}>
-              <.link phx-click={JS.push("delete", value: %{id: material.id}) |> hide("##{material.sku}")}>
-                <.button size={:sm} variant={:danger}>Delete</.button>
-              </.link>
-            </:action>
-          </.table>
-        </Page.surface>
-      </Page.section>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <p style="font-size:14px;font-weight:700;color:#F4EFE2;">
+                {format_amount(material.unit, material.current_stock)}
+              </p>
+              <p style="font-size:12px;color:#6E675A;margin-top:2px;">
+                {format_money(@organisation.currency, material.price)}/{unit_abbr(material.unit)}
+              </p>
+            </div>
+          </div>
+        </div>
 
-      <.modal
-        :if={@live_action in [:new, :edit]}
-        id="material-modal"
-        title={@page_title}
-        show
-        on_cancel={JS.patch(~p"/manage/inventory")}
+        <p
+          :if={@material_count == 0}
+          style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;"
+        >
+          No materials yet
+        </p>
+      </div>
+
+      <%!-- FAB --%>
+      <button
+        class="fab"
+        ontouchstart=""
+        aria-label="New material"
+        phx-click={JS.patch(~p"/manage/inventory/new")}
       >
-        <.live_component
-          module={OpenSauceWeb.InventoryLive.FormComponentMaterial}
-          id={(@material && @material.id) || :new}
-          current_member={@current_member}
-          title={@page_title}
-          action={@live_action}
-          material={@material}
-          patch={~p"/manage/inventory"}
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.4" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <%!-- new material bottom sheet --%>
+      <div
+        :if={@live_action == :new}
+        class="fixed inset-0 z-[60] flex flex-col justify-end"
+        role="dialog"
+        aria-label="New material"
+      >
+        <div
+          class="absolute inset-0 bg-black/65"
+          phx-click={JS.patch(~p"/manage/inventory")}
+          aria-hidden="true"
         />
-      </.modal>
-    </Page.page>
+        <div
+          class="relative w-full bg-[#211E16] mobile-scroll"
+          style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);max-height:82vh;overflow-y:auto;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
+        >
+          <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);position:sticky;top:0;background:#211E16;z-index:1;">
+            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
+                New material
+              </span>
+              <.link patch={~p"/manage/inventory"}>
+                <button
+                  type="button"
+                  ontouchstart=""
+                  style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </.link>
+            </div>
+          </div>
+          <div style="padding:20px 16px;">
+            <.live_component
+              module={OpenSauceWeb.InventoryLive.FormComponentMaterial}
+              id={:new}
+              current_member={@current_member}
+              action={@live_action}
+              material={nil}
+              patch={~p"/manage/inventory"}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, socket |> assign(:material_count, 0) |> stream(:materials, [])}
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    socket = apply_action(socket, socket.assigns.live_action, params)
-    {:noreply, Navigation.assign(socket, :inventory, inventory_trail(socket.assigns))}
+  def handle_params(_params, _url, socket) do
+    {:noreply,
+     socket
+     |> assign(:page_title, "Inventory")
+     |> assign(:main_bg, "bg-[#16140E]")
+     |> load_materials()
+     |> Navigation.assign(:inventory, [Navigation.root(:inventory)])}
   end
 
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Material")
-    |> assign(:material, nil)
-    |> load_materials()
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Inventory")
-    |> assign(:material, nil)
-    |> load_materials()
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
+  @impl true
+  def handle_info({:saved, material}, socket) do
     member = socket.assigns.current_member
+    material = Ash.load!(material, :current_stock, actor: member, tenant: member.organisation_id)
 
-    material =
-      Inventory.get_material_by_id!(id,
-        load: [:current_stock],
-        actor: member,
-        tenant: member.organisation_id
-      )
-
-    socket
-    |> assign(:page_title, "Edit Material")
-    |> assign(:material, material)
-    |> load_materials()
+    {:noreply,
+     socket
+     |> update(:material_count, &(&1 + 1))
+     |> stream_insert(:materials, material)}
   end
 
   defp load_materials(socket) do
@@ -137,39 +166,19 @@ defmodule OpenSauceWeb.InventoryLive.Index do
         load: [:current_stock]
       )
 
-    stream(socket, :materials, materials, reset: true)
+    socket
+    |> assign(:material_count, length(materials))
+    |> stream(:materials, materials, reset: true)
   end
 
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    member = socket.assigns.current_member
+  defp type_color(:plant), do: "#DB9258"
+  defp type_color(_), do: "#54B57E"
 
-    case id
-         |> Inventory.get_material_by_id!(actor: member, tenant: member.organisation_id)
-         |> Inventory.destroy_material(actor: member, tenant: member.organisation_id) do
-      :ok ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Material deleted.")
-         |> stream_delete(:materials, %{id: id})}
+  defp type_label(:plant), do: "Plant"
+  defp type_label(_), do: "Supply"
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to delete material.")}
-    end
-  end
-
-  @impl true
-  def handle_info({:saved, material}, socket) do
-    member = socket.assigns.current_member
-    material = Ash.load!(material, :current_stock, actor: member, tenant: member.organisation_id)
-    {:noreply, stream_insert(socket, :materials, material)}
-  end
-
-  defp inventory_trail(%{live_action: :new}),
-    do: [Navigation.root(:inventory), Navigation.page(:inventory, :new_material)]
-
-  defp inventory_trail(%{live_action: :edit, material: material}) when not is_nil(material),
-    do: [Navigation.root(:inventory), Navigation.resource(:material, material)]
-
-  defp inventory_trail(_), do: [Navigation.root(:inventory)]
+  defp unit_abbr(:gram), do: "g"
+  defp unit_abbr(:milliliter), do: "mL"
+  defp unit_abbr(:piece), do: "pcs"
+  defp unit_abbr(_), do: ""
 end

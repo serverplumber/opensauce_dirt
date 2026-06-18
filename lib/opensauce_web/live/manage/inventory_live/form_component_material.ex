@@ -7,51 +7,119 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
 
   @impl true
   def render(assigns) do
+    unit = assigns.form[:unit].value || :gram
+
+    assigns = assign(assigns, :unit, unit)
+
     ~H"""
-    <div>
-      <.simple_form
-        for={@form}
-        id="material-form"
-        phx-target={@myself}
-        phx-change="validate"
-        phx-submit="save"
-      >
-        <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:sku]} type="text" label="SKU" />
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <.input field={@form[:price]} type="number" label="Price" step="0.001" min="0" />
+    <form
+      id="material-form"
+      phx-change="validate"
+      phx-submit="save"
+      phx-target={@myself}
+      style="display:flex;flex-direction:column;gap:16px;"
+    >
+      <div>
+        <label class="dark-label" for={@form[:name].id}>Name</label>
+        <input
+          class="dark-input"
+          type="text"
+          id={@form[:name].id}
+          name={@form[:name].name}
+          value={@form[:name].value}
+          placeholder="Slow-release fertiliser"
+        />
+        <span :for={msg <- @form[:name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+      </div>
 
-          <.input
-            field={@form[:unit]}
-            type="radiogroup"
-            label="Measured in"
-            value={@form[:unit].value || :gram}
-            options={[{"Gram", :gram}, {"Milliliter", :milliliter}, {"Piece", :piece}]}
+      <div>
+        <label class="dark-label" for={@form[:sku].id}>SKU</label>
+        <input
+          class="dark-input"
+          type="text"
+          id={@form[:sku].id}
+          name={@form[:sku].name}
+          value={@form[:sku].value}
+          placeholder="FERT-001"
+        />
+        <span :for={msg <- @form[:sku].errors} class="dark-field-error">{elem(msg, 0)}</span>
+      </div>
+
+      <div>
+        <label class="dark-label" for={@form[:material_type].id}>Type</label>
+        <select class="dark-select" id={@form[:material_type].id} name={@form[:material_type].name}>
+          <option value="supply" selected={@form[:material_type].value == :supply}>Supply</option>
+          <option value="plant" selected={@form[:material_type].value == :plant}>Plant</option>
+        </select>
+        <span :for={msg <- @form[:material_type].errors} class="dark-field-error">{elem(msg, 0)}</span>
+      </div>
+
+      <div>
+        <label class="dark-label" for={@form[:unit].id}>Unit</label>
+        <select class="dark-select" id={@form[:unit].id} name={@form[:unit].name}>
+          <option value="gram" selected={@form[:unit].value == :gram}>Gram (g)</option>
+          <option value="milliliter" selected={@form[:unit].value == :milliliter}>Milliliter (mL)</option>
+          <option value="piece" selected={@form[:unit].value == :piece}>Piece (pcs)</option>
+        </select>
+        <span :for={msg <- @form[:unit].errors} class="dark-field-error">{elem(msg, 0)}</span>
+      </div>
+
+      <div>
+        <label class="dark-label" for={@form[:price].id}>Price per {unit_abbr(@unit)}</label>
+        <input
+          class="dark-input"
+          type="number"
+          id={@form[:price].id}
+          name={@form[:price].name}
+          value={@form[:price].value}
+          step="0.001"
+          min="0"
+          placeholder="0.00"
+        />
+        <span :for={msg <- @form[:price].errors} class="dark-field-error">{elem(msg, 0)}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="dark-label" for={@form[:minimum_stock].id}>
+            Min stock ({unit_abbr(@unit)})
+          </label>
+          <input
+            class="dark-input"
+            type="number"
+            id={@form[:minimum_stock].id}
+            name={@form[:minimum_stock].name}
+            value={@form[:minimum_stock].value}
+            step="0.001"
+            min="0"
+            placeholder="0"
           />
+          <span :for={msg <- @form[:minimum_stock].errors} class="dark-field-error">
+            {elem(msg, 0)}
+          </span>
         </div>
+        <div>
+          <label class="dark-label" for={@form[:maximum_stock].id}>
+            Max stock ({unit_abbr(@unit)})
+          </label>
+          <input
+            class="dark-input"
+            type="number"
+            id={@form[:maximum_stock].id}
+            name={@form[:maximum_stock].name}
+            value={@form[:maximum_stock].value}
+            step="0.001"
+            min="0"
+            placeholder="0"
+          />
+          <span :for={msg <- @form[:maximum_stock].errors} class="dark-field-error">
+            {elem(msg, 0)}
+          </span>
+        </div>
+      </div>
 
-        <.input
-          field={@form[:minimum_stock]}
-          type="number"
-          label="Minimum Stock"
-          inline_label={@form[:unit].value || :gram}
-          step="0.001"
-          min="0"
-        />
-        <.input
-          field={@form[:maximum_stock]}
-          inline_label={@form[:unit].value || :gram}
-          type="number"
-          label="Maximum Stock"
-          step="0.001"
-          min="0"
-        />
-
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save Material</.button>
-        </:actions>
-      </.simple_form>
-    </div>
+      <.glow_button valid={form_valid?(@form)} type="submit">Save material</.glow_button>
+    </form>
     """
   end
 
@@ -61,18 +129,19 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
   end
 
   @impl true
-  def handle_event("validate", %{"material" => material_params}, socket) do
-    {:noreply, assign(socket, form: Form.validate(socket.assigns.form, material_params))}
+  def handle_event("validate", %{"material" => params}, socket) do
+    {:noreply, assign(socket, form: Form.validate(socket.assigns.form, params))}
   end
 
-  def handle_event("save", %{"material" => material_params}, socket) do
-    case Form.submit(socket.assigns.form, params: material_params) do
+  @impl true
+  def handle_event("save", %{"material" => params}, socket) do
+    case Form.submit(socket.assigns.form, params: params) do
       {:ok, material} ->
         send(self(), {:saved, material})
 
         {:noreply,
          socket
-         |> put_flash(:info, "Material #{socket.assigns.form.source.type}d successfully")
+         |> put_flash(:info, "Material #{socket.assigns.form.source.type}d.")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, form} ->
@@ -81,19 +150,30 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
   end
 
   defp assign_form(%{assigns: %{material: material}} = socket) do
+    opts = [
+      as: "material",
+      actor: socket.assigns.current_member,
+      tenant: socket.assigns.current_member.organisation_id
+    ]
+
     form =
       if material do
-        Form.for_update(material, :update,
-          as: "material",
-          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
-        )
+        Form.for_update(material, :update, opts)
       else
-        Form.for_create(Inventory.Material, :create,
-          as: "material",
-          actor: socket.assigns.current_member, tenant: socket.assigns.current_member.organisation_id
-        )
+        Form.for_create(Inventory.Material, :create, opts)
       end
 
     assign(socket, form: to_form(form))
   end
+
+  defp form_valid?(form) do
+    form[:name].value not in [nil, ""] and
+      form[:sku].value not in [nil, ""] and
+      form[:price].value not in [nil, ""]
+  end
+
+  defp unit_abbr(:gram), do: "g"
+  defp unit_abbr(:milliliter), do: "mL"
+  defp unit_abbr(:piece), do: "pcs"
+  defp unit_abbr(_), do: ""
 end
