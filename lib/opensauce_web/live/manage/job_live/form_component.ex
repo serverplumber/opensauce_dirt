@@ -4,7 +4,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
 
   alias OpenSauce.Accounts
   alias OpenSauce.CRM
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @impl true
   def render(assigns) do
@@ -167,7 +167,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
           tenant: member.organisation_id
         )
       else
-        AshPhoenix.Form.for_create(Orders.Job, :create,
+        AshPhoenix.Form.for_create(Work.Job, :create,
           as: "job",
           actor: member,
           tenant: member.organisation_id
@@ -242,14 +242,14 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     member = socket.assigns.current_member
 
     upstream =
-      Orders.get_job_by_id!(upstream_job_id,
+      Work.get_job_by_id!(upstream_job_id,
         actor: member,
         tenant: member.organisation_id,
         load: [:materials]
       )
 
     Enum.each(upstream.materials, fn jm ->
-      Orders.move_job_material!(jm, %{job_id: job.id},
+      Work.move_job_material!(jm, %{job_id: job.id},
         actor: member,
         tenant: member.organisation_id
       )
@@ -273,7 +273,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
   end
 
   defp load_upstream_jobs(garden_id, member) do
-    Orders.list_jobs_at_garden!(garden_id,
+    Work.list_jobs_at_garden!(garden_id,
       actor: member,
       tenant: member.organisation_id,
       load: [:materials]

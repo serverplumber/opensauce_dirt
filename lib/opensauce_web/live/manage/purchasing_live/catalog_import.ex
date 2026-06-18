@@ -6,7 +6,6 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
 
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.CatalogImporter
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def mount(%{"id" => supplier_id}, _session, socket) do
@@ -46,13 +45,7 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
     {:noreply,
      socket
      |> assign(:page_title, "Import Catalog")
-     |> assign(:main_bg, "bg-[#16140E]")
-     |> Navigation.assign(:purchasing, [
-       Navigation.root(:purchasing),
-       Navigation.page(:purchasing, :suppliers),
-       Navigation.resource(:supplier, socket.assigns.supplier),
-       %{label: "Import catalog", path: nil}
-     ])}
+     |> assign(:main_bg, "bg-[#16140E]")}
   end
 
   @impl true

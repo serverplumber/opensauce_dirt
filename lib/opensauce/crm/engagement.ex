@@ -175,9 +175,9 @@ defmodule OpenSauce.CRM.Engagement do
       public? true
     end
 
-    has_many :jobs, OpenSauce.Orders.Job do
+    has_many :jobs, OpenSauce.Work.Job do
       public? true
-      domain OpenSauce.Orders
+      domain OpenSauce.Work
     end
   end
 

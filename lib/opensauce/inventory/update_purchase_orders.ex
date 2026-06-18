@@ -1,7 +1,7 @@
 defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
   @moduledoc false
 
-  alias OpenSauce.{Inventory, Orders}
+  alias OpenSauce.{Inventory, Work}
 
   @doc """
   Ensures every upcoming scheduled job has PO items for all its required
@@ -15,7 +15,7 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
     tenant = Keyword.fetch!(opts, :tenant)
 
     jobs =
-      Orders.list_upcoming_jobs!(
+      Work.list_upcoming_jobs!(
         actor: actor,
         tenant: tenant,
         load: [materials: [supplier_catalog_item: [:supplier_catalog]]]

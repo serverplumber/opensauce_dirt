@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.EngagementLive.New do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.CRM
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def mount(_params, _session, socket) do
@@ -43,7 +42,7 @@ defmodule OpenSauceWeb.EngagementLive.New do
       |> assign(:page_title, if(engagement, do: "Edit Engagement", else: "New Engagement"))
       |> assign(:main_bg, "bg-[#16140E]")
 
-    {:noreply, Navigation.assign(socket, :customers, customer_trail(customer))}
+    {:noreply, socket}
   end
 
   @impl true
@@ -93,6 +92,4 @@ defmodule OpenSauceWeb.EngagementLive.New do
     {:noreply, socket}
   end
 
-  defp customer_trail(customer),
-    do: [Navigation.root(:customers), Navigation.resource(:customer, customer)]
 end

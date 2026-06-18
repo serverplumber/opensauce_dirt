@@ -2,7 +2,6 @@ defmodule OpenSauceWeb.CustomerLive.Index do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -75,7 +74,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
   def handle_params(params, _url, socket) do
     socket = apply_action(socket, socket.assigns.live_action, params)
 
-    {:noreply, Navigation.assign(socket, :customers, customer_index_trail(socket.assigns))}
+    {:noreply, socket}
   end
 
   defp apply_action(socket, :index, _params) do
@@ -83,8 +82,6 @@ defmodule OpenSauceWeb.CustomerLive.Index do
     |> assign(:page_title, "Customers")
     |> assign(:main_bg, "bg-[#16140E]")
   end
-
-  defp customer_index_trail(_), do: [Navigation.root(:customers)]
 
   defp garden_count_label([]), do: "No gardens"
   defp garden_count_label([_]), do: "1 garden"

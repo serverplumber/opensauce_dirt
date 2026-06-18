@@ -6,83 +6,201 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.simple_form
+      <.form
         for={@form}
         id="customer-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
+        style="display:flex;flex-direction:column;gap:16px;"
       >
-        <div class="mt-4 space-y-8 bg-white">
-          <.input
-            field={@form[:type]}
-            type="radiogroup"
-            options={[{"Individual", :individual}, {"Company", :company}]}
-            value={@form[:type].value || :individual}
-          />
-
-          <div class="space-y-4">
-            <.input
-              field={@form[:company_name_nickname]}
-              type="text"
-              label={if company_type?(@form), do: "Company name", else: "Nickname"}
-              required={company_type?(@form)}
+        <div style="display:flex;gap:8px;">
+          <label style={"flex:1;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;#{if company_type?(@form), do: "background:rgba(84,181,126,0.12);border:1.5px solid rgba(84,181,126,0.4);color:#54B57E;", else: "background:#54B57E;border:1.5px solid #54B57E;color:#0C1F15;"}"}>
+            <input
+              type="radio"
+              name={@form[:type].name}
+              value="individual"
+              checked={!company_type?(@form)}
+              style="display:none;"
             />
-            <div class="flex flex-row space-x-4">
-              <.input field={@form[:first_name]} type="text" label="First name" />
-              <.input field={@form[:last_name]} type="text" label="Last name" />
-            </div>
-            <.input field={@form[:email]} type="email" label="Email" />
-            <.input field={@form[:phone]} type="tel" label="Phone" />
+            Individual
+          </label>
+          <label style={"flex:1;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;#{if company_type?(@form), do: "background:#54B57E;border:1.5px solid #54B57E;color:#0C1F15;", else: "background:rgba(84,181,126,0.12);border:1.5px solid rgba(84,181,126,0.4);color:#54B57E;"}"}>
+            <input
+              type="radio"
+              name={@form[:type].name}
+              value="company"
+              checked={company_type?(@form)}
+              style="display:none;"
+            />
+            Company
+          </label>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <p class="dark-label">{if company_type?(@form), do: "Company name", else: "Nickname"}</p>
+            <input
+              type="text"
+              id={@form[:company_name_nickname].id}
+              name={@form[:company_name_nickname].name}
+              value={@form[:company_name_nickname].value}
+              class="dark-input"
+              style="width:100%;"
+            />
           </div>
-
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <label class="text-sm font-semibold leading-6 text-zinc-800">Garden Addresses</label>
-              <.button
-                type="button"
-                variant={:outline}
-                phx-click="add_garden_address"
-                phx-target={@myself}
-              >
-                + Add address
-              </.button>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <p class="dark-label">First name</p>
+              <input
+                type="text"
+                id={@form[:first_name].id}
+                name={@form[:first_name].name}
+                value={@form[:first_name].value}
+                class="dark-input"
+                style="width:100%;"
+              />
             </div>
-
-            <.inputs_for :let={f_garden} field={@form[:garden_addresses]}>
-              <div class="relative rounded-lg border border-stone-200 bg-stone-50 p-4">
-                <input type="hidden" name={f_garden[:is_garden].name} value="true" />
-                <input type="hidden" name={f_garden[:is_billing].name} value="false" />
-                <input type="hidden" name={f_garden[:is_indoor].name} value="false" />
-                <button
-                  type="button"
-                  phx-click="remove_garden_address"
-                  phx-value-path={f_garden.name}
-                  phx-target={@myself}
-                  class="absolute top-3 right-3 text-stone-400 hover:text-red-500"
-                >
-                  <.icon name="hero-x-mark" class="h-4 w-4" />
-                </button>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div class="sm:col-span-2">
-                    <.input field={f_garden[:name]} type="text" label="Name" placeholder="e.g. North Field" />
-                  </div>
-                  <div class="sm:col-span-2">
-                    <.input field={f_garden[:street]} type="text" label="Street" />
-                  </div>
-                  <.input field={f_garden[:city]} type="text" label="City" />
-                  <.input field={f_garden[:province]} type="text" label="Province" />
-                  <.input field={f_garden[:zip]} type="text" label="Postal Code" />
-                </div>
-              </div>
-            </.inputs_for>
+            <div style="flex:1;">
+              <p class="dark-label">Last name</p>
+              <input
+                type="text"
+                id={@form[:last_name].id}
+                name={@form[:last_name].name}
+                value={@form[:last_name].value}
+                class="dark-input"
+                style="width:100%;"
+              />
+            </div>
+          </div>
+          <div>
+            <p class="dark-label">Email</p>
+            <input
+              type="email"
+              id={@form[:email].id}
+              name={@form[:email].name}
+              value={@form[:email].value}
+              class="dark-input"
+              style="width:100%;"
+            />
+          </div>
+          <div>
+            <p class="dark-label">Phone</p>
+            <input
+              type="tel"
+              id={@form[:phone].id}
+              name={@form[:phone].name}
+              value={@form[:phone].value}
+              class="dark-input"
+              style="width:100%;"
+            />
           </div>
         </div>
 
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save Customer</.button>
-        </:actions>
-      </.simple_form>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Garden Addresses
+            </p>
+            <button
+              type="button"
+              phx-click="add_garden_address"
+              phx-target={@myself}
+              ontouchstart=""
+              style="background:none;border:1.5px solid rgba(52,48,37,0.58);border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:#9A9384;cursor:pointer;"
+            >
+              + Add address
+            </button>
+          </div>
+
+          <.inputs_for :let={f_garden} field={@form[:garden_addresses]}>
+            <div style="position:relative;background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:16px;">
+              <input type="hidden" name={f_garden[:is_garden].name} value="true" />
+              <input type="hidden" name={f_garden[:is_billing].name} value="false" />
+              <input type="hidden" name={f_garden[:is_indoor].name} value="false" />
+              <button
+                type="button"
+                phx-click="remove_garden_address"
+                phx-value-path={f_garden.name}
+                phx-target={@myself}
+                ontouchstart=""
+                style="position:absolute;top:12px;right:12px;background:none;border:none;color:#E87E7E;font-size:16px;line-height:1;cursor:pointer;padding:4px;"
+              >
+                ×
+              </button>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div>
+                  <p class="dark-label">Name</p>
+                  <input
+                    type="text"
+                    id={f_garden[:name].id}
+                    name={f_garden[:name].name}
+                    value={f_garden[:name].value}
+                    placeholder="e.g. North Field"
+                    class="dark-input"
+                    style="width:100%;"
+                  />
+                </div>
+                <div>
+                  <p class="dark-label">Street</p>
+                  <input
+                    type="text"
+                    id={f_garden[:street].id}
+                    name={f_garden[:street].name}
+                    value={f_garden[:street].value}
+                    class="dark-input"
+                    style="width:100%;"
+                  />
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <div style="flex:1;">
+                    <p class="dark-label">City</p>
+                    <input
+                      type="text"
+                      id={f_garden[:city].id}
+                      name={f_garden[:city].name}
+                      value={f_garden[:city].value}
+                      class="dark-input"
+                      style="width:100%;"
+                    />
+                  </div>
+                  <div style="flex:1;">
+                    <p class="dark-label">Province</p>
+                    <input
+                      type="text"
+                      id={f_garden[:province].id}
+                      name={f_garden[:province].name}
+                      value={f_garden[:province].value}
+                      class="dark-input"
+                      style="width:100%;"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p class="dark-label">Postal Code</p>
+                  <input
+                    type="text"
+                    id={f_garden[:zip].id}
+                    name={f_garden[:zip].name}
+                    value={f_garden[:zip].value}
+                    class="dark-input"
+                    style="width:100%;"
+                  />
+                </div>
+              </div>
+            </div>
+          </.inputs_for>
+        </div>
+
+        <button
+          type="submit"
+          phx-disable-with="Saving…"
+          ontouchstart=""
+          style="width:100%;background:#54B57E;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+        >
+          Save Customer
+        </button>
+      </.form>
     </div>
     """
   end

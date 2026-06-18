@@ -4,7 +4,6 @@ defmodule OpenSauceWeb.VenueLive.Show do
 
   alias OpenSauce.Accounts.Roles
   alias OpenSauce.Operations
-  alias OpenSauceWeb.Navigation
   alias OpenSauceWeb.StorageLocationLive.FormComponent, as: LocationForm
   alias OpenSauceWeb.VenueLive.FormComponent, as: VenueForm
 
@@ -192,13 +191,10 @@ defmodule OpenSauceWeb.VenueLive.Show do
 
   @impl true
   def handle_params(_params, _url, socket) do
-    trail = [Navigation.root(:venues), %{label: socket.assigns.venue.name, path: nil}]
-
     {:noreply,
      socket
      |> assign(:page_title, socket.assigns.venue.name)
-     |> assign(:main_bg, "bg-[#16140E]")
-     |> Navigation.assign(:venues, trail)}
+     |> assign(:main_bg, "bg-[#16140E]")}
   end
 
   @impl true

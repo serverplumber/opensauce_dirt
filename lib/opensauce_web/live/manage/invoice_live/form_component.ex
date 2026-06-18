@@ -5,7 +5,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   import Ash.Query
 
   alias OpenSauce.CRM
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
   alias Decimal, as: D
 
   @impl true
@@ -373,7 +373,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     case CRM.create_invoice(attrs, actor: member, tenant: member.organisation_id) do
       {:ok, invoice} ->
         for job <- visible_jobs do
-          Orders.assign_job_invoice(job.struct, %{invoice_id: invoice.id},
+          Work.assign_job_invoice(job.struct, %{invoice_id: invoice.id},
             actor: member,
             tenant: member.organisation_id
           )
@@ -411,7 +411,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   end
 
   defp load_uninvoiced_jobs(customer_id, member) do
-    Orders.Job
+    Work.Job
     |> filter(
       engagement.customer_id == ^customer_id and
         status in [:scheduled, :in_progress, :completed] and

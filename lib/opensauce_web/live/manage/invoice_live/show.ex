@@ -5,8 +5,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   import Ash.Query
 
   alias OpenSauce.CRM
-  alias OpenSauce.Orders
-  alias OpenSauceWeb.Navigation
+  alias OpenSauce.Work
 
   @impl true
   def render(assigns) do
@@ -138,7 +137,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     invoice = load_invoice(id, member)
 
     jobs =
-      Orders.Job
+      Work.Job
       |> filter(invoice_id == ^id)
       |> Ash.read!(actor: member, tenant: member.organisation_id)
 
@@ -149,11 +148,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
       |> assign(:page_title, "Invoice #{invoice.reference}")
       |> assign(:main_bg, "bg-[#16140E]")
 
-    {:noreply,
-     Navigation.assign(socket, :invoices, [
-       Navigation.root(:invoices),
-       Navigation.resource(:invoice, invoice)
-     ])}
+    {:noreply, socket}
   end
 
   @impl true

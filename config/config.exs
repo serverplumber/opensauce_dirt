@@ -42,7 +42,7 @@ config :opensauce,
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [
     OpenSauce.CRM,
-    OpenSauce.Orders,
+    OpenSauce.Work,
     OpenSauce.Inventory,
     OpenSauce.Accounts,
     OpenSauce.Operations

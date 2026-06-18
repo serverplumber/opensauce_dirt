@@ -1,7 +1,7 @@
 defmodule OpenSauce.Calendar.FeedGenerator do
   @moduledoc false
 
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @past_days 30
   @future_days 90
@@ -17,7 +17,7 @@ defmodule OpenSauce.Calendar.FeedGenerator do
   end
 
   defp build_job_events(actor, date_start, date_end) do
-    case Orders.list_jobs(
+    case Work.list_jobs(
            actor: actor,
            load: [engagement: [:customer]],
            filter: [scheduled_for_gte: date_start, scheduled_for_lte: date_end]

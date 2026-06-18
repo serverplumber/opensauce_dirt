@@ -9,9 +9,9 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <div class="mb-4">
-        <label class="mb-1 block text-sm font-medium text-stone-700">Search Catalog</label>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <p class="dark-label">Search Catalog</p>
         <.live_component
           module={CatalogSearchComponent}
           id={"po-item-catalog-search-#{@id}"}
@@ -22,60 +22,101 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent do
         />
       </div>
 
-      <.simple_form
+      <.form
         for={@form}
         id="purchase-order-item-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
+        style="display:flex;flex-direction:column;gap:12px;"
       >
-        <.input field={@form[:purchase_order_id]} type="hidden" />
+        <input type="hidden" name={@form[:purchase_order_id].name} value={@form[:purchase_order_id].value} />
         <input
           type="hidden"
           name="purchase_order_item[supplier_catalog_item_id]"
           value={@selected_item && @selected_item.id}
         />
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">SKU</label>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;">
+            <p class="dark-label">SKU</p>
             <input
               type="text"
               name="purchase_order_item[supplier_sku]"
               value={@sku_value}
-              placeholder="From catalog or enter manually"
-              class="w-full rounded border border-stone-300 px-3 py-2 text-sm font-mono focus:border-primary-400 focus:outline-none"
+              placeholder="From catalog or manual"
+              class="dark-input"
+              style="width:100%;font-family:monospace;"
             />
           </div>
-          <.input
-            field={@form[:unit_price]}
+          <div style="flex:1;">
+            <p class="dark-label">Unit Price</p>
+            <input
+              type="number"
+              id={@form[:unit_price].id}
+              name={@form[:unit_price].name}
+              value={@price_value || @form[:unit_price].value}
+              step="0.001"
+              min="0"
+              class="dark-input"
+              style="width:100%;"
+            />
+          </div>
+        </div>
+
+        <div>
+          <p class="dark-label">Quantity</p>
+          <input
             type="number"
-            label="Unit Price"
-            step="0.001"
-            min="0"
-            value={@price_value}
+            id={@form[:quantity].id}
+            name={@form[:quantity].name}
+            value={@form[:quantity].value}
+            step="1"
+            min="1"
+            class="dark-input"
+            style="width:100%;"
           />
         </div>
 
-        <.input field={@form[:quantity]} type="number" label="Quantity" step="1" min="1" />
+        <div>
+          <p class="dark-label">Material (optional — link to stock)</p>
+          <select
+            id={@form[:material_id].id}
+            name={@form[:material_id].name}
+            class="dark-select"
+          >
+            <option value="">— none —</option>
+            <option
+              :for={m <- @materials}
+              value={m.id}
+              selected={@form[:material_id].value == m.id}
+            >
+              {m.name}
+            </option>
+          </select>
+        </div>
 
-        <.input
-          field={@form[:material_id]}
-          type="select"
-          label="Material (optional — link to stock)"
-          options={[{"— none —", nil}] ++ for(m <- @materials, do: {m.name, m.id})}
-        />
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input
+            type="checkbox"
+            id={@form[:is_reservation].id}
+            name={@form[:is_reservation].name}
+            value="true"
+            checked={@form[:is_reservation].value in [true, "true"]}
+            style="width:18px;height:18px;accent-color:#54B57E;cursor:pointer;"
+          />
+          <span style="font-size:13px;color:#9A9384;">Cherry-pick (inspect individually)</span>
+        </label>
 
-        <.input
-          field={@form[:is_reservation]}
-          type="checkbox"
-          label="Cherry-pick (inspect individually)"
-        />
-
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Adding...">Add Item</.button>
-        </:actions>
-      </.simple_form>
+        <button
+          type="submit"
+          phx-disable-with="Adding…"
+          ontouchstart=""
+          style="width:100%;background:#54B57E;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+        >
+          Add Item
+        </button>
+      </.form>
     </div>
     """
   end

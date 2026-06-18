@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.CRM
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -167,7 +166,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       |> assign(:main_bg, "bg-[#16140E]")
       |> load_invoices()
 
-    {:noreply, Navigation.assign(socket, :invoices, [Navigation.root(:invoices)])}
+    {:noreply, socket}
   end
 
   @impl true

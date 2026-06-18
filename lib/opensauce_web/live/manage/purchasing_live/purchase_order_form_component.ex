@@ -9,33 +9,66 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderFormComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.simple_form
+      <.form
         for={@form}
         id="purchase-order-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
+        style="display:flex;flex-direction:column;gap:16px;"
       >
-        <.input
-          field={@form[:supplier_id]}
-          type="select"
-          label="Supplier"
-          options={for s <- @suppliers, do: {s.name, s.id}}
-        />
+        <div>
+          <p class="dark-label">Supplier</p>
+          <select
+            id={@form[:supplier_id].id}
+            name={@form[:supplier_id].name}
+            class="dark-select"
+          >
+            <option value="">Select a supplier</option>
+            <option
+              :for={s <- @suppliers}
+              value={s.id}
+              selected={@form[:supplier_id].value == s.id}
+            >
+              {s.name}
+            </option>
+          </select>
+        </div>
 
-        <.input
-          field={@form[:status]}
-          type="select"
-          label="Status"
-          options={[{"Draft", :draft}, {"Ordered", :ordered}, {"Received", :received}]}
-        />
+        <div>
+          <p class="dark-label">Status</p>
+          <select
+            id={@form[:status].id}
+            name={@form[:status].name}
+            class="dark-select"
+          >
+            <option value="draft" selected={@form[:status].value in [:draft, "draft"]}>Draft</option>
+            <option value="ordered" selected={@form[:status].value in [:ordered, "ordered"]}>Ordered</option>
+            <option value="received" selected={@form[:status].value in [:received, "received"]}>Received</option>
+          </select>
+        </div>
 
-        <.input field={@form[:ordered_at]} type="datetime-local" label="Ordered At" />
+        <div>
+          <p class="dark-label">Ordered At</p>
+          <input
+            type="datetime-local"
+            id={@form[:ordered_at].id}
+            name={@form[:ordered_at].name}
+            value={Phoenix.HTML.Form.normalize_value("datetime-local", @form[:ordered_at].value)}
+            class="dark-input"
+            style="width:100%;"
+          />
+        </div>
 
-        <:actions>
-          <.button variant={:primary} phx-disable-with="Saving...">Save Purchase Order</.button>
-        </:actions>
-      </.simple_form>
+        <button
+          type="submit"
+          phx-disable-with="Saving…"
+          ontouchstart=""
+          style="width:100%;background:#54B57E;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+        >
+          Save Purchase Order
+        </button>
+      </.form>
     </div>
     """
   end

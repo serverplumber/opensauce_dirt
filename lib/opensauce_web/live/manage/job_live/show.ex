@@ -3,9 +3,8 @@ defmodule OpenSauceWeb.JobLive.Show do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Accounts
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
   alias OpenSauceWeb.HtmlHelpers
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def mount(_params, _session, socket) do
@@ -22,7 +21,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     return_to = Map.get(params, "return_to", ~p"/manage/jobs")
 
     job =
-      Orders.get_job_by_id!(id,
+      Work.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
         load: [
@@ -35,7 +34,7 @@ defmodule OpenSauceWeb.JobLive.Show do
 
     events =
       if job.status == :in_progress do
-        Orders.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
+        Work.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
       else
         []
       end
@@ -50,8 +49,7 @@ defmodule OpenSauceWeb.JobLive.Show do
      |> assign(:page_title, page_title(job))
      |> assign(:materials_cost, materials_cost(job.materials))
      |> assign(:arrived_at, arrival && arrival.timestamp)
-     |> assign(:arrival_odo, arrival && arrival.data.value.odometer_km)
-     |> Navigation.assign(:jobs, [Navigation.root(:jobs)])}
+     |> assign(:arrival_odo, arrival && arrival.data.value.odometer_km)}
   end
 
   @impl true
@@ -77,7 +75,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     member = socket.assigns.current_member
     job = socket.assigns.job
 
-    Orders.assign_job_staff(
+    Work.assign_job_staff(
       %{job_id: job.id, member_id: member_id, organisation_id: member.organisation_id},
       actor: member,
       tenant: member.organisation_id
@@ -90,7 +88,7 @@ defmodule OpenSauceWeb.JobLive.Show do
   def handle_event("remove_staff", %{"id" => job_staff_id}, socket) do
     member = socket.assigns.current_member
     sa = Enum.find(socket.assigns.job.staff_assignments, &(&1.id == job_staff_id))
-    if sa, do: Orders.unassign_job_staff(sa, actor: member, tenant: member.organisation_id)
+    if sa, do: Work.unassign_job_staff(sa, actor: member, tenant: member.organisation_id)
     {:noreply, reload_job(socket)}
   end
 
@@ -546,7 +544,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     job = socket.assigns.job
 
     job =
-      Orders.get_job_by_id!(job.id,
+      Work.get_job_by_id!(job.id,
         actor: member,
         tenant: member.organisation_id,
         load: [
@@ -559,7 +557,7 @@ defmodule OpenSauceWeb.JobLive.Show do
 
     events =
       if job.status == :in_progress do
-        Orders.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
+        Work.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
       else
         []
       end

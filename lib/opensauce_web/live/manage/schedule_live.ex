@@ -2,7 +2,7 @@ defmodule OpenSauceWeb.ScheduleLive do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @impl true
   def mount(_params, _session, socket) do
@@ -67,7 +67,7 @@ defmodule OpenSauceWeb.ScheduleLive do
     member = socket.assigns.current_member
     job = socket.assigns.place_job
 
-    Orders.update_job(
+    Work.update_job(
       job,
       %{scheduled_for: nil, start_time: nil, status: :scheduling},
       actor: member,
@@ -105,7 +105,7 @@ defmodule OpenSauceWeb.ScheduleLive do
 
     new_status = if job.status == :scheduling, do: :scheduled, else: job.status
 
-    Orders.update_job(
+    Work.update_job(
       job,
       %{scheduled_for: date, start_time: start_time, status: new_status, duration_estimate: duration},
       actor: member,
@@ -496,7 +496,7 @@ defmodule OpenSauceWeb.ScheduleLive do
     member = socket.assigns.current_member
 
     jobs =
-      Orders.list_jobs!(
+      Work.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
         load: [:garden, engagement: [:customer]]

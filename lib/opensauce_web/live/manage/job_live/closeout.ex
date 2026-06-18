@@ -3,9 +3,8 @@ defmodule OpenSauceWeb.JobLive.Closeout do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Inventory
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
   alias OpenSauceWeb.HtmlHelpers
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def mount(_params, _session, socket) do
@@ -25,7 +24,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
     member = socket.assigns.current_member
 
     job =
-      Orders.get_job_by_id!(id,
+      Work.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
         load: [
@@ -37,15 +36,14 @@ defmodule OpenSauceWeb.JobLive.Closeout do
       )
 
     events =
-      Orders.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
+      Work.list_job_events!(job.id, actor: member, tenant: member.organisation_id)
 
     {:noreply,
      socket
      |> assign(:job, job)
      |> assign(:materials, initial_materials(job))
      |> assign(:odometer, arrival_odometer(events))
-     |> assign(:page_title, "Close out")
-     |> Navigation.assign(:jobs, [Navigation.root(:jobs)])}
+     |> assign(:page_title, "Close out")}
   end
 
   @impl true
@@ -167,7 +165,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
     note = if socket.assigns.note == "", do: nil, else: socket.assigns.note
 
     event =
-      Orders.log_job_event!(
+      Work.log_job_event!(
         %{
           job_id: job.id,
           timestamp: now,
@@ -179,7 +177,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
       )
 
     Enum.each(job.staff_assignments, fn sa ->
-      Orders.log_job_event_staff(
+      Work.log_job_event_staff(
         %{
           job_event_id: event.id,
           member_id: sa.member_id,
@@ -190,7 +188,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
       )
     end)
 
-    Orders.complete_job(job, opts)
+    Work.complete_job(job, opts)
 
     {:noreply, push_navigate(socket, to: ~p"/manage/jobs")}
   end

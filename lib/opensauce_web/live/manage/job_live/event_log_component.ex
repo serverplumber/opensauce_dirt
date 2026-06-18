@@ -2,101 +2,140 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-6">
-      <div :if={@events != []} class="space-y-1">
-        <div :for={event <- @events} class="flex items-center gap-3 py-1.5 text-sm">
-          <span class="font-medium text-stone-700 shrink-0">{event_type_label(event.data.type)}</span>
-          <span class="text-stone-400 text-xs shrink-0">{format_event_time(event.timestamp)}</span>
-          <span :if={event.note} class="text-stone-500 text-xs truncate">{event.note}</span>
+    <div>
+      <div :if={@events != []} style="margin-bottom:16px;border-bottom:1px solid rgba(52,48,37,0.58);padding-bottom:4px;">
+        <div
+          :for={event <- @events}
+          style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(52,48,37,0.18);"
+        >
+          <span style="font-size:13px;font-weight:600;color:#F4EFE2;flex-shrink:0;">
+            {event_type_label(event.data.type)}
+          </span>
+          <span style="font-size:11px;color:#9A9384;flex-shrink:0;">
+            {format_event_time(event.timestamp)}
+          </span>
+          <span
+            :if={event.note}
+            style="font-size:11px;color:#6E675A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+          >
+            {event.note}
+          </span>
         </div>
       </div>
 
-      <div class={[@events != [] && "border-t border-stone-200 pt-4"]}>
-        <.simple_form
-          for={@form}
-          id={"event-log-form-#{@job.id}"}
-          phx-target={@myself}
-          phx-change="validate"
-          phx-submit="save"
-        >
-          <div class="space-y-4">
-            <div class="flex gap-4">
-              <div class="flex-1">
-                <.input field={@form[:timestamp]} type="datetime-local" label="Time" step="1800" />
-              </div>
-              <div class="w-36">
-                <.input
-                  type="number"
-                  name="event[odometer_km]"
-                  value={@odometer_km}
-                  label="Odometer (km)"
-                  min="0"
-                  step="1"
-                />
-              </div>
-            </div>
-            <.input field={@form[:note]} type="textarea" label="Note" rows="2" />
+      <.form
+        for={@form}
+        id={"event-log-form-#{@job.id}"}
+        phx-target={@myself}
+        phx-change="validate"
+        phx-submit="save"
+        style="display:flex;flex-direction:column;gap:14px;"
+      >
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;">
+            <p class="dark-label">Time</p>
+            <input
+              type="datetime-local"
+              id={@form[:timestamp].id}
+              name={@form[:timestamp].name}
+              value={Phoenix.HTML.Form.normalize_value("datetime-local", @form[:timestamp].value)}
+              step="1800"
+              class="dark-input"
+              style="width:100%;"
+            />
           </div>
+          <div style="width:118px;">
+            <p class="dark-label">Odometer (km)</p>
+            <input
+              type="number"
+              name="event[odometer_km]"
+              value={@odometer_km}
+              min="0"
+              step="1"
+              class="dark-input"
+              style="width:100%;"
+            />
+          </div>
+        </div>
 
-          <:actions>
-            <div class="flex flex-wrap gap-2">
-              <.link navigate={~p"/manage/jobs/#{@job.id}/materials"}>
-                <.button type="button" variant={:outline}>Edit materials</.button>
-              </.link>
-              <.button
-                :if={@events != []}
-                type="button"
-                phx-click="open_event_materials"
-                phx-target={@myself}
-                variant={:outline}
-              >
-                Add materials
-              </.button>
-              <.button
-                :if={@show_arrive}
-                type="submit"
-                name="action"
-                value="arrive"
-                variant={:primary}
-              >
-                Arrive
-              </.button>
-              <.button
-                :if={@show_depart}
-                type="submit"
-                name="action"
-                value="depart"
-                variant={:primary}
-              >
-                Depart
-              </.button>
-              <.button
-                :if={@show_complete}
-                type="submit"
-                name="action"
-                value="complete"
-                class="bg-green-50 text-green-700 hover:bg-green-100 shadow-none ring-1 ring-green-200"
-              >
-                Mark complete
-              </.button>
-              <.button
-                :if={@show_cancel}
-                type="submit"
-                name="action"
-                value="cancel"
-                variant={:outline}
-              >
-                Cancel job
-              </.button>
-            </div>
-          </:actions>
-        </.simple_form>
-      </div>
+        <div>
+          <p class="dark-label">Note</p>
+          <textarea
+            id={@form[:note].id}
+            name={@form[:note].name}
+            rows="2"
+            class="dark-textarea"
+            phx-debounce="blur"
+          >{Phoenix.HTML.Form.normalize_value("textarea", @form[:note].value)}</textarea>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:4px;">
+          <.link :if={@events != []} navigate={~p"/manage/jobs/#{@job.id}/materials"}>
+            <button
+              type="button"
+              ontouchstart=""
+              style="background:none;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:600;color:#9A9384;cursor:pointer;"
+            >
+              Edit materials
+            </button>
+          </.link>
+          <button
+            :if={@events != []}
+            type="button"
+            phx-click="open_event_materials"
+            phx-target={@myself}
+            ontouchstart=""
+            style="background:none;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:600;color:#9A9384;cursor:pointer;"
+          >
+            Add materials
+          </button>
+          <button
+            :if={@show_arrive}
+            type="submit"
+            name="action"
+            value="arrive"
+            ontouchstart=""
+            style="background:#54B57E;border:none;border-radius:12px;padding:11px 20px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+          >
+            Arrive
+          </button>
+          <button
+            :if={@show_depart}
+            type="submit"
+            name="action"
+            value="depart"
+            ontouchstart=""
+            style="background:#54B57E;border:none;border-radius:12px;padding:11px 20px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+          >
+            Depart
+          </button>
+          <button
+            :if={@show_complete}
+            type="submit"
+            name="action"
+            value="complete"
+            ontouchstart=""
+            style="background:rgba(84,181,126,0.15);border:1px solid rgba(84,181,126,0.3);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:600;color:#54B57E;cursor:pointer;"
+          >
+            Mark complete
+          </button>
+          <button
+            :if={@show_cancel}
+            type="submit"
+            name="action"
+            value="cancel"
+            ontouchstart=""
+            style="background:none;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:600;color:#9A9384;cursor:pointer;"
+          >
+            Cancel job
+          </button>
+        </div>
+      </.form>
     </div>
     """
   end
@@ -118,7 +157,7 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
       |> String.trim_trailing("Z")
 
     form =
-      AshPhoenix.Form.for_create(Orders.JobEvent, :log,
+      AshPhoenix.Form.for_create(Work.JobEvent, :log,
         as: "event",
         actor: member,
         tenant: member.organisation_id

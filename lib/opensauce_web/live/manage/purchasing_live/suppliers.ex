@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Inventory
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -183,11 +182,7 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
           assign(socket, :supplier, nil)
       end
 
-    {:noreply,
-     Navigation.assign(socket, :purchasing, [
-       Navigation.root(:purchasing),
-       Navigation.page(:purchasing, :suppliers)
-     ])}
+    {:noreply, socket}
   end
 
   @impl true

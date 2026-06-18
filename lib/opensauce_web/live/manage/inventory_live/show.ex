@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Inventory
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -244,11 +243,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
      |> assign(:page_title, material.name)
      |> assign(:main_bg, "bg-[#16140E]")
      |> assign(:material, material)
-     |> assign(:open_po_items, open_po_items)
-     |> Navigation.assign(:inventory, [
-       Navigation.root(:inventory),
-       %{label: material.name, path: nil}
-     ])}
+     |> assign(:open_po_items, open_po_items)}
   end
 
   @impl true

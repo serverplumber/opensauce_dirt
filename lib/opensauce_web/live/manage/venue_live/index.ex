@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.VenueLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Operations
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -129,8 +128,7 @@ defmodule OpenSauceWeb.VenueLive.Index do
      socket
      |> assign(:venues, load_venues(socket))
      |> assign(:page_title, "Venues")
-     |> assign(:main_bg, "bg-[#16140E]")
-     |> Navigation.assign(:venues, [Navigation.root(:venues)])}
+     |> assign(:main_bg, "bg-[#16140E]")}
   end
 
   @impl true

@@ -3,7 +3,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Accounts
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @impl true
   def mount(_params, _session, socket) do
@@ -14,7 +14,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
       {:ok, push_navigate(socket, to: ~p"/manage/today")}
     else
       shift =
-        Orders.get_job_by_id!(active_shift.id,
+        Work.get_job_by_id!(active_shift.id,
           actor: member,
           tenant: member.organisation_id,
           load: [:events, :staff_assignments]
@@ -25,7 +25,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
         |> Enum.reject(&(&1.status == :suspended))
 
       today_jobs =
-        Orders.list_jobs!(
+        Work.list_jobs!(
           actor: member,
           tenant: member.organisation_id,
           load: [:garden, engagement: [:customer]]
@@ -104,7 +104,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
     case socket.assigns.pending_action do
       {:add, m} ->
         event =
-          Orders.log_job_event!(
+          Work.log_job_event!(
             %{
               job_id: shift.id,
               timestamp: now,
@@ -114,7 +114,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
             opts
           )
 
-        Orders.log_job_event_staff(
+        Work.log_job_event_staff(
           %{
             job_event_id: event.id,
             member_id: m.id,
@@ -124,14 +124,14 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
           opts
         )
 
-        Orders.assign_job_staff(
+        Work.assign_job_staff(
           %{job_id: shift.id, member_id: m.id, organisation_id: actor.organisation_id},
           opts
         )
 
       {:remove, m, sa_id} ->
         event =
-          Orders.log_job_event!(
+          Work.log_job_event!(
             %{
               job_id: shift.id,
               timestamp: now,
@@ -141,7 +141,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
             opts
           )
 
-        Orders.log_job_event_staff(
+        Work.log_job_event_staff(
           %{
             job_event_id: event.id,
             member_id: m.id,
@@ -152,10 +152,10 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
         )
 
         sa = Enum.find(shift.staff_assignments, &(&1.id == sa_id))
-        if sa, do: Orders.unassign_job_staff(sa, opts)
+        if sa, do: Work.unassign_job_staff(sa, opts)
 
       {:end_shift} ->
-        Orders.log_job_event!(
+        Work.log_job_event!(
           %{
             job_id: shift.id,
             timestamp: now,
@@ -165,7 +165,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
           opts
         )
 
-        Orders.complete_job(shift, opts)
+        Work.complete_job(shift, opts)
     end
 
     case socket.assigns.pending_action do
@@ -493,7 +493,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
     member = socket.assigns.current_member
 
     shift =
-      Orders.get_job_by_id!(socket.assigns.shift.id,
+      Work.get_job_by_id!(socket.assigns.shift.id,
         actor: member,
         tenant: member.organisation_id,
         load: [:events, :staff_assignments]

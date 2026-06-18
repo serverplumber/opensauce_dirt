@@ -174,13 +174,6 @@ defmodule OpenSauceWeb.Layouts do
               </div>
 
               <div class="flex items-center gap-4">
-                <.live_component
-                  :if={@current_user && @socket}
-                  module={OpenSauceWeb.Components.CommandPalette}
-                  id="command-palette"
-                  current_user={@current_user}
-                  current_member={assigns[:current_member]}
-                />
                 <div :if={@current_user} class="relative">
                   <button
                     type="button"

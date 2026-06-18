@@ -8,43 +8,56 @@ defmodule OpenSauceWeb.EngagementLive.MaterialsComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-6">
-      <.table id={"em-#{@engagement_id}"} rows={@engagement_materials}>
-        <:col :let={em} label="Plant">
-          <span class="italic">{catalog_item_title(em.supplier_catalog_item)}</span>
-        </:col>
-        <:col :let={em} label="Format">
-          {em.supplier_catalog_item.format_description || "—"}
-        </:col>
-        <:col :let={em} label="Supplier">
-          {em.supplier_catalog_item.supplier_catalog.supplier.name}
-        </:col>
-        <:col :let={em} label="Qty">{em.quantity}</:col>
-        <:col :let={em} label="Scheduled">{format_date(em.scheduled_date) || "—"}</:col>
-        <:col :let={em} label="Note">{em.note || "—"}</:col>
-        <:action :let={em}>
-          <.button
-            variant={:outline}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div
+        :if={@engagement_materials != []}
+        style="border:1px solid rgba(52,48,37,0.58);border-radius:12px;overflow:hidden;"
+      >
+        <div
+          :for={em <- @engagement_materials}
+          style="display:flex;align-items:flex-start;justify-content:space-between;padding:11px 14px;border-bottom:1px solid rgba(52,48,37,0.58);"
+        >
+          <div style="min-width:0;flex:1;margin-right:12px;">
+            <p style="font-size:13px;font-weight:600;color:#F4EFE2;font-style:italic;">
+              {catalog_item_title(em.supplier_catalog_item)}
+            </p>
+            <p style="font-size:12px;color:#9A9384;margin-top:2px;">
+              {em.supplier_catalog_item.format_description || "—"} ·
+              {em.supplier_catalog_item.supplier_catalog.supplier.name}
+            </p>
+            <p style="font-size:12px;color:#9A9384;margin-top:1px;">
+              qty {em.quantity} · {format_date(em.scheduled_date) || "no date"}<span
+                :if={em.note}
+              > · {em.note}</span>
+            </p>
+          </div>
+          <button
+            type="button"
             phx-click="remove"
             phx-value-id={em.id}
             phx-target={@myself}
+            ontouchstart=""
+            style="font-size:12px;font-weight:600;color:#E87E7E;background:none;border:none;padding:4px 8px;cursor:pointer;flex-shrink:0;"
           >
             Remove
-          </.button>
-        </:action>
-        <:empty>No materials on this engagement yet.</:empty>
-      </.table>
+          </button>
+        </div>
+      </div>
+      <p :if={@engagement_materials == []} style="font-size:13px;color:#6E675A;padding:4px 0;">
+        No materials on this engagement yet.
+      </p>
 
-      <div class="flex justify-end border-t border-stone-200 pt-2 text-sm">
-        <span class="text-stone-500 mr-2">Material cost</span>
-        <span class="font-medium">{format_money(@currency, @total_cost)}</span>
+      <div style="display:flex;justify-content:flex-end;">
+        <span style="font-size:12px;color:#9A9384;margin-right:8px;">Material cost</span>
+        <span style="font-size:12px;font-weight:600;color:#F4EFE2;">{format_money(@currency, @total_cost)}</span>
       </div>
 
-      <div class="border-t border-stone-200 pt-4">
-        <h4 class="mb-3 text-sm font-medium text-stone-700">Add material</h4>
-
-        <div class="mb-3">
-          <label class="mb-1 block text-sm font-medium text-stone-700">Search Catalog</label>
+      <div style="border-top:1px solid rgba(52,48,37,0.58);padding-top:16px;display:flex;flex-direction:column;gap:12px;">
+        <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+          Add material
+        </p>
+        <div>
+          <p class="dark-label">Search Catalog</p>
           <.live_component
             module={CatalogSearchComponent}
             id={"em-catalog-search-#{@id}"}
@@ -54,33 +67,65 @@ defmodule OpenSauceWeb.EngagementLive.MaterialsComponent do
             selected_item={@selected_item}
           />
         </div>
-
-        <.simple_form
+        <.form
           for={@form}
           id="engagement-material-add-form"
           phx-target={@myself}
           phx-submit="add"
+          style="display:flex;flex-direction:column;gap:12px;"
         >
           <input
             type="hidden"
             name="engagement_material[supplier_catalog_item_id]"
             value={@selected_item && @selected_item.id}
           />
-          <div class="grid grid-cols-3 gap-3">
-            <.input field={@form[:quantity]} type="number" label="Quantity" step="0.01" min="0" />
-            <.input field={@form[:scheduled_date]} type="date" label="Scheduled date" />
-            <.input field={@form[:note]} label="Note" />
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <p class="dark-label">Quantity</p>
+              <input
+                type="number"
+                id={@form[:quantity].id}
+                name={@form[:quantity].name}
+                value={@form[:quantity].value}
+                step="0.01"
+                min="0"
+                class="dark-input"
+                style="width:100%;"
+              />
+            </div>
+            <div style="flex:1;">
+              <p class="dark-label">Scheduled date</p>
+              <input
+                type="date"
+                id={@form[:scheduled_date].id}
+                name={@form[:scheduled_date].name}
+                value={@form[:scheduled_date].value}
+                class="dark-input"
+                style="width:100%;"
+              />
+            </div>
           </div>
-          <:actions>
-            <.button
-              variant={:primary}
-              phx-disable-with="Adding..."
-              disabled={is_nil(@selected_item)}
-            >
-              Add
-            </.button>
-          </:actions>
-        </.simple_form>
+          <div>
+            <p class="dark-label">Note</p>
+            <input
+              type="text"
+              id={@form[:note].id}
+              name={@form[:note].name}
+              value={@form[:note].value}
+              class="dark-input"
+              style="width:100%;"
+            />
+          </div>
+          <button
+            type="submit"
+            phx-disable-with="Adding…"
+            disabled={is_nil(@selected_item)}
+            ontouchstart=""
+            style={"width:100%;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;#{if is_nil(@selected_item), do: "background:rgba(84,181,126,0.15);color:#54B57E;opacity:0.5;", else: "background:#54B57E;color:#0C1F15;"}"}
+          >
+            Add
+          </button>
+        </.form>
       </div>
     </div>
     """

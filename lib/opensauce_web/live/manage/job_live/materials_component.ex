@@ -2,47 +2,57 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
   @moduledoc false
   use OpenSauceWeb, :live_component
 
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
   alias OpenSauceWeb.CatalogSearchComponent
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-6">
-      <.table id={"jm-#{@job_id}"} rows={@job_materials}>
-        <:col :let={jm} label="Plant">
-          <span class="italic">{catalog_item_title(jm.supplier_catalog_item)}</span>
-        </:col>
-        <:col :let={jm} label="Format">
-          {jm.supplier_catalog_item.format_description || "—"}
-        </:col>
-        <:col :let={jm} label="Supplier">
-          {jm.supplier_catalog_item.supplier_catalog.supplier.name}
-        </:col>
-        <:col :let={jm} label="Qty">{jm.quantity}</:col>
-        <:action :let={jm}>
-          <.button
-            variant={:outline}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div
+        :if={@job_materials != []}
+        style="border:1px solid rgba(52,48,37,0.58);border-radius:12px;overflow:hidden;"
+      >
+        <div
+          :for={jm <- @job_materials}
+          style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid rgba(52,48,37,0.58);"
+        >
+          <div style="min-width:0;flex:1;margin-right:12px;">
+            <p style="font-size:13px;font-weight:600;color:#F4EFE2;font-style:italic;">
+              {catalog_item_title(jm.supplier_catalog_item)}
+            </p>
+            <p style="font-size:12px;color:#9A9384;margin-top:2px;">
+              {jm.supplier_catalog_item.format_description || "—"} ·
+              {jm.supplier_catalog_item.supplier_catalog.supplier.name} · qty {jm.quantity}
+            </p>
+          </div>
+          <button
+            type="button"
             phx-click="remove"
             phx-value-id={jm.id}
             phx-target={@myself}
+            ontouchstart=""
+            style="font-size:12px;font-weight:600;color:#E87E7E;background:none;border:none;padding:4px 8px;cursor:pointer;flex-shrink:0;"
           >
             Remove
-          </.button>
-        </:action>
-        <:empty>No materials on this job yet.</:empty>
-      </.table>
+          </button>
+        </div>
+      </div>
+      <p :if={@job_materials == []} style="font-size:13px;color:#6E675A;padding:4px 0;">
+        No materials on this job yet.
+      </p>
 
-      <div class="flex justify-end border-t border-stone-200 pt-2 text-sm">
-        <span class="text-stone-500 mr-2">Total cost</span>
-        <span class="font-medium">{format_money(@currency, @total_cost)}</span>
+      <div style="display:flex;justify-content:flex-end;">
+        <span style="font-size:12px;color:#9A9384;margin-right:8px;">Total cost</span>
+        <span style="font-size:12px;font-weight:600;color:#F4EFE2;">{format_money(@currency, @total_cost)}</span>
       </div>
 
-      <div class="border-t border-stone-200 pt-4">
-        <h4 class="mb-3 text-sm font-medium text-stone-700">Add material</h4>
-
-        <div class="mb-3">
-          <label class="mb-1 block text-sm font-medium text-stone-700">Search Catalog</label>
+      <div style="border-top:1px solid rgba(52,48,37,0.58);padding-top:16px;display:flex;flex-direction:column;gap:12px;">
+        <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+          Add material
+        </p>
+        <div>
+          <p class="dark-label">Search Catalog</p>
           <.live_component
             module={CatalogSearchComponent}
             id={"jm-catalog-search-#{@id}"}
@@ -52,24 +62,41 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
             selected_item={@selected_item}
           />
         </div>
-
-        <.simple_form for={@form} id="job-material-add-form" phx-target={@myself} phx-submit="add">
+        <.form
+          for={@form}
+          id="job-material-add-form"
+          phx-target={@myself}
+          phx-submit="add"
+          style="display:flex;flex-direction:column;gap:12px;"
+        >
           <input
             type="hidden"
             name="job_material[supplier_catalog_item_id]"
             value={@selected_item && @selected_item.id}
           />
-          <.input field={@form[:quantity]} type="number" label="Quantity" step="0.01" min="0" />
-          <:actions>
-            <.button
-              variant={:primary}
-              phx-disable-with="Adding..."
-              disabled={is_nil(@selected_item)}
-            >
-              Add
-            </.button>
-          </:actions>
-        </.simple_form>
+          <div>
+            <p class="dark-label">Quantity</p>
+            <input
+              type="number"
+              id={@form[:quantity].id}
+              name={@form[:quantity].name}
+              value={@form[:quantity].value}
+              step="0.01"
+              min="0"
+              class="dark-input"
+              style="width:100%;"
+            />
+          </div>
+          <button
+            type="submit"
+            phx-disable-with="Adding…"
+            disabled={is_nil(@selected_item)}
+            ontouchstart=""
+            style={"width:100%;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;#{if is_nil(@selected_item), do: "background:rgba(84,181,126,0.15);color:#54B57E;opacity:0.5;", else: "background:#54B57E;color:#0C1F15;"}"}
+          >
+            Add
+          </button>
+        </.form>
       </div>
     </div>
     """
@@ -96,7 +123,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
   def handle_event("add", %{"job_material" => params}, socket) do
     member = socket.assigns.current_member
 
-    case Orders.create_job_material(
+    case Work.create_job_material(
            %{
              job_id: socket.assigns.job_id,
              supplier_catalog_item_id: params["supplier_catalog_item_id"],
@@ -128,7 +155,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
     member = socket.assigns.current_member
     jm = Enum.find(socket.assigns.job_materials, &(&1.id == id))
 
-    case Orders.destroy_job_material(jm, actor: member, tenant: member.organisation_id) do
+    case Work.destroy_job_material(jm, actor: member, tenant: member.organisation_id) do
       :ok ->
         job_materials = load_job_materials(socket.assigns)
 
@@ -143,7 +170,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
   end
 
   defp load_job_materials(%{job_id: job_id, current_member: member}) do
-    Orders.get_job_by_id!(
+    Work.get_job_by_id!(
       job_id,
       actor: member,
       tenant: member.organisation_id,

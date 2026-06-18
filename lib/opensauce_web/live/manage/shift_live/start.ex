@@ -3,7 +3,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Operations
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @impl true
   def mount(_params, _session, socket) do
@@ -12,7 +12,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
     venues = Operations.list_venues!(actor: member, tenant: member.organisation_id)
 
     all_jobs =
-      Orders.list_jobs!(
+      Work.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
         load: [:garden, engagement: [:customer]]
@@ -108,7 +108,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
             end
 
           shift =
-            Orders.create_job!(
+            Work.create_job!(
               %{
                 type: :shift,
                 status: :in_progress,
@@ -118,7 +118,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               opts
             )
 
-          Orders.log_job_event!(
+          Work.log_job_event!(
             %{
               job_id: shift.id,
               timestamp: now,
@@ -130,7 +130,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
 
         mode when mode in [:checkin, :riding] ->
           if socket.assigns.active_shift do
-            Orders.log_job_event!(
+            Work.log_job_event!(
               %{
                 job_id: socket.assigns.active_shift.id,
                 timestamp: now,

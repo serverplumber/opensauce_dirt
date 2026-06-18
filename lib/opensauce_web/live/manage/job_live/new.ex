@@ -5,7 +5,7 @@ defmodule OpenSauceWeb.JobLive.New do
   alias OpenSauce.Accounts
   alias OpenSauce.CRM
   alias OpenSauce.Inventory
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @service_categories [
     {:installation, "Install"},
@@ -1056,7 +1056,7 @@ defmodule OpenSauceWeb.JobLive.New do
 
     params = build_job_params(socket.assigns)
 
-    case Orders.create_job(params, actor: member, tenant: member.organisation_id) do
+    case Work.create_job(params, actor: member, tenant: member.organisation_id) do
       {:ok, job} ->
         write_job_materials(job, socket.assigns.draft_map, member)
         write_job_staff(job, socket.assigns.draft_crew, member)
@@ -1160,7 +1160,7 @@ defmodule OpenSauceWeb.JobLive.New do
 
   defp write_job_staff(job, crew, member) do
     Enum.each(crew, fn m ->
-      Orders.assign_job_staff(
+      Work.assign_job_staff(
         %{job_id: job.id, member_id: m.id, organisation_id: member.organisation_id},
         actor: member,
         tenant: member.organisation_id
@@ -1178,7 +1178,7 @@ defmodule OpenSauceWeb.JobLive.New do
 
   defp write_job_materials(job, draft_map, member) do
     Enum.each(draft_map, fn {_id, {item, qty}} ->
-      Orders.create_job_material(
+      Work.create_job_material(
         %{job_id: job.id, supplier_catalog_item_id: item.id, quantity: qty},
         actor: member,
         tenant: member.organisation_id

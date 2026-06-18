@@ -4,7 +4,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   alias OpenSauce.Accounts
   alias OpenSauce.CRM
-  alias OpenSauceWeb.Navigation
 
   @empty_draft %{
     "name" => "",
@@ -390,7 +389,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       |> assign(:all_jobs, all_jobs)
       |> assign(:open_jobs_by_garden, open_jobs_by_garden(customer, socket))
 
-    {:noreply, Navigation.assign(socket, :customers, customer_trail(customer))}
+    {:noreply, socket}
   end
 
   @impl true
@@ -529,7 +528,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     customer.garden_addresses
     |> Enum.map(fn addr ->
       count =
-        case OpenSauce.Orders.list_jobs_at_garden(addr.id, opts) do
+        case OpenSauce.Work.list_jobs_at_garden(addr.id, opts) do
           {:ok, jobs} -> length(jobs)
           _ -> 0
         end
@@ -543,9 +542,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp short_name(customer) do
     customer.company_name_nickname || customer.first_name
   end
-
-  defp customer_trail(customer),
-    do: [Navigation.root(:customers), Navigation.resource(:customer, customer)]
 
   defp schedule_job_title(engagement) do
     if engagement.garden, do: engagement.garden.name || "garden", else: "engagement"

@@ -4,7 +4,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
 
   alias OpenSauce.CRM
   alias OpenSauce.Inventory
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
   alias OpenSauceWeb.HtmlHelpers
 
   @impl true
@@ -22,7 +22,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
     member = socket.assigns.current_member
 
     job =
-      Orders.get_job_by_id!(job_id,
+      Work.get_job_by_id!(job_id,
         actor: member,
         tenant: member.organisation_id,
         load: [
@@ -96,7 +96,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
     jm = Enum.find(socket.assigns.job.materials, &(&1.id == jm_id))
 
     if jm do
-      Orders.destroy_job_material(jm, actor: member, tenant: member.organisation_id)
+      Work.destroy_job_material(jm, actor: member, tenant: member.organisation_id)
       {:noreply, reload(socket)}
     else
       {:noreply, socket}
@@ -113,7 +113,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
 
     qty = (plan_item && plan_item.quantity) || Decimal.new(1)
 
-    case Orders.create_job_material(
+    case Work.create_job_material(
            %{
              job_id: job.id,
              supplier_catalog_item_id: catalog_item_id,
@@ -397,7 +397,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
       nil ->
         qty = max(delta, 1)
 
-        case Orders.create_job_material(
+        case Work.create_job_material(
                %{
                  job_id: job.id,
                  supplier_catalog_item_id: catalog_item_id,
@@ -415,12 +415,12 @@ defmodule OpenSauceWeb.JobLive.Materials do
         new_qty = Decimal.add(jm.quantity, Decimal.new(delta))
 
         if Decimal.compare(new_qty, Decimal.new(0)) != :gt do
-          case Orders.destroy_job_material(jm, actor: member, tenant: member.organisation_id) do
+          case Work.destroy_job_material(jm, actor: member, tenant: member.organisation_id) do
             :ok -> {:noreply, reload(socket)}
             {:error, _} -> {:noreply, put_flash(socket, :error, "Could not remove item.")}
           end
         else
-          case Orders.update_job_material(jm, %{quantity: new_qty},
+          case Work.update_job_material(jm, %{quantity: new_qty},
                  actor: member,
                  tenant: member.organisation_id
                ) do
@@ -435,7 +435,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
     member = socket.assigns.current_member
 
     job =
-      Orders.get_job_by_id!(socket.assigns.job.id,
+      Work.get_job_by_id!(socket.assigns.job.id,
         actor: member,
         tenant: member.organisation_id,
         load: [

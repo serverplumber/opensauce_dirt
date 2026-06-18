@@ -4,7 +4,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
 
   alias OpenSauce.CRM
   alias OpenSauce.Inventory
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @service_categories [
     {:maintenance, "Maintenance"},
@@ -23,9 +23,9 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
     opts = [actor: member, tenant: member.organisation_id]
 
     shift =
-      case Orders.find_active_shift!(opts) do
+      case Work.find_active_shift!(opts) do
         [s | _] ->
-          Orders.get_job_by_id!(s.id, opts ++ [load: [staff_assignments: [member: []]]])
+          Work.get_job_by_id!(s.id, opts ++ [load: [staff_assignments: [member: []]]])
 
         [] ->
           nil
@@ -578,7 +578,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
       containing_shift_id: shift.id
     }
 
-    case Orders.create_job(job_params, opts) do
+    case Work.create_job(job_params, opts) do
       {:ok, job} ->
         write_job_materials(job, socket.assigns.draft_map, opts)
 
@@ -601,7 +601,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
     now = DateTime.truncate(DateTime.utc_now(), :second)
 
     event =
-      Orders.log_job_event!(
+      Work.log_job_event!(
         %{
           job_id: job.id,
           timestamp: now,
@@ -612,7 +612,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
       )
 
     Enum.each(shift.staff_assignments, fn sa ->
-      Orders.log_job_event_staff(
+      Work.log_job_event_staff(
         %{
           job_event_id: event.id,
           member_id: sa.member_id,
@@ -623,7 +623,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
       )
     end)
 
-    Orders.mark_job_in_progress(job, opts)
+    Work.mark_job_in_progress(job, opts)
   end
 
   defp log_adhoc_done(job, shift, member, start_minutes, duration_minutes, opts) do
@@ -632,7 +632,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
     departure_dt = minutes_to_utc(today, start_minutes + duration_minutes)
 
     arrival_event =
-      Orders.log_job_event!(
+      Work.log_job_event!(
         %{
           job_id: job.id,
           timestamp: arrival_dt,
@@ -643,7 +643,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
       )
 
     Enum.each(shift.staff_assignments, fn sa ->
-      Orders.log_job_event_staff(
+      Work.log_job_event_staff(
         %{
           job_event_id: arrival_event.id,
           member_id: sa.member_id,
@@ -655,7 +655,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
     end)
 
     departure_event =
-      Orders.log_job_event!(
+      Work.log_job_event!(
         %{
           job_id: job.id,
           timestamp: departure_dt,
@@ -666,7 +666,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
       )
 
     Enum.each(shift.staff_assignments, fn sa ->
-      Orders.log_job_event_staff(
+      Work.log_job_event_staff(
         %{
           job_event_id: departure_event.id,
           member_id: sa.member_id,
@@ -677,7 +677,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
       )
     end)
 
-    Orders.complete_job(job, opts)
+    Work.complete_job(job, opts)
   end
 
   defp minutes_to_utc(date, minutes) do
@@ -691,7 +691,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
 
   defp write_job_materials(job, draft_map, opts) do
     Enum.each(draft_map, fn {_id, {item, qty}} ->
-      Orders.create_job_material(
+      Work.create_job_material(
         %{job_id: job.id, supplier_catalog_item_id: item.id, quantity: qty},
         opts
       )

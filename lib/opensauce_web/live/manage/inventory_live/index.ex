@@ -3,7 +3,6 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Inventory
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -141,8 +140,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
      socket
      |> assign(:page_title, "Inventory")
      |> assign(:main_bg, "bg-[#16140E]")
-     |> load_materials()
-     |> Navigation.assign(:inventory, [Navigation.root(:inventory)])}
+     |> load_materials()}
   end
 
   @impl true

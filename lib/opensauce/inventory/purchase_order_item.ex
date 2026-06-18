@@ -161,10 +161,10 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
       attribute_writable? true
     end
 
-    belongs_to :job, OpenSauce.Orders.Job do
+    belongs_to :job, OpenSauce.Work.Job do
       allow_nil? true
       public? true
-      domain OpenSauce.Orders
+      domain OpenSauce.Work
       attribute_writable? true
     end
   end

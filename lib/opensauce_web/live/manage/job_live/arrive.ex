@@ -3,8 +3,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.CRM
-  alias OpenSauce.Orders
-  alias OpenSauceWeb.Navigation
+  alias OpenSauce.Work
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,7 +20,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
     member = socket.assigns.current_member
 
     job =
-      Orders.get_job_by_id!(id,
+      Work.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
         load: [:garden, engagement: [:customer], staff_assignments: [member: [:user]]]
@@ -31,8 +30,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
      socket
      |> assign(:job, job)
      |> assign(:note, (job.garden && job.garden.notes) || "")
-     |> assign(:page_title, "Arrived")
-     |> Navigation.assign(:jobs, [Navigation.root(:jobs)])}
+     |> assign(:page_title, "Arrived")}
   end
 
   @impl true
@@ -57,7 +55,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
       end
 
     event =
-      Orders.log_job_event!(
+      Work.log_job_event!(
         %{
           job_id: job.id,
           timestamp: now,
@@ -68,7 +66,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
       )
 
     Enum.each(job.staff_assignments, fn sa ->
-      Orders.log_job_event_staff(
+      Work.log_job_event_staff(
         %{
           job_event_id: event.id,
           member_id: sa.member_id,
@@ -80,7 +78,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
     end)
 
     if job.status in [:scheduling, :scheduled] do
-      Orders.mark_job_in_progress(job, opts)
+      Work.mark_job_in_progress(job, opts)
     end
 
     note = socket.assigns.note

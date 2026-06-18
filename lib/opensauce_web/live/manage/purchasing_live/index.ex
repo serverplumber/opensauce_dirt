@@ -5,7 +5,6 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
   alias Decimal, as: D
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.UpdatePurchaseOrders
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -187,8 +186,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
     {:noreply,
      socket
      |> assign(:page_title, "Purchasing")
-     |> assign(:main_bg, "bg-[#16140E]")
-     |> Navigation.assign(:purchasing, [Navigation.root(:purchasing)])}
+     |> assign(:main_bg, "bg-[#16140E]")}
   end
 
   @impl true

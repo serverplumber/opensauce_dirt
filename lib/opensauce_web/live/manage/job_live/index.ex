@@ -3,9 +3,8 @@ defmodule OpenSauceWeb.JobLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Accounts
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
   alias OpenSauceWeb.JobLive.EventLogComponent
-  alias OpenSauceWeb.Navigation
 
   @impl true
   def render(assigns) do
@@ -218,21 +217,19 @@ defmodule OpenSauceWeb.JobLive.Index do
     |> assign(:page_title, "Jobs")
     |> assign(:main_bg, "bg-[#16140E]")
     |> assign(:job, nil)
-    |> Navigation.assign(:jobs, [Navigation.root(:jobs)])
   end
 
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Job")
     |> assign(:job, nil)
-    |> Navigation.assign(:jobs, [Navigation.root(:jobs), Navigation.page(:jobs, :new_job)])
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     member = socket.assigns.current_member
 
     job =
-      Orders.get_job_by_id!(id,
+      Work.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
         load: [:garden, engagement: [:customer]]
@@ -241,7 +238,6 @@ defmodule OpenSauceWeb.JobLive.Index do
     socket
     |> assign(:page_title, "Edit Job")
     |> assign(:job, job)
-    |> Navigation.assign(:jobs, [Navigation.root(:jobs)])
   end
 
   @impl true
@@ -263,7 +259,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     job = socket.assigns.event_log_job
 
     if event.data.type == :arrival && job.status == :scheduled do
-      Orders.mark_job_in_progress(job, actor: member, tenant: member.organisation_id)
+      Work.mark_job_in_progress(job, actor: member, tenant: member.organisation_id)
     end
 
     {:noreply, socket |> assign(event_log_job: nil, event_log_events: []) |> load_jobs()}
@@ -276,8 +272,8 @@ defmodule OpenSauceWeb.JobLive.Index do
     opts = [actor: member, tenant: member.organisation_id]
 
     case status do
-      :completed -> Orders.complete_job(job, opts)
-      :cancelled -> Orders.cancel_job(job, opts)
+      :completed -> Work.complete_job(job, opts)
+      :cancelled -> Work.cancel_job(job, opts)
     end
 
     {:noreply, socket |> assign(event_log_job: nil, event_log_events: []) |> load_jobs()}
@@ -299,7 +295,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     job = Enum.find(socket.assigns.jobs, &(&1.id == id))
 
     events =
-      Orders.list_job_events!(job.id,
+      Work.list_job_events!(job.id,
         actor: member,
         tenant: member.organisation_id
       )
@@ -540,7 +536,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
 
     jobs =
-      Orders.list_jobs!(
+      Work.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
         load: [:garden, :staff_assignments, engagement: [:customer]]

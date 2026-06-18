@@ -56,8 +56,6 @@ defmodule OpenSauceWeb do
       use Phoenix.LiveView,
         layout: {OpenSauceWeb.Layouts, :app}
 
-      alias OpenSauceWeb.Navigation
-
       unquote(html_helpers())
     end
   end

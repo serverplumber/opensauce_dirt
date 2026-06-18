@@ -3,7 +3,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
   use OpenSauceWeb, :live_component
 
   alias OpenSauce.CRM
-  alias OpenSauce.Orders
+  alias OpenSauce.Work
 
   @impl true
   def render(assigns) do
@@ -126,7 +126,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
 
     with {:ok, to_date} <- Date.from_iso8601(params["date"] || ""),
          {:ok, job} <-
-           Orders.create_job(
+           Work.create_job(
              %{
                type: :client_work,
                status: :scheduled,
@@ -144,7 +144,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
       date_materials = filter_by_date(scheduled, socket.assigns.from_date, to_date)
 
       for em <- date_materials do
-        Orders.create_job_material(
+        Work.create_job_material(
           %{job_id: job.id, supplier_catalog_item_id: em.supplier_catalog_item_id, quantity: em.quantity},
           actor: member,
           tenant: member.organisation_id
@@ -153,7 +153,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
 
       if engagement.jobs == [] do
         for em <- unscheduled do
-          Orders.create_job_material(
+          Work.create_job_material(
             %{job_id: job.id, supplier_catalog_item_id: em.supplier_catalog_item_id, quantity: em.quantity},
             actor: member,
             tenant: member.organisation_id

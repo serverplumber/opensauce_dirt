@@ -103,8 +103,7 @@ defmodule OpenSauceWeb.Router do
         {OpenSauceWeb.LiveUserAuth, :live_manager_required},
         OpenSauceWeb.LiveCurrentPath,
         OpenSauceWeb.LiveNav,
-        OpenSauceWeb.LiveSettings,
-        OpenSauceWeb.LiveCommandPalette
+        OpenSauceWeb.LiveSettings
       ] do
       # Job Routes
       live "/manage/jobs", JobLive.Index, :index
@@ -120,18 +119,7 @@ defmodule OpenSauceWeb.Router do
 
       # Org edit (owner-accessible via account page)
       live "/manage/org", OrgLive, :index
-
-      # Settings Routes
-      live "/manage/settings", SettingsLive.Index, :index
-      live "/manage/settings/general", SettingsLive.Index, :general
-      live "/manage/settings/csv", SettingsLive.Index, :csv
-      live "/manage/settings/api_keys", SettingsLive.Index, :api_keys
-      live "/manage/settings/calendar", SettingsLive.Index, :calendar_feed
-      live "/manage/settings/members", SettingsLive.Index, :members
     end
-
-    # CSV Export (regular controller, not LiveView)
-    get "/manage/settings/csv/export/:entity", CSVExportController, :export
 
     # Staff Routes
     ash_authentication_live_session :manage_routes,
@@ -140,7 +128,6 @@ defmodule OpenSauceWeb.Router do
         OpenSauceWeb.LiveCurrentPath,
         OpenSauceWeb.LiveNav,
         OpenSauceWeb.LiveSettings,
-        OpenSauceWeb.LiveCommandPalette,
         OpenSauceWeb.LiveShift
       ] do
       # Job creation, detail, arrive + materials
