@@ -135,8 +135,7 @@ defmodule OpenSauceWeb.TodayLive do
 
   @impl true
   def handle_event("fab_manager_action", _params, socket) do
-    # Ad hoc job creation — to be wired up
-    {:noreply, socket}
+    {:noreply, push_navigate(socket, to: ~p"/manage/jobs/adhoc")}
   end
 
   @impl true

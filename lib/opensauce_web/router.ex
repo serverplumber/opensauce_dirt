@@ -110,6 +110,7 @@ defmodule OpenSauceWeb.Router do
       live "/manage/jobs", JobLive.Index, :index
       live "/manage/jobs/:id/edit", JobLive.Index, :edit
       live "/manage/jobs/:id/closeout", JobLive.Closeout, :index
+      live "/manage/jobs/adhoc", JobLive.Adhoc, :index
 
       # Venue Routes
       live "/manage/venues", VenueLive.Index, :index
