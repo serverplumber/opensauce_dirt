@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>OpenSauce Dirt — Login (polished)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* brand */
+    --forest:        #173A2B;   /* deep panel green */
+    --forest-deep:   #102A20;
+    --leaf:          #2C7A4E;   /* primary action */
+    --leaf-bright:   #3D9A63;
+    --leaf-wash:     #E5EFE6;   /* soft green fill */
+    --amber:         #BE6E37;   /* warm copper accent */
+    --amber-wash:    #F5E6D6;
+    /* neutrals */
+    --cream:         #F6F2E9;   /* app background */
+    --paper:         #FFFFFF;
+    --stone-900:     #1E1B16;   /* ink */
+    --stone-700:     #44403A;
+    --stone-500:     #7A736A;   /* muted */
+    --stone-300:     #C9C2B5;
+    --stone-200:     #E4DECF;   /* borders */
+    --stone-100:     #EFEADD;
+    --ring:          rgba(44,122,78,0.28);
+    --shadow-card:   0 1px 2px rgba(30,27,22,0.04), 0 8px 24px rgba(30,27,22,0.07);
+    --shadow-btn:    0 6px 16px rgba(44,122,78,0.30);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #EEE8DA 0%, #E6E0D1 60%, #DED7C6 100%);
+    color: var(--stone-900);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding: 56px 32px 80px;
+  }
+
+  /* ── page header ───────────────────────────────────────── */
+  .head { max-width: 1180px; margin: 0 auto 44px; }
+  .head .kicker {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--leaf); margin-bottom: 10px;
+  }
+  .head h1 {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700; font-size: 34px; letter-spacing: -0.02em; color: var(--stone-900);
+  }
+  .head p { margin-top: 10px; font-size: 15.5px; color: var(--stone-500); max-width: 640px; line-height: 1.55; }
+
+  /* ── phone row ─────────────────────────────────────────── */
+  .row {
+    display: flex; flex-wrap: wrap; gap: 56px 48px;
+    justify-content: center; align-items: flex-start;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .frame { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .caption { text-align: center; max-width: 320px; }
+  .caption .ct { font-size: 13px; font-weight: 700; color: var(--stone-700); letter-spacing: 0.02em; }
+  .caption .cd { font-size: 12.5px; color: var(--stone-500); margin-top: 3px; line-height: 1.45; }
+
+  .phone {
+    width: 360px;
+    background: #0C0C0D;
+    border-radius: 46px;
+    padding: 11px;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.18),
+      0 22px 50px -12px rgba(30,27,22,0.45);
+    position: relative;
+  }
+  .screen {
+    width: 338px;
+    min-height: 786px;
+    background: var(--cream);
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+
+  /* status bar */
+  .status {
+    height: 50px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 26px 0 30px;
+    font-weight: 600; font-size: 14px; letter-spacing: 0.01em;
+    position: relative; z-index: 3;
+  }
+  .status.on-dark { color: #fff; }
+  .status .glyphs { display: flex; align-items: center; gap: 6px; }
+  .status svg { display: block; }
+
+  /* ── shared bits ───────────────────────────────────────── */
+  .sprout { display: block; }
+
+  .btn {
+    height: 56px; border: none; border-radius: 16px; width: 100%;
+    background: var(--leaf); color: #fff;
+    font-family: "Hanken Grotesk", sans-serif; font-weight: 700; font-size: 16px;
+    letter-spacing: 0.01em; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    box-shadow: var(--shadow-btn);
+    transition: transform .12s ease, background .12s ease;
+  }
+  .btn:hover { background: var(--leaf-bright); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.ghost {
+    background: var(--paper); color: var(--stone-900);
+    border: 1.5px solid var(--stone-200); box-shadow: var(--shadow-card);
+  }
+  .btn.ghost:hover { background: var(--stone-100); }
+
+  .label {
+    font-size: 13px; font-weight: 600; color: var(--stone-700);
+    letter-spacing: 0.01em; margin-bottom: 8px; display: block;
+  }
+  .field {
+    height: 56px; background: var(--paper);
+    border: 1.5px solid var(--stone-200); border-radius: 14px;
+    display: flex; align-items: center; gap: 11px; padding: 0 16px;
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
+  .field.focus { border-color: var(--leaf); box-shadow: 0 0 0 4px var(--ring); }
+  .field input {
+    border: none; outline: none; background: transparent; flex: 1;
+    font-family: "Hanken Grotesk", sans-serif; font-size: 16px; color: var(--stone-900);
+  }
+  .field input::placeholder { color: var(--stone-300); }
+
+  .reassure {
+    display: flex; align-items: center; gap: 9px;
+    color: var(--stone-500); font-size: 13px; line-height: 1.4;
+  }
+  .reassure svg { flex: 0 0 auto; }
+
+  h2.title {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700; letter-spacing: -0.02em; color: var(--stone-900);
+  }
+
+  /* ===== L1 ============================================== */
+  .l1-hero {
+    background:
+      radial-gradient(130% 120% at 80% -20%, #245A40 0%, var(--forest) 45%, var(--forest-deep) 100%);
+    padding: 0 30px 46px;
+    border-bottom-left-radius: 34px; border-bottom-right-radius: 34px;
+    position: relative; overflow: hidden;
+    margin-top: -50px; padding-top: 50px;
+  }
+  .l1-hero .leafmark {
+    position: absolute; right: -28px; top: 30px; opacity: 0.13;
+    transform: rotate(8deg);
+  }
+  .brandline { display: flex; align-items: center; gap: 12px; margin-top: 30px; }
+  .brandline .wm {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 800;
+    font-size: 27px; color: #fff; letter-spacing: -0.02em;
+  }
+  .brand-tag {
+    margin-top: 22px; font-size: 12px; font-weight: 700; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--leaf-bright);
+  }
+  .brand-sub {
+    margin-top: 9px; font-family: "Bricolage Grotesque", sans-serif;
+    font-size: 25px; line-height: 1.22; font-weight: 600; color: #F4EFE2;
+    letter-spacing: -0.01em; max-width: 250px;
+  }
+  .l1-body { padding: 30px 30px 26px; display: flex; flex-direction: column; flex: 1; }
+  .l1-body h2 { font-size: 23px; }
+  .l1-body .sub { margin-top: 7px; font-size: 14.5px; color: var(--stone-500); line-height: 1.5; }
+  .form-stack { margin-top: 26px; display: flex; flex-direction: column; }
+  .terms { margin-top: auto; padding-top: 26px; font-size: 11.5px; color: var(--stone-300); text-align: center; line-height: 1.5; }
+  .terms a { color: var(--stone-500); text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ===== L2 ============================================== */
+  .topbar { height: 56px; flex: 0 0 auto; display: flex; align-items: center; padding: 0 18px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--stone-200);
+    background: var(--paper); display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .l2-body { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 14px 32px 30px; }
+  .env-badge {
+    width: 92px; height: 92px; border-radius: 26px;
+    background: var(--leaf-wash); border: 1.5px solid #CFE2D2;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 36px;
+  }
+  .l2-body h2 { font-size: 25px; margin-top: 26px; }
+  .l2-body .sent-to { margin-top: 12px; font-size: 14.5px; color: var(--stone-500); }
+  .l2-body .email {
+    margin-top: 5px; font-size: 16px; font-weight: 700; color: var(--stone-900);
+  }
+  .l2-body .expiry {
+    margin-top: 16px; font-size: 13.5px; color: var(--stone-500); line-height: 1.5;
+    max-width: 240px;
+  }
+  .l2-actions { width: 100%; margin-top: 30px; display: flex; flex-direction: column; gap: 12px; }
+  .l2-links { margin-top: 22px; display: flex; gap: 22px; justify-content: center; }
+  .l2-links button {
+    background: none; border: none; cursor: pointer; font-family: inherit;
+    font-size: 13.5px; font-weight: 600; color: var(--leaf); padding: 0;
+  }
+  .l2-links button.muted { color: var(--stone-400, #9c958a); }
+  .l2-links button:disabled { color: var(--stone-300); cursor: default; }
+  .spam { margin-top: auto; padding-top: 24px; font-size: 12.5px; color: var(--stone-500); }
+
+  /* ===== L3 ============================================== */
+  .l3-top { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+  .l3-top .mini-wm { display: flex; align-items: center; gap: 9px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: var(--forest); }
+  .l3-top .signout { font-size: 13px; font-weight: 600; color: var(--stone-500); }
+  .l3-body { padding: 6px 24px 28px; flex: 1; display: flex; flex-direction: column; }
+  .l3-body .greet { font-family: "Bricolage Grotesque", sans-serif; font-size: 27px; font-weight: 700; letter-spacing: -0.02em; }
+  .l3-body .greet-sub { margin-top: 7px; font-size: 14px; color: var(--stone-500); line-height: 1.5; }
+  .org-list { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .org {
+    background: var(--paper); border: 1.5px solid var(--stone-200); border-radius: 18px;
+    padding: 15px; display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--shadow-card); cursor: pointer; position: relative;
+    transition: border-color .12s ease, transform .12s ease;
+  }
+  .org:hover { transform: translateY(-1px); }
+  .org.current { border-color: var(--leaf); box-shadow: 0 0 0 3px var(--ring), var(--shadow-card); }
+  .org .mono {
+    width: 50px; height: 50px; border-radius: 14px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 23px; color: #fff;
+  }
+  .org .info { flex: 1; min-width: 0; }
+  .org .nm { font-size: 16px; font-weight: 700; color: var(--stone-900); letter-spacing: -0.01em; }
+  .org .meta { margin-top: 5px; font-size: 12.5px; color: var(--stone-500); }
+  .org .chev { color: var(--stone-300); flex: 0 0 auto; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .pill.crew { background: var(--leaf-wash); color: var(--leaf); }
+  .pill.owner { background: var(--amber-wash); color: var(--amber); }
+  .pill.supplier { background: var(--stone-100); color: var(--stone-500); }
+  .last-used {
+    position: absolute; top: 14px; right: 15px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--leaf);
+  }
+  .create-org {
+    margin-top: 16px; border: 1.5px dashed var(--stone-300); border-radius: 18px;
+    background: rgba(255,255,255,0.4); padding: 16px; display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: background .12s ease, border-color .12s ease;
+  }
+  .create-org:hover { background: rgba(255,255,255,0.75); border-color: var(--leaf); }
+  .create-org .plus {
+    width: 50px; height: 50px; border-radius: 14px; flex: 0 0 auto;
+    background: var(--leaf-wash); display: flex; align-items: center; justify-content: center; color: var(--leaf);
+  }
+  .create-org .ct { font-size: 15px; font-weight: 700; color: var(--stone-900); }
+  .create-org .cd { margin-top: 3px; font-size: 12.5px; color: var(--stone-500); }
+</style>
+</head>
+<body>
+
+  <header class="head">
+    <div class="kicker">OpenSauce Dirt · Hi-fi</div>
+    <h1>Login &amp; onboarding — polished</h1>
+    <p>The L flow taken from wireframe to product: evergreen brand surfaces, warm stone neutrals, a copper accent for roles, and field-ready ergonomics (56px targets, high contrast for sunlight). Passwordless sign-in → magic link → choose your organisation.</p>
+  </header>
+
+  <div class="row">
+
+    <!-- ════════════════ L1 · Sign in ════════════════ -->
+    <div class="frame">
+      <div class="phone">
+        <div class="screen" data-screen-label="L1 · Sign in">
+          <div class="status on-dark">
+            <span>9:41</span>
+            <span class="glyphs">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="#fff"/><rect x="5" y="4" width="3" height="8" rx="1" fill="#fff"/><rect x="10" y="1.5" width="3" height="10.5" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#fff" opacity="0.4"/></svg>
+              <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><path d="M8.5 2.2c2.4 0 4.6.9 6.2 2.4l1.2-1.3C14 1.3 11.4.2 8.5.2 5.6.2 3 1.3 1.1 3.3l1.2 1.3C3.9 3.1 6.1 2.2 8.5 2.2Z" fill="#fff"/><path d="M8.5 5.4c1.5 0 2.9.6 3.9 1.6l1.2-1.3C12.3 4.4 10.5 3.6 8.5 3.6S4.7 4.4 3.4 5.7l1.2 1.3c1-1 2.4-1.6 3.9-1.6Z" fill="#fff"/><path d="M8.5 8.6c.8 0 1.5.3 2 .9l-2 2.1-2-2.1c.5-.6 1.2-.9 2-.9Z" fill="#fff"/></svg>
+              <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.6" y="0.6" width="21.6" height="11.8" rx="3" stroke="#fff" stroke-opacity="0.5"/><rect x="2.4" y="2.4" width="16" height="8.2" rx="1.6" fill="#fff"/><rect x="23.6" y="4" width="1.8" height="5" rx="0.9" fill="#fff" fill-opacity="0.5"/></svg>
+            </span>
+          </div>
+
+          <div class="l1-hero">
+            <svg class="leafmark" width="180" height="180" viewBox="0 0 24 24" fill="none">
+              <path d="M12 21c0-5 0-8 3-11 2-2 5-2 6-2 0 3-1 6-3 8-2.4 2.4-6 5-6 5Z" fill="#fff"/>
+              <path d="M12 21c0-4-1-6-4-8-1.6-1.1-4-1.3-5-1.3.2 2.6 1.3 4.8 3.2 6.2C8.4 19.4 12 21 12 21Z" fill="#fff"/>
+            </svg>
+            <div class="brandline">
+              <svg class="sprout" width="34" height="34" viewBox="0 0 24 24" fill="none">
+                <path d="M12 22v-8" stroke="#9FD9B2" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 15c0-3.3 0-5 2-7 1.4-1.4 3.6-1.5 4.6-1.5 0 2.1-.6 4.3-2.1 5.8C14.8 13.9 12 15 12 15Z" fill="#3D9A63"/>
+                <path d="M12 16c0-2.7-.7-4-2.7-5.4C7.9 9.7 5.8 9.6 4.9 9.6c.1 1.9.9 3.6 2.3 4.7C8.8 15.4 12 16 12 16Z" fill="#5BB97F"/>
+              </svg>
+              <span class="wm">OpenSauce</span>
+            </div>
+            <div class="brand-tag">Dirt · field ops</div>
+            <div class="brand-sub">Jobs, crews &amp; gardens — in your pocket.</div>
+          </div>
+
+          <div class="l1-body">
+            <h2 class="title">Sign in</h2>
+            <p class="sub">Enter your work email and we'll send a one-tap link. No password to remember.</p>
+
+            <div class="form-stack">
+              <label class="label">Work email</label>
+              <div class="field focus">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="#2C7A4E" stroke-width="1.8"/><path d="M4 7l8 6 8-6" stroke="#2C7A4E" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <input value="sam@greenfields.co" />
+              </div>
+              <div style="height:18px"></div>
+              <button class="btn">
+                Email me a magic link
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div style="height:16px"></div>
+              <div class="reassure">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#7A736A" stroke-width="1.7"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#7A736A" stroke-width="1.7"/></svg>
+                <span>The link signs you in on this phone. It works once.</span>
+              </div>
+            </div>
+
+            <p class="terms">By continuing you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="ct">L1 · Sign in</div>
+        <div class="cd">Brand hero + single email field. One unmistakable primary action.</div>
+      </div>
+    </div>
+
+    <!-- ════════════════ L2 · Check email ════════════════ -->
+    <div class="frame">
+      <div class="phone">
+        <div class="screen" data-screen-label="L2 · Check your email">
+          <div class="status">
+            <span>9:41</span>
+            <span class="glyphs">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="#1E1B16"/><rect x="5" y="4" width="3" height="8" rx="1" fill="#1E1B16"/><rect x="10" y="1.5" width="3" height="10.5" rx="1" fill="#1E1B16"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#1E1B16" opacity="0.35"/></svg>
+              <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><path d="M8.5 2.2c2.4 0 4.6.9 6.2 2.4l1.2-1.3C14 1.3 11.4.2 8.5.2 5.6.2 3 1.3 1.1 3.3l1.2 1.3C3.9 3.1 6.1 2.2 8.5 2.2Z" fill="#1E1B16"/><path d="M8.5 5.4c1.5 0 2.9.6 3.9 1.6l1.2-1.3C12.3 4.4 10.5 3.6 8.5 3.6S4.7 4.4 3.4 5.7l1.2 1.3c1-1 2.4-1.6 3.9-1.6Z" fill="#1E1B16"/><path d="M8.5 8.6c.8 0 1.5.3 2 .9l-2 2.1-2-2.1c.5-.6 1.2-.9 2-.9Z" fill="#1E1B16"/></svg>
+              <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.6" y="0.6" width="21.6" height="11.8" rx="3" stroke="#1E1B16" stroke-opacity="0.45"/><rect x="2.4" y="2.4" width="16" height="8.2" rx="1.6" fill="#1E1B16"/><rect x="23.6" y="4" width="1.8" height="5" rx="0.9" fill="#1E1B16" fill-opacity="0.45"/></svg>
+            </span>
+          </div>
+
+          <div class="topbar">
+            <div class="icon-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#44403A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+
+          <div class="l2-body">
+            <div class="env-badge">
+              <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="#2C7A4E" stroke-width="1.7"/><path d="M4 7l8 6 8-6" stroke="#2C7A4E" stroke-width="1.7" stroke-linecap="round"/><circle cx="19" cy="6" r="4" fill="#3D9A63"/><path d="M17.4 6l1.1 1.1 2-2.2" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2 class="title">Check your email</h2>
+            <p class="sent-to">We sent a one-tap sign-in link to</p>
+            <p class="email">sam@greenfields.co</p>
+            <p class="expiry">Tap the link on this phone and you're in. It works once and expires in 15&nbsp;minutes.</p>
+
+            <div class="l2-actions">
+              <button class="btn">Open mail app</button>
+              <div class="l2-links">
+                <button disabled>Resend link · 0:30</button>
+                <button class="muted">Use a different email</button>
+              </div>
+            </div>
+
+            <p class="spam">Can't find it? Check your spam folder.</p>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="ct">L2 · Check your email</div>
+        <div class="cd">Holding state. Resend cooldown + change-email escape hatch.</div>
+      </div>
+    </div>
+
+    <!-- ════════════════ L3 · Choose org ════════════════ -->
+    <div class="frame">
+      <div class="phone">
+        <div class="screen" data-screen-label="L3 · Choose organisation">
+          <div class="status">
+            <span>9:41</span>
+            <span class="glyphs">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="#1E1B16"/><rect x="5" y="4" width="3" height="8" rx="1" fill="#1E1B16"/><rect x="10" y="1.5" width="3" height="10.5" rx="1" fill="#1E1B16"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#1E1B16" opacity="0.35"/></svg>
+              <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><path d="M8.5 2.2c2.4 0 4.6.9 6.2 2.4l1.2-1.3C14 1.3 11.4.2 8.5.2 5.6.2 3 1.3 1.1 3.3l1.2 1.3C3.9 3.1 6.1 2.2 8.5 2.2Z" fill="#1E1B16"/><path d="M8.5 5.4c1.5 0 2.9.6 3.9 1.6l1.2-1.3C12.3 4.4 10.5 3.6 8.5 3.6S4.7 4.4 3.4 5.7l1.2 1.3c1-1 2.4-1.6 3.9-1.6Z" fill="#1E1B16"/><path d="M8.5 8.6c.8 0 1.5.3 2 .9l-2 2.1-2-2.1c.5-.6 1.2-.9 2-.9Z" fill="#1E1B16"/></svg>
+              <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.6" y="0.6" width="21.6" height="11.8" rx="3" stroke="#1E1B16" stroke-opacity="0.45"/><rect x="2.4" y="2.4" width="16" height="8.2" rx="1.6" fill="#1E1B16"/><rect x="23.6" y="4" width="1.8" height="5" rx="0.9" fill="#1E1B16" fill-opacity="0.45"/></svg>
+            </span>
+          </div>
+
+          <div class="l3-top">
+            <div class="mini-wm">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 22v-8" stroke="#2C7A4E" stroke-width="2" stroke-linecap="round"/><path d="M12 15c0-3.3 0-5 2-7 1.4-1.4 3.6-1.5 4.6-1.5 0 2.1-.6 4.3-2.1 5.8C14.8 13.9 12 15 12 15Z" fill="#2C7A4E"/><path d="M12 16c0-2.7-.7-4-2.7-5.4C7.9 9.7 5.8 9.6 4.9 9.6c.1 1.9.9 3.6 2.3 4.7C8.8 15.4 12 16 12 16Z" fill="#5BB97F"/></svg>
+              OpenSauce
+            </div>
+            <span class="signout">Sign out</span>
+          </div>
+
+          <div class="l3-body">
+            <div class="greet">G'day, Sam 👋</div>
+            <div class="greet-sub">You're signed in. Pick where you're working today.</div>
+
+            <div class="org-list">
+              <div class="org current">
+                <span class="last-used">Last used</span>
+                <div class="mono" style="background:linear-gradient(135deg,#2C7A4E,#173A2B)">G</div>
+                <div class="info">
+                  <div class="nm">Greenfields Landscaping</div>
+                  <span class="pill crew">Field crew</span>
+                  <div class="meta">Hadlow depot · 12 in crew</div>
+                </div>
+                <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#2C7A4E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+
+              <div class="org">
+                <div class="mono" style="background:linear-gradient(135deg,#BE6E37,#8A4D24)">O</div>
+                <div class="info">
+                  <div class="nm">Oakhill Gardens Ltd</div>
+                  <span class="pill owner">Owner</span>
+                  <div class="meta">3 depots · 28 crew</div>
+                </div>
+                <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#C9C2B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+
+              <div class="org">
+                <div class="mono" style="background:linear-gradient(135deg,#7A736A,#44403A)">C</div>
+                <div class="info">
+                  <div class="nm">Cramer Nurseries</div>
+                  <span class="pill supplier">Supplier · read-only</span>
+                  <div class="meta">Tonbridge</div>
+                </div>
+                <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#C9C2B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+
+            <div class="create-org">
+              <div class="plus">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#2C7A4E" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <div class="ct">Create a new organisation</div>
+                <div class="cd">Set up your company in a couple of minutes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="ct">L3 · Choose organisation</div>
+        <div class="cd">One identity, many orgs. Last-used pre-highlighted; role-coded pills.</div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauce.CRM.Customer do
   # TODO_polish: destroy action should be owner-only. Non-owners should only be able
   # to hide a customer via an `active` flag, keeping the record intact for order history.

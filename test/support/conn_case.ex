@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauceWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauce.Accounts.Checks.ApiScopeCheck do
   @moduledoc """
   Policy check that verifies API key scopes when a request is made via an API key.

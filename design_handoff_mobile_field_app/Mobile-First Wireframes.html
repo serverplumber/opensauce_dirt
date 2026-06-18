@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>OpenSauce · Mobile-First Wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: 'Patrick Hand', system-ui, sans-serif;
+    background: #1a1410;
+    color: oklch(0.93 0.02 80);
+  }
+  /* Hide annotations when tweak says so */
+  .wf-phone-body[data-annotated="0"] [data-wf-anno] { display: none !important; }
+
+  /* Compact density compaction — knock down padding within rows */
+  .wf-phone-body[data-density="compact"] [data-dc-card] { font-size: 12px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="wireframe-ui.jsx"></script>
+<script type="text/babel" src="wireframe-screens.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "pattern": "tabs",
+  "persona": "field",
+  "density": "cozy",
+  "annotated": true,
+  "showFrame": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  const tweaks = {
+    pattern: t.pattern,
+    persona: t.persona,
+    density: t.density,
+    annotated: t.annotated,
+  };
+
+  // Intro / framing card shown above the canvas.
+  return (
+    <div>
+      <div style={{
+        maxWidth: 980,
+        margin: '0 auto',
+        padding: '36px 24px 8px',
+        fontFamily: '"Patrick Hand", cursive',
+      }}>
+        <div style={{ fontFamily: '"Caveat", cursive', fontSize: 42, fontWeight: 700, lineHeight: 1, color: 'oklch(0.93 0.02 80)' }}>
+          OpenSauce Dirt · mobile-first wireframes
+        </div>
+        <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: 'oklch(0.68 0.025 75)', marginTop: 8, lineHeight: 1.6, letterSpacing: 0.2 }}>
+          29 sketches across 7 areas. shifts & JobEvents are first-class (section G,
+          with staff/manager paths into per-person events). the stock chain is
+          volume-driven by amendments only — plants are a human call (section F1,
+          with selectable truck size + PurchaseOrderPrint handoff). engagements live
+          in More → Engagements (section D — catalog picker + inventory browser; small
+          pots come in flats, larger pots and amendments are individual). prices are
+          tappable (✎) to set/edit. text/Latin search throughout, metric throughout.
+        </div>
+        <div style={{ fontFamily: '"Patrick Hand", cursive', fontSize: 14, color: 'oklch(0.88 0.025 75)', marginTop: 14, lineHeight: 1.4 }}>
+          <strong>system:</strong> Caveat headers · Patrick Hand body · IBM Plex Mono notes ·
+          dark soil paper · leaf green accent · italic Latin · hand-drawn boxes
+        </div>
+        <div style={{ fontFamily: '"Patrick Hand", cursive', fontSize: 14, color: 'oklch(0.88 0.025 75)', marginTop: 6, lineHeight: 1.4 }}>
+          <strong>next:</strong> pick a direction per area → drill down on a flow (shift loop? schedule board? pickup?) → hi-fi mocks against real Cramer catalog data.
+        </div>
+      </div>
+
+      <DesignCanvas>
+        <DCSection
+          id="L"
+          title="L · Login & onboarding"
+          subtitle="Passwordless entry. Enter email → magic link → land on org selection. One identity can belong to several orgs (crew here, owner there), so the org picker is a first-class step before Today."
+        >
+          <DCArtboard id="L1" label="L1 · Sign in" width={360} height={820}>
+            <PhoneWrapped label="L1 · Sign in" note="passwordless · email → magic link · one big primary action" Screen={ScreenL1} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="L2" label="L2 · Check your email" width={360} height={820}>
+            <PhoneWrapped label="L2 · Check your email" note="holding screen · polls for the tap · resend + change-email escape hatches" Screen={ScreenL2} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="L3" label="L3 · Choose organisation" width={360} height={820}>
+            <PhoneWrapped label="L3 · Choose org" note="one identity, many orgs · most-recent pre-highlighted · create org (the default when you have none)" Screen={ScreenL3} hideNav tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="H"
+          title="H · Customer creation"
+          subtitle="A customer is contact details + gardens. Work happens at a garden, never at the customer abstractly, so every customer needs at least one. Billing isn't a separate address field — exactly one garden is flagged ★ as the billing address."
+        >
+          <DCArtboard id="H1" label="H1 · New customer" width={360} height={820}>
+            <PhoneWrapped label="H1 · New customer" note="contact + gardens · first garden auto-flagged ★ billing · can't save with zero gardens" Screen={ScreenH1} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="H2" label="H2 · Add garden" width={360} height={820}>
+            <PhoneWrapped label="H2 · Add garden" note="named place + address + access · 'use as billing' toggle moves the single ★" Screen={ScreenH2} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="H3" label="H3 · Gardens & billing" width={360} height={820}>
+            <PhoneWrapped label="H3 · Gardens & billing" note="single-select radio across gardens · exactly one is the billing address" Screen={ScreenH3} hideNav tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="I"
+          title="I · Customers (list + summary)"
+          subtitle="The Customers tab and the screen behind it. The summary is the launch pad for work: gardens (with the ★ billing flag), live engagements, balance — and a sticky 'new engagement' so starting a contract is one tap."
+        >
+          <DCArtboard id="I1" label="I1 · Customers list" width={360} height={820}>
+            <PhoneWrapped label="I1 · Customers list" note="search hits gardens + postcodes · right rail shows owing / active count" Screen={ScreenI1} activeTab={2} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="I2" label="I2 · Customer summary" width={360} height={820}>
+            <PhoneWrapped label="I2 · Customer summary" note="contact + balance · gardens w/ ★ billing · engagements · sticky '+ new engagement' → D1" Screen={ScreenI2} hideNav tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="K"
+          title="K · Job creation (planned)"
+          subtitle="The foundational create flow — ad-hoc (section J) is its unplanned special case. A job has a TYPE (client work / shift / internal). For client work an optional engagement fills in the customer + garden, a service category is required, and addressable categories require a garden. Then schedule, crew, and a live cost estimate."
+        >
+          <DCArtboard id="K1" label="K1 · Context (type, engagement, category)" width={360} height={900}>
+            <PhoneWrapped label="K1 · New job · context" note="type drives fields · engagement sets customer + garden · category required" Screen={ScreenK1} hideNav height={900} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="K2" label="K2 · Schedule & crew" width={360} height={960}>
+            <PhoneWrapped label="K2 · Schedule & crew" note="date + duration + tentative crew → live cost estimate before anyone's on site" Screen={ScreenK2} hideNav height={960} tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="J"
+          title="J · Ad-hoc job (unplanned visit)"
+          subtitle="From Jobs → '+ ad-hoc'. Creates a job plus an arrival OR departure event. Arrival opens an active job you close normally before the next; departure logs a finished visit retrospectively (timespan + materials) in one screen. Gated — only available when no job is active (one job at a time)."
+        >
+          <DCArtboard id="J1" label="J1 · Entry + gate" width={360} height={820}>
+            <PhoneWrapped label="J1 · Entry + gate" note="'+ ad-hoc' lives on Jobs · greys out while a job is live" Screen={ScreenJ1} activeTab={1} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="J2" label="J2 · Arrival path" width={360} height={820}>
+            <PhoneWrapped label="J2 · Ad-hoc · arrival" note="garden + description + switch · arrival → becomes the active job, close it like B4" Screen={ScreenJ2} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="J3" label="J3 · Departure path" width={360} height={1040}>
+            <PhoneWrapped label="J3 · Ad-hoc · departure" note="everything in one screen · timespan + materials + supplies · save & done, no open job" Screen={ScreenJ3} hideNav height={1040} tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="A"
+          title="A · Home / Dashboard"
+          subtitle="First thing a field worker sees when they open the app. Today is local. Yesterday is a tap away. Tomorrow is two."
+        >
+          <DCArtboard id="A1" label="A1 · Today-first feed" width={360} height={820}>
+            <PhoneWrapped label="A1 · Today-first" note="day-banner → live job → up next → 'needs you' inbox" Screen={ScreenA1} activeTab={0} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="A4" label="A4 · Inbox feed" width={360} height={820}>
+            <PhoneWrapped label="A4 · Inbox feed" note="every event in one timeline · day dividers" Screen={ScreenA4} activeTab={0} tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="B"
+          title="B · Jobs (list + detail)"
+          subtitle="The unit of work. Crew lives in this. Three list paradigms + the detail screen that has to support live work."
+        >
+          <DCArtboard id="B1" label="B1 · Cards by date" width={360} height={820}>
+            <PhoneWrapped label="B1 · Cards by date" note="grouped by day · status pill + accent stripe" Screen={ScreenB1} activeTab={1} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="B2" label="B2 · Agenda timeline" width={360} height={820}>
+            <PhoneWrapped label="B2 · Agenda timeline" note="vertical ticks · day strip in header" Screen={ScreenB2} activeTab={1} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="B3" label="B3 · Map + sheet" width={360} height={820}>
+            <PhoneWrapped label="B3 · Map + sheet" note="map up top · bottom sheet of nearest-first list" Screen={ScreenB3} activeTab={1} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="B4" label="B4 · Job detail" width={360} height={820}>
+            <PhoneWrapped label="B4 · Job detail" note="live timer hero · quick-add row · 'mark complete' CTA" Screen={ScreenB4} activeTab={1} tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="G"
+          title="G · Shifts & JobEvents (the field workflow)"
+          subtitle="The data-capture spine: start a shift → arrive at job (distance) → staff leave / manager close-out / log per-person events → end of shift. G3 is manager-only (David: 'staff just leaves, manager enters what was done and used'). G5/G6 are the two paths into a per-person JobEvent."
+        >
+          <DCArtboard id="G1" label="G1 · Start shift" width={360} height={820}>
+            <PhoneWrapped label="G1 · Start shift" note="depart depot (odo) OR check-in at greenhouse · two paths" Screen={ScreenG1} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="G2" label="G2 · Arrive at job" width={360} height={820}>
+            <PhoneWrapped label="G2 · Arrive at job" note="fast: odo + crew confirm + optional note" Screen={ScreenG2} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="G3" label="G3 · Close out (manager)" width={360} height={1100}>
+            <PhoneWrapped label="G3 · Close out (manager)" note="staff just leaves · manager logs distance, what was planted, materials used, on-site storage" Screen={ScreenG3} hideNav tall tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="G4" label="G4 · End-of-shift summary" width={360} height={820}>
+            <PhoneWrapped label="G4 · Shift summary" note="3 KPIs · stops list · distance log · 'needs review' handoff" Screen={ScreenG4} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="G5" label="G5 · Crew member leaving" width={360} height={820}>
+            <PhoneWrapped label="G5 · Crew leaving (staff)" note="one confirm · creates JobEvent with just this person · rate locked at this moment" Screen={ScreenG5} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="G6" label="G6 · Manager event entry" width={360} height={820}>
+            <PhoneWrapped label="G6 · Manager event entry" note="pick crew · event type chips · time picker · preview before save" Screen={ScreenG6} hideNav tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="E"
+          title="E · Schedule (first-class flow)"
+          subtitle="Placing jobs on the calendar is the planner's home base. Every move feeds the PO engine — schedule → demand → POs → pickups."
+        >
+          <DCArtboard id="E1" label="E1 · Week board" width={360} height={820}>
+            <PhoneWrapped label="E1 · Week board" note="crew × day grid · drag jobs · unscheduled queue" Screen={ScreenE1} activeTab={4} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="E2" label="E2 · Schedule a job" width={360} height={820}>
+            <PhoneWrapped label="E2 · Schedule a job" note="slot + crew + live materials check · auto-drafts PO if short" Screen={ScreenE2} hideNav tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="C"
+          title="C · Inventory"
+          subtitle="Phone needs three answers: do I have it (by Latin)? where is it? how do I count it? Tables become search + cards."
+        >
+          <DCArtboard id="C1" label="C1 · Categorised list" width={360} height={820}>
+            <PhoneWrapped label="C1 · Categorised list" note="low-stock section pinned · search shortcut top-right" Screen={ScreenC1} activeTab={4} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="C2" label="C2 · Latin search" width={360} height={820}>
+            <PhoneWrapped label="C2 · Latin search" note="autocomplete on Latin · cultivar shown · common name beneath" Screen={ScreenC2} activeTab={4} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="C3" label="C3 · Material detail" width={360} height={820}>
+            <PhoneWrapped label="C3 · Material detail" note="3 KPIs > tables · 3 verbs (order/receive/adjust)" Screen={ScreenC3} activeTab={4} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="C4" label="C4 · Stock count flow" width={360} height={820}>
+            <PhoneWrapped label="C4 · Stock count" note="single-item · big +/- · 'save & next'" Screen={ScreenC4} hideNav tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="F"
+          title="F · Stock flow (volume-driven)"
+          subtitle="Per David: rollups are by truck volume, not # of jobs in a window. F1 = supply-run builder (amendments auto-volume; plants need a human call); F2 = PO drafts ready to print via PurchaseOrderPrint; F3 = nursery pickup as a job-like ticklist."
+        >
+          <DCArtboard id="F1" label="F1 · Supply run" width={360} height={1340}>
+            <PhoneWrapped label="F1 · Supply run" note="truck size picker · amendments-only gauge · plants picked by a human · generate → PurchaseOrderPrint" Screen={ScreenF1} activeTab={3} height={1100} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="F2" label="F2 · PO drafts" width={360} height={820}>
+            <PhoneWrapped label="F2 · Generated PO drafts" note="auto-grouped per supplier · review then send all" Screen={ScreenF2} activeTab={3} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="F3" label="F3 · Nursery pickup" width={360} height={820}>
+            <PhoneWrapped label="F3 · Nursery pickup" note="pickup = a job · ticklist while loading · report short / substitute" Screen={ScreenF3} activeTab={3} tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="D"
+          title="D · Engagements & material editing"
+          subtitle="No manual purchasing — purchases are tied to jobs. An Engagement is a meta-job (contract w/ a customer for a garden, has scope, signature, prices, planned materials, child jobs). Reached via More → Engagements (not a top-level owner tab). D5 is the fast first-touch capture (scope note + photos + loose budget + due date — the real work happens later); D1 is the detail; material editing splits into D2 (catalog), D3 (per-job), D4 (browse on-hand inventory)."
+        >
+          <DCArtboard id="D5" label="D5 · New engagement (fast capture)" width={360} height={940}>
+            <PhoneWrapped label="D5 · New engagement" note="fast first-touch · scope note + a few photos + loose budget + due date · real work happens later" Screen={ScreenD5} hideNav height={920} tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="D1" label="D1 · Engagement detail" width={360} height={920}>
+            <PhoneWrapped label="D1 · Engagement detail" note="contract overview · ✓ icon = signed · first-class image gallery · prices ✎ tap to set" Screen={ScreenD1} activeTab={4} tall tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="D2" label="D2 · Engagement materials (catalog)" width={360} height={920}>
+            <PhoneWrapped label="D2 · Plan materials · catalog" note="catalog source · −f/−1 count +1/+f stepper · prices ✎ · 'browse inventory →' opens D4" Screen={ScreenD2} hideNav tall tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="D3" label="D3 · Job materials" width={360} height={820}>
+            <PhoneWrapped label="D3 · Job materials" note="picker inside a job · −f/−1/+1/+f for 9cm, ±1 for 30cm+/amendments" Screen={ScreenD3} hideNav tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="D4" label="D4 · Browse inventory" width={360} height={920}>
+            <PhoneWrapped label="D4 · Browse inventory → garden" note="in-stock items only · '+ to garden' adds to engagement's material list" Screen={ScreenD4} hideNav tall tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Navigation">
+          <TweakRadio
+            label="Pattern"
+            value={t.pattern}
+            onChange={(v) => setTweak('pattern', v)}
+            options={[
+              { value: 'tabs', label: 'Tabs' },
+              { value: 'drawer', label: 'Drawer' },
+              { value: 'tiles', label: 'Tiles' },
+            ]}
+          />
+          <TweakRadio
+            label="Persona"
+            value={t.persona}
+            onChange={(v) => setTweak('persona', v)}
+            options={[
+              { value: 'field', label: 'Field crew' },
+              { value: 'admin', label: 'Owner' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection label="Display">
+          <TweakRadio
+            label="Density"
+            value={t.density}
+            onChange={(v) => setTweak('density', v)}
+            options={[
+              { value: 'compact', label: 'Tight' },
+              { value: 'cozy', label: 'Cozy' },
+              { value: 'roomy', label: 'Roomy' },
+            ]}
+          />
+          <TweakToggle
+            label="Show annotations"
+            value={t.annotated}
+            onChange={(v) => setTweak('annotated', v)}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>

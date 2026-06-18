@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauce.Test.AshHelpers do
   @moduledoc """
   Thin wrappers around Ash actions to consistently pass `actor` and optional loads.

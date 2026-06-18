@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauceWeb.HtmlHelpers do
   @moduledoc """
   Helper functions for formatting and displaying data in HTML templates.

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauce.Types.Unit do
   @moduledoc """
   Represents measurement units with conversion and formatting capabilities.

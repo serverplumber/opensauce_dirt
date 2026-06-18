@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauce.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications

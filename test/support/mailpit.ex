@@ -1,3 +1,6 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
 defmodule OpenSauce.Test.Mailpit do
   @moduledoc """
   Helper for interacting with Mailpit's REST API during e2e tests.
