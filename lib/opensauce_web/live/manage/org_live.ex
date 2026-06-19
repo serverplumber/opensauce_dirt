@@ -648,7 +648,7 @@ defmodule OpenSauceWeb.OrgLive do
         </div>
       </div>
 
-      <.form for={@form} id="org-form" phx-change="validate_org" phx-submit="save_org" style="padding:16px 16px 160px;display:flex;flex-direction:column;gap:20px;">
+      <.form for={@form} id="org-form" phx-change="validate_org" phx-submit="save_org" style="padding:16px 16px 96px;display:flex;flex-direction:column;gap:20px;">
 
         <%!-- Back --%>
         <div style="padding:4px 0;">
@@ -1133,14 +1133,11 @@ defmodule OpenSauceWeb.OrgLive do
           </div>
         </div>
 
-        <%!-- FAB save button --%>
-      </.form>
-
-      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));">
-        <.glow_button type="submit" form="org-form" valid={true}>
+        <.glow_button type="submit" valid={true}>
           Save changes
         </.glow_button>
-      </div>
+
+      </.form>
     </div>
     """
   end
