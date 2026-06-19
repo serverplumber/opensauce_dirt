@@ -46,24 +46,31 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
                 </p>
               </div>
             </div>
+            <.link patch={~p"/manage/purchasing/suppliers/#{s.id}/edit"} style="flex-shrink:0;">
+              <button
+                type="button"
+                ontouchstart=""
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
+            </.link>
           </div>
-          <div style="display:flex;gap:8px;margin-top:12px;border-top:1px solid rgba(52,48,37,0.58);padding-top:10px;">
-            <.link navigate={~p"/manage/purchasing/suppliers/#{s.id}/import"} style="flex:1;">
+          <div style="margin-top:12px;border-top:1px solid rgba(52,48,37,0.58);padding-top:10px;">
+            <.link navigate={~p"/manage/purchasing/suppliers/#{s.id}/import"}>
               <button
                 type="button"
                 ontouchstart=""
                 style="width:100%;background:rgba(52,48,37,0.5);border:1px solid rgba(52,48,37,0.58);border-radius:10px;padding:8px;font-size:13px;font-weight:600;color:#9A9384;cursor:pointer;"
               >
                 Import catalog
-              </button>
-            </.link>
-            <.link patch={~p"/manage/purchasing/suppliers/#{s.id}/edit"} style="flex-shrink:0;">
-              <button
-                type="button"
-                ontouchstart=""
-                style="background:rgba(52,48,37,0.5);border:1px solid rgba(52,48,37,0.58);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;color:#F4EFE2;cursor:pointer;"
-              >
-                Edit
               </button>
             </.link>
           </div>

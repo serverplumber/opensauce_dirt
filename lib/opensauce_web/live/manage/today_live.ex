@@ -283,9 +283,7 @@ defmodule OpenSauceWeb.TodayLive do
         phx-click="fab_manager_action"
         title="New job"
       >
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M12 5v14M5 12h14" stroke="#0C1F15" stroke-width="2.4" stroke-linecap="round" />
-        </svg>
+        <.add_job_icon />
       </button>
 
       <%!-- Place sheet --%>

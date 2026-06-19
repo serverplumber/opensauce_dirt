@@ -283,6 +283,7 @@ button {
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 20px rgba(84,181,126,0.30);
+  color: #0C1F15;
   cursor: pointer;
   z-index: 5;
   transition: transform .12s ease, background .12s ease;

@@ -999,6 +999,15 @@ defmodule OpenSauceWeb.Components.Core do
   defp member_subtitle(%{role: :manager}), do: "Manager"
   defp member_subtitle(_), do: "Staff"
 
+  def add_job_icon(assigns) do
+    ~H"""
+    <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      <path stroke-linecap="round" stroke-width="1.75" d="M12 11v6M9 14h6"/>
+    </svg>
+    """
+  end
+
   defp member_gradient(role) when role in [:owner, :manager],
     do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
 

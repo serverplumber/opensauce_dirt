@@ -32,11 +32,13 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
       <div>
         <label class="dark-label">Contact name <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
         <input
+          id="supplier-contact-name"
           class="dark-input"
           type="text"
           name="supplier[contact_name]"
           value={@form[:contact_name].value || ""}
           placeholder="Jane Smith"
+          phx-hook="TitleCase"
         />
       </div>
 
@@ -55,11 +57,13 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
         <div>
           <label class="dark-label">Phone</label>
           <input
+            id="supplier-contact-phone"
             class="dark-input"
             type="tel"
             name="supplier[contact_phone]"
             value={@form[:contact_phone].value || ""}
             placeholder="+1 555 000 0000"
+            phx-hook="FormatPhone"
           />
         </div>
       </div>
@@ -76,9 +80,11 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           phx-click="add_address"
           phx-target={@myself}
           ontouchstart=""
-          style="font-size:13px;color:#54B57E;background:none;border:none;padding:0;cursor:pointer;"
+          style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
         >
-          + Add
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
         </button>
       </div>
 
@@ -88,11 +94,13 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
             <div style="flex:1;">
               <label class="dark-label">Label <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
               <input
+                id={f_addr[:name].id}
                 class="dark-input"
                 type="text"
                 name={f_addr[:name].name}
                 value={f_addr[:name].value || ""}
                 placeholder="Pickup location, Head office…"
+                phx-hook="TitleCase"
               />
             </div>
             <button
@@ -120,38 +128,42 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
             />
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <label class="dark-label">City</label>
               <input
                 class="dark-input"
                 type="text"
+                id={f_addr[:city].id}
                 name={f_addr[:city].name}
                 value={f_addr[:city].value || ""}
                 placeholder="Hadlow"
+                phx-hook="TitleCase"
               />
             </div>
-            <div>
-              <label class="dark-label">Province / County</label>
-              <input
-                class="dark-input"
-                type="text"
-                name={f_addr[:province].name}
-                value={f_addr[:province].value || ""}
-                placeholder="Kent"
-              />
-            </div>
-          </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
             <div>
               <label class="dark-label">Postal code</label>
               <input
                 class="dark-input"
                 type="text"
+                id={f_addr[:zip].id}
                 name={f_addr[:zip].name}
                 value={f_addr[:zip].value || ""}
-                placeholder="TN11 0AA"
+                placeholder="A1A 1A1"
+                phx-hook="FormatPostal"
+              />
+            </div>
+            <div>
+              <label class="dark-label">Province</label>
+              <input
+                class="dark-input"
+                type="text"
+                id={f_addr[:province].id}
+                name={f_addr[:province].name}
+                value={f_addr[:province].value || ""}
+                placeholder="Kent"
+                phx-hook="TitleCase"
               />
             </div>
             <div>
@@ -159,9 +171,11 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
               <input
                 class="dark-input"
                 type="text"
+                id={f_addr[:country].id}
                 name={f_addr[:country].name}
                 value={f_addr[:country].value || ""}
                 placeholder="UK"
+                phx-hook="TitleCase"
               />
             </div>
           </div>
@@ -169,7 +183,7 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
       </.inputs_for>
 
       <p :if={(@form.source.forms[:addresses] || []) == []} style="font-size:13px;color:#6E675A;text-align:center;padding:8px 0;">
-        No addresses — tap + Add to add one
+        No addresses yet
       </p>
 
       <div style="height:1px;background:rgba(52,48,37,0.58);" />
@@ -185,7 +199,7 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
       </div>
 
       <div style="margin-top:4px;">
-        <.glow_button type="submit" valid={true}>
+        <.glow_button type="submit" valid={form_valid?(@form)}>
           {if @supplier, do: "Save changes", else: "Add supplier"}
         </.glow_button>
       </div>
@@ -225,6 +239,11 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
     end
+  end
+
+  defp form_valid?(form) do
+    val = form[:name].value
+    val != nil and val != ""
   end
 
   defp assign_form(%{assigns: %{supplier: supplier, current_member: member}} = socket) do

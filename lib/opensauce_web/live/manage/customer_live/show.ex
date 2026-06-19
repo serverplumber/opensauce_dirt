@@ -142,11 +142,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                     {Map.get(@open_jobs_by_garden, addr.id)} open
                   </span>
                   <.link navigate={~p"/manage/jobs/new?garden_id=#{addr.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
-                    <div style="width:48px;border-radius:10px;background:#54B57E;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#0C1F15;">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                      </svg>
-                      <span style="font-size:10px;font-weight:700;letter-spacing:0.01em;">+ Job</span>
+                    <div style="width:40px;height:40px;border-radius:10px;background:#54B57E;display:flex;align-items:center;justify-content:center;color:#0C1F15;">
+                      <.add_job_icon />
                     </div>
                   </.link>
                 </div>
@@ -189,11 +186,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                     <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>
                   </div>
                   <.link navigate={~p"/manage/jobs/new?engagement_id=#{e.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
-                    <div style="width:48px;border-radius:10px;background:#54B57E;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#0C1F15;">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                      </svg>
-                      <span style="font-size:10px;font-weight:700;letter-spacing:0.01em;">+ Job</span>
+                    <div style="width:40px;height:40px;border-radius:10px;background:#54B57E;display:flex;align-items:center;justify-content:center;color:#0C1F15;">
+                      <.add_job_icon />
                     </div>
                   </.link>
                 </div>
@@ -204,13 +198,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
         <%!-- jobs --%>
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Jobs</span>
-            <.link navigate={~p"/manage/jobs/new?customer_ref=#{@customer.reference}"} ontouchstart="">
-              <button type="button" style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-              </button>
-            </.link>
           </div>
           <div :if={Enum.empty?(@all_jobs)}
             style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
