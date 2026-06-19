@@ -75,10 +75,16 @@ defmodule OpenSauceWeb.JobLive.New do
             eng.customer && eng.customer.reference == customer_ref
           end)
 
+        customer_gardens =
+          Enum.filter(socket.assigns.all_gardens, fn g ->
+            g.customer && g.customer.reference == customer_ref
+          end)
+
         socket
         |> assign(:all_engagements, customer_engagements)
         |> assign(:filtered_engagements, customer_engagements)
-        |> assign(:engagement_enabled, customer_engagements != [])
+        |> assign(:all_gardens, customer_gardens)
+        |> assign(:engagement_enabled, false)
       else
         socket
       end

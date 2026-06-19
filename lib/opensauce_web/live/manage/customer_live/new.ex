@@ -149,6 +149,7 @@ defmodule OpenSauceWeb.CustomerLive.New do
               name={@form[:phone].name}
               id={@form[:phone].id}
               value={@form[:phone].value || ""}
+              phx-hook="FormatPhone"
               phx-debounce="300"
             />
             <span :for={msg <- @form[:phone].errors} class="dark-field-error">{elem(msg, 0)}</span>
@@ -159,11 +160,10 @@ defmodule OpenSauceWeb.CustomerLive.New do
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span class="dark-label" style="margin-bottom:0;">Gardens</span>
               <button type="button" phx-click="open_garden_sheet"
-                style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
                 </svg>
-                Add
               </button>
             </div>
 
@@ -267,19 +267,19 @@ defmodule OpenSauceWeb.CustomerLive.New do
               <label class="dark-label" for="draft-street">Street</label>
               <input class="dark-input" type="text" name="garden[street]" id="draft-street" value={@draft["street"]} />
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <label class="dark-label" for="draft-city">City</label>
-                <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} />
+                <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} phx-hook="TitleCase" />
+              </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label class="dark-label" for="draft-zip">Postal code</label>
+                <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} phx-hook="FormatPostal" />
               </div>
               <div>
                 <label class="dark-label" for="draft-province">Province</label>
-                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} />
+                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} phx-hook="TitleCase" />
               </div>
-            </div>
-            <div>
-              <label class="dark-label" for="draft-zip">Postal code</label>
-              <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} />
             </div>
             <div>
               <label class="dark-label" for="draft-notes">Notes</label>
@@ -407,7 +407,9 @@ defmodule OpenSauceWeb.CustomerLive.New do
       socket.assigns.gardens
       |> Enum.with_index()
       |> Enum.map(fn {g, i} ->
-        Map.put(g, "is_billing", to_string(i == socket.assigns.billing_index))
+        g
+        |> Map.put("is_billing", to_string(i == socket.assigns.billing_index))
+        |> nilify_map_values()
       end)
 
     full_params = Map.put(params, "garden_addresses", gardens_with_billing)
@@ -470,4 +472,8 @@ defmodule OpenSauceWeb.CustomerLive.New do
   end
 
   defp ash_error_summary(_), do: "Could not save customer."
+
+  defp nilify(""), do: nil
+  defp nilify(s), do: s
+  defp nilify_map_values(map), do: Map.new(map, fn {k, v} -> {k, nilify(v)} end)
 end

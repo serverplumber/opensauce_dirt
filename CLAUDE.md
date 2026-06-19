@@ -124,6 +124,15 @@ Buttons: `.seg-tab` / `.seg-tab--on`, `.leaf-btn`, `.btn-glow` / `.btn-glow--on`
 
 Scrollbars: `.mobile-scroll`, `.dark-screen` — thin dark scrollbar, leaf green on hover.
 
+### Icon conventions
+
+**Edit action** — always use the pencil-on-square (not a naked pencil):
+```html
+<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+</svg>
+```
+
 ### Glow button + validation pattern
 
 The `<.glow_button>` component (`core.ex`) takes a `valid` boolean. When `false` (default): no animation, hover still shows a glow. When `true`: pulsing `glow-pulse` animation kicks in to call the user to action.
@@ -170,6 +179,30 @@ Never show cost estimates or time estimates in job list cards — those belong o
 - **TailwindFormatter** orders CSS classes
 - **Phoenix.LiveView.HTMLFormatter** formats HEEx templates
 - All four run via `mix format`
+
+## Form Input Formatting
+
+Client-side input hooks live in `assets/js/hooks/formatters.js` and are registered in `assets/js/hooks/index.js`. Attach them with `phx-hook="HookName"` on any `dark-input`.
+
+| Hook | Field types | Behaviour |
+|---|---|---|
+| `FormatPhone` | `type="tel"` phone fields | Strips non-digits, formats to `(xxx) xxx-xxxx` on every `input` event; truncates at 10 digits. |
+| `FormatPostal` | `type="text"` postal code | Strips spaces, uppercases, inserts space after position 3 → `A1A 1A1`; max 7 chars. Canadian only. |
+| `TitleCase` | `type="text"` city, country | Capitalises first letter of each word on `blur`. Fires once when the user leaves the field. |
+
+**HTML `type` attributes** drive the mobile keyboard:
+- `type="tel"` — numeric dial pad (phone fields)
+- `type="email"` — email keyboard with `@` key
+- `type="url"` — URL keyboard with `.com` shortcut
+- `type="number"` — numeric keyboard (rates, amounts)
+
+**Server-side nil handling** — address and contact fields are all `allow_nil? true` on the resource. The `nilify_map_values/1` helper (`org_live.ex`) converts empty strings to `nil` before passing address params to CRM functions. Apply the same pattern whenever you collect address or optional text params from a form.
+
+```elixir
+defp nilify(""), do: nil
+defp nilify(s), do: s
+defp nilify_map_values(map), do: Map.new(map, fn {k, v} -> {k, nilify(v)} end)
+```
 
 ## Commit Convention
 

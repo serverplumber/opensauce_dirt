@@ -95,104 +95,10 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
               name={@form[:phone].name}
               value={@form[:phone].value}
               class="dark-input"
+              phx-hook="FormatPhone"
               style="width:100%;"
             />
           </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
-              Garden Addresses
-            </p>
-            <button
-              type="button"
-              phx-click="add_garden_address"
-              phx-target={@myself}
-              ontouchstart=""
-              style="background:none;border:1.5px solid rgba(52,48,37,0.58);border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:#9A9384;cursor:pointer;"
-            >
-              + Add address
-            </button>
-          </div>
-
-          <.inputs_for :let={f_garden} field={@form[:garden_addresses]}>
-            <div style="position:relative;background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:16px;">
-              <input type="hidden" name={f_garden[:is_garden].name} value="true" />
-              <input type="hidden" name={f_garden[:is_billing].name} value="false" />
-              <input type="hidden" name={f_garden[:is_indoor].name} value="false" />
-              <button
-                type="button"
-                phx-click="remove_garden_address"
-                phx-value-path={f_garden.name}
-                phx-target={@myself}
-                ontouchstart=""
-                style="position:absolute;top:12px;right:12px;background:none;border:none;color:#E87E7E;font-size:16px;line-height:1;cursor:pointer;padding:4px;"
-              >
-                ×
-              </button>
-              <div style="display:flex;flex-direction:column;gap:10px;">
-                <div>
-                  <p class="dark-label">Name</p>
-                  <input
-                    type="text"
-                    id={f_garden[:name].id}
-                    name={f_garden[:name].name}
-                    value={f_garden[:name].value}
-                    placeholder="e.g. North Field"
-                    class="dark-input"
-                    style="width:100%;"
-                  />
-                </div>
-                <div>
-                  <p class="dark-label">Street</p>
-                  <input
-                    type="text"
-                    id={f_garden[:street].id}
-                    name={f_garden[:street].name}
-                    value={f_garden[:street].value}
-                    class="dark-input"
-                    style="width:100%;"
-                  />
-                </div>
-                <div style="display:flex;gap:10px;">
-                  <div style="flex:1;">
-                    <p class="dark-label">City</p>
-                    <input
-                      type="text"
-                      id={f_garden[:city].id}
-                      name={f_garden[:city].name}
-                      value={f_garden[:city].value}
-                      class="dark-input"
-                      style="width:100%;"
-                    />
-                  </div>
-                  <div style="flex:1;">
-                    <p class="dark-label">Province</p>
-                    <input
-                      type="text"
-                      id={f_garden[:province].id}
-                      name={f_garden[:province].name}
-                      value={f_garden[:province].value}
-                      class="dark-input"
-                      style="width:100%;"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <p class="dark-label">Postal Code</p>
-                  <input
-                    type="text"
-                    id={f_garden[:zip].id}
-                    name={f_garden[:zip].name}
-                    value={f_garden[:zip].value}
-                    class="dark-input"
-                    style="width:100%;"
-                  />
-                </div>
-              </div>
-            </div>
-          </.inputs_for>
         </div>
 
         <button
@@ -216,16 +122,6 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
   @impl true
   def handle_event("validate", %{"customer" => customer_params}, socket) do
     {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, customer_params))}
-  end
-
-  def handle_event("add_garden_address", _params, socket) do
-    form = AshPhoenix.Form.add_form(socket.assigns.form, [:garden_addresses])
-    {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_event("remove_garden_address", %{"path" => path}, socket) do
-    form = AshPhoenix.Form.remove_form(socket.assigns.form, path)
-    {:noreply, assign(socket, form: form)}
   end
 
   def handle_event("save", %{"customer" => customer_params}, socket) do
@@ -261,31 +157,13 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
         AshPhoenix.Form.for_update(customer, :update,
           as: "customer",
           actor: member,
-          tenant: member.organisation_id,
-          forms: [
-            garden_addresses: [
-              type: :list,
-              data: customer.garden_addresses || [],
-              resource: OpenSauce.CRM.Address,
-              create_action: :create,
-              update_action: :update
-            ]
-          ]
+          tenant: member.organisation_id
         )
       else
         AshPhoenix.Form.for_create(OpenSauce.CRM.Customer, :create,
           as: "customer",
           actor: member,
-          tenant: member.organisation_id,
-          forms: [
-            garden_addresses: [
-              type: :list,
-              data: [],
-              resource: OpenSauce.CRM.Address,
-              create_action: :create,
-              update_action: :update
-            ]
-          ]
+          tenant: member.organisation_id
         )
       end
 

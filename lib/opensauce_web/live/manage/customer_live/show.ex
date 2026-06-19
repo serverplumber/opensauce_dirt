@@ -30,7 +30,11 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           </button>
         </.link>
         <.link patch={~p"/manage/customers/#{@customer.reference}/edit"}>
-          <button type="button" style="font-size:13.5px;font-weight:700;color:#6E675A;background:none;border:none;cursor:pointer;padding:4px;" ontouchstart="">Edit</button>
+          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
         </.link>
       </div>
 
@@ -96,9 +100,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Gardens</span>
             <button type="button" phx-click="open_garden_sheet" ontouchstart=""
-              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-              Add
+              style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
             </button>
           </div>
           <div :if={Enum.empty?(@customer.garden_addresses)}
@@ -158,9 +161,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
             <span class="dark-label" style="margin-bottom:0;">Engagements</span>
             <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
               <button type="button" ontouchstart=""
-                style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                Add
+                style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
               </button>
             </.link>
           </div>
@@ -202,15 +204,20 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
         <%!-- jobs --%>
         <div>
-          <div style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Jobs</span>
+            <.link navigate={~p"/manage/jobs/new?customer_ref=#{@customer.reference}"} ontouchstart="">
+              <button type="button" style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+              </button>
+            </.link>
           </div>
           <div :if={Enum.empty?(@all_jobs)}
             style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
             No jobs yet
           </div>
           <div :if={not Enum.empty?(@all_jobs)} style="display:flex;flex-direction:column;gap:8px;">
-            <.link :for={job <- @all_jobs} navigate={~p"/manage/jobs/#{job.id}"} style="display:block;text-decoration:none;">
+            <.link :for={job <- @all_jobs} navigate={job_url(job.id, @customer.reference)} style="display:block;text-decoration:none;">
               <div class={"jcard#{if job.status == :in_progress, do: " live", else: ""}"}>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <div style="flex:1;min-width:0;">
@@ -273,7 +280,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
               </div>
               <div>
                 <label class="dark-label" for="draft-province">Province</label>
-                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} />
+                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} phx-hook="TitleCase" />
               </div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:2px;">
                 <span class="dark-label" style="margin:0;">Billing</span>
@@ -297,24 +304,34 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         </div>
       </div>
 
-    <%!-- Edit customer modal --%>
-    <.modal
-      :if={@live_action == :edit}
-      id="customer-modal"
-      title="Edit Customer"
-      max_width="max-w-2xl"
-      show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
-    >
-      <.live_component
-        module={OpenSauceWeb.CustomerLive.FormComponent}
-        id={@customer.id}
-        current_member={@current_member}
-        action={@live_action}
-        customer={@customer}
-        patch={~p"/manage/customers/#{@customer.reference}"}
-      />
-    </.modal>
+    <%!-- Edit customer sheet --%>
+    <div :if={@live_action == :edit}
+      style="position:fixed;inset:0;z-index:60;"
+      role="dialog" aria-modal="true" aria-label="Edit customer">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+        phx-click={JS.patch(~p"/manage/customers/#{@customer.reference}")}></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
+          <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">Edit Customer</h3>
+          <button type="button" phx-click={JS.patch(~p"/manage/customers/#{@customer.reference}")} ontouchstart=""
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));">
+          <.live_component
+            module={OpenSauceWeb.CustomerLive.FormComponent}
+            id={@customer.id}
+            current_member={@current_member}
+            action={@live_action}
+            customer={@customer}
+            patch={~p"/manage/customers/#{@customer.reference}"}
+          />
+        </div>
+      </div>
+    </div>
 
     <%!-- Engagement materials modal --%>
     <.modal
@@ -500,6 +517,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         existing ++ [Map.put(params, "is_garden", "true")]
       end
 
+    updated_list = Enum.map(updated_list, &nilify_map_values/1)
+
     result =
       customer
       |> Ash.Changeset.for_update(:update, %{garden_addresses: updated_list},
@@ -642,4 +661,13 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp job_category_label(:winterization), do: "Winterization"
   defp job_category_label(:maintenance), do: "Maintenance"
   defp job_category_label(other), do: to_string(other)
+
+  defp job_url(job_id, customer_ref) do
+    return = URI.encode_www_form("/manage/customers/#{customer_ref}")
+    "/manage/jobs/#{job_id}?return_to=#{return}"
+  end
+
+  defp nilify(""), do: nil
+  defp nilify(s), do: s
+  defp nilify_map_values(map), do: Map.new(map, fn {k, v} -> {k, nilify(v)} end)
 end
