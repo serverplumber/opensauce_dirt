@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -26,27 +26,39 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"year_round\"",
+      "default": "false",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "season",
-      "type": "text"
+      "source": "is_billing",
+      "type": "boolean"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "false",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "year",
-      "type": "bigint"
+      "source": "is_garden",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_indoor",
+      "type": "boolean"
     },
     {
       "allow_nil?": true,
@@ -57,8 +69,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "valid_from",
-      "type": "date"
+      "source": "street",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -69,8 +81,68 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "valid_until",
-      "type": "date"
+      "source": "city",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "province",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "zip",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "country",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "notes",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "location",
+      "type": "map"
     },
     {
       "allow_nil?": false,
@@ -97,38 +169,7 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "inventory_supplier_catalogs_organisation_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_organisations"
-      },
-      "scale": null,
-      "size": null,
-      "source": "organisation_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -146,7 +187,69 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_supplier_catalogs_supplier_id_fkey",
+        "name": "crm_addresses_customer_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_customers"
+      },
+      "scale": null,
+      "size": null,
+      "source": "customer_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "crm_addresses_organisation_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_organisations"
+      },
+      "scale": null,
+      "size": null,
+      "source": "organisation_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "crm_addresses_supplier_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -165,14 +268,14 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B6DBB76F21285D462E417673BFF70053A155EAFD1F701E769DD08B6E22C02890",
+  "hash": "1EEA171B907529FB400198F03B4A81B717FD0832486A948C1545C38550578053",
   "identities": [],
   "multitenancy": {
-    "attribute": "organisation_id",
-    "global": false,
-    "strategy": "attribute"
+    "attribute": null,
+    "global": null,
+    "strategy": null
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_supplier_catalogs"
+  "table": "crm_addresses"
 }

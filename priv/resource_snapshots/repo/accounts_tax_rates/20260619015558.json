@@ -15,50 +15,62 @@
     {
       "allow_nil?": false,
       "default": "nil",
-      "generated?": true,
+      "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reference",
+      "source": "name",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "\"draft\"",
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
+      "source": "rate",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_compound",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "position",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "registration_number",
       "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "ordered_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "received_at",
-      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -103,7 +115,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_purchase_orders_organisation_id_fkey",
+        "name": "accounts_tax_rates_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -114,37 +126,6 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_purchase_orders_supplier_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_suppliers"
-      },
-      "scale": null,
-      "size": null,
-      "source": "supplier_id",
-      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -153,23 +134,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "79E8D3A0507D1048E3CB4C76288522547143533978B15D647EFEC808EAFC87C8",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "inventory_purchase_orders_reference_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "reference"
-        }
-      ],
-      "name": "reference",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "94E20C7A60660DF37BFCF091D85575DBFD4488FAEDA1F98143E88AA829214EC1",
+  "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -177,5 +143,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_purchase_orders"
+  "table": "accounts_tax_rates"
 }

@@ -47,17 +47,18 @@ defmodule OpenSauceWeb.OrgLive do
     address_params = params |> Map.get("address", %{}) |> nilify_map_values()
     member = socket.assigns.current_member
 
-    with {:ok, updated_org} <- Form.submit(socket.assigns.form.source, params: org_params),
-         {:ok, updated_org} <- Accounts.update_organisation(updated_org, %{address: address_params}, actor: member) do
-      updated_org = Accounts.get_organisation!(updated_org.id, authorize?: false, load: [:address])
-      form = Form.for_update(updated_org, :update_settings, authorize?: false, domain: Accounts, as: "org")
+    case Form.submit(socket.assigns.form.source, params: org_params) do
+      {:ok, updated_org} ->
+        upsert_org_address(socket.assigns.org, address_params)
+        updated_org = Accounts.get_organisation!(updated_org.id, authorize?: false, load: [:address])
+        form = Form.for_update(updated_org, :update_settings, authorize?: false, domain: Accounts, as: "org")
 
-      {:noreply,
-       socket
-       |> assign(:org, updated_org)
-       |> assign(:form, to_form(form))
-       |> put_flash(:info, "Organisation updated.")}
-    else
+        {:noreply,
+         socket
+         |> assign(:org, updated_org)
+         |> assign(:form, to_form(form))
+         |> put_flash(:info, "Organisation updated.")}
+
       {:error, %AshPhoenix.Form{} = form} ->
         {:noreply, socket |> assign(:form, to_form(form)) |> put_flash(:error, "Could not save — check the fields below.")}
 
@@ -647,8 +648,7 @@ defmodule OpenSauceWeb.OrgLive do
         </div>
       </div>
 
-      <%!-- Page content — form wraps all sections so the FAB submit button works --%>
-      <.form for={@form} id="org-form" phx-change="validate_org" phx-submit="save_org" style="padding:16px 16px 120px;display:flex;flex-direction:column;gap:20px;">
+      <.form for={@form} id="org-form" phx-change="validate_org" phx-submit="save_org" style="padding:16px 16px 160px;display:flex;flex-direction:column;gap:20px;">
 
         <%!-- Back --%>
         <div style="padding:4px 0;">
@@ -690,6 +690,29 @@ defmodule OpenSauceWeb.OrgLive do
                 id={@form[:legal_name].id}
                 value={@form[:legal_name].value || ""}
                 placeholder="1308-8393 Inc."
+              />
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:website].id}>Website <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <input
+                class="dark-input"
+                type="url"
+                name={@form[:website].name}
+                id={@form[:website].id}
+                value={@form[:website].value || ""}
+                placeholder="totogardens.ca"
+              />
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:phone].id}>Phone</label>
+              <input
+                class="dark-input"
+                type="tel"
+                name={@form[:phone].name}
+                id={@form[:phone].id}
+                value={@form[:phone].value || ""}
+                placeholder="(613) 555-0100"
+                phx-hook="FormatPhone"
               />
             </div>
 
@@ -1031,35 +1054,6 @@ defmodule OpenSauceWeb.OrgLive do
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
-                <label class="dark-label" for={@form[:phone].id}>Phone</label>
-                <input
-                  class="dark-input"
-                  type="tel"
-                  name={@form[:phone].name}
-                  id={@form[:phone].id}
-                  value={@form[:phone].value || ""}
-                  placeholder="(613) 555-0100"
-                  phx-hook="FormatPhone"
-                />
-              </div>
-              <div>
-                <label class="dark-label" for={@form[:website].id}>Website</label>
-                <input
-                  class="dark-input"
-                  type="url"
-                  name={@form[:website].name}
-                  id={@form[:website].id}
-                  value={@form[:website].value || ""}
-                  placeholder="totogardens.ca"
-                />
-              </div>
-            </div>
-
-            <div style="height:1px;background:rgba(52,48,37,0.58);"></div>
-            <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Point of contact</p>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div>
                 <label class="dark-label" for={@form[:contact_name].id}>Name</label>
                 <input
                   class="dark-input"
@@ -1140,20 +1134,13 @@ defmodule OpenSauceWeb.OrgLive do
         </div>
 
         <%!-- FAB save button --%>
-        <button
-          class="fab"
-          type="submit"
-          ontouchstart=""
-          aria-label="Save organisation"
-        >
-          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-            <polyline points="17 21 17 13 7 13 7 21"/>
-            <polyline points="7 3 7 8 15 8"/>
-          </svg>
-        </button>
-
       </.form>
+
+      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));">
+        <.glow_button type="submit" form="org-form" valid={true}>
+          Save changes
+        </.glow_button>
+      </div>
     </div>
     """
   end
@@ -1213,6 +1200,20 @@ defmodule OpenSauceWeb.OrgLive do
   defp tax_rate_valid?(%{"name" => name, "rate" => rate}) do
     trimmed = String.trim(name || "")
     trimmed != "" and match?({_, ""}, Decimal.parse(to_string(rate || "0")))
+  end
+
+  defp upsert_org_address(org, address_params) do
+    alias OpenSauce.CRM
+
+    if org.address do
+      CRM.update_address(org.address, address_params, authorize?: false)
+    else
+      any_value = Enum.any?(Map.values(address_params), & &1)
+
+      if any_value do
+        CRM.create_address(Map.put(address_params, "organisation_id", org.id), authorize?: false)
+      end
+    end
   end
 
   defp nilify(""), do: nil

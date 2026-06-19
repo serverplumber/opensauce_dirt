@@ -21,56 +21,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "type",
+      "source": "supplier_sku",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"1\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "captured_on",
-      "type": "date"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "storage_key",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "content_type",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "original_filename",
-      "type": "text"
+      "source": "quantity",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -81,8 +45,44 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "notes",
-      "type": "text"
+      "source": "confirmed_qty",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "received_qty",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "unit_price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_reservation",
+      "type": "boolean"
     },
     {
       "allow_nil?": false,
@@ -123,24 +123,24 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
         },
-        "name": "crm_engagement_images_organisation_id_fkey",
+        "name": "inventory_purchase_order_items_purchase_order_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "accounts_organisations"
+        "table": "inventory_purchase_orders"
       },
       "scale": null,
       "size": null,
-      "source": "organisation_id",
+      "source": "purchase_order_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -158,83 +158,95 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_engagement_images_engagement_id_fkey",
+        "name": "inventory_purchase_order_items_supplier_catalog_item_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_engagements"
+        "table": "inventory_supplier_catalog_items"
       },
       "scale": null,
       "size": null,
-      "source": "engagement_id",
+      "source": "supplier_catalog_item_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "inventory_purchase_order_items_material_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_materials"
+      },
+      "scale": null,
+      "size": null,
+      "source": "material_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "inventory_purchase_order_items_job_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "orders_jobs"
+      },
+      "scale": null,
+      "size": null,
+      "source": "job_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_engagement_images_engagement_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id",
-        "type"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        },
-        {
-          "type": "atom",
-          "value": "type"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_engagement_images_engagement_type_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "6A362DE6462350A151A877891DE3186E7EC23D6BA3F6D10DFDA1B8011C7447BE",
+  "hash": "FCEA9A481A03212DC3C8294F0DFE8BB3B7BDD91B181BE2DCF5B64BC877AB12C5",
   "identities": [],
   "multitenancy": {
-    "attribute": "organisation_id",
-    "global": false,
-    "strategy": "attribute"
+    "attribute": null,
+    "global": null,
+    "strategy": null
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_engagement_images"
+  "table": "inventory_purchase_order_items"
 }

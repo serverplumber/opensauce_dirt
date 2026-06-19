@@ -611,7 +611,11 @@ defmodule OpenSauceWeb.ScheduleLive do
 
   defp job_who(job) do
     cl = customer_label(job)
-    if cl == "", do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job", else: cl
+    base = if cl == "", do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job", else: cl
+    case job do
+      %{engagement: %{scope_title: t}} when is_binary(t) and t != "" -> "#{base} · #{t}"
+      _ -> base
+    end
   end
 
   defp job_where_text(%{garden: nil}), do: nil

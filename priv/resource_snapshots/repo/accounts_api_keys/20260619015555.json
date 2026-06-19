@@ -14,15 +14,51 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"staff\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "role",
+      "source": "name",
       "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "prefix",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "key_hash",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "%{}",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "scopes",
+      "type": "map"
     },
     {
       "allow_nil?": true,
@@ -33,32 +69,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "display_title",
-      "type": "text"
+      "source": "last_used_at",
+      "type": "utc_datetime"
     },
     {
-      "allow_nil?": false,
-      "default": "\"0\"",
+      "allow_nil?": true,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "labor_hourly_rate",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"active\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "status",
-      "type": "text"
+      "source": "revoked_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -103,38 +127,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "accounts_organisation_members_user_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_users"
-      },
-      "scale": null,
-      "size": null,
-      "source": "user_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "accounts_organisation_members_organisation_id_fkey",
+        "name": "accounts_api_keys_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -153,33 +146,29 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "10EFA55684967177F5297506F8EE7546F679B3207CE13E4EE3D5D993EE57A137",
+  "hash": "ED9D800A800E03191DDFF504AF1377C080E0107D96789105B3ADFE6D5CB60B86",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "accounts_organisation_members_unique_membership_index",
+      "index_name": "accounts_api_keys_key_hash_index",
       "keys": [
         {
           "type": "atom",
-          "value": "user_id"
-        },
-        {
-          "type": "atom",
-          "value": "organisation_id"
+          "value": "key_hash"
         }
       ],
-      "name": "unique_membership",
+      "name": "key_hash",
       "nils_distinct?": true,
       "where": null
     }
   ],
   "multitenancy": {
-    "attribute": null,
-    "global": null,
-    "strategy": null
+    "attribute": "organisation_id",
+    "global": false,
+    "strategy": "attribute"
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_organisation_members"
+  "table": "accounts_api_keys"
 }

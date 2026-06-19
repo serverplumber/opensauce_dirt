@@ -30,15 +30,6 @@ defmodule OpenSauce.Accounts.Organisation do
 
     update :update do
       accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :head_office_venue_id] ++ @new_fields
-
-      argument :address, :map, allow_nil?: true
-
-      change manage_relationship(:address,
-               on_lookup: :relate,
-               on_no_match: :create,
-               on_match: :update,
-               on_missing: :destroy
-             )
     end
 
     update :update_settings do

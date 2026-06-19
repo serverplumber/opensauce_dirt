@@ -25,30 +25,6 @@
       "type": "decimal"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "reason",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "occurred_at",
-      "type": "utc_datetime"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
@@ -91,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_movements_organisation_id_fkey",
+        "name": "orders_job_event_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -122,20 +98,20 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_movements_material_id_fkey",
+        "name": "orders_job_event_materials_job_event_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_materials"
+        "table": "orders_job_events"
       },
       "scale": null,
       "size": null,
-      "source": "material_id",
+      "source": "job_event_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -153,16 +129,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_movements_lot_id_fkey",
+        "name": "orders_job_event_materials_material_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_lots"
+        "table": "inventory_materials"
       },
       "scale": null,
       "size": null,
-      "source": "lot_id",
+      "source": "material_id",
       "type": "uuid"
     }
   ],
@@ -172,7 +148,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "25BB0545C6AD93142D8F145727002D11FDFBE86EE50320E3421E608DE9DCD30E",
+  "hash": "739490E9649F43E0683557DE4C125A0441C8D1D949269B0AF9AD67C505EE697D",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -181,5 +157,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_movements"
+  "table": "orders_job_event_materials"
 }

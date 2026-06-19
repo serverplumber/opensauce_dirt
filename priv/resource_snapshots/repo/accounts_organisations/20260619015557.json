@@ -158,7 +158,7 @@
     },
     {
       "allow_nil?": true,
-      "default": "nil",
+      "default": "\"Tout solde impayé porte intérêt à compter du 31e jour suivant la date de facturation, au taux annuel de 24 %, composé quotidiennement.\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -167,6 +167,18 @@
       "size": null,
       "source": "invoice_terms",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "invoice_annual_nominal_rate",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -230,6 +242,18 @@
     },
     {
       "allow_nil?": false,
+      "default": "1",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "next_invoice_number",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -290,7 +314,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "F676EAE36FC695CB9D925B31919526E77F31251ED31919DC5EF093CD5C5D766E",
+  "hash": "871C49743F55695F7473D0EEEBA35C2415EF2AB9275F2BC3C620AC2214A7AB7D",
   "identities": [
     {
       "all_tenants?": false,

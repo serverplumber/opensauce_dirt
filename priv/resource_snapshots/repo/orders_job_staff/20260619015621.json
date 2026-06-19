@@ -14,18 +14,6 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -67,7 +55,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "operations_storage_locations_organisation_id_fkey",
+        "name": "orders_job_staff_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,27 +86,100 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "operations_storage_locations_venue_id_fkey",
+        "name": "orders_job_staff_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "operations_venues"
+        "table": "orders_jobs"
       },
       "scale": null,
       "size": null,
-      "source": "venue_id",
+      "source": "job_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "orders_job_staff_member_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_organisation_members"
+      },
+      "scale": null,
+      "size": null,
+      "source": "member_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "job_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "job_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_job_staff_job_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1506BE1584DEB89C9EAD890316AE79A7CE14A35D2E24211FF9958FE87E6C1EAD",
-  "identities": [],
+  "hash": "4C2D1C123744AE6CC8CA01EABB41C71F9AFD5CE1223E96A40789A367C8237407",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "orders_job_staff_unique_staff_assignment_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "job_id"
+        },
+        {
+          "type": "atom",
+          "value": "member_id"
+        }
+      ],
+      "name": "unique_staff_assignment",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -126,5 +187,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "operations_storage_locations"
+  "table": "orders_job_staff"
 }

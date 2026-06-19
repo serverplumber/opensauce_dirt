@@ -15,7 +15,19 @@
     {
       "allow_nil?": false,
       "default": "nil",
-      "generated?": true,
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "invoice_number",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
@@ -26,15 +38,15 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "fragment(\"CURRENT_DATE\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "type",
-      "type": "text"
+      "source": "issued_on",
+      "type": "date"
     },
     {
       "allow_nil?": true,
@@ -45,8 +57,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "company_name_nickname",
-      "type": "text"
+      "source": "due_on",
+      "type": "date"
     },
     {
       "allow_nil?": false,
@@ -57,44 +69,47 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "first_name",
+      "source": "amount",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "notes",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "[]",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "last_name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "email",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "phone",
-      "type": "text"
+      "source": "line_items",
+      "type": [
+        "array",
+        "map"
+      ]
     },
     {
       "allow_nil?": false,
@@ -139,7 +154,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_customers_organisation_id_fkey",
+        "name": "crm_invoices_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -150,59 +165,145 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "crm_invoices_customer_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_customers"
+      },
+      "scale": null,
+      "size": null,
+      "source": "customer_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "crm_invoices_engagement_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_engagements"
+      },
+      "scale": null,
+      "size": null,
+      "source": "engagement_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
-  "custom_statements": [],
-  "has_create_action": true,
-  "hash": "61D949FDB6B4421A92E80B0013092CF21B36DD41D1C4CD93318F14937E62E19D",
-  "identities": [
+  "custom_indexes": [
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "crm_customers_email_index",
-      "keys": [
+      "concurrently": false,
+      "error_fields": [
+        "customer_id"
+      ],
+      "fields": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "customer_id"
         }
       ],
-      "name": "email",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": "crm_invoices_customer_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     },
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "crm_customers_phone_index",
-      "keys": [
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id"
+      ],
+      "fields": [
         {
           "type": "atom",
-          "value": "phone"
+          "value": "engagement_id"
         }
       ],
-      "name": "phone",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": "crm_invoices_engagement_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     },
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "crm_customers_reference_index",
-      "keys": [
+      "concurrently": false,
+      "error_fields": [
+        "status"
+      ],
+      "fields": [
         {
           "type": "atom",
-          "value": "reference"
+          "value": "status"
         }
       ],
-      "name": "reference",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": "crm_invoices_status_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     }
   ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "A417886FBB1FB59D8000B61352E6692F8CCE6DB0D305A8821A1A700FA1362DDD",
+  "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -210,5 +311,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_customers"
+  "table": "crm_invoices"
 }

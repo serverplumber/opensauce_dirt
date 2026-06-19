@@ -13,6 +13,18 @@
       "type": "uuid"
     },
     {
+      "allow_nil?": false,
+      "default": "\"staff\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "role",
+      "type": "text"
+    },
+    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -21,128 +33,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "display_title",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "false",
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "is_billing",
-      "type": "boolean"
+      "source": "labor_hourly_rate",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
-      "default": "false",
+      "default": "\"active\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "is_garden",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": false,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "is_indoor",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "street",
+      "source": "status",
       "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "city",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "province",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "zip",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "country",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "location",
-      "type": "map"
     },
     {
       "allow_nil?": false,
@@ -169,38 +85,7 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "crm_addresses_customer_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "crm_customers"
-      },
-      "scale": null,
-      "size": null,
-      "source": "customer_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -218,20 +103,20 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_addresses_organisation_id_fkey",
+        "name": "accounts_organisation_members_user_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "accounts_organisations"
+        "table": "accounts_users"
       },
       "scale": null,
       "size": null,
-      "source": "organisation_id",
+      "source": "user_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -245,20 +130,20 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "crm_addresses_supplier_id_fkey",
+        "name": "accounts_organisation_members_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_suppliers"
+        "table": "accounts_organisations"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_id",
+      "source": "organisation_id",
       "type": "uuid"
     }
   ],
@@ -268,8 +153,27 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "317690D360AD0ACB657D814AF57E930EBF214BB25C93147D5F11141EB3050C1F",
-  "identities": [],
+  "hash": "8C9392DA67B0CC9DB9ACE01C9148437848B12FF55A7DFC9B3DFD88BF25000246",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_organisation_members_unique_membership_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "user_id"
+        },
+        {
+          "type": "atom",
+          "value": "organisation_id"
+        }
+      ],
+      "name": "unique_membership",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -277,5 +181,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_addresses"
+  "table": "accounts_organisation_members"
 }

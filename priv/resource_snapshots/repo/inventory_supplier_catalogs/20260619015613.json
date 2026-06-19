@@ -21,20 +21,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "data",
-      "type": "map"
+      "source": "name",
+      "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "\"year_round\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "actor_id",
-      "type": "uuid"
+      "source": "season",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -45,8 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "timestamp",
-      "type": "utc_datetime"
+      "source": "year",
+      "type": "bigint"
     },
     {
       "allow_nil?": true,
@@ -57,8 +57,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "note",
-      "type": "text"
+      "source": "valid_from",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "valid_until",
+      "type": "date"
     },
     {
       "allow_nil?": false,
@@ -103,7 +115,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_events_organisation_id_fkey",
+        "name": "inventory_supplier_catalogs_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -134,54 +146,26 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_events_job_id_fkey",
+        "name": "inventory_supplier_catalogs_supplier_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_jobs"
+        "table": "inventory_suppliers"
       },
       "scale": null,
       "size": null,
-      "source": "job_id",
+      "source": "supplier_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "job_id",
-        "timestamp"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "job_id"
-        },
-        {
-          "type": "atom",
-          "value": "timestamp"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "orders_job_events_job_timeline_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "EA35216A51C7F259DABA6886F5DE6D7381E6CA139A93E78D981FD4ED32B092C8",
+  "hash": "6E3713E633CA6016AA11890A5479F42F0D5C6B2BDB92A7C040270B001E2ADCA0",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -190,5 +174,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_events"
+  "table": "inventory_supplier_catalogs"
 }

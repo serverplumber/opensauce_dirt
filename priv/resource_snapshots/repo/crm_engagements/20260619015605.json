@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "lot_code",
+      "source": "scope_title",
       "type": "text"
     },
     {
@@ -33,7 +33,43 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "expiry_date",
+      "source": "scope_description",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "install_price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "maintenance_price_annual",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "term_start",
       "type": "date"
     },
     {
@@ -45,8 +81,44 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "received_at",
-      "type": "utc_datetime"
+      "source": "term_end",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "signature",
+      "type": "map"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "notes",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -91,7 +163,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_lots_organisation_id_fkey",
+        "name": "crm_engagements_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -101,68 +173,6 @@
       "scale": null,
       "size": null,
       "source": "organisation_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_lots_venue_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "operations_venues"
-      },
-      "scale": null,
-      "size": null,
-      "source": "venue_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_lots_material_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_materials"
-      },
-      "scale": null,
-      "size": null,
-      "source": "material_id",
       "type": "uuid"
     },
     {
@@ -180,20 +190,51 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "inventory_lots_supplier_id_fkey",
+        "name": "crm_engagements_garden_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_suppliers"
+        "table": "crm_addresses"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_id",
+      "source": "garden_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "crm_engagements_customer_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_customers"
+      },
+      "scale": null,
+      "size": null,
+      "source": "customer_id",
       "type": "uuid"
     }
   ],
@@ -205,39 +246,17 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "lot_code"
+        "customer_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "lot_code"
+          "value": "customer_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": "inventory_lots_lot_code_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": true,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "material_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "material_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "inventory_lots_material_id_index",
+      "name": null,
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -249,17 +268,39 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "supplier_id"
+        "garden_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "supplier_id"
+          "value": "garden_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": "inventory_lots_supplier_id_index",
+      "name": null,
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "status"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "status"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": null,
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -270,7 +311,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "85680744E589860BA1E9459754C51B09EA6A58B03950B339EDEFF1DD9B744519",
+  "hash": "249187973D66A2F4A090E22EEC703C41E45001C4C19784E0CEB82EE8F16DBC18",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -279,5 +320,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_lots"
+  "table": "crm_engagements"
 }

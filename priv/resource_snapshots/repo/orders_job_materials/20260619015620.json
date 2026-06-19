@@ -25,30 +25,6 @@
       "type": "decimal"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "scheduled_date",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "note",
-      "type": "text"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
@@ -91,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_engagement_materials_organisation_id_fkey",
+        "name": "orders_job_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -122,16 +98,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_engagement_materials_engagement_id_fkey",
+        "name": "orders_job_materials_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_engagements"
+        "table": "orders_jobs"
       },
       "scale": null,
       "size": null,
-      "source": "engagement_id",
+      "source": "job_id",
       "type": "uuid"
     },
     {
@@ -153,7 +129,7 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_engagement_materials_supplier_catalog_item_id_fkey",
+        "name": "orders_job_materials_supplier_catalog_item_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -172,7 +148,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "D0D95E4F813E0A2B9445DB12AA9FAC0B7BD9BA756E0B18C63CE20C5C097021F1",
+  "hash": "B76BC18B0C1A9DBF36A8B5B543A2F8B997358A5246655D2FB711270E22BBDE35",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -181,5 +157,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_engagement_materials"
+  "table": "orders_job_materials"
 }

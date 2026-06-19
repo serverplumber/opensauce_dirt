@@ -408,6 +408,7 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
 
     create table(:crm_invoices, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :invoice_number, :bigint, null: false
       add :reference, :text, null: false
       add :issued_on, :date, null: false, default: fragment("CURRENT_DATE")
       add :due_on, :date
@@ -618,6 +619,7 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
       add :rate, :decimal, null: false, default: "0"
       add :is_compound, :boolean, null: false, default: false
       add :position, :bigint, null: false, default: 0
+      add :registration_number, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -1103,6 +1105,22 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
       add :mileage_cost_per_km, :decimal, null: false, default: "0"
       add :email_from_name, :text, default: "OpenSauce"
       add :email_from_address, :text
+      add :legal_name, :text
+      add :website, :text
+      add :phone, :text
+      add :payment_info, :text
+
+      add :invoice_terms, :text,
+        default:
+          "Tout solde impayé porte intérêt à compter du 31e jour suivant la date de facturation, au taux annuel de 24 %, composé quotidiennement."
+
+      add :invoice_annual_nominal_rate, :decimal
+      add :invoice_footer, :text
+      add :contact_name, :text
+      add :contact_title, :text
+      add :contact_phone, :text
+      add :contact_email, :text
+      add :next_invoice_number, :bigint, null: false, default: 1
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -1267,6 +1285,18 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
       remove :head_office_venue_id
       remove :updated_at
       remove :inserted_at
+      remove :next_invoice_number
+      remove :contact_email
+      remove :contact_phone
+      remove :contact_title
+      remove :contact_name
+      remove :invoice_footer
+      remove :invoice_annual_nominal_rate
+      remove :invoice_terms
+      remove :payment_info
+      remove :phone
+      remove :website
+      remove :legal_name
       remove :email_from_address
       remove :email_from_name
       remove :mileage_cost_per_km

@@ -537,7 +537,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
         String.trim(user.first_name)
 
       true ->
-        user.email |> String.split("@") |> hd()
+        user.email |> to_string() |> String.split("@") |> hd()
     end
   end
 

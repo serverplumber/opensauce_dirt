@@ -25,6 +25,30 @@
       "type": "decimal"
     },
     {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "scheduled_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "note",
+      "type": "text"
+    },
+    {
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
@@ -67,7 +91,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_event_materials_organisation_id_fkey",
+        "name": "crm_engagement_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,16 +122,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_event_materials_job_event_id_fkey",
+        "name": "crm_engagement_materials_engagement_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_job_events"
+        "table": "crm_engagements"
       },
       "scale": null,
       "size": null,
-      "source": "job_event_id",
+      "source": "engagement_id",
       "type": "uuid"
     },
     {
@@ -129,16 +153,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_event_materials_material_id_fkey",
+        "name": "crm_engagement_materials_supplier_catalog_item_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_materials"
+        "table": "inventory_supplier_catalog_items"
       },
       "scale": null,
       "size": null,
-      "source": "material_id",
+      "source": "supplier_catalog_item_id",
       "type": "uuid"
     }
   ],
@@ -148,7 +172,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "CD3DF59E134BA5A8D4A8F5265244EBE73B5FB3C94BF9723ED7D222550DE76DB1",
+  "hash": "1CE2AEC207D4D74E955D6421EDAD679B20305B8A11A08404A5FF7856492E7FD1",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -157,5 +181,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_event_materials"
+  "table": "crm_engagement_materials"
 }
