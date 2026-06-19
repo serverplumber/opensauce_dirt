@@ -316,9 +316,7 @@ defmodule OpenSauceWeb.JobLive.Index do
     {:noreply, assign(socket, :tab, String.to_existing_atom(tab))}
   end
 
-  defp card_click(%{status: :scheduling, id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
-  defp card_click(%{status: :in_progress, id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
-  defp card_click(%{id: id}), do: JS.push("open_event_log", value: %{id: id})
+  defp card_click(%{id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
 
   attr :job, :map, required: true
   attr :org_members, :list, default: []
@@ -361,6 +359,7 @@ defmodule OpenSauceWeb.JobLive.Index do
             type="button"
             style="border:none;cursor:pointer;"
             phx-click={JS.push("open_event_log", value: %{id: @job.id})}
+            onclick="event.stopPropagation()"
             ontouchstart=""
           >
             Start

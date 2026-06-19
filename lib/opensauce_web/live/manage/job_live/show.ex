@@ -20,14 +20,16 @@ defmodule OpenSauceWeb.JobLive.Show do
     member = socket.assigns.current_member
     return_to = Map.get(params, "return_to", ~p"/manage/jobs")
 
+    org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+
     job =
       Work.get_job_by_id!(id,
         actor: member,
         tenant: member.organisation_id,
         load: [
           :garden,
+          :staff_assignments,
           engagement: [:customer],
-          staff_assignments: [member: [:user]],
           materials: [supplier_catalog_item: [supplier_catalog: [:supplier]]]
         ]
       )
@@ -44,6 +46,7 @@ defmodule OpenSauceWeb.JobLive.Show do
 
     {:noreply,
      socket
+     |> assign(:org_members, org_members)
      |> assign(:job, job)
      |> assign(:return_to, return_to)
      |> assign(:page_title, page_title(job))
@@ -54,20 +57,12 @@ defmodule OpenSauceWeb.JobLive.Show do
 
   @impl true
   def handle_event("open_staff_sheet", _params, socket) do
-    member = socket.assigns.current_member
-
-    org_members =
-      Accounts.list_members_for_organisation!(member.organisation_id,
-        actor: member,
-        tenant: member.organisation_id
-      )
-
-    {:noreply, assign(socket, show_staff_sheet: true, org_members: org_members)}
+    {:noreply, assign(socket, show_staff_sheet: true)}
   end
 
   @impl true
   def handle_event("close_staff_sheet", _params, socket) do
-    {:noreply, assign(socket, show_staff_sheet: false, org_members: [])}
+    {:noreply, assign(socket, show_staff_sheet: false)}
   end
 
   @impl true
@@ -81,7 +76,7 @@ defmodule OpenSauceWeb.JobLive.Show do
       tenant: member.organisation_id
     )
 
-    {:noreply, socket |> assign(show_staff_sheet: false, org_members: []) |> reload_job()}
+    {:noreply, socket |> assign(show_staff_sheet: false) |> reload_job()}
   end
 
   @impl true
@@ -208,19 +203,18 @@ defmodule OpenSauceWeb.JobLive.Show do
           </div>
 
           <%!-- crew --%>
+          <% assigned_ids = Enum.map(@job.staff_assignments || [], & &1.member_id) %>
           <div
-            :if={@job.staff_assignments != [] && @job.staff_assignments != nil}
+            :if={assigned_ids != []}
             style="margin-top:10px;display:flex;gap:5px;align-items:center;"
           >
-            <div
-              :for={sa <- Enum.take(@job.staff_assignments, 6)}
-              class="av"
-              style={"background:#{crew_color(sa.member_id)}"}
-            >
-              {crew_initial(sa.member)}
-            </div>
-            <span :if={length(@job.staff_assignments) > 6} style="font-size:11px;color:#6E675A;">
-              +{length(@job.staff_assignments) - 6}
+            <.member_avatar
+              :for={m <- @org_members |> Enum.filter(&(&1.id in assigned_ids)) |> Enum.take(6)}
+              member={m}
+              size={26}
+            />
+            <span :if={length(assigned_ids) > 6} style="font-size:11px;color:#6E675A;">
+              +{length(assigned_ids) - 6}
             </span>
           </div>
         </div>
@@ -236,7 +230,7 @@ defmodule OpenSauceWeb.JobLive.Show do
                 On site · {elapsed_label(@arrived_at)}
               </p>
               <p style="font-size:11px;color:#9A9384;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                {arrival_line(@arrived_at, @arrival_odo, @job)}
+                {arrival_line(@arrived_at, @arrival_odo, @job, @org_members)}
               </p>
             </div>
             <.link navigate={~p"/manage/jobs/#{@job.id}/closeout"}>
@@ -288,17 +282,16 @@ defmodule OpenSauceWeb.JobLive.Show do
               type="button"
               phx-click="open_staff_sheet"
               ontouchstart=""
-              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
+              style="color:#54B57E;background:none;border:none;cursor:pointer;padding:4px;line-height:0;"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 5v14M5 12h14"
                   stroke="currentColor"
-                  stroke-width="2.2"
+                  stroke-width="2"
                   stroke-linecap="round"
                 />
               </svg>
-              add
             </button>
           </div>
           <div
@@ -307,41 +300,36 @@ defmodule OpenSauceWeb.JobLive.Show do
           >
             No crew assigned
           </div>
+          <% member_map = Map.new(@org_members, &{&1.id, &1}) %>
           <div
             :if={@job.staff_assignments != []}
             style="display:flex;flex-direction:column;gap:6px;"
           >
             <div
               :for={sa <- @job.staff_assignments}
+              :if={Map.has_key?(member_map, sa.member_id)}
               style="background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;"
             >
-              <div class="av" style={"background:#{crew_color(sa.member_id)}"}>
-                {crew_initial(sa.member)}
-              </div>
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:13px;font-weight:600;color:#F4EFE2;">
-                  {staff_name(sa.member)}
-                </p>
-                <p style="font-size:11px;color:#6E675A;margin-top:1px;">
-                  {role_label(sa.member.role)}
-                </p>
-              </div>
-              <button
-                type="button"
-                phx-click="remove_staff"
-                phx-value-id={sa.id}
-                ontouchstart=""
-                style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M18 6L6 18M6 6l12 12"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
+              <.member_card member={member_map[sa.member_id]}>
+                <:trailing>
+                  <button
+                    type="button"
+                    phx-click="remove_staff"
+                    phx-value-id={sa.id}
+                    ontouchstart=""
+                    style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </:trailing>
+              </.member_card>
             </div>
           </div>
         </div>
@@ -351,7 +339,20 @@ defmodule OpenSauceWeb.JobLive.Show do
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Materials</span>
             <.link navigate={~p"/manage/jobs/#{@job.id}/materials"}>
-              <span style="font-size:12px;font-weight:700;color:#54B57E;">edit list</span>
+              <button
+                type="button"
+                ontouchstart=""
+                style="color:#54B57E;background:none;border:none;cursor:pointer;padding:4px;line-height:0;"
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
             </.link>
           </div>
           <div
@@ -439,13 +440,7 @@ defmodule OpenSauceWeb.JobLive.Show do
             ontouchstart=""
             style="background:#2B2820;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;cursor:pointer;"
           >
-            <div class="av" style={"background:#{crew_color(m.id)}"}>
-              {crew_initial(m)}
-            </div>
-            <div style="flex:1;min-width:0;">
-              <p style="font-size:13px;font-weight:600;color:#F4EFE2;">{staff_name(m)}</p>
-              <p style="font-size:11px;color:#6E675A;margin-top:1px;">{role_label(m.role)}</p>
-            </div>
+            <.member_card member={m} />
           </div>
         </div>
       </div>
@@ -477,13 +472,15 @@ defmodule OpenSauceWeb.JobLive.Show do
     end
   end
 
-  defp arrival_line(nil, _odo, _job), do: "—"
+  defp arrival_line(nil, _odo, _job, _org_members), do: "—"
 
-  defp arrival_line(arrived_at, odo, job) do
+  defp arrival_line(arrived_at, odo, job, org_members) do
+    member_map = Map.new(org_members, &{&1.id, &1})
+
     crew =
       (job.staff_assignments || [])
       |> Enum.take(3)
-      |> Enum.map(fn sa -> staff_name(sa.member) end)
+      |> Enum.map(fn sa -> staff_name(Map.get(member_map, sa.member_id)) end)
       |> Enum.reject(&(&1 == "?"))
       |> Enum.join(" + ")
 
@@ -522,17 +519,8 @@ defmodule OpenSauceWeb.JobLive.Show do
   end
 
   defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
+  defp staff_name(nil), do: "?"
   defp staff_name(_), do: "?"
-
-  defp crew_initial(member) do
-    n = staff_name(member)
-    if n == "?", do: "?", else: n |> String.first() |> String.upcase()
-  end
-
-  defp role_label(:owner), do: "Owner"
-  defp role_label(:manager), do: "Manager"
-  defp role_label(:staff), do: "Staff"
-  defp role_label(_), do: "—"
 
   defp available_members(org_members, job) do
     assigned = MapSet.new(job.staff_assignments, & &1.member_id)
@@ -549,8 +537,8 @@ defmodule OpenSauceWeb.JobLive.Show do
         tenant: member.organisation_id,
         load: [
           :garden,
+          :staff_assignments,
           engagement: [:customer],
-          staff_assignments: [member: [:user]],
           materials: [supplier_catalog_item: [supplier_catalog: [:supplier]]]
         ]
       )
@@ -570,11 +558,6 @@ defmodule OpenSauceWeb.JobLive.Show do
     |> assign(:materials_cost, materials_cost(job.materials))
     |> assign(:arrived_at, arrival && arrival.timestamp)
     |> assign(:arrival_odo, arrival && arrival.data.value.odometer_km)
-  end
-
-  defp crew_color(member_id) do
-    colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]
-    Enum.at(colors, :erlang.phash2(member_id, length(colors)))
   end
 
   defp category_color(:installation), do: "#DB9258"
