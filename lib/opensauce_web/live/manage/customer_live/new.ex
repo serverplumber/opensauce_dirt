@@ -400,6 +400,7 @@ defmodule OpenSauceWeb.CustomerLive.New do
   end
 
   def handle_event("save", %{"customer" => params}, socket) do
+    member = socket.assigns.current_member
     params = Map.put_new(params, "type", to_string(socket.assigns.customer_type))
 
     gardens_with_billing =
@@ -411,15 +412,34 @@ defmodule OpenSauceWeb.CustomerLive.New do
 
     full_params = Map.put(params, "garden_addresses", gardens_with_billing)
 
-    case AshPhoenix.Form.submit(socket.assigns.form.source, params: full_params) do
+    case OpenSauce.CRM.Customer
+         |> Ash.Changeset.for_create(:create, full_params,
+           actor: member,
+           tenant: member.organisation_id
+         )
+         |> Ash.create() do
       {:ok, customer} ->
         {:noreply,
          socket
          |> put_flash(:info, "Customer created")
          |> push_navigate(to: ~p"/manage/customers/#{customer.reference}")}
 
-      {:error, form} ->
-        {:noreply, assign(socket, form: to_form(form))}
+      {:error, %Ash.Changeset{} = changeset} ->
+        form =
+          AshPhoenix.Form.for_create(OpenSauce.CRM.Customer, :create,
+            as: "customer",
+            actor: member,
+            tenant: member.organisation_id
+          )
+          |> AshPhoenix.Form.validate(params, errors: true)
+
+        {:noreply,
+         socket
+         |> assign(:form, to_form(form))
+         |> put_flash(:error, ash_error_summary(changeset))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not save customer.")}
     end
   end
 
@@ -438,4 +458,16 @@ defmodule OpenSauceWeb.CustomerLive.New do
     |> Enum.reject(&(is_nil(&1) or &1 == ""))
     |> Enum.join(", ")
   end
+
+  defp ash_error_summary(%Ash.Changeset{errors: errors}) do
+    errors
+    |> Enum.map(fn
+      %{field: field, message: msg} when not is_nil(field) -> "#{field}: #{msg}"
+      %{message: msg} -> msg
+      e -> inspect(e)
+    end)
+    |> Enum.join(", ")
+  end
+
+  defp ash_error_summary(_), do: "Could not save customer."
 end

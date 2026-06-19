@@ -24,7 +24,6 @@ defmodule OpenSauce.CRM.Invoice do
     create :create do
       primary? true
       accept [
-        :reference,
         :customer_id,
         :engagement_id,
         :issued_on,
@@ -35,6 +34,8 @@ defmodule OpenSauce.CRM.Invoice do
         :line_items,
         :organisation_id
       ]
+
+      change OpenSauce.CRM.Changes.AssignInvoiceNumber
     end
 
     update :update do
@@ -73,6 +74,11 @@ defmodule OpenSauce.CRM.Invoice do
 
   attributes do
     uuid_primary_key :id
+
+    attribute :invoice_number, :integer do
+      allow_nil? false
+      public? true
+    end
 
     attribute :reference, :string do
       allow_nil? false

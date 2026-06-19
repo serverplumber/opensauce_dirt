@@ -21,6 +21,7 @@ defmodule OpenSauce.Accounts.Organisation do
       :payment_info,
       :invoice_terms,
       :invoice_footer,
+      :invoice_annual_nominal_rate,
       :contact_name,
       :contact_title,
       :contact_phone,
@@ -41,7 +42,7 @@ defmodule OpenSauce.Accounts.Organisation do
     end
 
     update :update_settings do
-      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address] ++ @new_fields
+      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :next_invoice_number, :invoice_annual_nominal_rate] ++ @new_fields
     end
   end
 
@@ -124,6 +125,13 @@ defmodule OpenSauce.Accounts.Organisation do
     attribute :invoice_terms, :string do
       public? true
       allow_nil? true
+      default "Tout solde impayé porte intérêt à compter du 31e jour suivant la date de facturation, au taux annuel de 24 %, composé quotidiennement."
+    end
+
+    attribute :invoice_annual_nominal_rate, :decimal do
+      public? true
+      allow_nil? true
+      constraints min: 0, max: 35
     end
 
     attribute :invoice_footer, :string do
@@ -149,6 +157,13 @@ defmodule OpenSauce.Accounts.Organisation do
     attribute :contact_email, :string do
       public? true
       allow_nil? true
+    end
+
+    attribute :next_invoice_number, :integer do
+      public? true
+      allow_nil? false
+      default 1
+      constraints min: 1
     end
 
     timestamps()

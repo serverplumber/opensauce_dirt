@@ -965,6 +965,19 @@ defmodule OpenSauceWeb.OrgLive do
           <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Invoice</p>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
             <div>
+              <label class="dark-label" for={@form[:next_invoice_number].id}>Next invoice number</label>
+              <input
+                class="dark-input"
+                type="number"
+                min="1"
+                step="1"
+                name={@form[:next_invoice_number].name}
+                id={@form[:next_invoice_number].id}
+                value={@form[:next_invoice_number].value || 1}
+              />
+              <span :for={msg <- @form[:next_invoice_number].errors} class="dark-field-error">{elem(msg, 0)}</span>
+            </div>
+            <div>
               <label class="dark-label" for={@form[:payment_info].id}>Payment info</label>
               <textarea
                 class="dark-textarea"
@@ -983,6 +996,21 @@ defmodule OpenSauceWeb.OrgLive do
                 rows="3"
                 placeholder="E.g. Payment due within 30 days. Overdue balances subject to 1.5% monthly interest."
               >{@form[:invoice_terms].value || ""}</textarea>
+            </div>
+            <div>
+              <label class="dark-label" for={@form[:invoice_annual_nominal_rate].id}>Annual nominal rate (%)</label>
+              <input
+                class="dark-input"
+                type="number"
+                min="0"
+                max="35"
+                step="0.01"
+                name={@form[:invoice_annual_nominal_rate].name}
+                id={@form[:invoice_annual_nominal_rate].id}
+                value={@form[:invoice_annual_nominal_rate].value || ""}
+                placeholder="e.g. 24"
+              />
+              <span :for={msg <- @form[:invoice_annual_nominal_rate].errors} class="dark-field-error">{elem(msg, 0)}</span>
             </div>
             <div>
               <label class="dark-label" for={@form[:invoice_footer].id}>Footer</label>

@@ -200,7 +200,12 @@ defmodule OpenSauceWeb.EngagementLive.Show do
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Planned materials</span>
             <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/materials"}>
-              <span style="font-size:12px;font-weight:700;color:#54B57E;">edit list</span>
+              <button type="button" ontouchstart="" style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </.link>
           </div>
           <div :if={@engagement.materials == []}
@@ -230,9 +235,10 @@ defmodule OpenSauceWeb.EngagementLive.Show do
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Jobs</span>
             <button type="button" phx-click="open_job_sheet" ontouchstart=""
-              style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-              Add
+              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
             </button>
           </div>
           <div :if={@engagement.jobs == []}

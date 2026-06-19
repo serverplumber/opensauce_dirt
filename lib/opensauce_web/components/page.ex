@@ -198,7 +198,7 @@ defmodule OpenSauceWeb.Components.Page do
     %{label: "Invoices", path: "/manage/invoices"}
   ]
 
-  @primary_prefixes ["/manage/today", "/manage/schedule", "/manage/jobs", "/manage/customers", "/manage/shifts", "/manage/purchasing"]
+  @primary_prefixes ["/manage/today", "/manage/schedule", "/manage/shifts", "/manage/jobs", "/manage/customers"]
 
   attr :current_path, :string, default: ""
   attr :current_user, :any, default: nil
@@ -431,11 +431,22 @@ defmodule OpenSauceWeb.Components.Page do
           </.nav_tab>
 
           <.nav_tab
+            :if={is_nil(@active_shift)}
             navigate={~p"/manage/schedule"}
             label="Schedule"
             active={String.starts_with?(@current_path, "/manage/schedule")}
           >
             <:icon><.schedule_icon /></:icon>
+          </.nav_tab>
+
+          <.nav_tab
+            :if={@active_shift}
+            navigate={~p"/manage/shifts/current"}
+            label="Shift"
+            active={String.starts_with?(@current_path, "/manage/shifts")}
+            live={true}
+          >
+            <:icon><.shift_icon /></:icon>
           </.nav_tab>
 
           <.nav_tab
@@ -447,21 +458,11 @@ defmodule OpenSauceWeb.Components.Page do
           </.nav_tab>
 
           <.nav_tab
-            :if={is_nil(@active_shift)}
             navigate={~p"/manage/customers"}
             label="Clients"
             active={String.starts_with?(@current_path, "/manage/customers")}
           >
             <:icon><.customers_icon /></:icon>
-          </.nav_tab>
-
-          <.nav_tab
-            :if={@active_shift}
-            navigate={~p"/manage/shifts/current"}
-            label="Shift"
-            active={String.starts_with?(@current_path, "/manage/shifts")}
-          >
-            <:icon><.shift_icon /></:icon>
           </.nav_tab>
 
           <button
@@ -488,6 +489,7 @@ defmodule OpenSauceWeb.Components.Page do
   attr :navigate, :string, required: true
   attr :label, :string, required: true
   attr :active, :boolean, default: false
+  attr :live, :boolean, default: false
 
   defp nav_tab(assigns) do
     ~H"""
@@ -499,7 +501,14 @@ defmodule OpenSauceWeb.Components.Page do
         not @active && "text-[#6E675A] hover:text-[#9A9384]"
       ]}
     >
-      {render_slot(@icon)}
+      <div class="relative">
+        {render_slot(@icon)}
+        <span
+          :if={@live}
+          class="absolute -top-0.5 -right-0.5 block h-2 w-2 rounded-full bg-[#54B57E]"
+          style="box-shadow: 0 0 0 1.5px #16140E;"
+        />
+      </div>
       <span>{@label}</span>
     </.link>
     """

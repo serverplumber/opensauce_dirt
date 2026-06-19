@@ -174,3 +174,15 @@ Never show cost estimates or time estimates in job list cards — those belong o
 ## Commit Convention
 
 Commits follow the pattern: `type(scope): description` (e.g., `feat(jobs):`, `fix(crm):`, `chore(inventory):`)
+
+## Known Gotchas
+
+**AshPhoenix.Form.submit drops all but the first element of an `{:array, :map}` argument** unless that argument is configured as a nested form via the `forms:` option. When an action takes an `{:array, :map}` argument assembled in assigns (not from form inputs), bypass `AshPhoenix.Form.submit` and call Ash directly:
+
+```elixir
+Resource
+|> Ash.Changeset.for_create(:action, params, actor: member, tenant: member.organisation_id)
+|> Ash.create()
+```
+
+The `AshPhoenix.Form` struct can still be used for field-level error display on failure via `AshPhoenix.Form.validate(form, scalar_params, errors: true)`.

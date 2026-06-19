@@ -108,7 +108,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           <div :if={not Enum.empty?(@customer.garden_addresses)} style="display:flex;flex-direction:column;gap:8px;">
             <div :for={addr <- @customer.garden_addresses} class="jcard">
               <div style="display:flex;align-items:flex-start;gap:10px;">
-                <div style="flex:1;min-width:0;">
+                <button type="button" phx-click="open_edit_garden_sheet" phx-value-id={addr.id} ontouchstart=""
+                  style="flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;text-align:left;">
                   <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {addr.name || "Unnamed garden"}
                   </p>
@@ -132,7 +133,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                   <p :if={addr.notes} style="font-size:12px;color:#6E675A;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;">
                     {addr.notes}
                   </p>
-                </div>
+                </button>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
                   <span :if={Map.get(@open_jobs_by_garden, addr.id, 0) > 0} class="pill sched">
                     {Map.get(@open_jobs_by_garden, addr.id)} open
@@ -184,14 +185,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
                   <div style="display:flex;align-items:center;gap:8px;">
                     <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>
-                    <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}/edit"}>
-                      <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </button>
-                    </.link>
                   </div>
                   <.link navigate={~p"/manage/jobs/new?engagement_id=#{e.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
                     <div style="width:48px;border-radius:10px;background:#54B57E;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#0C1F15;">
@@ -249,7 +242,9 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
-            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">Add garden</h3>
+            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">
+              {if @editing_garden, do: "Edit garden", else: "Add garden"}
+            </h3>
             <button type="button" phx-click="close_garden_sheet" ontouchstart=""
               style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -257,7 +252,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
               </svg>
             </button>
           </div>
-          <.form for={:garden} id="garden-draft-form" phx-submit="add_garden"
+          <.form for={:garden} id="garden-draft-form" phx-submit="save_garden"
             style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;">
             <div>
               <label class="dark-label" for="draft-name">Garden name</label>
@@ -296,7 +291,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
             </div>
             <button type="submit" ontouchstart=""
               style="width:100%;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
-              Add garden
+              {if @editing_garden, do: "Save changes", else: "Add garden"}
             </button>
           </.form>
         </div>
@@ -367,6 +362,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
      |> assign(:engagement_id, nil)
      |> assign(:schedule_job_engagement, nil)
      |> assign(:show_garden_sheet, false)
+     |> assign(:editing_garden, nil)
      |> assign(:draft, @empty_draft)
      |> assign(:open_jobs_by_garden, %{})}
   end
@@ -419,11 +415,27 @@ defmodule OpenSauceWeb.CustomerLive.Show do
       "province" => (org.address && org.address.province) || ""
     }
 
-    {:noreply, assign(socket, show_garden_sheet: true, draft: draft)}
+    {:noreply, assign(socket, show_garden_sheet: true, editing_garden: nil, draft: draft)}
+  end
+
+  def handle_event("open_edit_garden_sheet", %{"id" => id}, socket) do
+    addr = Enum.find(socket.assigns.customer.garden_addresses, &(&1.id == id))
+
+    draft = %{
+      "name" => addr.name || "",
+      "street" => addr.street || "",
+      "city" => addr.city || "",
+      "province" => addr.province || "",
+      "zip" => addr.zip || "",
+      "notes" => addr.notes || "",
+      "is_billing" => to_string(addr.is_billing)
+    }
+
+    {:noreply, assign(socket, show_garden_sheet: true, editing_garden: addr, draft: draft)}
   end
 
   def handle_event("close_garden_sheet", _params, socket) do
-    {:noreply, assign(socket, show_garden_sheet: false)}
+    {:noreply, assign(socket, show_garden_sheet: false, editing_garden: nil)}
   end
 
   def handle_event("toggle_draft_billing", _params, socket) do
@@ -431,32 +443,66 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     {:noreply, assign(socket, draft: Map.put(socket.assigns.draft, "is_billing", new_val))}
   end
 
-  def handle_event("add_garden", %{"garden" => params}, socket) do
+  def handle_event("save_garden", %{"garden" => params}, socket) do
     member = socket.assigns.current_member
     customer = socket.assigns.customer
+    editing = socket.assigns.editing_garden
     is_billing_new = params["is_billing"] == "true"
 
-    existing =
-      Enum.map(customer.garden_addresses, fn addr ->
-        %{
-          "id" => addr.id,
-          "name" => addr.name || "",
-          "street" => addr.street || "",
-          "city" => addr.city || "",
-          "province" => addr.province || "",
-          "zip" => addr.zip || "",
-          "notes" => addr.notes,
-          "is_garden" => "true",
-          "is_billing" => if(is_billing_new, do: "false", else: to_string(addr.is_billing)),
-          "is_indoor" => to_string(addr.is_indoor)
-        }
-      end)
+    updated_list =
+      if editing do
+        Enum.map(customer.garden_addresses, fn addr ->
+          if addr.id == editing.id do
+            %{
+              "id" => addr.id,
+              "name" => params["name"],
+              "street" => params["street"],
+              "city" => params["city"],
+              "province" => params["province"],
+              "zip" => params["zip"],
+              "notes" => params["notes"],
+              "is_garden" => "true",
+              "is_billing" => params["is_billing"],
+              "is_indoor" => to_string(addr.is_indoor)
+            }
+          else
+            %{
+              "id" => addr.id,
+              "name" => addr.name || "",
+              "street" => addr.street || "",
+              "city" => addr.city || "",
+              "province" => addr.province || "",
+              "zip" => addr.zip || "",
+              "notes" => addr.notes,
+              "is_garden" => "true",
+              "is_billing" => if(is_billing_new, do: "false", else: to_string(addr.is_billing)),
+              "is_indoor" => to_string(addr.is_indoor)
+            }
+          end
+        end)
+      else
+        existing =
+          Enum.map(customer.garden_addresses, fn addr ->
+            %{
+              "id" => addr.id,
+              "name" => addr.name || "",
+              "street" => addr.street || "",
+              "city" => addr.city || "",
+              "province" => addr.province || "",
+              "zip" => addr.zip || "",
+              "notes" => addr.notes,
+              "is_garden" => "true",
+              "is_billing" => if(is_billing_new, do: "false", else: to_string(addr.is_billing)),
+              "is_indoor" => to_string(addr.is_indoor)
+            }
+          end)
 
-    all_gardens = existing ++ [Map.put(params, "is_garden", "true")]
+        existing ++ [Map.put(params, "is_garden", "true")]
+      end
 
     result =
       customer
-      |> Ash.Changeset.for_update(:update, %{garden_addresses: all_gardens},
+      |> Ash.Changeset.for_update(:update, %{garden_addresses: updated_list},
         actor: member,
         tenant: member.organisation_id
       )
@@ -471,13 +517,15 @@ defmodule OpenSauceWeb.CustomerLive.Show do
          |> assign(:customer, updated_customer)
          |> assign(:open_jobs_by_garden, open_jobs_by_garden(updated_customer, socket))
          |> assign(:show_garden_sheet, false)
+         |> assign(:editing_garden, nil)
          |> assign(:draft, @empty_draft)}
 
       {:error, _} ->
         {:noreply,
          socket
-         |> put_flash(:error, "Could not add garden.")
-         |> assign(:show_garden_sheet, false)}
+         |> put_flash(:error, "Could not save garden.")
+         |> assign(:show_garden_sheet, false)
+         |> assign(:editing_garden, nil)}
     end
   end
 

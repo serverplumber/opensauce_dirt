@@ -22,7 +22,6 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       |> assign_new(:custom_line_items, fn -> [] end)
       |> assign_new(:params, fn ->
         %{
-          "reference" => "",
           "issued_on" => Date.to_iso8601(Date.utc_today()),
           "due_on" => "",
           "notes" => "",
@@ -40,19 +39,8 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     <div style="padding:0 16px;">
       <form id="invoice-form" phx-change="validate" phx-submit="save" phx-target={@myself} style="display:flex;flex-direction:column;gap:16px;padding-bottom:24px;">
 
-        <%!-- reference + customer --%>
+        <%!-- customer --%>
         <div style="display:flex;flex-direction:column;gap:12px;">
-          <div>
-            <label class="dark-label">Reference</label>
-            <input
-              type="text"
-              name="invoice[reference]"
-              value={@params["reference"]}
-              class="dark-input"
-              placeholder="INV-001"
-              required
-            />
-          </div>
           <div>
             <label class="dark-label">Customer</label>
             <select name="invoice[customer_id]" class="dark-select">
@@ -358,7 +346,6 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       end)
 
     attrs = %{
-      reference: params["reference"],
       customer_id: params["customer_id"],
       engagement_id: if(!engagement_hidden && engagement, do: engagement.id),
       issued_on: parse_date(params["issued_on"]),
@@ -515,9 +502,8 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     Enum.count(jobs, fn j -> not MapSet.member?(hidden_job_ids, j.id) end)
   end
 
-  defp can_save?(params, customer_id) do
-    ref = String.trim(params["reference"] || "")
-    ref != "" && customer_id not in [nil, ""]
+  defp can_save?(_params, customer_id) do
+    customer_id not in [nil, ""]
   end
 
   defp format_job_label(%{service_type: type, garden_name: garden}) when is_binary(garden) and garden != "" do
