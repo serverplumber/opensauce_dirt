@@ -14,14 +14,14 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"client_work\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "lot_code",
+      "source": "type",
       "type": "text"
     },
     {
@@ -33,7 +33,31 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "expiry_date",
+      "source": "service_category",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "account_code",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "scheduled_for",
       "type": "date"
     },
     {
@@ -45,8 +69,68 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "received_at",
-      "type": "utc_datetime"
+      "source": "start_time",
+      "type": "time"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"scheduling\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "due_by",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "duration_estimate",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "realized_cost",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "notes",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -91,7 +175,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_lots_organisation_id_fkey",
+        "name": "orders_jobs_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -104,7 +188,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -118,51 +202,20 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "inventory_lots_venue_id_fkey",
+        "name": "orders_jobs_garden_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "operations_venues"
+        "table": "crm_addresses"
       },
       "scale": null,
       "size": null,
-      "source": "venue_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_lots_material_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_materials"
-      },
-      "scale": null,
-      "size": null,
-      "source": "material_id",
+      "source": "garden_id",
       "type": "uuid"
     },
     {
@@ -184,16 +237,109 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_lots_supplier_id_fkey",
+        "name": "orders_jobs_engagement_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_suppliers"
+        "table": "crm_engagements"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_id",
+      "source": "engagement_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_jobs_invoice_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_invoices"
+      },
+      "scale": null,
+      "size": null,
+      "source": "invoice_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_jobs_containing_shift_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "orders_jobs"
+      },
+      "scale": null,
+      "size": null,
+      "source": "containing_shift_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "orders_jobs_actor_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_users"
+      },
+      "scale": null,
+      "size": null,
+      "source": "actor_id",
       "type": "uuid"
     }
   ],
@@ -205,39 +351,17 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "lot_code"
+        "scheduled_for"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "lot_code"
+          "value": "scheduled_for"
         }
       ],
       "include": null,
       "message": null,
-      "name": "inventory_lots_lot_code_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": true,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "material_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "material_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "inventory_lots_material_id_index",
+      "name": "orders_jobs_scheduled_for_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -249,17 +373,83 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "supplier_id"
+        "status"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "supplier_id"
+          "value": "status"
         }
       ],
       "include": null,
       "message": null,
-      "name": "inventory_lots_supplier_id_index",
+      "name": "orders_jobs_status_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "containing_shift_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "containing_shift_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_jobs_containing_shift_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "engagement_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_jobs_engagement_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "garden_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "garden_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_jobs_garden_id_index",
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -270,7 +460,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "DCE3D1F0F314B3BDDB4019F9E2C6C1494DCCE7B27949EEFDA951551FEDB94AB8",
+  "hash": "A95DD75C199B0F60FD7F4D30DB76F4FC4DD002AAD46D9F182C2C6B9CE32393FC",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -279,5 +469,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_lots"
+  "table": "orders_jobs"
 }

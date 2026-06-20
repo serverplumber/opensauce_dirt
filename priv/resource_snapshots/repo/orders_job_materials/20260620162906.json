@@ -21,18 +21,6 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "supplier_sku",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"1\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
       "source": "quantity",
       "type": "decimal"
     },
@@ -45,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "confirmed_qty",
+      "source": "cost",
       "type": "decimal"
     },
     {
@@ -57,32 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "received_qty",
+      "source": "price",
       "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "unit_price",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "is_reservation",
-      "type": "boolean"
     },
     {
       "allow_nil?": false,
@@ -123,24 +87,24 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "inventory_purchase_order_items_purchase_order_id_fkey",
+        "name": "orders_job_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_purchase_orders"
+        "table": "accounts_organisations"
       },
       "scale": null,
       "size": null,
-      "source": "purchase_order_id",
+      "source": "organisation_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -158,69 +122,7 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_purchase_order_items_supplier_catalog_item_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_supplier_catalog_items"
-      },
-      "scale": null,
-      "size": null,
-      "source": "supplier_catalog_item_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_purchase_order_items_material_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_materials"
-      },
-      "scale": null,
-      "size": null,
-      "source": "material_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_purchase_order_items_job_id_fkey",
+        "name": "orders_job_materials_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -231,6 +133,37 @@
       "size": null,
       "source": "job_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_job_materials_supplier_catalog_item_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_supplier_catalog_items"
+      },
+      "scale": null,
+      "size": null,
+      "source": "supplier_catalog_item_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -239,14 +172,14 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "FCEA9A481A03212DC3C8294F0DFE8BB3B7BDD91B181BE2DCF5B64BC877AB12C5",
+  "hash": "B6C6D28D00C07EF3F4D66B567FF91FCCA8F8D3A1650013700842D81C50CBC287",
   "identities": [],
   "multitenancy": {
-    "attribute": null,
-    "global": null,
-    "strategy": null
+    "attribute": "organisation_id",
+    "global": false,
+    "strategy": "attribute"
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_purchase_order_items"
+  "table": "orders_job_materials"
 }

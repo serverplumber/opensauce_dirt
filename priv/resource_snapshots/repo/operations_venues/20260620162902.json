@@ -14,14 +14,14 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"staff\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "role",
+      "source": "name",
       "type": "text"
     },
     {
@@ -33,31 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "display_title",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"0\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "labor_hourly_rate",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"active\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "status",
+      "source": "address",
       "type": "text"
     },
     {
@@ -103,38 +79,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "accounts_organisation_members_user_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_users"
-      },
-      "scale": null,
-      "size": null,
-      "source": "user_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "accounts_organisation_members_organisation_id_fkey",
+        "name": "operations_venues_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -153,33 +98,14 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "8C9392DA67B0CC9DB9ACE01C9148437848B12FF55A7DFC9B3DFD88BF25000246",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "accounts_organisation_members_unique_membership_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "user_id"
-        },
-        {
-          "type": "atom",
-          "value": "organisation_id"
-        }
-      ],
-      "name": "unique_membership",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "D330272F3FC83C0326E0617B02D87B7A90F7AE7C8372AD4B96E358C31CC5856C",
+  "identities": [],
   "multitenancy": {
-    "attribute": null,
-    "global": null,
-    "strategy": null
+    "attribute": "organisation_id",
+    "global": false,
+    "strategy": "attribute"
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_organisation_members"
+  "table": "operations_venues"
 }

@@ -14,39 +14,15 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"0\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "quantity",
+      "source": "man_hour_rate",
       "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "reason",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "occurred_at",
-      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -91,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_movements_organisation_id_fkey",
+        "name": "orders_job_event_staff_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -122,20 +98,20 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_movements_material_id_fkey",
+        "name": "orders_job_event_staff_job_event_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_materials"
+        "table": "orders_job_events"
       },
       "scale": null,
       "size": null,
-      "source": "material_id",
+      "source": "job_event_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -149,30 +125,53 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "inventory_movements_lot_id_fkey",
+        "name": "orders_job_event_staff_member_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_lots"
+        "table": "accounts_organisation_members"
       },
       "scale": null,
       "size": null,
-      "source": "lot_id",
+      "source": "member_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "job_event_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "job_event_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_job_event_staff_job_event_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9A1B2E05F225E10889D419B40531BB3C5554B6D1FA4C376DC6B7C7CB5C8B081D",
+  "hash": "8DF6BB74374AC23ACE6AD2A0036A7219B2755A69A0A1860DF3F47EB836D187E8",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -181,5 +180,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_movements"
+  "table": "orders_job_event_staff"
 }

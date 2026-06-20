@@ -26,39 +26,51 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"0\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "rate",
+      "source": "sku",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "unit",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "price",
       "type": "decimal"
     },
     {
       "allow_nil?": false,
-      "default": "false",
+      "default": "\"supply\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "is_compound",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": false,
-      "default": "0",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "position",
-      "type": "bigint"
+      "source": "material_type",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -69,8 +81,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "registration_number",
-      "type": "text"
+      "source": "minimum_stock",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "maximum_stock",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -115,7 +139,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "accounts_tax_rates_organisation_id_fkey",
+        "name": "inventory_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -134,8 +158,37 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "94E20C7A60660DF37BFCF091D85575DBFD4488FAEDA1F98143E88AA829214EC1",
-  "identities": [],
+  "hash": "61ABFAE5FE9F82133B24B331F0EAE31E6B7A7B01F1715F087998836ABCDD3863",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "inventory_materials_name_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "name"
+        }
+      ],
+      "name": "name",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "inventory_materials_sku_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "sku"
+        }
+      ],
+      "name": "sku",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -143,5 +196,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_tax_rates"
+  "table": "inventory_materials"
 }

@@ -24,7 +24,7 @@ defmodule OpenSauce.Work.JobMaterial do
     end
 
     update :update do
-      accept [:quantity]
+      accept [:quantity, :cost, :price]
     end
 
     update :move do
@@ -47,8 +47,27 @@ defmodule OpenSauce.Work.JobMaterial do
   attributes do
     uuid_primary_key :id
 
+    # Zero is valid — a plant can be on the job at qty 0 to record a gifted/presented item.
+    # Use destroy to remove the line; do not treat 0 as a removal signal.
     attribute :quantity, :decimal do
       allow_nil? false
+      public? true
+      constraints min: 0
+    end
+
+    # What the org paid externally for this material on this job.
+    # Distinct from SupplierCatalogItem.unit_price (catalogue list price), which is often
+    # absent for plants. Filled in when the supplier invoice is known; nil until then.
+    attribute :cost, :decimal do
+      allow_nil? true
+      public? true
+      constraints min: 0
+    end
+
+    # Billable rate or MSRP to the client for this material on this job.
+    # Independent of cost and catalogue price — set when quoting or invoicing.
+    attribute :price, :decimal do
+      allow_nil? true
       public? true
       constraints min: 0
     end

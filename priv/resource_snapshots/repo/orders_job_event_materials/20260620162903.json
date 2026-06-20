@@ -21,8 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
-      "type": "text"
+      "source": "quantity",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -67,7 +67,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "operations_storage_locations_organisation_id_fkey",
+        "name": "orders_job_event_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,16 +98,47 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "operations_storage_locations_venue_id_fkey",
+        "name": "orders_job_event_materials_job_event_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "operations_venues"
+        "table": "orders_job_events"
       },
       "scale": null,
       "size": null,
-      "source": "venue_id",
+      "source": "job_event_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_job_event_materials_material_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_materials"
+      },
+      "scale": null,
+      "size": null,
+      "source": "material_id",
       "type": "uuid"
     }
   ],
@@ -117,7 +148,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "6AF2A85602D1623A3D1055C828287797995104A5F16803261D6FC835832A3E89",
+  "hash": "BC4AB91BCB7A233A80FB6FA31DADB8595F4A0DBCCE72BEDC5BDEE609E2C02A7D",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -126,5 +157,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "operations_storage_locations"
+  "table": "orders_job_event_materials"
 }

@@ -21,8 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
-      "type": "text"
+      "source": "data",
+      "type": "map"
     },
     {
       "allow_nil?": true,
@@ -33,8 +33,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_name",
-      "type": "text"
+      "source": "actor_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "timestamp",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": true,
@@ -45,31 +57,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_email",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "contact_phone",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
+      "source": "note",
       "type": "text"
     },
     {
@@ -115,7 +103,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_suppliers_organisation_id_fkey",
+        "name": "orders_job_events_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -126,15 +114,74 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_job_events_job_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "orders_jobs"
+      },
+      "scale": null,
+      "size": null,
+      "source": "job_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "job_id",
+        "timestamp"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "job_id"
+        },
+        {
+          "type": "atom",
+          "value": "timestamp"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_job_events_job_timeline_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "4929581C677F7CB1F281C9A1348979DC06DEEBA8A95AD67A4BB39A25EEC88DCC",
+  "hash": "12F154AA5641B452E1DF5049A185009919322AD8DDC7E29D083FCF359B74CD51",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -143,5 +190,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_suppliers"
+  "table": "orders_job_events"
 }

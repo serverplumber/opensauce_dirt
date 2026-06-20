@@ -14,6 +14,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
      |> assign(:search_query, "")
      |> assign(:search_results, [])
      |> assign(:format_filter, nil)
+     |> assign(:editing_material, nil)
      |> assign(:main_bg, "bg-[#16140E]")}
   end
 
@@ -100,6 +101,31 @@ defmodule OpenSauceWeb.JobLive.Materials do
       {:noreply, reload(socket)}
     else
       {:noreply, socket}
+    end
+  end
+
+  def handle_event("open_material_sheet", %{"id" => jm_id}, socket) do
+    jm = Enum.find(socket.assigns.job.materials, &(&1.id == jm_id))
+    {:noreply, assign(socket, :editing_material, jm)}
+  end
+
+  def handle_event("close_material_sheet", _params, socket) do
+    {:noreply, assign(socket, :editing_material, nil)}
+  end
+
+  def handle_event("save_material_sheet", params, socket) do
+    member = socket.assigns.current_member
+    jm = socket.assigns.editing_material
+
+    attrs = %{
+      quantity: parse_decimal(params["nb"]),
+      cost: parse_optional_decimal(params["cost"]),
+      price: parse_optional_decimal(params["price"])
+    }
+
+    case Work.update_job_material(jm, attrs, actor: member, tenant: member.organisation_id) do
+      {:ok, _} -> {:noreply, socket |> assign(:editing_material, nil) |> reload()}
+      {:error, _} -> {:noreply, put_flash(socket, :error, "Could not save.")}
     end
   end
 
@@ -228,37 +254,42 @@ defmodule OpenSauceWeb.JobLive.Materials do
           </div>
           <div :if={@job.materials != []} style="display:flex;flex-direction:column;gap:6px;">
             <div :for={jm <- @job.materials}
-              style={"background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid #{if MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id), do: "#54B57E", else: "rgba(52,48,37,0.58)"};"}>
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              phx-click="open_material_sheet"
+              phx-value-id={jm.id}
+              ontouchstart=""
+              style={"background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid #{if MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id), do: "#54B57E", else: "rgba(52,48,37,0.58)"};cursor:pointer;"}>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <%!-- quantity badge --%>
+                <div style="flex-shrink:0;min-width:32px;text-align:center;">
+                  <span style="font-size:11px;font-weight:700;color:#6E675A;">×</span><span style="font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.02em;">{jm.quantity}</span>
+                </div>
+                <%!-- name + supplier --%>
                 <div style="flex:1;min-width:0;">
                   <p style="font-size:13px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {catalog_item_title(jm.supplier_catalog_item)}
                   </p>
-                  <p style="font-size:11px;color:#9A9384;margin-top:2px;">
+                  <p style="font-size:11px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {jm.supplier_catalog_item.supplier_catalog.supplier.name}
                     {if jm.supplier_catalog_item.format_description, do: " · #{jm.supplier_catalog_item.format_description}"}
-                    {if MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id), do: " · from plan"}
+                    {if MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id), do: " · plan"}
                   </p>
                 </div>
+                <%!-- cost + price + remove --%>
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                  <div style="display:flex;align-items:center;gap:4px;">
-                    <button type="button"
-                      phx-click="sub_one"
-                      phx-value-id={jm.supplier_catalog_item_id}
-                      ontouchstart=""
-                      style={stepper_btn_style()}>
-                      −1
-                    </button>
-                    <span style="font-size:16px;font-weight:700;color:#F4EFE2;min-width:32px;text-align:center;">{jm.quantity}</span>
-                    <button type="button"
-                      phx-click="add_one"
-                      phx-value-id={jm.supplier_catalog_item_id}
-                      ontouchstart=""
-                      style={stepper_btn_style()}>
-                      +1
-                    </button>
+                  <div style="text-align:right;">
+                    <p style="font-size:12px;font-weight:700;color:#DB9258;line-height:1.2;">
+                      {jm.cost && HtmlHelpers.format_currency(@organisation.currency, jm.cost) || "—"}
+                    </p>
+                    <p style="font-size:10px;color:#9A7344;margin-top:1px;">cost</p>
+                  </div>
+                  <div style="text-align:right;">
+                    <p style="font-size:12px;font-weight:700;color:#54B57E;line-height:1.2;">
+                      {jm.price && HtmlHelpers.format_currency(@organisation.currency, jm.price) || "—"}
+                    </p>
+                    <p style="font-size:10px;color:#3A7A57;margin-top:1px;">price</p>
                   </div>
                   <button type="button" phx-click="remove_item" phx-value-id={jm.id} ontouchstart=""
+                    onclick="event.stopPropagation()"
                     style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                       <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -297,6 +328,93 @@ defmodule OpenSauceWeb.JobLive.Materials do
           </div>
         </div>
 
+      </div>
+
+      <%!-- material edit bottom sheet --%>
+      <div
+        :if={@editing_material != nil}
+        style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
+      >
+        <div
+          phx-click="close_material_sheet"
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
+        >
+        </div>
+        <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
+          <%!-- handle + header --%>
+          <div style="padding:12px 16px 14px;border-bottom:1px solid rgba(52,48,37,0.58);">
+            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+              <div style="min-width:0;flex:1;">
+                <p style="font-size:15px;font-weight:700;color:#F4EFE2;line-height:1.2;">
+                  {catalog_item_title(@editing_material.supplier_catalog_item)}
+                </p>
+                <p style="font-size:11px;color:#6E675A;margin-top:3px;">
+                  {@editing_material.supplier_catalog_item.supplier_catalog.supplier.name}
+                </p>
+              </div>
+              <button
+                type="button"
+                phx-click="close_material_sheet"
+                ontouchstart=""
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <%!-- form --%>
+          <form phx-submit="save_material_sheet" style="padding:16px;">
+            <div style="display:flex;gap:10px;">
+              <div style="flex:1;">
+                <label class="dark-label">Qty</label>
+                <input
+                  class="dark-input"
+                  type="number"
+                  name="nb"
+                  value={@editing_material.quantity}
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  style="text-align:center;"
+                />
+              </div>
+              <div style="flex:1;">
+                <label class="dark-label" style="color:#9A7344;">Cost</label>
+                <input
+                  class="dark-input"
+                  type="number"
+                  name="cost"
+                  value={@editing_material.cost}
+                  min="0"
+                  step="0.01"
+                  inputmode="decimal"
+                  placeholder="—"
+                  style="color:#DB9258;"
+                />
+              </div>
+              <div style="flex:1;">
+                <label class="dark-label" style="color:#3A7A57;">Price</label>
+                <input
+                  class="dark-input"
+                  type="number"
+                  name="price"
+                  value={@editing_material.price}
+                  min="0"
+                  step="0.01"
+                  inputmode="decimal"
+                  placeholder="—"
+                  style="color:#54B57E;"
+                />
+              </div>
+            </div>
+            <button type="submit" class="leaf-btn" style="width:100%;margin-top:16px;">
+              Save
+            </button>
+          </form>
+        </div>
       </div>
 
       <%!-- sticky summary bar --%>
@@ -533,6 +651,14 @@ defmodule OpenSauceWeb.JobLive.Materials do
   end
 
   defp engagement_context(_), do: ""
+
+  defp parse_decimal(nil), do: Decimal.new(0)
+  defp parse_decimal(""), do: Decimal.new(0)
+  defp parse_decimal(s), do: Decimal.new(s)
+
+  defp parse_optional_decimal(nil), do: nil
+  defp parse_optional_decimal(""), do: nil
+  defp parse_optional_decimal(s), do: Decimal.new(s)
 
   defp back_path(%{engagement: eng, engagement_id: eid}) when not is_nil(eid) do
     if eng && eng.customer do

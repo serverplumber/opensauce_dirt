@@ -14,6 +14,54 @@
     },
     {
       "allow_nil?": false,
+      "default": "nil",
+      "generated?": true,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reference",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "ordered_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "received_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -55,7 +103,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_staff_organisation_id_fkey",
+        "name": "inventory_purchase_orders_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -68,7 +116,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -86,96 +134,38 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_staff_job_id_fkey",
+        "name": "inventory_purchase_orders_supplier_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders_jobs"
+        "table": "inventory_suppliers"
       },
       "scale": null,
       "size": null,
-      "source": "job_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "orders_job_staff_member_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_organisation_members"
-      },
-      "scale": null,
-      "size": null,
-      "source": "member_id",
+      "source": "supplier_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "job_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "job_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "orders_job_staff_job_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "4C2D1C123744AE6CC8CA01EABB41C71F9AFD5CE1223E96A40789A367C8237407",
+  "hash": "D092A1D2937BFB248D12A1871B9C3A42B1A474141C5F8D4F83239FCE73157569",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "orders_job_staff_unique_staff_assignment_index",
+      "index_name": "inventory_purchase_orders_reference_index",
       "keys": [
         {
           "type": "atom",
-          "value": "job_id"
-        },
-        {
-          "type": "atom",
-          "value": "member_id"
+          "value": "reference"
         }
       ],
-      "name": "unique_staff_assignment",
+      "name": "reference",
       "nils_distinct?": true,
       "where": null
     }
@@ -187,5 +177,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_staff"
+  "table": "inventory_purchase_orders"
 }

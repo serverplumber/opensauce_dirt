@@ -14,18 +14,6 @@
     },
     {
       "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "quantity",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -67,7 +55,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_job_materials_organisation_id_fkey",
+        "name": "orders_job_staff_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,7 +86,7 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_job_materials_job_id_fkey",
+        "name": "orders_job_staff_job_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -125,31 +113,73 @@
         "match_type": null,
         "match_with": null,
         "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
+          "attribute": null,
+          "global": null,
+          "strategy": null
         },
-        "name": "orders_job_materials_supplier_catalog_item_id_fkey",
+        "name": "orders_job_staff_member_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_supplier_catalog_items"
+        "table": "accounts_organisation_members"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_catalog_item_id",
+      "source": "member_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "job_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "job_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "orders_job_staff_job_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B76BC18B0C1A9DBF36A8B5B543A2F8B997358A5246655D2FB711270E22BBDE35",
-  "identities": [],
+  "hash": "3100A11CFC6BCF961ACCA38B9089A9B1F1CC697440B1887D554287A40ABE5AA3",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "orders_job_staff_unique_staff_assignment_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "job_id"
+        },
+        {
+          "type": "atom",
+          "value": "member_id"
+        }
+      ],
+      "name": "unique_staff_assignment",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -157,5 +187,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_job_materials"
+  "table": "orders_job_staff"
 }

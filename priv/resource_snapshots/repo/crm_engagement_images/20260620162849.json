@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "type",
       "type": "text"
     },
     {
@@ -33,7 +33,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "sku",
+      "source": "captured_on",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "storage_key",
       "type": "text"
     },
     {
@@ -45,7 +57,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "unit",
+      "source": "content_type",
       "type": "text"
     },
     {
@@ -57,19 +69,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "price",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"supply\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "material_type",
+      "source": "original_filename",
       "type": "text"
     },
     {
@@ -81,20 +81,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "minimum_stock",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "maximum_stock",
-      "type": "decimal"
+      "source": "notes",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -139,7 +127,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_materials_organisation_id_fkey",
+        "name": "crm_engagement_images_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -150,45 +138,97 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "crm_engagement_images_engagement_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_engagements"
+      },
+      "scale": null,
+      "size": null,
+      "source": "engagement_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
-  "custom_statements": [],
-  "has_create_action": true,
-  "hash": "16073E033CEAA2EF709F45AEDB375D0D783BC8E2498220B17287BF85026D46DE",
-  "identities": [
+  "custom_indexes": [
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "inventory_materials_name_index",
-      "keys": [
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id"
+      ],
+      "fields": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "engagement_id"
         }
       ],
-      "name": "name",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": "crm_engagement_images_engagement_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     },
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "inventory_materials_sku_index",
-      "keys": [
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id",
+        "type"
+      ],
+      "fields": [
         {
           "type": "atom",
-          "value": "sku"
+          "value": "engagement_id"
+        },
+        {
+          "type": "atom",
+          "value": "type"
         }
       ],
-      "name": "sku",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": "crm_engagement_images_engagement_type_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     }
   ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "80424B375C10FBC8EA96857D047576F6DF28617921793A338A0696138B376C0A",
+  "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
     "global": false,
@@ -196,5 +236,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_materials"
+  "table": "crm_engagement_images"
 }

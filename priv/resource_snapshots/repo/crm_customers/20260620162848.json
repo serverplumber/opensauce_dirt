@@ -26,14 +26,14 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"draft\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
+      "source": "type",
       "type": "text"
     },
     {
@@ -45,8 +45,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "ordered_at",
-      "type": "utc_datetime"
+      "source": "company_name_nickname",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "first_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "last_name",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -57,8 +81,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "received_at",
-      "type": "utc_datetime"
+      "source": "email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "phone",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -103,7 +139,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_purchase_orders_organisation_id_fkey",
+        "name": "crm_customers_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -114,37 +150,6 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_purchase_orders_supplier_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_suppliers"
-      },
-      "scale": null,
-      "size": null,
-      "source": "supplier_id",
-      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -153,12 +158,40 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "0BAB806494061D9EE2A6E33837BF12E2858CF433E7764B52612F93534C0F48FF",
+  "hash": "137C24F41D7AEBCD2DDB5C482192DF138F665F2F1915F27476149918A452D385",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "inventory_purchase_orders_reference_index",
+      "index_name": "crm_customers_email_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "email"
+        }
+      ],
+      "name": "email",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "crm_customers_phone_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "phone"
+        }
+      ],
+      "name": "phone",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "crm_customers_reference_index",
       "keys": [
         {
           "type": "atom",
@@ -177,5 +210,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_purchase_orders"
+  "table": "crm_customers"
 }
