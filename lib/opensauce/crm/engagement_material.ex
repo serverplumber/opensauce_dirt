@@ -25,7 +25,7 @@ defmodule OpenSauce.CRM.EngagementMaterial do
 
     update :update do
       primary? true
-      accept [:quantity, :scheduled_date, :note]
+      accept [:quantity, :scheduled_date, :note, :cost, :price]
     end
   end
 
@@ -42,6 +42,8 @@ defmodule OpenSauce.CRM.EngagementMaterial do
   attributes do
     uuid_primary_key :id
 
+    # Planned quantity for the engagement scope. May differ from what is ultimately
+    # recorded on JobMaterials when the work is executed.
     attribute :quantity, :decimal do
       allow_nil? false
       public? true
@@ -56,6 +58,25 @@ defmodule OpenSauce.CRM.EngagementMaterial do
     attribute :note, :string do
       allow_nil? true
       public? true
+    end
+
+    # Estimated cost to the org for this material at engagement time (supplier price).
+    # Used to cost the engagement and verify margin before signing. May be updated
+    # as supplier quotes come in; the actual paid cost is recorded on JobMaterial.cost
+    # once the job runs.
+    attribute :cost, :decimal do
+      allow_nil? true
+      public? true
+      constraints min: 0
+    end
+
+    # Planned billable price to the client for this material.
+    # Set when building the engagement quote to verify margin. May differ from the
+    # final JobMaterial.price if pricing changes between quoting and execution.
+    attribute :price, :decimal do
+      allow_nil? true
+      public? true
+      constraints min: 0
     end
 
     timestamps()

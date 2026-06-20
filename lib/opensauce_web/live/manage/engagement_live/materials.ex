@@ -5,6 +5,7 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
   alias OpenSauce.CRM
   alias OpenSauce.Inventory
   alias OpenSauceWeb.HtmlHelpers
+  alias Phoenix.LiveView.JS
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,6 +14,10 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
      |> assign(:search_query, "")
      |> assign(:search_results, [])
      |> assign(:format_filter, nil)
+     |> assign(:editing_material, nil)
+     |> assign(:date_lines, [])
+     |> assign(:selected_date, nil)
+     |> assign(:adding_date_line, false)
      |> assign(:main_bg, "bg-[#16140E]")}
   end
 
@@ -31,12 +36,54 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
         ]
       )
 
+    date_lines = derive_date_lines(engagement.materials, socket.assigns[:date_lines] || [])
+
     {:noreply,
      socket
      |> assign(:reference, reference)
      |> assign(:engagement, engagement)
      |> assign(:plan_map, build_plan_map(engagement.materials))
+     |> assign(:date_lines, date_lines)
      |> assign(:page_title, "Plan materials")}
+  end
+
+  def handle_event("set_date_context", %{"date" => ""}, socket) do
+    {:noreply, assign(socket, :selected_date, nil)}
+  end
+
+  def handle_event("set_date_context", %{"date" => date_str}, socket) do
+    {:ok, date} = Date.from_iso8601(date_str)
+    {:noreply, assign(socket, :selected_date, date)}
+  end
+
+  def handle_event("start_add_date_line", _, socket) do
+    {:noreply, assign(socket, :adding_date_line, true)}
+  end
+
+  def handle_event("confirm_date_line", %{"date" => date_str}, socket) do
+    case Date.from_iso8601(date_str) do
+      {:ok, date} ->
+        {:noreply,
+         socket
+         |> update(:date_lines, fn lines -> Enum.sort(Enum.uniq([date | lines])) end)
+         |> assign(:selected_date, date)
+         |> assign(:adding_date_line, false)}
+
+      _ ->
+        {:noreply, assign(socket, :adding_date_line, false)}
+    end
+  end
+
+  def handle_event("cancel_add_date_line", _, socket) do
+    {:noreply, assign(socket, :adding_date_line, false)}
+  end
+
+  def handle_event("clear_search", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, "")
+     |> assign(:search_results, [])
+     |> assign(:format_filter, nil)}
   end
 
   @impl true
@@ -101,53 +148,64 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
     end
   end
 
+  def handle_event("open_material_sheet", %{"id" => em_id}, socket) do
+    em = Enum.find(socket.assigns.engagement.materials, &(&1.id == em_id))
+    {:noreply, assign(socket, :editing_material, em)}
+  end
+
+  def handle_event("close_material_sheet", _params, socket) do
+    {:noreply, assign(socket, :editing_material, nil)}
+  end
+
+  def handle_event("save_material_sheet", params, socket) do
+    member = socket.assigns.current_member
+    em = socket.assigns.editing_material
+
+    attrs = %{
+      quantity: parse_decimal(params["nb"]),
+      cost: parse_optional_decimal(params["cost"]),
+      price: parse_optional_decimal(params["price"]),
+      scheduled_date: parse_optional_date(params["scheduled_date"])
+    }
+
+    case CRM.update_engagement_material(em, attrs, actor: member, tenant: member.organisation_id) do
+      {:ok, _} -> {:noreply, socket |> assign(:editing_material, nil) |> reload()}
+      {:error, _} -> {:noreply, put_flash(socket, :error, "Could not save.")}
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:80px;">
 
-      <%!-- nav row --%>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
-        <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
-          <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </.link>
-        <div style="text-align:center;">
-          <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">Plan materials</p>
-          <p style="font-size:11px;color:#9A9384;margin-top:1px;">
-            {customer_short_name(@engagement.customer)} · {@engagement.scope_title || "Engagement"}
-          </p>
-        </div>
-        <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
-          <button type="button" ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;">
-            Done
-          </button>
-        </.link>
-      </div>
+      <.material_search_header
+        search_query={@search_query}
+        placeholder="Latin name, cultivar, or common name…"
+      >
+        <:nav>
+          <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
+            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </.link>
+          <div style="text-align:center;">
+            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">Plan materials</p>
+            <p style="font-size:11px;color:#9A9384;margin-top:1px;">
+              {customer_short_name(@engagement.customer)} · {@engagement.scope_title || "Engagement"}
+            </p>
+          </div>
+          <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
+            <button type="button" ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;">
+              Done
+            </button>
+          </.link>
+        </:nav>
+      </.material_search_header>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px;">
-
-        <%!-- search --%>
-        <form phx-change="search" style="position:relative;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6E675A;pointer-events:none;">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <input
-            class="dark-input"
-            type="search"
-            name="q"
-            value={@search_query}
-            phx-debounce="300"
-            autocomplete="off"
-            placeholder="Latin name, cultivar, or common name…"
-            style="padding-left:36px;"
-          />
-        </form>
 
         <%!-- format filter chips --%>
         <div :if={@search_results != [] and format_options(@search_results) != []}
@@ -180,51 +238,87 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
 
         <%!-- plan list (when not searching) --%>
         <div :if={@search_query == ""}>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <span class="dark-label" style="margin-bottom:0;">Current plan</span>
-          </div>
-          <div :if={@engagement.materials == []}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
-            No materials yet — search to add
-          </div>
-          <div :if={@engagement.materials != []} style="display:flex;flex-direction:column;gap:6px;">
-            <div :for={em <- @engagement.materials}
-              style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;display:flex;align-items:center;gap:10px;">
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:13px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                  {catalog_item_title(em.supplier_catalog_item)}
-                </p>
-                <p style="font-size:11px;color:#9A9384;margin-top:2px;">
-                  {em.supplier_catalog_item.supplier_catalog.supplier.name}
-                  {if em.supplier_catalog_item.format_description, do: " · #{em.supplier_catalog_item.format_description}"}
-                  {if em.scheduled_date, do: " · #{em.scheduled_date}"}
-                </p>
-              </div>
-              <span style="font-size:15px;font-weight:700;color:#F4EFE2;flex-shrink:0;">×{em.quantity}</span>
-              <button type="button" phx-click="remove_plan_item" phx-value-id={em.id} ontouchstart=""
-                style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:12px;">
+            <div :for={{date, items} <- display_groups(@engagement.materials, @date_lines)}>
+              <div
+                phx-click="set_date_context"
+                phx-value-date={if is_nil(date), do: "", else: Date.to_iso8601(date)}
+                ontouchstart=""
+                style={"display:flex;align-items:center;gap:8px;cursor:pointer;#{if items == [], do: "", else: "margin-bottom:8px;"}"}
+              >
+                <span style={"font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;#{if @selected_date == date, do: "color:#54B57E;", else: "color:#6E675A;"}"}>
+                  {date_group_label(date, @engagement.term_start)}
+                </span>
+                <div style={"flex:1;height:1px;#{if @selected_date == date, do: "background:rgba(84,181,126,0.35);", else: "background:rgba(52,48,37,0.58);"}"}>
+                </div>
+                <svg
+                  :if={@selected_date == date}
+                  width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  style="flex-shrink:0;color:#54B57E;"
+                >
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-              </button>
+              </div>
+              <div :if={items != []} style="display:flex;flex-direction:column;gap:6px;">
+                <.material_line
+                  :for={em <- items}
+                  jm={em}
+                  currency={@organisation.currency}
+                  on_tap={JS.push("open_material_sheet", value: %{id: em.id})}
+                  on_remove={JS.push("remove_plan_item", value: %{id: em.id})}
+                />
+              </div>
             </div>
+            <p
+              :if={@engagement.materials == []}
+              style="font-size:13px;color:#6E675A;text-align:center;padding:2px 0 6px;"
+            >search above to add plants</p>
           </div>
+          <form :if={@adding_date_line} phx-submit="confirm_date_line"
+            style="display:flex;align-items:center;gap:8px;">
+            <input
+              type="date" name="date" class="dark-input"
+              style="flex:1;color-scheme:dark;" autofocus
+            />
+            <button type="submit" ontouchstart=""
+              style="background:#54B57E;color:#0C1F15;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">
+              Add
+            </button>
+            <button type="button" phx-click="cancel_add_date_line" ontouchstart=""
+              style="background:none;border:none;color:#6E675A;font-size:16px;cursor:pointer;padding:4px 8px;line-height:1;">
+              ✕
+            </button>
+          </form>
+          <button :if={!@adding_date_line} type="button" phx-click="start_add_date_line"
+            ontouchstart=""
+            style="width:100%;border-radius:12px;border:1.5px dashed rgba(84,181,126,0.3);padding:10px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#54B57E;">
+            <.add_job_icon />
+          </button>
         </div>
 
       </div>
 
       <%!-- sticky summary bar --%>
-      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;z-index:10;">
-        <span style="font-size:13px;color:#9A9384;">
-          plan · {length(@engagement.materials)} {if length(@engagement.materials) == 1, do: "item", else: "items"}
-          · est {HtmlHelpers.format_currency(@organisation.currency, plan_cost(@engagement.materials))}
-        </span>
-        <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
-          <span ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;cursor:pointer;">
-            back to engagement →
+      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;z-index:10;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+          <span style="font-size:13px;color:#9A9384;">
+            {length(@engagement.materials)} {if length(@engagement.materials) == 1, do: "item", else: "items"}
           </span>
-        </.link>
+          <span style="font-size:13px;font-weight:700;color:#DB9258;">
+            {HtmlHelpers.format_currency(@organisation.currency, materials_cost_total(@engagement.materials))}
+          </span>
+          <span style="font-size:13px;font-weight:700;color:#54B57E;">
+            {HtmlHelpers.format_currency(@organisation.currency, materials_price_total(@engagement.materials))}
+          </span>
+        </div>
       </div>
+
+      <.material_line_sheet
+        material={@editing_material}
+        currency={@organisation.currency}
+        on_close={JS.push("close_material_sheet")}
+        show_date={true}
+      />
 
     </div>
     """
@@ -315,12 +409,16 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
     case Map.get(socket.assigns.plan_map, catalog_item_id) do
       nil ->
         qty = max(delta, 1)
+        {cost_val, price_val} = catalog_price(item)
 
         case CRM.create_engagement_material(
                %{
                  engagement_id: engagement.id,
                  supplier_catalog_item_id: catalog_item_id,
                  quantity: Decimal.new(qty),
+                 scheduled_date: socket.assigns.selected_date,
+                 cost: cost_val,
+                 price: price_val,
                  organisation_id: member.organisation_id
                },
                actor: member,
@@ -375,6 +473,7 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
     socket
     |> assign(:engagement, engagement)
     |> assign(:plan_map, build_plan_map(engagement.materials))
+    |> update(:date_lines, &derive_date_lines(engagement.materials, &1))
   end
 
   defp build_plan_map(materials) do
@@ -389,6 +488,14 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
   defp flat_size(%{min_order_qty: nil}), do: 1
   defp flat_size(%{min_order_qty: n}), do: n
 
+  # Splits a catalog item's unit_price into {cost, price} based on catalog price_kind.
+  # :cost catalogs → populate cost field, leave price nil (margin to be set later).
+  # :msrp catalogs (or unspecified) → populate price field, leave cost nil.
+  defp catalog_price(nil), do: {nil, nil}
+  defp catalog_price(%{unit_price: nil}), do: {nil, nil}
+  defp catalog_price(%{unit_price: p, supplier_catalog: %{price_kind: :cost}}), do: {p, nil}
+  defp catalog_price(%{unit_price: p}), do: {nil, p}
+
   defp format_options(results) do
     results
     |> Enum.map(& &1.format_description)
@@ -400,12 +507,62 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
   defp filtered_results(results, nil), do: results
   defp filtered_results(results, fmt), do: Enum.filter(results, &(&1.format_description == fmt))
 
-  defp plan_cost(materials) do
+  defp materials_cost_total(materials) do
     Enum.reduce(materials, Decimal.new(0), fn em, acc ->
-      unit = em.supplier_catalog_item.unit_price || Decimal.new(0)
-      Decimal.add(acc, Decimal.mult(em.quantity, unit))
+      Decimal.add(acc, Decimal.mult(em.quantity, em.cost || Decimal.new(0)))
     end)
   end
+
+  defp materials_price_total(materials) do
+    Enum.reduce(materials, Decimal.new(0), fn em, acc ->
+      Decimal.add(acc, Decimal.mult(em.quantity, em.price || Decimal.new(0)))
+    end)
+  end
+
+  defp parse_decimal(nil), do: Decimal.new(0)
+  defp parse_decimal(""), do: Decimal.new(0)
+  defp parse_decimal(s) do
+    case Decimal.parse(s) do
+      {d, ""} -> d
+      _ -> Decimal.new(0)
+    end
+  end
+
+  defp parse_optional_decimal(nil), do: nil
+  defp parse_optional_decimal(""), do: nil
+  defp parse_optional_decimal(s) do
+    case Decimal.parse(s) do
+      {d, ""} -> d
+      _ -> nil
+    end
+  end
+
+  defp parse_optional_date(nil), do: nil
+  defp parse_optional_date(""), do: nil
+  defp parse_optional_date(s) do
+    case Date.from_iso8601(s) do
+      {:ok, d} -> d
+      _ -> nil
+    end
+  end
+
+  # Always renders a row for each known date (from date_lines + existing materials),
+  # including empty ones — so a freshly-added date line is immediately selectable.
+  defp display_groups(materials, date_lines) do
+    grouped = Enum.group_by(materials, & &1.scheduled_date)
+    all_dates =
+      (date_lines ++ (materials |> Enum.map(& &1.scheduled_date) |> Enum.reject(&is_nil/1)))
+      |> Enum.uniq()
+      |> Enum.sort()
+
+    undated = [{nil, Map.get(grouped, nil, [])}]
+    dated = Enum.map(all_dates, fn d -> {d, Map.get(grouped, d, [])} end)
+    undated ++ dated
+  end
+
+  defp date_group_label(nil, nil), do: "Plan"
+  defp date_group_label(nil, term_start), do: Calendar.strftime(term_start, "%b %-d, %Y")
+  defp date_group_label(date, _), do: Calendar.strftime(date, "%b %-d, %Y")
 
   defp price_label(item, currency) do
     case item.unit_price do
@@ -426,4 +583,11 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
 
   defp customer_short_name(%{company_name_nickname: n}) when is_binary(n) and n != "", do: n
   defp customer_short_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
+
+  # Merges dates from existing materials with any locally-added (unpersisted) date lines.
+  defp derive_date_lines(materials, existing_lines) do
+    from_materials = materials |> Enum.map(& &1.scheduled_date) |> Enum.reject(&is_nil/1) |> Enum.uniq()
+    (from_materials ++ existing_lines) |> Enum.uniq() |> Enum.sort()
+  end
+
 end

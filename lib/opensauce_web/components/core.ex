@@ -1012,4 +1012,5 @@ defmodule OpenSauceWeb.Components.Core do
     do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
 
   defp member_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
+
 end

@@ -6,6 +6,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
   alias OpenSauce.Inventory
   alias OpenSauce.Work
   alias OpenSauceWeb.HtmlHelpers
+  alias Phoenix.LiveView.JS
 
   @impl true
   def mount(_params, _session, socket) do
@@ -253,54 +254,22 @@ defmodule OpenSauceWeb.JobLive.Materials do
             No materials yet — search to add
           </div>
           <div :if={@job.materials != []} style="display:flex;flex-direction:column;gap:6px;">
-            <div :for={jm <- @job.materials}
-              phx-click="open_material_sheet"
-              phx-value-id={jm.id}
-              ontouchstart=""
-              style={"background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid #{if MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id), do: "#54B57E", else: "rgba(52,48,37,0.58)"};cursor:pointer;"}>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <%!-- quantity badge --%>
-                <div style="flex-shrink:0;min-width:32px;text-align:center;">
-                  <span style="font-size:11px;font-weight:700;color:#6E675A;">×</span><span style="font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.02em;">{jm.quantity}</span>
-                </div>
-                <%!-- name + supplier --%>
-                <div style="flex:1;min-width:0;">
-                  <p style="font-size:13px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {catalog_item_title(jm.supplier_catalog_item)}
-                  </p>
-                  <p style="font-size:11px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {jm.supplier_catalog_item.supplier_catalog.supplier.name}
-                    {if jm.supplier_catalog_item.format_description, do: " · #{jm.supplier_catalog_item.format_description}"}
-                    {if MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id), do: " · plan"}
-                  </p>
-                </div>
-                <%!-- cost + price + remove --%>
-                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                  <div style="text-align:right;">
-                    <p style="font-size:12px;font-weight:700;color:#DB9258;line-height:1.2;">
-                      {jm.cost && HtmlHelpers.format_currency(@organisation.currency, jm.cost) || "—"}
-                    </p>
-                    <p style="font-size:10px;color:#9A7344;margin-top:1px;">cost</p>
-                  </div>
-                  <div style="text-align:right;">
-                    <p style="font-size:12px;font-weight:700;color:#54B57E;line-height:1.2;">
-                      {jm.price && HtmlHelpers.format_currency(@organisation.currency, jm.price) || "—"}
-                    </p>
-                    <p style="font-size:10px;color:#3A7A57;margin-top:1px;">price</p>
-                  </div>
-                  <button type="button" phx-click="remove_item" phx-value-id={jm.id} ontouchstart=""
-                    onclick="event.stopPropagation()"
-                    style="background:none;border:none;color:#6E675A;cursor:pointer;padding:4px;line-height:0;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <.material_line
+              :for={jm <- @job.materials}
+              jm={jm}
+              currency={@organisation.currency}
+              from_plan={MapSet.member?(@plan_item_ids, jm.supplier_catalog_item_id)}
+              on_tap={JS.push("open_material_sheet", value: %{id: jm.id})}
+              on_remove={JS.push("remove_item", value: %{id: jm.id})}
+            />
           </div>
 
-          <%!-- plan items not yet on job --%>
+          <%!-- TODO: "from plan — not added yet" section is a hard problem.
+               When a user adds a plan item it adopts the plan qty, but there's
+               no good answer for: what if it was already added manually? what
+               if qty should differ from plan? what about partial adds?
+               Leave the basic add_from_plan action in place but do not invest
+               further in this UI until the plan↔job reconciliation model is clearer. --%>
           <div :if={@job.engagement && unplanned_items(@job) != []} style="margin-top:12px;">
             <p style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:8px;">
               From plan — not added yet
@@ -320,8 +289,10 @@ defmodule OpenSauceWeb.JobLive.Materials do
                   phx-click="add_from_plan"
                   phx-value-id={em.supplier_catalog_item_id}
                   ontouchstart=""
-                  style="font-size:12px;font-weight:700;color:#54B57E;background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:8px;padding:5px 10px;cursor:pointer;">
-                  + add
+                  style="background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:8px;padding:6px 10px;cursor:pointer;color:#54B57E;line-height:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -330,104 +301,23 @@ defmodule OpenSauceWeb.JobLive.Materials do
 
       </div>
 
-      <%!-- material edit bottom sheet --%>
-      <div
-        :if={@editing_material != nil}
-        style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
-      >
-        <div
-          phx-click="close_material_sheet"
-          style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
-        >
-        </div>
-        <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
-          <%!-- handle + header --%>
-          <div style="padding:12px 16px 14px;border-bottom:1px solid rgba(52,48,37,0.58);">
-            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;"></div>
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-              <div style="min-width:0;flex:1;">
-                <p style="font-size:15px;font-weight:700;color:#F4EFE2;line-height:1.2;">
-                  {catalog_item_title(@editing_material.supplier_catalog_item)}
-                </p>
-                <p style="font-size:11px;color:#6E675A;margin-top:3px;">
-                  {@editing_material.supplier_catalog_item.supplier_catalog.supplier.name}
-                </p>
-              </div>
-              <button
-                type="button"
-                phx-click="close_material_sheet"
-                ontouchstart=""
-                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <%!-- form --%>
-          <form phx-submit="save_material_sheet" style="padding:16px;">
-            <div style="display:flex;gap:10px;">
-              <div style="flex:1;">
-                <label class="dark-label">Qty</label>
-                <input
-                  class="dark-input"
-                  type="number"
-                  name="nb"
-                  value={@editing_material.quantity}
-                  min="0"
-                  step="1"
-                  inputmode="numeric"
-                  style="text-align:center;"
-                />
-              </div>
-              <div style="flex:1;">
-                <label class="dark-label" style="color:#9A7344;">Cost</label>
-                <input
-                  class="dark-input"
-                  type="number"
-                  name="cost"
-                  value={@editing_material.cost}
-                  min="0"
-                  step="0.01"
-                  inputmode="decimal"
-                  placeholder="—"
-                  style="color:#DB9258;"
-                />
-              </div>
-              <div style="flex:1;">
-                <label class="dark-label" style="color:#3A7A57;">Price</label>
-                <input
-                  class="dark-input"
-                  type="number"
-                  name="price"
-                  value={@editing_material.price}
-                  min="0"
-                  step="0.01"
-                  inputmode="decimal"
-                  placeholder="—"
-                  style="color:#54B57E;"
-                />
-              </div>
-            </div>
-            <button type="submit" class="leaf-btn" style="width:100%;margin-top:16px;">
-              Save
-            </button>
-          </form>
-        </div>
-      </div>
+      <.material_line_sheet
+        material={@editing_material}
+        currency={@organisation.currency}
+        on_close={JS.push("close_material_sheet")}
+      />
 
       <%!-- sticky summary bar --%>
-      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;z-index:10;">
-        <span style="font-size:13px;color:#9A9384;">
+      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:14px;z-index:10;">
+        <span style="font-size:13px;font-weight:600;color:#9A9384;">
           {length(@job.materials)} {if length(@job.materials) == 1, do: "item", else: "items"}
-          · {HtmlHelpers.format_currency(@organisation.currency, job_cost(@job.materials))}
         </span>
-        <.link navigate={@back_to}>
-          <span ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;cursor:pointer;">
-            back to job →
-          </span>
-        </.link>
+        <span style="font-size:13px;font-weight:700;color:#DB9258;">
+          {HtmlHelpers.format_currency(@organisation.currency, materials_cost_total(@job.materials))}
+        </span>
+        <span style="font-size:13px;font-weight:700;color:#54B57E;">
+          {HtmlHelpers.format_currency(@organisation.currency, materials_price_total(@job.materials))}
+        </span>
       </div>
 
     </div>
@@ -609,10 +499,15 @@ defmodule OpenSauceWeb.JobLive.Materials do
   defp filtered_results(results, nil), do: results
   defp filtered_results(results, fmt), do: Enum.filter(results, &(&1.format_description == fmt))
 
-  defp job_cost(materials) do
+  defp materials_cost_total(materials) do
     Enum.reduce(materials, Decimal.new(0), fn jm, acc ->
-      unit = jm.supplier_catalog_item.unit_price || Decimal.new(0)
-      Decimal.add(acc, Decimal.mult(jm.quantity, unit))
+      Decimal.add(acc, Decimal.mult(jm.quantity, jm.cost || Decimal.new(0)))
+    end)
+  end
+
+  defp materials_price_total(materials) do
+    Enum.reduce(materials, Decimal.new(0), fn jm, acc ->
+      Decimal.add(acc, Decimal.mult(jm.quantity, jm.price || Decimal.new(0)))
     end)
   end
 
@@ -660,13 +555,7 @@ defmodule OpenSauceWeb.JobLive.Materials do
   defp parse_optional_decimal(""), do: nil
   defp parse_optional_decimal(s), do: Decimal.new(s)
 
-  defp back_path(%{engagement: eng, engagement_id: eid}) when not is_nil(eid) do
-    if eng && eng.customer do
-      "/manage/customers/#{eng.customer.reference}/engagements/#{eid}"
-    else
-      "/manage/jobs"
-    end
-  end
+  defp back_path(%{id: job_id}), do: "/manage/jobs/#{job_id}"
 
   defp back_path(_), do: "/manage/jobs"
 end

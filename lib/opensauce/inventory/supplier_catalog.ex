@@ -24,11 +24,11 @@ defmodule OpenSauce.Inventory.SupplierCatalog do
 
     create :create do
       primary? true
-      accept [:name, :supplier_id, :season, :year, :valid_from, :valid_until]
+      accept [:name, :supplier_id, :season, :year, :valid_from, :valid_until, :price_kind]
     end
 
     update :update do
-      accept [:name, :season, :year, :valid_from, :valid_until]
+      accept [:name, :season, :year, :valid_from, :valid_until, :price_kind]
     end
   end
 
@@ -71,6 +71,16 @@ defmodule OpenSauce.Inventory.SupplierCatalog do
     attribute :valid_until, :date do
       allow_nil? true
       public? true
+    end
+
+    # Whether unit_price on items in this catalogue represents the supplier's cost
+    # to the org (:cost) or the MSRP/billable rate to clients (:msrp).
+    # Defaults to :msrp; unspecified catalogues are assumed to show list prices.
+    attribute :price_kind, :atom do
+      allow_nil? false
+      public? true
+      default :msrp
+      constraints one_of: [:msrp, :cost]
     end
 
     timestamps()
