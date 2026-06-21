@@ -13,6 +13,7 @@ defmodule OpenSauceWeb.Components do
   defmacro __using__(_opts) do
     quote do
       import OpenSauceWeb.Components.Core
+      import OpenSauceWeb.Components.Jobs
       import OpenSauceWeb.Components.Materials
       import OpenSauceWeb.Components.Page
     end

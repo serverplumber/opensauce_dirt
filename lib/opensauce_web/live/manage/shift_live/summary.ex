@@ -217,7 +217,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
           No jobs scheduled today
         </div>
 
-        <.stop_card :for={job <- @today_jobs} job={job} />
+        <.job_card :for={job <- @today_jobs} job={job} return_to="/manage/shifts/current" />
       </div>
 
       <%!-- Crew card (manager / owner only) --%>
@@ -448,47 +448,6 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
     """
   end
 
-  attr :job, :any, required: true
-
-  defp stop_card(assigns) do
-    ~H"""
-    <div
-      class="jcard"
-      style="margin-bottom:8px;"
-      phx-click={JS.navigate(~p"/manage/jobs/#{@job.id}?return_to=/manage/shifts/current")}
-      ontouchstart=""
-    >
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-        <div style="min-width:0;flex:1;">
-          <div style="font-size:15px;font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:#F4EFE2;">
-            {job_name(@job)}
-          </div>
-          <div
-            :if={job_where(@job)}
-            style="margin-top:3px;font-size:12px;color:#9A9384;"
-          >
-            {job_where(@job)}
-          </div>
-        </div>
-        <span style={"font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;flex-shrink:0;#{status_pill_style(@job.status)}"}>
-          {status_label(@job.status)}
-        </span>
-      </div>
-      <div :if={@job.service_category || @job.start_time} style="margin-top:9px;display:flex;align-items:center;gap:6px;">
-        <span
-          :if={@job.start_time}
-          style="font-size:11px;font-weight:700;color:#6E675A;background:#16140E;border:1px solid rgba(52,48,37,0.5);border-radius:6px;padding:2px 6px;flex-shrink:0;"
-        >
-          {Calendar.strftime(@job.start_time, "%H:%M")}
-        </span>
-        <span :if={@job.service_category} class="jcat">
-          {service_category_label(@job.service_category)}
-        </span>
-      </div>
-    </div>
-    """
-  end
-
   defp reload_shift(socket) do
     member = socket.assigns.current_member
 
@@ -533,38 +492,6 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
   defp jobs_done_count(jobs) do
     jobs |> Enum.count(&(&1.status == :completed)) |> to_string()
   end
-
-  defp job_name(%{engagement: %{customer: %{company_name_nickname: nick}}}) when is_binary(nick), do: nick
-  defp job_name(%{engagement: %{customer: %{first_name: f, last_name: l}}}), do: "#{f} #{l}"
-  defp job_name(%{garden: %{name: name}}) when is_binary(name) and name != "", do: name
-  defp job_name(_), do: "Job"
-
-  defp job_where(%{garden: %{name: n, zip: z}}) do
-    [n, z] |> Enum.reject(&(is_nil(&1) or &1 == "")) |> Enum.join(" · ") |> then(&if &1 == "", do: nil, else: &1)
-  end
-
-  defp job_where(_), do: nil
-
-  defp status_label(:scheduled), do: "Sched"
-  defp status_label(:in_progress), do: "On site"
-  defp status_label(:completed), do: "Done"
-  defp status_label(:cancelled), do: "Cancelled"
-  defp status_label(other), do: to_string(other)
-
-  defp status_pill_style(:in_progress), do: "background:rgba(84,181,126,0.14);color:#54B57E;"
-  defp status_pill_style(:completed), do: "background:rgba(90,180,216,0.14);color:#5AB4D8;"
-  defp status_pill_style(:cancelled), do: "background:rgba(232,126,126,0.14);color:#E87E7E;"
-  defp status_pill_style(_), do: "background:rgba(110,103,90,0.14);color:#6E675A;"
-
-  defp service_category_label(:installation), do: "Installation"
-  defp service_category_label(:delivery), do: "Delivery"
-  defp service_category_label(:pruning), do: "Pruning"
-  defp service_category_label(:consultation), do: "Consultation"
-  defp service_category_label(:design), do: "Design"
-  defp service_category_label(:opening), do: "Opening"
-  defp service_category_label(:winterization), do: "Winterization"
-  defp service_category_label(:maintenance), do: "Maintenance"
-  defp service_category_label(other), do: to_string(other)
 
   defp crew_color(member_id) do
     colors = ["#6BCB93", "#DB9258", "#5AB4D8", "#A87EDB", "#E87E7E"]

@@ -22,7 +22,17 @@ defmodule OpenSauce.Work.Job do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
+
+    destroy :destroy do
+      primary? true
+      validate attribute_does_not_equal(:status, :in_progress),
+        message: "cannot delete a job that is in progress"
+      validate attribute_does_not_equal(:status, :completed),
+        message: "cannot delete a completed job"
+      validate attribute_does_not_equal(:status, :cancelled),
+        message: "cannot delete a cancelled job"
+    end
 
     read :list do
       primary? true

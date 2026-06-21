@@ -24,6 +24,30 @@ defmodule OpenSauceWeb.TodayLive do
   end
 
   @impl true
+  def handle_params(%{"place_job_id" => job_id}, _url, socket) do
+    today = Date.utc_today()
+    job = Enum.find(socket.assigns.jobs, &(&1.id == job_id))
+
+    if job do
+      place_day = job.scheduled_for || today
+
+      place_minutes =
+        if job.start_time,
+          do: job.start_time.hour * 60 + job.start_time.minute,
+          else: next_available_minutes(socket.assigns.jobs, place_day)
+
+      {:noreply,
+       assign(socket,
+         place_job: job,
+         place_day: place_day,
+         place_minutes: place_minutes,
+         place_duration: job.duration_estimate || 120
+       )}
+    else
+      {:noreply, socket}
+    end
+  end
+
   def handle_params(_params, _url, socket), do: {:noreply, socket}
 
   @impl true
@@ -61,7 +85,7 @@ defmodule OpenSauceWeb.TodayLive do
 
   @impl true
   def handle_event("place_close", _params, socket) do
-    {:noreply, assign(socket, place_job: nil)}
+    {:noreply, socket |> assign(place_job: nil) |> push_patch(to: ~p"/manage/today")}
   end
 
   @impl true
@@ -76,7 +100,7 @@ defmodule OpenSauceWeb.TodayLive do
       tenant: member.organisation_id
     )
 
-    {:noreply, socket |> assign(place_job: nil) |> load_jobs()}
+    {:noreply, socket |> assign(place_job: nil) |> load_jobs() |> push_patch(to: ~p"/manage/today")}
   end
 
   @impl true
@@ -208,7 +232,7 @@ defmodule OpenSauceWeb.TodayLive do
         >
           Nothing scheduled
         </div>
-        <.sched_card :for={job <- day_jobs} job={job} />
+        <.job_card :for={job <- day_jobs} job={job} return_to="/manage/today" on_place="place_open" />
 
         <%!-- Unscheduled --%>
         <% unsched = unscheduled_jobs(@jobs) %>
@@ -225,7 +249,7 @@ defmodule OpenSauceWeb.TodayLive do
           >
             None
           </div>
-          <.sched_card :for={job <- unsched} job={job} show_due />
+          <.job_card :for={job <- unsched} job={job} return_to="/manage/today" on_place="place_open" show_due />
         </div>
 
         <%!-- Engagements --%>
@@ -397,83 +421,6 @@ defmodule OpenSauceWeb.TodayLive do
             Remove from schedule
           </button>
         </div>
-      </div>
-    </div>
-    """
-  end
-
-  attr :job, :any, required: true
-  attr :show_due, :boolean, default: false
-
-  defp sched_card(assigns) do
-    ~H"""
-    <div
-      class={["jcard", @job.status == :in_progress && "live"]}
-      phx-click={
-        if @job.status != :scheduling,
-          do: JS.navigate(~p"/manage/jobs/#{@job.id}?return_to=/manage/today")
-      }
-      ontouchstart=""
-    >
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-        <div style="min-width:0;flex:1;">
-          <div style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:#F4EFE2;">
-            {job_who(@job)}
-          </div>
-          <div
-            :if={job_where_text(@job)}
-            style="margin-top:4px;font-size:12.5px;color:#9A9384;line-height:1.3;display:flex;align-items:center;gap:5px;"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;">
-              <path
-                d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
-                stroke="#9A9384"
-                stroke-width="1.6"
-              />
-              <circle cx="12" cy="10" r="2.4" stroke="#9A9384" stroke-width="1.6" />
-            </svg>
-            {job_where_text(@job)}
-          </div>
-        </div>
-        <span :if={@job.status == :in_progress} class="pill live">
-          <span class="dot pulse"></span>On site
-        </span>
-        <span :if={@job.status == :scheduled} class="pill sched">
-          <span class="dot"></span>Sched
-        </span>
-        <button
-          :if={@job.status == :scheduling}
-          class="pill cancel"
-          type="button"
-          ontouchstart=""
-          style="border:none;cursor:pointer;"
-          phx-click="place_open"
-          phx-value-id={@job.id}
-        >
-          Place
-        </button>
-      </div>
-
-      <div style="margin-top:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
-          <span
-            :if={@job.start_time}
-            style="font-size:11px;font-weight:700;color:#6E675A;background:#16140E;border:1px solid rgba(52,48,37,0.5);border-radius:6px;padding:2px 6px;flex-shrink:0;letter-spacing:0.02em;"
-          >
-            {Calendar.strftime(@job.start_time, "%H:%M")}
-          </span>
-          <span :if={@job.service_category} class="jcat">
-            <span class="catdot" style={"background:#{category_color(@job.service_category)}"}></span>
-            {service_category_label(@job.service_category)}
-          </span>
-          <span :if={!@job.service_category} class="jcat" style="color:#6E675A;">—</span>
-        </div>
-        <span
-          :if={@show_due && @job.due_by}
-          style="font-size:11.5px;color:#6E675A;font-weight:600;flex-shrink:0;"
-        >
-          due {Calendar.strftime(@job.due_by, "%-d %b")}
-        </span>
       </div>
     </div>
     """
@@ -652,45 +599,4 @@ defmodule OpenSauceWeb.TodayLive do
   defp eng_status_bg(:in_progress), do: "rgba(84,181,126,0.12)"
   defp eng_status_bg(_), do: "rgba(110,103,90,0.12)"
 
-  defp job_who(job) do
-    cl = customer_label(job)
-    base = if cl == "", do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job", else: cl
-    case job do
-      %{engagement: %{scope_title: t}} when is_binary(t) and t != "" -> "#{base} · #{t}"
-      _ -> base
-    end
-  end
-
-  defp job_where_text(%{garden: nil}), do: nil
-
-  defp job_where_text(%{garden: g}) do
-    parts = [g.name, g.zip] |> Enum.reject(&is_nil/1) |> Enum.reject(&(&1 == ""))
-    if parts == [], do: nil, else: Enum.join(parts, " · ")
-  end
-
-  defp customer_label(%{engagement: nil}), do: ""
-  defp customer_label(%{engagement: %{customer: nil}}), do: ""
-
-  defp customer_label(%{engagement: %{customer: c}}) do
-    if c.company_name_nickname,
-      do: c.company_name_nickname,
-      else: "#{c.first_name} #{c.last_name}"
-  end
-
-  defp category_color(:installation), do: "#DB9258"
-  defp category_color(:delivery), do: "#DB9258"
-  defp category_color(:consultation), do: "#5AB4D8"
-  defp category_color(:design), do: "#5AB4D8"
-  defp category_color(_), do: "#54B57E"
-
-  defp service_category_label(nil), do: "—"
-  defp service_category_label(:installation), do: "Installation"
-  defp service_category_label(:delivery), do: "Delivery"
-  defp service_category_label(:pruning), do: "Pruning"
-  defp service_category_label(:consultation), do: "Consultation"
-  defp service_category_label(:design), do: "Design"
-  defp service_category_label(:opening), do: "Opening"
-  defp service_category_label(:winterization), do: "Winterization"
-  defp service_category_label(:maintenance), do: "Maintenance"
-  defp service_category_label(other), do: to_string(other)
 end

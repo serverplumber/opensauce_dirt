@@ -65,7 +65,7 @@ defmodule OpenSauceWeb.JobLive.Index do
                 <span class="line"></span>
                 <span class="dn">{day_date_label(date, today)}</span>
               </div>
-              <.job_card :for={job <- date_jobs} job={job} org_members={@org_members} />
+              <.job_card :for={job <- date_jobs} job={job} org_members={@org_members} show_start={not is_nil(@active_shift)} />
             </div>
           </div>
           <div
@@ -79,7 +79,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         <%!-- unscheduled tab: flat list --%>
         <div :if={@tab == :unscheduled}>
           <div :if={@counts.unscheduled > 0}>
-            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} org_members={@org_members} />
+            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} org_members={@org_members} show_start={not is_nil(@active_shift)} />
           </div>
           <div
             :if={@counts.unscheduled == 0}
@@ -197,6 +197,7 @@ defmodule OpenSauceWeb.JobLive.Index do
      |> assign(
        tab: :scheduled,
        org_members: [],
+       active_shift: nil,
        materials_job_id: nil,
        event_log_job: nil,
        event_log_events: [],
@@ -316,103 +317,6 @@ defmodule OpenSauceWeb.JobLive.Index do
     {:noreply, assign(socket, :tab, String.to_existing_atom(tab))}
   end
 
-  defp card_click(%{id: id}), do: JS.navigate(~p"/manage/jobs/#{id}")
-
-  attr :job, :map, required: true
-  attr :org_members, :list, default: []
-
-  defp job_card(assigns) do
-    ~H"""
-    <div
-      class={["jcard", @job.status == :in_progress && "live"]}
-      phx-click={card_click(@job)}
-      ontouchstart=""
-    >
-      <%!-- top: who + status pill --%>
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-        <div style="min-width:0;flex:1;">
-          <div style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:#F4EFE2;">
-            {job_who(@job)}
-          </div>
-          <div
-            :if={job_where_text(@job)}
-            style="margin-top:4px;font-size:12.5px;color:#9A9384;line-height:1.3;display:flex;align-items:center;gap:5px;"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;">
-              <path
-                d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
-                stroke="#9A9384"
-                stroke-width="1.6"
-              />
-              <circle cx="12" cy="10" r="2.4" stroke="#9A9384" stroke-width="1.6" />
-            </svg>
-            {job_where_text(@job)}
-          </div>
-        </div>
-        <span :if={@job.status == :in_progress} class="pill live">
-          <span class="dot pulse"></span>On site
-        </span>
-        <div :if={@job.status == :scheduling} style="display:flex;gap:6px;flex-shrink:0;">
-          <span class="pill cancel">Place</span>
-          <button
-            class="pill live"
-            type="button"
-            style="border:none;cursor:pointer;"
-            phx-click={JS.push("open_event_log", value: %{id: @job.id})}
-            onclick="event.stopPropagation()"
-            ontouchstart=""
-          >
-            Start
-          </button>
-        </div>
-        <span :if={@job.status == :scheduled} class="pill sched">
-          <span class="dot"></span>Scheduled
-        </span>
-        <span :if={@job.status == :completed} class="pill done">Done</span>
-        <span :if={@job.status == :cancelled} class="pill cancel">Cancelled</span>
-      </div>
-
-      <%!-- meta: category --%>
-      <div style="margin-top:11px;">
-        <span :if={@job.service_category} class="jcat">
-          <span class="catdot" style={"background:#{category_color(@job.service_category)}"}></span>
-          {service_category_label(@job.service_category)}
-        </span>
-        <span :if={!@job.service_category} class="jcat" style="color:#6E675A;">—</span>
-      </div>
-
-      <%!-- live strip (in-progress) --%>
-      <div :if={@job.status == :in_progress} class="live-strip">
-        <span class="lbl">{live_strip_label(@job, @org_members)}</span>
-        <.link
-          navigate={~p"/manage/jobs/#{@job.id}/closeout"}
-          onclick="event.stopPropagation()"
-          ontouchstart=""
-        >
-          <button class="open" type="button" style="border:none;background:none;cursor:pointer;">
-            Leave →
-          </button>
-        </.link>
-      </div>
-
-      <%!-- crew row (scheduled + crew present) --%>
-      <% assigned_ids = if @job.staff_assignments, do: Enum.map(@job.staff_assignments, & &1.member_id), else: [] %>
-      <div
-        :if={@job.status != :in_progress && assigned_ids != []}
-        class="crewrow"
-      >
-        <div class="avs">
-          <.member_avatar
-            :for={m <- @org_members |> Enum.filter(&(&1.id in assigned_ids)) |> Enum.take(5)}
-            member={m}
-            size={26}
-          />
-        </div>
-      </div>
-    </div>
-    """
-  end
-
   defp jobs_for_tab(jobs, :scheduled, today) do
     Enum.filter(jobs, &job_scheduled?(&1, today))
   end
@@ -482,63 +386,20 @@ defmodule OpenSauceWeb.JobLive.Index do
     end
   end
 
-  defp job_who(job) do
-    cl = customer_label(job)
-
-    if cl == "",
-      do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job",
-      else: cl
-  end
-
-  defp job_where_text(%{garden: nil}), do: nil
-
-  defp job_where_text(%{garden: g}) do
-    parts = [g.name, g.zip] |> Enum.reject(&is_nil/1) |> Enum.reject(&(&1 == ""))
-    if parts == [], do: nil, else: Enum.join(parts, " · ")
-  end
-
-  defp member_display_name(%{user: %{first_name: f, last_name: l, email: email}}) do
-    cond do
-      f && l -> "#{f} #{l}"
-      f -> f
-      true -> to_string(email)
-    end
-  end
-
-  defp member_display_name(%{user: %{email: email}}), do: to_string(email)
-  defp member_display_name(_), do: "—"
-
-  defp live_strip_label(job, org_members) do
-    assigned_ids = Enum.map(job.staff_assignments, & &1.member_id)
-
-    names =
-      org_members
-      |> Enum.filter(&(&1.id in assigned_ids))
-      |> Enum.take(3)
-      |> Enum.map(&member_display_name/1)
-      |> Enum.join(" + ")
-
-    if names == "", do: "on the clock", else: "on the clock · #{names}"
-  end
-
-  defp category_color(:installation), do: "#DB9258"
-  defp category_color(:delivery), do: "#DB9258"
-  defp category_color(:consultation), do: "#5AB4D8"
-  defp category_color(:design), do: "#5AB4D8"
-  defp category_color(_), do: "#54B57E"
-
   defp load_jobs(socket) do
     member = socket.assigns.current_member
 
     org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
 
-    jobs =
+    all_jobs =
       Work.list_jobs!(
         actor: member,
         tenant: member.organisation_id,
         load: [:garden, :staff_assignments, engagement: [:customer]]
       )
-      |> Enum.reject(&(&1.type == :shift))
+
+    active_shift = Enum.find(all_jobs, &(&1.type == :shift && &1.status == :in_progress))
+    jobs = Enum.reject(all_jobs, &(&1.type == :shift))
 
     today = Date.utc_today()
 
@@ -548,7 +409,11 @@ defmodule OpenSauceWeb.JobLive.Index do
       history: Enum.count(jobs, &job_history?(&1, today))
     }
 
-    socket |> assign(:jobs, jobs) |> assign(:counts, counts) |> assign(:org_members, org_members)
+    socket
+    |> assign(:jobs, jobs)
+    |> assign(:counts, counts)
+    |> assign(:org_members, org_members)
+    |> assign(:active_shift, active_shift)
   end
 
   defp job_scheduled?(job, today) do
@@ -581,19 +446,6 @@ defmodule OpenSauceWeb.JobLive.Index do
   defp customer_label(%{engagement: %{customer: nil}}), do: ""
 
   defp customer_label(%{engagement: %{customer: c}}) do
-    if c.company_name_nickname,
-      do: c.company_name_nickname,
-      else: "#{c.first_name} #{c.last_name}"
+    if c.company_name_nickname, do: c.company_name_nickname, else: "#{c.first_name} #{c.last_name}"
   end
-
-  defp service_category_label(nil), do: "—"
-  defp service_category_label(:installation), do: "Installation"
-  defp service_category_label(:delivery), do: "Delivery"
-  defp service_category_label(:pruning), do: "Pruning"
-  defp service_category_label(:consultation), do: "Consultation"
-  defp service_category_label(:design), do: "Design"
-  defp service_category_label(:opening), do: "Opening"
-  defp service_category_label(:winterization), do: "Winterization"
-  defp service_category_label(:maintenance), do: "Maintenance"
-  defp service_category_label(other), do: to_string(other)
 end

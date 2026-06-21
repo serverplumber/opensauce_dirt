@@ -206,25 +206,13 @@ defmodule OpenSauceWeb.CustomerLive.Show do
             No jobs yet
           </div>
           <div :if={not Enum.empty?(@all_jobs)} style="display:flex;flex-direction:column;gap:8px;">
-            <.link :for={job <- @all_jobs} navigate={job_url(job.id, @customer.reference)} style="display:block;text-decoration:none;">
-              <div class={"jcard#{if job.status == :in_progress, do: " live", else: ""}"}>
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <div style="flex:1;min-width:0;">
-                    <div class="jcat" style="margin-bottom:4px;">
-                      <span class="catdot" style={"background:#{job_category_color(job.service_category)}"}></span>
-                      <span style="font-size:12px;">{job_category_label(job.service_category)}</span>
-                    </div>
-                    <p :if={job.garden} style="font-size:13.5px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                      {job.garden.name || "Unnamed site"}
-                    </p>
-                    <p :if={job.scheduled_for} style="font-size:12px;color:#9A9384;margin-top:2px;">
-                      {Calendar.strftime(job.scheduled_for, "%-d %B %Y")}
-                    </p>
-                  </div>
-                  <span class={"pill #{job_pill_class(job.status)}"}>{job_status_label(job.status)}</span>
-                </div>
-              </div>
-            </.link>
+            <.job_ref_card
+              :for={job <- @all_jobs}
+              job={job}
+              title={job_local_title(job)}
+              navigate={job_url(job.id, @customer.reference)}
+              currency={@organisation.currency}
+            />
           </div>
         </div>
 
@@ -380,7 +368,12 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     all_jobs =
       customer.engagements
       |> Enum.flat_map(& &1.jobs)
-      |> Enum.sort_by(& &1.scheduled_for, {:desc, Date})
+      |> Enum.sort_by(& &1.scheduled_for, fn
+        nil, nil -> false
+        nil, _ -> false
+        _, nil -> true
+        a, b -> Date.compare(a, b) == :gt
+      end)
 
     socket =
       socket
@@ -572,7 +565,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         :full_name,
         garden_addresses: [:name, :full_address, :is_billing, :notes, :is_indoor],
         invoices: [:amount, :status],
-        engagements: [:total_quoted_value, :materials, garden: [:name], jobs: [garden: [:name]]]
+        engagements: [:total_quoted_value, :materials, garden: [:name], jobs: [:materials, garden: [:name]]]
       ]
     )
   end
@@ -621,35 +614,22 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp engagement_pill_class(:cancelled), do: "cancel"
   defp engagement_pill_class(_), do: "sched"
 
-  defp job_pill_class(:in_progress), do: "live"
-  defp job_pill_class(:scheduling), do: "cancel"
-  defp job_pill_class(:completed), do: "done"
-  defp job_pill_class(:cancelled), do: "cancel"
-  defp job_pill_class(_), do: "sched"
+  defp job_local_title(%{service_category: cat, garden: %{name: name}})
+       when not is_nil(cat) and is_binary(name) and name != "",
+       do: "#{cat_label(cat)} at #{name}"
 
-  defp job_status_label(:scheduling), do: "Place"
-  defp job_status_label(:scheduled), do: "Scheduled"
-  defp job_status_label(:in_progress), do: "Live"
-  defp job_status_label(:completed), do: "Done"
-  defp job_status_label(:cancelled), do: "Cancelled"
-  defp job_status_label(_), do: "—"
+  defp job_local_title(%{service_category: cat}) when not is_nil(cat), do: cat_label(cat)
+  defp job_local_title(_), do: "Job"
 
-  defp job_category_color(:installation), do: "#DB9258"
-  defp job_category_color(:delivery), do: "#DB9258"
-  defp job_category_color(:consultation), do: "#5AB4D8"
-  defp job_category_color(:design), do: "#5AB4D8"
-  defp job_category_color(_), do: "#54B57E"
-
-  defp job_category_label(nil), do: "—"
-  defp job_category_label(:installation), do: "Installation"
-  defp job_category_label(:delivery), do: "Delivery"
-  defp job_category_label(:pruning), do: "Pruning"
-  defp job_category_label(:consultation), do: "Consultation"
-  defp job_category_label(:design), do: "Design"
-  defp job_category_label(:opening), do: "Opening"
-  defp job_category_label(:winterization), do: "Winterization"
-  defp job_category_label(:maintenance), do: "Maintenance"
-  defp job_category_label(other), do: to_string(other)
+  defp cat_label(:installation), do: "Installation"
+  defp cat_label(:delivery), do: "Delivery"
+  defp cat_label(:pruning), do: "Pruning"
+  defp cat_label(:consultation), do: "Consultation"
+  defp cat_label(:design), do: "Design"
+  defp cat_label(:opening), do: "Opening"
+  defp cat_label(:winterization), do: "Winterization"
+  defp cat_label(:maintenance), do: "Maintenance"
+  defp cat_label(other), do: Phoenix.Naming.humanize(other)
 
   defp job_url(job_id, customer_ref) do
     return = URI.encode_www_form("/manage/customers/#{customer_ref}")

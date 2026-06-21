@@ -12,6 +12,7 @@ defmodule OpenSauceWeb.JobLive.Show do
      socket
      |> assign(:main_bg, "bg-[#16140E]")
      |> assign(:show_staff_sheet, false)
+     |> assign(:show_delete_confirm, false)
      |> assign(:org_members, [])}
   end
 
@@ -80,6 +81,27 @@ defmodule OpenSauceWeb.JobLive.Show do
   end
 
   @impl true
+  def handle_event("open_delete_confirm", _params, socket) do
+    {:noreply, assign(socket, :show_delete_confirm, true)}
+  end
+
+  @impl true
+  def handle_event("close_delete_confirm", _params, socket) do
+    {:noreply, assign(socket, :show_delete_confirm, false)}
+  end
+
+  @impl true
+  def handle_event("confirm_delete", _params, socket) do
+    member = socket.assigns.current_member
+    job = socket.assigns.job
+    return_to = socket.assigns.return_to
+
+    Work.destroy_job(job, actor: member, tenant: member.organisation_id)
+
+    {:noreply, push_navigate(socket, to: return_to)}
+  end
+
+  @impl true
   def handle_event("remove_staff", %{"id" => job_staff_id}, socket) do
     member = socket.assigns.current_member
     sa = Enum.find(socket.assigns.job.staff_assignments, &(&1.id == job_staff_id))
@@ -110,96 +132,67 @@ defmodule OpenSauceWeb.JobLive.Show do
             </svg>
           </button>
         </.link>
-        <.link navigate={~p"/manage/jobs/#{@job.id}/edit"}>
+        <div style="display:flex;align-items:center;gap:4px;">
           <button
+            :if={@job.status in [:scheduling, :scheduled]}
             type="button"
+            phx-click="open_delete_confirm"
             ontouchstart=""
             style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="1" fill="currentColor" />
-              <circle cx="19" cy="12" r="1" fill="currentColor" />
-              <circle cx="5" cy="12" r="1" fill="currentColor" />
+              <path
+                d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M10 11v6M14 11v6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
             </svg>
           </button>
-        </.link>
+          <.link navigate={~p"/manage/jobs/#{@job.id}/edit"}>
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="1" fill="currentColor" />
+                <circle cx="19" cy="12" r="1" fill="currentColor" />
+                <circle cx="5" cy="12" r="1" fill="currentColor" />
+              </svg>
+            </button>
+          </.link>
+        </div>
       </div>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:14px;">
         <%!-- job hero card --%>
         <div style="background:#211E16;border-radius:14px;border:1px solid rgba(52,48,37,0.58);padding:16px;">
-          <%!-- name + status pill --%>
+          <%!-- title + status chip --%>
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
             <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.2;margin:0;min-width:0;flex:1;">
-              {job_who(@job)}
+              {hero_title(@job)}
             </h1>
-            <span :if={@job.status == :in_progress} class="pill live" style="flex-shrink:0;">
-              <span class="dot pulse"></span>On site
-            </span>
-            <div :if={@job.status == :scheduling} style="display:flex;gap:6px;flex-shrink:0;">
-              <span class="pill cancel">Place</span>
-              <.link navigate={~p"/manage/jobs/#{@job.id}/arrive"}>
-                <button
-                  class="pill live"
-                  type="button"
-                  style="border:none;cursor:pointer;"
-                  ontouchstart=""
-                >
-                  Start
-                </button>
-              </.link>
-            </div>
-            <span :if={@job.status == :scheduled} class="pill sched" style="flex-shrink:0;">
-              <span class="dot"></span>Scheduled
-            </span>
-            <span :if={@job.status == :completed} class="pill done" style="flex-shrink:0;">
-              Done
-            </span>
-            <span :if={@job.status == :cancelled} class="pill cancel" style="flex-shrink:0;">
-              Cancelled
-            </span>
+            <.job_status_chip status={@job.status} job_id={@job.id} />
           </div>
 
-          <%!-- garden location --%>
-          <div
-            :if={job_where_text(@job)}
-            style="margin-top:6px;font-size:12.5px;color:#9A9384;display:flex;align-items:center;gap:5px;"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;">
-              <path
-                d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
-                stroke="#9A9384"
-                stroke-width="1.6"
-              />
-              <circle cx="12" cy="10" r="2.4" stroke="#9A9384" stroke-width="1.6" />
-            </svg>
-            {job_where_text(@job)}
+          <%!-- customer nickname · scope title --%>
+          <% subtitle = hero_subtitle(@job) %>
+          <div :if={subtitle != ""} style="margin-top:5px;font-size:13px;color:#9A9384;font-weight:500;">
+            {subtitle}
           </div>
 
-          <%!-- engagement scope title --%>
-          <div
-            :if={@job.engagement && @job.engagement.scope_title}
-            style="margin-top:10px;font-size:13px;font-weight:600;color:#9A9384;"
-          >
-            {@job.engagement.scope_title}
-          </div>
-
-          <%!-- service category + date --%>
-          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span :if={@job.service_category} class="jcat">
-              <span
-                class="catdot"
-                style={"background:#{category_color(@job.service_category)}"}
-              >
-              </span>
-              {service_category_label(@job.service_category)}
-            </span>
-            <span :if={@job.scheduled_for} style="font-size:12.5px;color:#9A9384;">
-              {Calendar.strftime(@job.scheduled_for, "%A %-d %B")}
-              <span :if={@job.duration_estimate} style="color:#6E675A;">
-                · {fmt_dur(@job.duration_estimate)}
-              </span>
-            </span>
+          <%!-- long date · duration estimate --%>
+          <div :if={@job.scheduled_for} style="margin-top:6px;font-size:12.5px;color:#6E675A;">
+            {Calendar.strftime(@job.scheduled_for, "%A %-d %B")}
+            <span :if={@job.duration_estimate}>· {fmt_dur(@job.duration_estimate)}</span>
           </div>
 
           <%!-- crew --%>
@@ -446,6 +439,43 @@ defmodule OpenSauceWeb.JobLive.Show do
       </div>
     </div>
 
+    <%!-- delete confirmation sheet --%>
+    <div
+      :if={@show_delete_confirm}
+      style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
+    >
+      <div
+        phx-click="close_delete_confirm"
+        style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
+      >
+      </div>
+      <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:20px 16px 40px;">
+        <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 20px;"></div>
+        <p style="font-size:17px;font-weight:700;color:#F4EFE2;margin-bottom:6px;">Delete this job?</p>
+        <p style="font-size:13px;color:#9A9384;margin-bottom:24px;line-height:1.5;">
+          This permanently removes the job and cannot be undone.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button
+            type="button"
+            phx-click="confirm_delete"
+            ontouchstart=""
+            style="width:100%;padding:14px;border-radius:12px;border:none;background:#E87E7E;color:#16140E;font-size:15px;font-weight:700;cursor:pointer;"
+          >
+            Delete job
+          </button>
+          <button
+            type="button"
+            phx-click="close_delete_confirm"
+            ontouchstart=""
+            style="width:100%;padding:14px;border-radius:12px;border:1px solid rgba(52,48,37,0.58);background:none;color:#9A9384;font-size:15px;font-weight:600;cursor:pointer;"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
     <%!-- sticky leave CTA — only for in-progress jobs --%>
     <div
       :if={@job.status == :in_progress}
@@ -498,25 +528,30 @@ defmodule OpenSauceWeb.JobLive.Show do
   defp page_title(%{type: :shift}), do: "Shift"
   defp page_title(_), do: "Job"
 
-  defp job_who(%{engagement: %{customer: c}} = job) when not is_nil(c) do
+  defp hero_title(%{service_category: cat, garden: %{name: n}})
+       when not is_nil(cat) and is_binary(n) and n != "",
+       do: "#{service_category_label(cat)} at #{n}"
+
+  defp hero_title(%{service_category: cat}) when not is_nil(cat),
+    do: service_category_label(cat)
+
+  defp hero_title(_), do: "Job"
+
+  defp hero_subtitle(job) do
+    nickname = customer_nickname(job)
+    scope = job.engagement && job.engagement.scope_title
+    [nickname, scope] |> Enum.reject(&(is_nil(&1) or &1 == "")) |> Enum.join(" · ")
+  end
+
+  defp customer_nickname(%{engagement: %{customer: c}}) when not is_nil(c) do
     cond do
       c.company_name_nickname -> c.company_name_nickname
       c.first_name || c.last_name -> String.trim("#{c.first_name} #{c.last_name}")
-      true -> garden_name(job)
+      true -> nil
     end
   end
 
-  defp job_who(job), do: garden_name(job)
-
-  defp garden_name(%{garden: %{name: n}}) when is_binary(n) and n != "", do: n
-  defp garden_name(_), do: "Unnamed job"
-
-  defp job_where_text(%{garden: nil}), do: nil
-
-  defp job_where_text(%{garden: g}) do
-    parts = [g.name, g.zip] |> Enum.reject(&is_nil/1) |> Enum.reject(&(&1 == ""))
-    if parts == [], do: nil, else: Enum.join(parts, " · ")
-  end
+  defp customer_nickname(_), do: nil
 
   defp staff_name(%{user: %{email: e}}) when is_binary(e), do: e |> String.split("@") |> hd()
   defp staff_name(nil), do: "?"

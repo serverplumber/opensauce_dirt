@@ -25,7 +25,7 @@ defmodule OpenSauceWeb.EngagementLive.Show do
           :garden,
           :images,
           materials: [:supplier_catalog_item],
-          jobs: [:garden]
+          jobs: [:garden, :materials]
         ]
       )
 
@@ -65,7 +65,7 @@ defmodule OpenSauceWeb.EngagementLive.Show do
       Ash.get!(CRM.Engagement, engagement_id,
         actor: member,
         tenant: member.organisation_id,
-        load: [:customer, :garden, :images, materials: [:supplier_catalog_item], jobs: [:garden]]
+        load: [:customer, :garden, :images, materials: [:supplier_catalog_item], jobs: [:garden, :materials]]
       )
 
     images = Enum.sort_by(engagement.images, &if(&1.type == :painting, do: 0, else: 1))
@@ -246,26 +246,13 @@ defmodule OpenSauceWeb.EngagementLive.Show do
             No jobs yet
           </div>
           <div :if={@engagement.jobs != []} style="display:flex;flex-direction:column;gap:8px;">
-            <.link :for={job <- Enum.sort_by(@engagement.jobs, &{job_sort_order(&1.status), &1.scheduled_for})}
-              navigate={~p"/manage/jobs/#{job.id}/materials"}
-              style="text-decoration:none;">
-              <div class="jcard">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <div style={"width:3px;border-radius:2px;align-self:stretch;background:#{job_accent(job.status)};flex-shrink:0;"}></div>
-                  <div style="flex:1;min-width:0;">
-                    <p style="font-size:14px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                      {job_title(job)}
-                    </p>
-                    <p style="font-size:12px;color:#9A9384;margin-top:2px;">
-                      {job_meta(job)}
-                    </p>
-                  </div>
-                  <span class={"pill #{job_pill_class(job.status)}"} style="flex-shrink:0;">
-                    {job_status_label(job.status)}
-                  </span>
-                </div>
-              </div>
-            </.link>
+            <.job_ref_card
+              :for={job <- Enum.sort_by(@engagement.jobs, &{job_sort_order(&1.status), &1.scheduled_for})}
+              job={job}
+              title={job_local_title(job)}
+              navigate={job_url(job.id, @reference, @engagement.id)}
+              currency={@organisation.currency}
+            />
           </div>
         </div>
 
@@ -331,29 +318,19 @@ defmodule OpenSauceWeb.EngagementLive.Show do
     end)
   end
 
-  defp job_title(%{service_category: cat}) when not is_nil(cat) do
-    Phoenix.Naming.humanize(cat)
-  end
+  defp job_local_title(%{service_category: cat}) when not is_nil(cat), do: cat_label(cat)
+  defp job_local_title(%{type: :internal_work, account_code: c}) when not is_nil(c), do: Phoenix.Naming.humanize(c)
+  defp job_local_title(_), do: "Job"
 
-  defp job_title(%{type: :shift}), do: "Shift"
-  defp job_title(%{type: :internal_work, account_code: code}) when not is_nil(code), do: Phoenix.Naming.humanize(code)
-  defp job_title(_), do: "Job"
-
-  defp job_meta(%{scheduled_for: nil, status: status}), do: Phoenix.Naming.humanize(status)
-
-  defp job_meta(%{scheduled_for: date, duration_estimate: dur, status: _status}) do
-    date_str = Calendar.strftime(date, "%a %d %b")
-    dur_str = if dur, do: " · #{fmt_dur(dur)}", else: ""
-    "#{date_str}#{dur_str}"
-  end
-
-  defp fmt_dur(minutes) when minutes < 60, do: "#{minutes}m"
-
-  defp fmt_dur(minutes) do
-    h = div(minutes, 60)
-    m = rem(minutes, 60)
-    if m == 0, do: "#{h}h", else: "#{h}h #{m}m"
-  end
+  defp cat_label(:installation), do: "Installation"
+  defp cat_label(:delivery), do: "Delivery"
+  defp cat_label(:pruning), do: "Pruning"
+  defp cat_label(:consultation), do: "Consultation"
+  defp cat_label(:design), do: "Design"
+  defp cat_label(:opening), do: "Opening"
+  defp cat_label(:winterization), do: "Winterization"
+  defp cat_label(:maintenance), do: "Maintenance"
+  defp cat_label(other), do: Phoenix.Naming.humanize(other)
 
   defp job_sort_order(:in_progress), do: 0
   defp job_sort_order(:scheduling), do: 1
@@ -362,23 +339,8 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   defp job_sort_order(:cancelled), do: 4
   defp job_sort_order(_), do: 1
 
-  defp job_accent(:in_progress), do: "#54B57E"
-  defp job_accent(:scheduling), do: "#DB9258"
-  defp job_accent(:completed), do: "#5AB4D8"
-  defp job_accent(:cancelled), do: "#6E675A"
-  defp job_accent(_), do: "#DB9258"
-
-  defp job_pill_class(:in_progress), do: "live"
-  defp job_pill_class(:scheduling), do: "cancel"
-  defp job_pill_class(:scheduled), do: "sched"
-  defp job_pill_class(:completed), do: "done"
-  defp job_pill_class(:cancelled), do: "cancel"
-  defp job_pill_class(_), do: "sched"
-
-  defp job_status_label(:in_progress), do: "On site"
-  defp job_status_label(:scheduling), do: "Place"
-  defp job_status_label(:scheduled), do: "Scheduled"
-  defp job_status_label(:completed), do: "Done"
-  defp job_status_label(:cancelled), do: "Cancelled"
-  defp job_status_label(s), do: Phoenix.Naming.humanize(s)
+  defp job_url(job_id, reference, engagement_id) do
+    return = URI.encode_www_form("/manage/customers/#{reference}/engagements/#{engagement_id}")
+    "/manage/jobs/#{job_id}?return_to=#{return}"
+  end
 end
