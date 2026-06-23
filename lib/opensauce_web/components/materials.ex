@@ -91,6 +91,8 @@ defmodule OpenSauceWeb.Components.Materials do
   attr :currency, :atom, required: true
   attr :from_plan, :boolean, default: false
   attr :removable, :boolean, default: true
+  attr :show_supplier, :boolean, default: true
+  attr :job, :map, default: nil
   attr :on_tap, JS, default: %JS{}
   attr :on_remove, JS, default: %JS{}
 
@@ -107,13 +109,10 @@ defmodule OpenSauceWeb.Components.Materials do
         </div>
         <div style="flex:1;min-width:0;">
           <p style="font-size:13px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            {catalog_item_title(@jm.supplier_catalog_item)}
+            {item_title(@jm)}
           </p>
           <p style="font-size:11px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            {@jm.supplier_catalog_item.supplier_catalog.supplier.name}
-            {if @jm.supplier_catalog_item.format_description,
-              do: " · #{@jm.supplier_catalog_item.format_description}"}
-            {if @from_plan, do: " · plan"}
+            {item_subtitle(@jm, @show_supplier, @from_plan)}
           </p>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
@@ -146,6 +145,16 @@ defmodule OpenSauceWeb.Components.Materials do
             </svg>
           </button>
         </div>
+      </div>
+      <%!-- job/garden attribution --%>
+      <div :if={@job && @job.garden} style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(52,48,37,0.45);display:flex;align-items:center;gap:5px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex-shrink:0;">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span style="font-size:11px;color:#6E675A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {job_location_label(@job)}
+        </span>
       </div>
     </div>
     """
@@ -265,6 +274,46 @@ defmodule OpenSauceWeb.Components.Materials do
     </div>
     """
   end
+
+  defp item_title(%{supplier_catalog_item: sci}) when not is_nil(sci), do: catalog_item_title(sci)
+  defp item_title(%{material: %{name: name}}) when not is_nil(name), do: name
+  defp item_title(%{supplier_sku: sku}) when not is_nil(sku), do: sku
+  defp item_title(_), do: "—"
+
+  defp item_subtitle(%{supplier_catalog_item: sci}, show_supplier, from_plan) when not is_nil(sci) do
+    parts =
+      [
+        if(show_supplier, do: sci.supplier_catalog.supplier.name),
+        sci.format_description,
+        if(from_plan, do: "plan")
+      ]
+      |> Enum.reject(&is_nil/1)
+
+    Enum.join(parts, " · ")
+  end
+
+  defp item_subtitle(%{material: %{name: _}}, _show_supplier, from_plan) do
+    if from_plan, do: "plan", else: ""
+  end
+
+  defp item_subtitle(_, _show_supplier, from_plan) do
+    if from_plan, do: "plan", else: ""
+  end
+
+  defp job_location_label(%{garden: %{customer: customer, name: garden_name}} = _job)
+       when not is_nil(customer) do
+    client = garden_customer_short(customer)
+    if garden_name, do: "#{client} — #{garden_name}", else: client
+  end
+
+  defp job_location_label(%{garden: %{name: name}}) when not is_nil(name), do: name
+  defp job_location_label(%{garden: garden}), do: garden.street || "—"
+  defp job_location_label(_), do: "—"
+
+  defp garden_customer_short(%{company_name_nickname: cn}) when not is_nil(cn), do: cn
+  defp garden_customer_short(%{first_name: fn_, last_name: ln}),
+    do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+  defp garden_customer_short(_), do: "—"
 
   # latin_name + cultivar if present, falls back to name
   defp catalog_item_title(item) do
