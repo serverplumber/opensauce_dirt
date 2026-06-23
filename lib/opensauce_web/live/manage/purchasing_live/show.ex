@@ -2,12 +2,16 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  import Ash.Query
+
   alias Decimal, as: D
   alias OpenSauce.Accounts
+  alias OpenSauce.CRM
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.Receiving
 
   import OpenSauceWeb.PurchaseOrderPrint
+  import OpenSauceWeb.Components.Materials
 
   @impl true
   def render(assigns) do
@@ -15,12 +19,28 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
       <%!-- print-only sheet (hidden on mobile) --%>
       <div class="hidden print:block">
-        <.purchase_order_print po={@po} currency={@organisation.currency} organisation={@organisation} />
+        <.purchase_order_print :if={@print_mode != nil} po={@po} currency={@organisation.currency} organisation={@organisation} org_address={@org_address} rep={member_name(@current_user)} mode={@print_mode} />
       </div>
 
       <div class="print:hidden">
-        <%!-- top bar --%>
-        <div style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
+        <%!--
+          Search-to-add pattern (canonical for this app):
+          A search icon sits in the header bar. Tapping it collapses the entire
+          header and replaces it with a full-width search input that auto-focuses.
+          Results render inline below, replacing the normal content. The × button
+          (always visible, no query needed) collapses back to the header.
+          Successfully adding an item also collapses. The normal content — items
+          list, sticky CTA — is hidden while search is open.
+
+          State: @search_open boolean (open/closed), @search_query / @search_results
+          for the live search. Events: open_search / clear_search / search.
+
+          Do not use a persistent search bar, a bottom sheet form, or a separate
+          search screen. This header-collapse pattern is the standard for any
+          screen where items are added from a catalogue or lookup.
+        --%>
+        <%!-- top bar: normal header --%>
+        <div :if={!@search_open} style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
           <.link navigate={~p"/manage/purchasing"}>
             <button
               type="button"
@@ -36,36 +56,117 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
             <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:19px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
               {po_supplier_name(@po)}
             </h1>
-            <p style="font-size:12px;color:#6E675A;margin-top:1px;font-family:monospace;">{@po.reference}</p>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style={"#{status_badge_style(@po.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
+            <span style={"margin-top:3px;display:inline-block;#{status_badge_style(@po.status)}border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;"}>
               {status_label(@po.status)}
             </span>
-            <button
-              :if={@po.status in [:draft, :ordered]}
-              type="button"
-              onclick="window.print()"
-              ontouchstart=""
-              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+          </div>
+          <button
+            :if={@po.status == :draft}
+            type="button"
+            phx-click="open_search"
+            ontouchstart=""
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button
+            :if={@po.status in [:draft, :ordered]}
+            type="button"
+            phx-click="open_print_modal"
+            ontouchstart=""
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <%!-- top bar: search active — full-width input replaces header --%>
+        <div :if={@search_open} style="padding:12px 16px 10px;">
+          <form phx-change="search" style="position:relative;">
+            <svg
+              width="15" height="15" viewBox="0 0 24 24" fill="none"
+              style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6E675A;pointer-events:none;"
             >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+              class="dark-input"
+              type="text"
+              name="q"
+              value={@search_query}
+              phx-debounce="300"
+              autocomplete="off"
+              placeholder="Search catalogue to add…"
+              phx-mounted={JS.focus()}
+              style="padding-left:36px;padding-right:52px;"
+            />
+            <button
+              type="button"
+              phx-click="clear_search"
+              ontouchstart=""
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#DB9258;cursor:pointer;padding:4px;line-height:0;"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
               </svg>
             </button>
-          </div>
+          </form>
         </div>
 
         <%!-- PO detail view: show / items / add_item --%>
         <div :if={@live_action in [:show, :items, :add_item]}>
+
+          <%!-- catalog search results --%>
+          <div :if={@search_query != ""} style="padding:0 16px;display:flex;flex-direction:column;gap:6px;padding-bottom:100px;">
+            <div
+              :if={@search_results == []}
+              style="font-size:13px;color:#6E675A;text-align:center;padding:20px 0;"
+            >
+              No results for "{@search_query}"
+            </div>
+            <div :for={sci <- @search_results}
+              style="background:#211E16;border-radius:12px;padding:12px;border:1px solid rgba(52,48,37,0.58);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                <div style="min-width:0;flex:1;">
+                  <p style="font-size:13px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {sci_title(sci)}
+                  </p>
+                  <p style="font-size:11px;color:#6E675A;margin-top:2px;">
+                    {sci.supplier_catalog.supplier.name}
+                    {if sci.format_description, do: " · #{sci.format_description}"}
+                    {if sci.sku, do: " · #{sci.sku}"}
+                  </p>
+                  <p :if={sci.unit_price} style="font-size:11px;color:#DB9258;margin-top:2px;">
+                    {format_currency(@organisation.currency, sci.unit_price)}/unit
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  phx-click="add_catalog_item"
+                  phx-value-id={sci.id}
+                  ontouchstart=""
+                  style="flex-shrink:0;background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:8px;padding:6px 12px;cursor:pointer;color:#54B57E;font-size:13px;font-weight:700;"
+                >
+                  + Add
+                </button>
+              </div>
+            </div>
+          </div>
+
           <%!-- ordered / confirmed date chips --%>
           <div
-            :if={@po.ordered_at || @po.received_at}
+            :if={(@po.ordered_at || @po.received_at) && @search_query == ""}
             style="padding:0 16px 12px;display:flex;gap:8px;"
           >
             <span :if={@po.ordered_at} style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;">
@@ -122,76 +223,59 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
             </form>
           </div>
 
-          <%!-- items list (non-ordered states) --%>
-          <div :if={@po.status != :ordered} style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
+          <%!-- items list (non-ordered states, not searching) --%>
+          <div :if={@po.status != :ordered && @search_query == ""} style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
             <p
               :if={@po.items == []}
               style="font-size:13.5px;color:#6E675A;text-align:center;padding:32px 0;"
             >
               No items yet
             </p>
-            <div
+            <.material_line
               :for={item <- @po.items}
-              style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;"
+              jm={display_item(item, @po.status)}
+              currency={@organisation.currency}
+              removable={@po.status == :draft}
+              on_tap={
+                if @po.status in [:draft, :confirmed],
+                  do: JS.push("open_material_sheet", value: %{id: item.id}),
+                  else: %JS{}
+              }
+              on_remove={JS.push("remove_po_item", value: %{id: item.id})}
+            />
+          </div>
+
+          <%!-- dashed + button for manual items (draft only, not searching) --%>
+          <div :if={@po.status == :draft && @search_query == ""} style="padding:10px 16px 0;">
+            <button
+              type="button"
+              phx-click="start_add_manual_item"
+              ontouchstart=""
+              style="width:100%;border-radius:12px;border:1.5px dashed rgba(84,181,126,0.3);padding:10px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#54B57E;"
             >
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-                <div style="min-width:0;flex:1;">
-                  <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">{plant_label(item)}</p>
-                  <p style="font-size:11.5px;font-family:monospace;color:#6E675A;margin-top:2px;">{item.supplier_sku}</p>
-                </div>
-                <span :if={item.is_reservation} style="flex-shrink:0;background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">
-                  cherry-pick
-                </span>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-                <div style="display:flex;gap:12px;">
-                  <span style="font-size:12px;color:#9A9384;">
-                    ordered: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.quantity)}</span>
-                  </span>
-                  <span :if={item.confirmed_qty} style="font-size:12px;color:#9A9384;">
-                    confirmed: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.confirmed_qty)}</span>
-                  </span>
-                  <span :if={item.received_qty} style="font-size:12px;color:#9A9384;">
-                    received: <span style="color:#54B57E;font-weight:600;">{fmt_qty(item.received_qty)}</span>
-                  </span>
-                </div>
-                <span :if={item.unit_price} style="font-size:12px;color:#6E675A;">
-                  {format_money(@organisation.currency, item.unit_price)}
-                </span>
-              </div>
-            </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </button>
           </div>
 
           <%!-- spacer for sticky CTA --%>
-          <div :if={@po.status != :ordered} style="height:110px;" />
+          <div :if={@po.status != :ordered && @search_query == ""} style="height:110px;" />
 
           <%!-- sticky CTA --%>
           <div
-            :if={@po.status in [:draft, :confirmed]}
+            :if={@po.status in [:draft, :confirmed] && @search_query == ""}
             style="position:fixed;bottom:74px;left:0;right:0;padding:12px 16px;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);"
           >
-            <div :if={@po.status == :draft} style="display:flex;gap:8px;">
-              <.link
-                patch={~p"/manage/purchasing/#{@po.reference}/add_item"}
-                style="flex-shrink:0;"
-              >
-                <button
-                  type="button"
-                  ontouchstart=""
-                  style="height:50px;padding:0 16px;background:rgba(52,48,37,0.5);border:1px solid rgba(52,48,37,0.58);border-radius:14px;font-size:14px;font-weight:600;color:#F4EFE2;cursor:pointer;white-space:nowrap;"
-                >
-                  + Add item
-                </button>
-              </.link>
-              <button
-                type="button"
-                phx-click="mark_ordered"
-                ontouchstart=""
-                style="flex:1;height:50px;background:#54B57E;border:none;border-radius:14px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
-              >
-                Send order →
-              </button>
-            </div>
+            <button
+              :if={@po.status == :draft}
+              type="button"
+              phx-click="mark_ordered"
+              ontouchstart=""
+              style="width:100%;height:50px;background:#54B57E;border:none;border-radius:14px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
+            >
+              Send order →
+            </button>
             <.link :if={@po.status == :confirmed} navigate={~p"/manage/purchasing/#{@po.reference}/lineup"}>
               <button
                 type="button"
@@ -303,6 +387,139 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
           </div>
         </div>
 
+        <%!-- manual add bottom sheet --%>
+        <div
+          :if={@adding_manual_item}
+          style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
+        >
+          <div
+            phx-click="cancel_add_manual_item"
+            style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
+          />
+          <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
+            <div style="padding:12px 16px 14px;border-bottom:1px solid rgba(52,48,37,0.58);">
+              <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;" />
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
+                  Add item
+                </p>
+                <button
+                  type="button"
+                  phx-click="cancel_add_manual_item"
+                  ontouchstart=""
+                  style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <form phx-submit="save_manual_item" style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <label class="dark-label">Description</label>
+                <input
+                  class="dark-input"
+                  type="text"
+                  name="description"
+                  placeholder="e.g. 10 white geum"
+                  phx-mounted={JS.focus()}
+                  style="width:100%;"
+                />
+              </div>
+              <div style="display:flex;gap:10px;">
+                <div style="flex:1;">
+                  <label class="dark-label">Qty</label>
+                  <input
+                    class="dark-input"
+                    type="number"
+                    name="qty"
+                    value="1"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    style="width:100%;"
+                  />
+                </div>
+                <div style="flex:1;">
+                  <label class="dark-label" style="color:#9A7344;">Cost</label>
+                  <input
+                    class="dark-input"
+                    type="number"
+                    name="cost"
+                    min="0"
+                    step="0.01"
+                    inputmode="decimal"
+                    placeholder="—"
+                    style="width:100%;color:#DB9258;"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                phx-click="toggle_manual_reservation"
+                ontouchstart=""
+                style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;cursor:pointer;"
+              >
+                <span style="font-size:13px;color:#9A9384;">Cherry-pick</span>
+                <div style={"width:40px;height:24px;border-radius:999px;flex-shrink:0;transition:background 0.15s;position:relative;#{if @manual_is_reservation, do: "background:#54B57E;", else: "background:#3A3528;"}"}>
+                  <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @manual_is_reservation, do: "left:19px;", else: "left:3px;"}"}></div>
+                </div>
+              </button>
+
+              <div style="margin-top:4px;">
+                <.glow_button type="submit" valid={true}>Add</.glow_button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <%!-- print picker --%>
+        <div
+          :if={@print_modal}
+          style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
+        >
+          <div phx-click="close_print_modal" style="position:absolute;inset:0;background:rgba(0,0,0,0.65);" />
+          <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
+            <div style="padding:12px 16px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
+              <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;" />
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
+                Print
+              </p>
+            </div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+              <button
+                type="button"
+                phx-click="select_print"
+                phx-value-mode="rollup"
+                ontouchstart=""
+                style="width:100%;background:#211E16;border:1.5px solid rgba(52,48,37,0.8);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;"
+              >
+                <p style="font-size:14px;font-weight:700;color:#F4EFE2;">Supply run totals</p>
+                <p style="font-size:12px;color:#6E675A;margin-top:2px;">One page — quantities rolled up for the supplier</p>
+              </button>
+              <button
+                type="button"
+                phx-click="select_print"
+                phx-value-mode="sheets"
+                ontouchstart=""
+                style="width:100%;background:#211E16;border:1.5px solid rgba(52,48,37,0.8);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;"
+              >
+                <p style="font-size:14px;font-weight:700;color:#F4EFE2;">Site sheets</p>
+                <p style="font-size:12px;color:#6E675A;margin-top:2px;">One sheet per delivery address for the crew</p>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <%!-- edit item cost / price / qty --%>
+        <.material_line_sheet
+          material={@editing_material}
+          currency={@organisation.currency}
+          on_close={JS.push("close_material_sheet")}
+          save_event="save_material_sheet"
+        />
+
         <%!-- add item bottom sheet --%>
         <div
           :if={@live_action == :add_item}
@@ -366,21 +583,34 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   def mount(_params, _session, socket) do
     member = socket.assigns.current_member
 
-    materials = Inventory.list_materials!(actor: member, tenant: member.organisation_id)
+    materials =
+      Inventory.list_materials!(
+        actor: member,
+        tenant: member.organisation_id
+      )
 
-    # Load org with address for print sheet
     organisation =
-      if Map.get(socket.assigns, :organisation) do
-        Accounts.get_organisation!(
-          member.organisation_id,
-          authorize?: false,
-          load: [:address]
-        )
-      else
-        Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
-      end
+      Accounts.get_organisation!(member.organisation_id, authorize?: false)
 
-    {:ok, assign(socket, materials: materials, organisation: organisation)}
+    org_address =
+      CRM.Address
+      |> filter(organisation_id == ^member.organisation_id and is_nil(customer_id))
+      |> Ash.read_one!(authorize?: false)
+
+    {:ok,
+     assign(socket,
+       materials: materials,
+       organisation: organisation,
+       org_address: org_address,
+       editing_material: nil,
+       search_query: "",
+       search_results: [],
+       search_open: false,
+       adding_manual_item: false,
+       manual_is_reservation: false,
+       print_modal: false,
+       print_mode: nil
+     )}
   end
 
   @impl true
@@ -407,6 +637,141 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
          socket
          |> put_flash(:error, "Unable to load purchase order")
          |> push_navigate(to: ~p"/manage/purchasing")}
+    end
+  end
+
+  @impl true
+  def handle_event("start_add_manual_item", _params, socket) do
+    {:noreply, assign(socket, adding_manual_item: true, manual_is_reservation: false)}
+  end
+
+  @impl true
+  def handle_event("cancel_add_manual_item", _params, socket) do
+    {:noreply, assign(socket, adding_manual_item: false, manual_is_reservation: false)}
+  end
+
+  @impl true
+  def handle_event("toggle_manual_reservation", _params, socket) do
+    {:noreply, assign(socket, :manual_is_reservation, !socket.assigns.manual_is_reservation)}
+  end
+
+  @impl true
+  def handle_event("save_manual_item", params, socket) do
+    member = socket.assigns.current_member
+    opts = [actor: member, tenant: member.organisation_id]
+
+    description = String.trim(params["description"] || "")
+
+    if description == "" do
+      {:noreply, socket}
+    else
+      attrs = %{
+        purchase_order_id: socket.assigns.po.id,
+        supplier_sku: description,
+        quantity: parse_decimal(params["qty"]),
+        cost: parse_optional_decimal(params["cost"]),
+        is_reservation: socket.assigns.manual_is_reservation
+      }
+
+      case Inventory.create_purchase_order_item(attrs, opts) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> assign(
+             adding_manual_item: false,
+             manual_is_reservation: false,
+             manual_sku: "",
+             manual_cost: nil
+           )
+           |> reload_po()}
+        {:error, _} -> {:noreply, put_flash(socket, :error, "Could not add item.")}
+      end
+    end
+  end
+
+  @impl true
+  def handle_event("open_print_modal", _params, socket) do
+    {:noreply, assign(socket, print_modal: true)}
+  end
+
+  @impl true
+  def handle_event("close_print_modal", _params, socket) do
+    {:noreply, assign(socket, print_modal: false)}
+  end
+
+  @impl true
+  def handle_event("select_print", %{"mode" => mode}, socket) do
+    {:noreply,
+     socket
+     |> assign(print_modal: false, print_mode: String.to_existing_atom(mode))
+     |> push_event("print", %{})}
+  end
+
+  @impl true
+  def handle_event("open_search", _params, socket) do
+    {:noreply, assign(socket, :search_open, true)}
+  end
+
+  @impl true
+  def handle_event("search", %{"q" => query}, socket) do
+    query = String.trim(query)
+    member = socket.assigns.current_member
+
+    results =
+      if String.length(query) >= 2 do
+        Inventory.search_supplier_catalog_items!(query,
+          actor: member,
+          tenant: member.organisation_id,
+          load: [supplier_catalog: [:supplier]]
+        )
+      else
+        []
+      end
+
+    {:noreply, socket |> assign(:search_query, query) |> assign(:search_results, results)}
+  end
+
+  @impl true
+  def handle_event("clear_search", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_open, false)
+     |> assign(:search_query, "")
+     |> assign(:search_results, [])}
+  end
+
+  @impl true
+  def handle_event("add_catalog_item", %{"id" => sci_id}, socket) do
+    member = socket.assigns.current_member
+    opts = [actor: member, tenant: member.organisation_id]
+
+    sci =
+      Inventory.get_supplier_catalog_item_by_id!(sci_id,
+        actor: member,
+        tenant: member.organisation_id,
+        load: [supplier_catalog: [:supplier]]
+      )
+
+    attrs = %{
+      purchase_order_id: socket.assigns.po.id,
+      supplier_catalog_item_id: sci.id,
+      supplier_sku: sci.sku || sci_title(sci),
+      cost: sci.unit_price,
+      material_id: sci.material_id,
+      quantity: 1
+    }
+
+    case Inventory.create_purchase_order_item(attrs, opts) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> assign(:search_open, false)
+         |> assign(:search_query, "")
+         |> assign(:search_results, [])
+         |> reload_po()}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not add item.")}
     end
   end
 
@@ -460,6 +825,48 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   end
 
   @impl true
+  def handle_event("open_material_sheet", %{"id" => id}, socket) do
+    item = Enum.find(socket.assigns.po.items, &(&1.id == id))
+    {:noreply, assign(socket, :editing_material, item)}
+  end
+
+  @impl true
+  def handle_event("close_material_sheet", _params, socket) do
+    {:noreply, assign(socket, :editing_material, nil)}
+  end
+
+  @impl true
+  def handle_event("save_material_sheet", params, socket) do
+    member = socket.assigns.current_member
+    opts = [actor: member, tenant: member.organisation_id]
+
+    attrs = %{
+      quantity: parse_decimal(params["nb"]),
+      cost: parse_optional_decimal(params["cost"]),
+      price: parse_optional_decimal(params["price"])
+    }
+
+    case Inventory.update_purchase_order_item(socket.assigns.editing_material, attrs, opts) do
+      {:ok, _} -> {:noreply, socket |> assign(:editing_material, nil) |> reload_po()}
+      {:error, _} -> {:noreply, put_flash(socket, :error, "Could not save.")}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_po_item", %{"id" => id}, socket) do
+    member = socket.assigns.current_member
+    opts = [actor: member, tenant: member.organisation_id]
+
+    with true <- socket.assigns.po.status == :draft,
+         item when not is_nil(item) <- Enum.find(socket.assigns.po.items, &(&1.id == id)),
+         :ok <- Inventory.destroy_purchase_order_item(item, opts) do
+      {:noreply, reload_po(socket)}
+    else
+      _ -> {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_info({:po_item_saved, _item}, socket) do
     {:noreply, reload_po(socket)}
   end
@@ -479,11 +886,37 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   end
 
   defp po_load do
-    [supplier: [:addresses], items: [:material, supplier_catalog_item: [], job: [:address]]]
+    [
+      supplier: [:addresses],
+      items: [:material, supplier_catalog_item: [supplier_catalog: [:supplier]], job: [garden: [:customer], engagement: []]]
+    ]
   end
+
+  # Pass the most relevant quantity for the PO state to material_line.
+  defp display_item(item, :confirmed), do: %{item | quantity: item.confirmed_qty || item.quantity}
+  defp display_item(item, :received), do: %{item | quantity: item.received_qty || item.confirmed_qty || item.quantity}
+  defp display_item(item, _), do: item
+
+  defp parse_optional_decimal(nil), do: nil
+  defp parse_optional_decimal(""), do: nil
+  defp parse_optional_decimal(s), do: Decimal.new(s)
 
   defp po_supplier_name(%{supplier: %{name: name}}), do: name
   defp po_supplier_name(_), do: "Unassigned"
+
+  defp member_name(%{first_name: fn_, last_name: ln})
+       when not is_nil(fn_) or not is_nil(ln),
+       do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+
+  defp member_name(_), do: nil
+
+  defp sci_title(%{latin_name: ln, cultivar: cv}) when not is_nil(ln) do
+    [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+  end
+
+  defp sci_title(%{name: name}) when not is_nil(name), do: name
+  defp sci_title(%{sku: sku}) when not is_nil(sku), do: sku
+  defp sci_title(_), do: "—"
 
   defp plant_label(%{supplier_catalog_item: %{latin_name: ln, cultivar: cv}}) when not is_nil(ln) do
     [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")

@@ -40,7 +40,7 @@ defmodule OpenSauce.Work.Job do
     end
 
     read :upcoming do
-      filter expr(status == :scheduled and not is_nil(scheduled_for) and scheduled_for >= ^Date.utc_today())
+      filter expr(status in [:scheduling, :scheduled])
       prepare build(sort: [scheduled_for: :asc])
     end
 

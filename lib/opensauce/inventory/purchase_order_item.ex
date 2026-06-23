@@ -62,26 +62,27 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
         :material_id,
         :supplier_sku,
         :quantity,
-        :unit_price,
+        :cost,
+        :price,
         :is_reservation
       ]
     end
 
     update :update do
-      accept [:job_id, :quantity, :unit_price, :is_reservation, :material_id]
+      accept [:job_id, :quantity, :cost, :price, :is_reservation, :material_id]
     end
 
     # Called when supplier confirms availability and sets items aside.
     # confirmed_qty may be less than quantity if they are short.
     update :confirm do
-      accept [:confirmed_qty, :unit_price]
+      accept [:confirmed_qty, :cost]
     end
 
     # Called at pickup/receipt. received_qty reflects cherry-pick outcome —
     # she may take fewer than confirmed (passed on a specimen) or a damaged
     # one at a negotiated price.
     update :receive do
-      accept [:received_qty, :unit_price]
+      accept [:received_qty, :cost]
     end
   end
 
@@ -129,7 +130,18 @@ defmodule OpenSauce.Inventory.PurchaseOrderItem do
       constraints min: 0
     end
 
-    attribute :unit_price, :decimal do
+    # What the org paid per unit on the supplier invoice.
+    # Seeded from the catalogue price at PO build time; updated at confirmation
+    # or receipt when the actual invoice price is known.
+    attribute :cost, :decimal do
+      allow_nil? true
+      public? true
+      constraints min: 0
+    end
+
+    # Unit rate billed to the client for this material.
+    # Nil until set during job invoicing.
+    attribute :price, :decimal do
       allow_nil? true
       public? true
       constraints min: 0

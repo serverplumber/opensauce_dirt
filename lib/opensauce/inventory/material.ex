@@ -53,7 +53,8 @@ defmodule OpenSauce.Inventory.Material do
         :material_type,
         :price,
         :minimum_stock,
-        :maximum_stock
+        :maximum_stock,
+        :default_supplier_catalog_item_id
       ]
     ]
 
@@ -68,9 +69,9 @@ defmodule OpenSauce.Inventory.Material do
         :material_type,
         :price,
         :minimum_stock,
-        :maximum_stock
+        :maximum_stock,
+        :default_supplier_catalog_item_id
       ]
-
     end
 
     read :list do
@@ -158,6 +159,12 @@ defmodule OpenSauce.Inventory.Material do
 
   relationships do
     has_many :movements, OpenSauce.Inventory.Movement
+
+    belongs_to :default_supplier_catalog_item, OpenSauce.Inventory.SupplierCatalogItem do
+      allow_nil? true
+      attribute_writable? true
+      public? true
+    end
   end
 
   aggregates do

@@ -121,6 +121,29 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
         </div>
       </div>
 
+      <div :if={@catalog_items != []}>
+        <label class="dark-label">Default supplier</label>
+        <select
+          id={@form[:default_supplier_catalog_item_id].id}
+          name={@form[:default_supplier_catalog_item_id].name}
+          class="dark-select"
+          style={
+            if @form[:default_supplier_catalog_item_id].value in [nil, ""],
+              do: "color:#6E675A;",
+              else: "color:#F4EFE2;"
+          }
+        >
+          <option value="">— none —</option>
+          <option
+            :for={sci <- @catalog_items}
+            value={sci.id}
+            selected={@form[:default_supplier_catalog_item_id].value == sci.id}
+          >
+            {sci_label(sci)}
+          </option>
+        </select>
+      </div>
+
       <.glow_button valid={form_valid?(@form)} type="submit">Save material</.glow_button>
     </form>
     """
@@ -128,7 +151,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
 
   @impl true
   def update(assigns, socket) do
-    {:ok, socket |> assign(assigns) |> assign_form()}
+    {:ok, socket |> assign(assigns) |> assign_new(:catalog_items, fn -> [] end) |> assign_form()}
   end
 
   @impl true
@@ -179,4 +202,19 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
   defp unit_abbr(:milliliter), do: "mL"
   defp unit_abbr(:piece), do: "pcs"
   defp unit_abbr(_), do: ""
+
+  defp sci_label(%{latin_name: ln, cultivar: cv, supplier_catalog: %{supplier: %{name: sn}}})
+       when not is_nil(ln) do
+    title = [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+    "#{sn} — #{title}"
+  end
+
+  defp sci_label(%{name: name, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(name),
+    do: "#{sn} — #{name}"
+
+  defp sci_label(%{sku: sku, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(sku),
+    do: "#{sn} — #{sku}"
+
+  defp sci_label(%{sku: sku}) when not is_nil(sku), do: sku
+  defp sci_label(_), do: "—"
 end

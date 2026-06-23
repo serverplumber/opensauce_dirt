@@ -45,6 +45,14 @@ defmodule OpenSauceWeb.JobLive.Materials do
      |> assign(:page_title, "Job materials")}
   end
 
+  def handle_event("clear_search", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, "")
+     |> assign(:search_results, [])
+     |> assign(:format_filter, nil)}
+  end
+
   @impl true
   def handle_event("search", %{"q" => query}, socket) do
     query = String.trim(query)
@@ -160,27 +168,29 @@ defmodule OpenSauceWeb.JobLive.Materials do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:80px;">
 
-      <%!-- nav row --%>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
-        <.link navigate={@back_to}>
-          <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </.link>
-        <div style="text-align:center;">
-          <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">Job materials</p>
-          <p style="font-size:11px;color:#9A9384;margin-top:1px;">
-            {job_subtitle(@job)}
-          </p>
-        </div>
-        <.link navigate={@back_to}>
-          <button type="button" ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;">
-            Done
-          </button>
-        </.link>
-      </div>
+      <.material_search_header
+        search_query={@search_query}
+        placeholder="Latin name, cultivar, or common name…"
+      >
+        <:nav>
+          <.link navigate={@back_to}>
+            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </.link>
+          <div style="text-align:center;">
+            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">Job materials</p>
+            <p style="font-size:11px;color:#9A9384;margin-top:1px;">{job_subtitle(@job)}</p>
+          </div>
+          <.link navigate={@back_to}>
+            <button type="button" ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;">
+              Done
+            </button>
+          </.link>
+        </:nav>
+      </.material_search_header>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px;">
 
@@ -192,25 +202,6 @@ defmodule OpenSauceWeb.JobLive.Materials do
             {engagement_context(@job)} · {length(@job.engagement.materials)} planned
           </p>
         </div>
-
-        <%!-- search --%>
-        <form phx-change="search" style="position:relative;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6E675A;pointer-events:none;">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <input
-            class="dark-input"
-            type="search"
-            name="q"
-            value={@search_query}
-            phx-debounce="300"
-            autocomplete="off"
-            placeholder="Latin name, cultivar, or common name…"
-            style="padding-left:36px;"
-          />
-        </form>
 
         <%!-- format filter chips --%>
         <div :if={@search_results != [] and format_options(@search_results) != []}

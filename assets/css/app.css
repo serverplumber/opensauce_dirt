@@ -368,6 +368,17 @@ button {
   color-scheme: dark;
 }
 
+@page {
+  margin: 0;
+}
+
+@media print {
+  .po-sheet {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+}
+
 /* Utility to hide scrollbar but allow scrolling */
 .no-scrollbar::-webkit-scrollbar {
     display: none;

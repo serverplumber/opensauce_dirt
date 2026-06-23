@@ -417,7 +417,7 @@ defmodule OpenSauceWeb.Components.Page do
       <%!-- Bottom nav bar --%>
       <nav
         id="bottom-nav"
-        class="fixed bottom-0 inset-x-0 z-50 bg-[#211E16]"
+        class="fixed bottom-0 inset-x-0 z-50 bg-[#211E16] print:hidden"
         aria-label="Primary navigation"
         style="border-top: 1.5px solid rgba(52,48,37,0.58); padding-bottom: env(safe-area-inset-bottom)"
       >

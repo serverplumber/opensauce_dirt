@@ -90,6 +90,7 @@ defmodule OpenSauceWeb.Components.Materials do
   attr :jm, :map, required: true
   attr :currency, :atom, required: true
   attr :from_plan, :boolean, default: false
+  attr :removable, :boolean, default: true
   attr :on_tap, JS, default: %JS{}
   attr :on_remove, JS, default: %JS{}
 
@@ -129,6 +130,7 @@ defmodule OpenSauceWeb.Components.Materials do
             <p style="font-size:10px;color:#3A7A57;margin-top:1px;">price</p>
           </div>
           <button
+            :if={@removable}
             type="button"
             phx-click={@on_remove}
             ontouchstart=""

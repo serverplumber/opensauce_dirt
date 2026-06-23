@@ -246,7 +246,7 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
   defp po_summary(po, currency) do
     count = length(po.items)
     total = Enum.reduce(po.items, D.new(0), fn item, acc ->
-      price = item.unit_price || D.new(0)
+      price = item.cost || D.new(0)
       qty = item.quantity || D.new(0)
       D.add(acc, D.mult(price, qty))
     end)

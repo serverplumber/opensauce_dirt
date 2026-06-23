@@ -77,6 +77,7 @@ defmodule OpenSauce.Inventory do
       define :find_open_po_items_by_job_and_item, action: :find_open_by_job_and_item, args: [:job_id, :supplier_catalog_item_id]
       define :create_purchase_order_item, action: :create
       define :update_purchase_order_item, action: :update
+      define :destroy_purchase_order_item, action: :destroy
       define :confirm_purchase_order_item, action: :confirm
       define :receive_purchase_order_item, action: :receive
     end

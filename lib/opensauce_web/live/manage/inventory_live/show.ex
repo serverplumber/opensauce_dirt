@@ -2,6 +2,8 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  import Ash.Query
+
   alias OpenSauce.Inventory
 
   @impl true
@@ -95,6 +97,22 @@ defmodule OpenSauceWeb.InventoryLive.Show do
           <.stat_tile label="Max" value={format_amount(@material.unit, @material.maximum_stock)} />
         </div>
 
+        <%!-- default supplier --%>
+        <div :if={@material.default_supplier_catalog_item} style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:#54B57E;flex-shrink:0;">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div style="min-width:0;flex:1;">
+            <p style="font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Default supplier
+            </p>
+            <p style="font-size:13px;color:#F4EFE2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {default_sci_label(@material.default_supplier_catalog_item)}
+            </p>
+          </div>
+        </div>
+
         <%!-- open purchase orders --%>
         <div :if={@open_po_items != []} style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:16px;overflow:hidden;margin-bottom:14px;">
           <div style="padding:12px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
@@ -179,6 +197,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
           current_member={@current_member}
           action={@live_action}
           material={@material}
+          catalog_items={@sci_for_material}
           patch={~p"/manage/inventory/#{@material.sku}/details"}
         />
       </.modal>
@@ -226,7 +245,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
 
     material =
       Inventory.get_material_by_sku!(sku,
-        load: [:current_stock, :movements],
+        load: [:current_stock, :movements, :default_supplier_catalog_item],
         actor: member,
         tenant: member.organisation_id
       )
@@ -238,12 +257,18 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         tenant: member.organisation_id
       )
 
+    sci_for_material =
+      Inventory.SupplierCatalogItem
+      |> filter(material_id == ^material.id)
+      |> Ash.read!(actor: member, tenant: member.organisation_id, load: [supplier_catalog: [:supplier]])
+
     {:noreply,
      socket
      |> assign(:page_title, material.name)
      |> assign(:main_bg, "bg-[#16140E]")
      |> assign(:material, material)
-     |> assign(:open_po_items, open_po_items)}
+     |> assign(:open_po_items, open_po_items)
+     |> assign(:sci_for_material, sci_for_material)}
   end
 
   @impl true
@@ -262,12 +287,19 @@ defmodule OpenSauceWeb.InventoryLive.Show do
 
     material =
       Inventory.get_material_by_sku!(sku,
-        load: [:current_stock, :movements],
+        load: [:current_stock, :movements, :default_supplier_catalog_item],
         actor: member,
         tenant: member.organisation_id
       )
 
-    assign(socket, :material, material)
+    sci_for_material =
+      Inventory.SupplierCatalogItem
+      |> filter(material_id == ^material.id)
+      |> Ash.read!(actor: member, tenant: member.organisation_id, load: [supplier_catalog: [:supplier]])
+
+    socket
+    |> assign(:material, material)
+    |> assign(:sci_for_material, sci_for_material)
   end
 
   defp details_active?(live_action), do: live_action in [:show, :details, :edit]
@@ -291,6 +323,14 @@ defmodule OpenSauceWeb.InventoryLive.Show do
       _ -> "color:#9A9384;"
     end
   end
+
+  defp default_sci_label(%{latin_name: ln, cultivar: cv}) when not is_nil(ln) do
+    [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+  end
+
+  defp default_sci_label(%{name: name}) when not is_nil(name), do: name
+  defp default_sci_label(%{sku: sku}) when not is_nil(sku), do: sku
+  defp default_sci_label(_), do: "—"
 
   defp movement_label(unit, qty) do
     abs_qty = Decimal.abs(qty)
