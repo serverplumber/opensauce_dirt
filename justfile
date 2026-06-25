@@ -37,6 +37,13 @@ nuke:
     mix ash.codegen initial_schema
     mix ash.migrate
     mix ecto.migrate --migrations-path priv/repo/manual_migrations
+    just nuke-test
+
+# Reset the test DB to match current migrations (run after `just nuke` or when test DB drifts)
+nuke-test:
+    MIX_ENV=test mix ash.reset
+    MIX_ENV=test mix ash.migrate
+    MIX_ENV=test mix ecto.migrate --migrations-path priv/repo/manual_migrations
 
 unnuke:
     rm -rf priv/repo/migrations priv/resource_snapshots

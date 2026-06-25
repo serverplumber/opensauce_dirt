@@ -16,6 +16,8 @@ mix ash.setup          # Run migrations + Ash introspection
 mix ash.codegen <name> # Generate snapshots + migrations after resource changes
 mix ash.reset          # Drop, create, migrate, seed
 docker-compose up -d   # Start PostgreSQL 16 + MinIO (S3-compatible storage)
+just nuke              # Wipe migrations, regenerate initial_schema, reset dev + test DBs
+just nuke-test         # Reset test DB only — run when test DB drifts from dev after a nuke
 ```
 
 ## Architecture
@@ -236,3 +238,5 @@ Resource
 ```
 
 The `AshPhoenix.Form` struct can still be used for field-level error display on failure via `AshPhoenix.Form.validate(form, scalar_params, errors: true)`.
+
+**`update` actions with `manage_relationship` require `require_atomic? false`** or Ash will fail in atomic mode at runtime. Any time you add `change manage_relationship(...)` inside an `update` action, add `require_atomic? false` to that action. Current call sites: `Supplier.update`, `Customer.update`.
