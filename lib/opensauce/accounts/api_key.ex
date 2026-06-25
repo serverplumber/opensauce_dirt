@@ -60,7 +60,7 @@ defmodule OpenSauce.Accounts.ApiKey do
     end
 
     policy always() do
-      authorize_if expr(^actor(:role) == :admin)
+      authorize_if expr(^actor(:role) == :owner)
     end
   end
 

@@ -19,7 +19,7 @@ defmodule OpenSauceWeb.CustomerLive.Index do
       </div>
 
       <%!-- list --%>
-      <div id="customers" phx-update="stream" style="padding:0 16px 100px;">
+      <div id="customers" phx-update="stream" style="padding:0 16px 0;">
         <div :for={{dom_id, customer} <- @streams.customers} id={dom_id} class="jcard" style="cursor:pointer;">
           <.link navigate={~p"/manage/customers/#{customer.reference}"} style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
             <div style="flex:1;min-width:0;">
@@ -38,11 +38,11 @@ defmodule OpenSauceWeb.CustomerLive.Index do
             </svg>
           </.link>
         </div>
-
-        <p :if={@customer_count == 0} style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;">
-          No customers yet
-        </p>
       </div>
+
+      <p :if={@customer_count == 0} style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0 100px;">
+        No customers yet
+      </p>
 
       <%!-- FAB --%>
       <.link navigate={~p"/manage/customers/new"}>

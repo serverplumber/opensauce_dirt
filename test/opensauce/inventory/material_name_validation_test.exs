@@ -9,6 +9,8 @@ defmodule OpenSauce.Inventory.MaterialNameValidationTest do
   defp staff, do: OpenSauce.DataCase.staff_actor()
 
   defp create_material(name) do
+    member = staff()
+
     Material
     |> Ash.Changeset.for_create(:create, %{
       name: name,
@@ -18,7 +20,7 @@ defmodule OpenSauce.Inventory.MaterialNameValidationTest do
       minimum_stock: Decimal.new(0),
       maximum_stock: Decimal.new(0)
     })
-    |> Ash.create(actor: staff())
+    |> Ash.create(actor: member, tenant: member.organisation_id)
   end
 
   describe "material name regex validation" do

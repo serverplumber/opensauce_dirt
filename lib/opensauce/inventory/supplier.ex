@@ -64,6 +64,7 @@ defmodule OpenSauce.Inventory.Supplier do
     end
 
     update :update do
+      require_atomic? false
       accept [:name, :contact_name, :contact_email, :contact_phone, :notes]
 
       argument :addresses, {:array, :map}, allow_nil?: true, default: []

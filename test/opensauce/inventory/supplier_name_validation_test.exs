@@ -9,12 +9,13 @@ defmodule OpenSauce.Inventory.SupplierNameValidationTest do
   defp staff, do: OpenSauce.DataCase.staff_actor()
 
   defp create_supplier(name, contact_name \\ nil) do
+    member = staff()
     params = %{name: name}
     params = if contact_name, do: Map.put(params, :contact_name, contact_name), else: params
 
     Supplier
     |> Ash.Changeset.for_create(:create, params)
-    |> Ash.create(actor: staff())
+    |> Ash.create(actor: member, tenant: member.organisation_id)
   end
 
   describe "supplier name validation" do

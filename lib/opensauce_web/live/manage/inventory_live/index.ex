@@ -17,7 +17,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
       </div>
 
       <%!-- material list --%>
-      <div style="padding:0 16px 100px;" id="materials-list" phx-update="stream">
+      <div style="padding:0 16px 0;" id="materials-list" phx-update="stream">
         <div
           :for={{dom_id, material} <- @streams.materials}
           id={dom_id}
@@ -53,13 +53,14 @@ defmodule OpenSauceWeb.InventoryLive.Index do
           </div>
         </div>
 
-        <p
-          :if={@material_count == 0}
-          style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;"
-        >
-          No materials yet
-        </p>
       </div>
+
+      <p
+        :if={@material_count == 0}
+        style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0 100px;"
+      >
+        No materials yet
+      </p>
 
       <%!-- FAB --%>
       <button

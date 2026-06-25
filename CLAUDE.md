@@ -61,10 +61,26 @@ After any resource change, run `mix ash.codegen <migration_name>` to update both
 ## Testing
 
 - **Test support**: `test/support/data_case.ex` (database tests), `test/support/conn_case.ex` (LiveView tests), `test/support/factory.ex`
-- **Factory** uses Ash actions directly to create test entities
-- **Helper functions**: `staff_actor()` and `admin_actor()` create test users with appropriate roles
+- **Factory** uses Ash actions directly to create test entities; `staff_actor()` and `admin_actor()` create test users with appropriate roles
 - **LiveView tests** use `Phoenix.LiveViewTest` with `live/2`, `element/2`, `render_click/1`, `form/3`, `render_submit/1`
 - Tests use PostgreSQL sandbox in manual mode (async-compatible)
+
+### What belongs in the test suite
+
+The model is being sketched fast. **Do not write CRUD tests** — they make model changes a two-part job and don't catch real bugs. Only write tests that catch bugs independent of model shape:
+
+- **Validation rules** that could silently break (name regex, format constraints)
+- **Authorization policies** — use `Ash.can?({Resource, :action}, actor, tenant: ...)`, no model fields needed
+- **Tenant isolation** — create in org A, read as org B, assert empty
+- **Structural constraints** — `phx-update="stream"` children must have `id` attributes; mount each stream screen with no data to guard against that regression. Add one test to `test/opensauce_web/empty_stream_live_test.exs` per new stream screen.
+- **Business-rule computations** (deferred until model stabilises)
+
+### Factory / test body rules
+
+- All prerequisites go through Factory (`test/support/factory.ex`). Test bodies must not contain model field names.
+- Each `staff_actor()` / `admin_actor()` call creates an isolated org — two calls = two isolated tenants.
+- Policy tests: `Ash.can?` returns the policy decision without touching validation — preferred over attempting a real Ash action with empty params (which returns `Ash.Error.Invalid`, not `Ash.Error.Forbidden`).
+- Tenant tests: create in org A via Factory; `Ash.read!` as org B actor should return `[]`.
 
 ## Product strategy: mobile only
 
