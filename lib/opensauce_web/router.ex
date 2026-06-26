@@ -199,6 +199,10 @@ defmodule OpenSauceWeb.Router do
            EngagementLive.Materials,
            :index
 
+      live "/manage/customers/:reference/engagements/:engagement_id/estimate",
+           EngagementLive.Estimate,
+           :show
+
       # Production
     end
   end

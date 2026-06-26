@@ -32,7 +32,11 @@ defmodule OpenSauceWeb.EngagementLive.New do
           )
       end
 
-    back_to = ~p"/manage/customers/#{reference}"
+    back_to =
+      case params["engagement_id"] do
+        nil -> ~p"/manage/customers/#{reference}"
+        id -> ~p"/manage/customers/#{reference}/engagements/#{id}"
+      end
 
     socket =
       socket
