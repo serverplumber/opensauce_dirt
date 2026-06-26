@@ -21,8 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
-      "type": "text"
+      "source": "quantity",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -33,8 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_name",
-      "type": "text"
+      "source": "cost",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -45,32 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "contact_email",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "contact_phone",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
+      "source": "price",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -115,7 +91,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_suppliers_organisation_id_fkey",
+        "name": "orders_job_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -126,6 +102,68 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_job_materials_job_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "orders_jobs"
+      },
+      "scale": null,
+      "size": null,
+      "source": "job_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "orders_job_materials_supplier_catalog_item_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_supplier_catalog_items"
+      },
+      "scale": null,
+      "size": null,
+      "source": "supplier_catalog_item_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -134,7 +172,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "CA0AD2F7D828EFCE7C180A83DD8E663340CD2A3D90B8C8331BE92294C374857D",
+  "hash": "40BCC098B32A21834D463E2F64172EC908BC74A4FA441BB144C069326F5BC3D2",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -143,5 +181,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_suppliers"
+  "table": "orders_job_materials"
 }

@@ -21,19 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
-      "type": "citext"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "first_name",
+      "source": "name",
       "type": "text"
     },
     {
@@ -45,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "last_name",
+      "source": "address",
       "type": "text"
     },
     {
@@ -71,6 +59,37 @@
       "size": null,
       "source": "updated_at",
       "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "operations_venues_organisation_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_organisations"
+      },
+      "scale": null,
+      "size": null,
+      "source": "organisation_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -79,29 +98,14 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "4A33D759E47D1FB3B61DF5E3BB507BA35047E4A9BF4E16BB767B46B4913B828A",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "accounts_users_unique_email_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "email"
-        }
-      ],
-      "name": "unique_email",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "105DB9B0A98E09CF03346DF9370FB763F261EF4E760DE2401E0E98594A942F42",
+  "identities": [],
   "multitenancy": {
-    "attribute": null,
-    "global": null,
-    "strategy": null
+    "attribute": "organisation_id",
+    "global": false,
+    "strategy": "attribute"
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_users"
+  "table": "operations_venues"
 }

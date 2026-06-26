@@ -21,11 +21,35 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "invoice_number",
+      "source": "name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"year_round\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "season",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "year",
       "type": "bigint"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,19 +57,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reference",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"CURRENT_DATE\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "issued_on",
+      "source": "valid_from",
       "type": "date"
     },
     {
@@ -57,59 +69,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "due_on",
+      "source": "valid_until",
       "type": "date"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"msrp\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "amount",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"draft\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "status",
+      "source": "price_kind",
       "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "notes",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "[]",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "line_items",
-      "type": [
-        "array",
-        "map"
-      ]
     },
     {
       "allow_nil?": false,
@@ -154,7 +127,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "crm_invoices_organisation_id_fkey",
+        "name": "inventory_supplier_catalogs_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -185,124 +158,26 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "crm_invoices_customer_id_fkey",
+        "name": "inventory_supplier_catalogs_supplier_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_customers"
+        "table": "inventory_suppliers"
       },
       "scale": null,
       "size": null,
-      "source": "customer_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "crm_invoices_engagement_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "crm_engagements"
-      },
-      "scale": null,
-      "size": null,
-      "source": "engagement_id",
+      "source": "supplier_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "customer_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "customer_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_invoices_customer_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_invoices_engagement_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "status"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "status"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "crm_invoices_status_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "EC3410FD693359A9C5C87D053596A0AF781AB91AD9E6DD4693FB5F77138F2269",
+  "hash": "34B0590F71E9869C26D0BEC6236D4DA567F20254385DF4176856CAC1DFDBBCDC",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -311,5 +186,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "crm_invoices"
+  "table": "inventory_supplier_catalogs"
 }

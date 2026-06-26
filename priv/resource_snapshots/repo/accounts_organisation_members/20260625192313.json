@@ -14,6 +14,18 @@
     },
     {
       "allow_nil?": false,
+      "default": "\"staff\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "role",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -21,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "display_title",
       "type": "text"
     },
     {
@@ -33,43 +45,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "rate",
+      "source": "labor_hourly_rate",
       "type": "decimal"
     },
     {
       "allow_nil?": false,
-      "default": "false",
+      "default": "\"active\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "is_compound",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": false,
-      "default": "0",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "position",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "registration_number",
+      "source": "status",
       "type": "text"
     },
     {
@@ -115,7 +103,38 @@
           "global": null,
           "strategy": null
         },
-        "name": "accounts_tax_rates_organisation_id_fkey",
+        "name": "accounts_organisation_members_user_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts_users"
+      },
+      "scale": null,
+      "size": null,
+      "source": "user_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "accounts_organisation_members_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -134,14 +153,33 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "F540AE4C42451BFBD6F85FC9FFB48B7C32CF232DE6309F5D36501CCAFD3DE90E",
-  "identities": [],
+  "hash": "FB247224EA85DDD41E0A5F0A4B69199BA8DC0CE2590AE35F4C80C44D0B2EE0DF",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_organisation_members_unique_membership_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "user_id"
+        },
+        {
+          "type": "atom",
+          "value": "organisation_id"
+        }
+      ],
+      "name": "unique_membership",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
-    "attribute": "organisation_id",
-    "global": false,
-    "strategy": "attribute"
+    "attribute": null,
+    "global": null,
+    "strategy": null
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_tax_rates"
+  "table": "accounts_organisation_members"
 }

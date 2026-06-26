@@ -13,15 +13,15 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
-      "default": "\"client_work\"",
+      "allow_nil?": true,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "type",
+      "source": "scope_title",
       "type": "text"
     },
     {
@@ -33,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "service_category",
+      "source": "scope_description",
       "type": "text"
     },
     {
@@ -45,8 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "account_code",
-      "type": "text"
+      "source": "install_price",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -57,7 +57,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "scheduled_for",
+      "source": "maintenance_price_annual",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "term_start",
       "type": "date"
     },
     {
@@ -69,12 +81,12 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "start_time",
-      "type": "time"
+      "source": "term_end",
+      "type": "date"
     },
     {
       "allow_nil?": false,
-      "default": "\"scheduling\"",
+      "default": "\"draft\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -93,32 +105,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "due_by",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "duration_estimate",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "realized_cost",
-      "type": "decimal"
+      "source": "signature",
+      "type": "map"
     },
     {
       "allow_nil?": true,
@@ -175,7 +163,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_jobs_organisation_id_fkey",
+        "name": "crm_engagements_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -206,7 +194,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_jobs_garden_id_fkey",
+        "name": "crm_engagements_garden_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -219,7 +207,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -237,109 +225,16 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "orders_jobs_engagement_id_fkey",
+        "name": "crm_engagements_customer_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "crm_engagements"
+        "table": "crm_customers"
       },
       "scale": null,
       "size": null,
-      "source": "engagement_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "orders_jobs_invoice_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "crm_invoices"
-      },
-      "scale": null,
-      "size": null,
-      "source": "invoice_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "orders_jobs_containing_shift_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "orders_jobs"
-      },
-      "scale": null,
-      "size": null,
-      "source": "containing_shift_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "orders_jobs_actor_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "accounts_users"
-      },
-      "scale": null,
-      "size": null,
-      "source": "actor_id",
+      "source": "customer_id",
       "type": "uuid"
     }
   ],
@@ -351,83 +246,17 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "scheduled_for"
+        "customer_id"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "scheduled_for"
+          "value": "customer_id"
         }
       ],
       "include": null,
       "message": null,
-      "name": "orders_jobs_scheduled_for_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "status"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "status"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "orders_jobs_status_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "containing_shift_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "containing_shift_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "orders_jobs_containing_shift_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "engagement_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "engagement_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "orders_jobs_engagement_id_index",
+      "name": null,
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -449,7 +278,29 @@
       ],
       "include": null,
       "message": null,
-      "name": "orders_jobs_garden_id_index",
+      "name": null,
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "status"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "status"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": null,
       "nulls_distinct": true,
       "prefix": null,
       "table": null,
@@ -460,7 +311,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B788C7C160E893BF8B89E578D521B0A38240F6630D2AA49FC4C07C3CCF54F51C",
+  "hash": "9F1195E4B1FC63E9A5D99C8B7F91B4F1B5AD7C0C56E61BA28555EF672C8055DC",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -469,5 +320,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "orders_jobs"
+  "table": "crm_engagements"
 }

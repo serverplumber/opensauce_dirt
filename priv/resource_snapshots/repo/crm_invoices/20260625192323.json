@@ -21,43 +21,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"year_round\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "season",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "year",
+      "source": "invoice_number",
       "type": "bigint"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "fragment(\"CURRENT_DATE\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "valid_from",
+      "source": "issued_on",
       "type": "date"
     },
     {
@@ -69,20 +45,59 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "valid_until",
+      "source": "due_on",
       "type": "date"
     },
     {
       "allow_nil?": false,
-      "default": "\"msrp\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "price_kind",
+      "source": "amount",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "notes",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "[]",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "line_items",
+      "type": [
+        "array",
+        "map"
+      ]
     },
     {
       "allow_nil?": false,
@@ -127,7 +142,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_supplier_catalogs_organisation_id_fkey",
+        "name": "crm_invoices_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -158,26 +173,124 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_supplier_catalogs_supplier_id_fkey",
+        "name": "crm_invoices_customer_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "inventory_suppliers"
+        "table": "crm_customers"
       },
       "scale": null,
       "size": null,
-      "source": "supplier_id",
+      "source": "customer_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "crm_invoices_engagement_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "crm_engagements"
+      },
+      "scale": null,
+      "size": null,
+      "source": "engagement_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "customer_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "customer_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "crm_invoices_customer_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "engagement_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "engagement_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "crm_invoices_engagement_id_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "status"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "status"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": "crm_invoices_status_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9FC52E0D77E87C256094EFB9F4EA01D1D8E9499A991F40A2167CC78E397441CA",
+  "hash": "B2CADDCE35D3B3DD85CCF27D9E951208D1ACF6BE011985BF89E43B649A1B3CAC",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -186,5 +299,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_supplier_catalogs"
+  "table": "crm_invoices"
 }

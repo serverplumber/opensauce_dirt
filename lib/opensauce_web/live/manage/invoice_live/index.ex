@@ -135,7 +135,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
             {customer_name(@invoice)}
           </p>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
-            <span style="font-family:monospace;font-size:11px;color:#6E675A;">{@invoice.reference}</span>
+            <span style="font-family:monospace;font-size:11px;color:#6E675A;">#{format_invoice_number(@invoice.invoice_number)}</span>
             <span style="color:#6E675A;">·</span>
             <span style="font-size:12px;color:#9A9384;">{format_date(@invoice.issued_on)}</span>
           </div>
@@ -193,4 +193,6 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
 
   defp customer_name(%{customer: %{first_name: f, last_name: l}}), do: "#{f} #{l}"
   defp customer_name(_), do: "Unknown customer"
+
+  defp format_invoice_number(n), do: String.pad_leading(Integer.to_string(n), 4, "0")
 end

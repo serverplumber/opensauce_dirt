@@ -62,6 +62,7 @@ defmodule OpenSauce.CRM do
       define :update_invoice, action: :update
       define :mark_invoice_paid, action: :mark_paid
       define :mark_invoice_sent, action: :mark_sent
+      define :void_invoice, action: :void
       define :destroy_invoice, action: :destroy
     end
   end

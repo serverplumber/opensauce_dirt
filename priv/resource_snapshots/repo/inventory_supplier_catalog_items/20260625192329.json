@@ -315,7 +315,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "6AA9CC54C3D66E07547061B64A2F9A358372BFEB53982A0DD16E83EF0663D68B",
+  "hash": "BD596E8E7FFF0A6B96787C0000AC8FA91478553CA21E22F87018F8B8C615863C",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",

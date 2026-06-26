@@ -33,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "prefix",
+      "source": "sku",
       "type": "text"
     },
     {
@@ -45,20 +45,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "key_hash",
+      "source": "unit",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "%{}",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "scopes",
-      "type": "map"
+      "source": "price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"supply\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "material_type",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -69,8 +81,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "last_used_at",
-      "type": "utc_datetime"
+      "source": "minimum_stock",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -81,8 +93,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "revoked_at",
-      "type": "utc_datetime"
+      "source": "maximum_stock",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -127,7 +139,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "accounts_api_keys_organisation_id_fkey",
+        "name": "inventory_materials_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -138,6 +150,37 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "inventory_materials_default_supplier_catalog_item_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_supplier_catalog_items"
+      },
+      "scale": null,
+      "size": null,
+      "source": "default_supplier_catalog_item_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -146,19 +189,33 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "C3C6637AFBAC46ED0ABEB4861851D6522AC5EAA60B1E629B99B5044661FCC1AF",
+  "hash": "EF9F2601E3AB08C6D2268759C0C64C8FF38C8553E590CF6DC2AAAA4EF089C1C6",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "accounts_api_keys_key_hash_index",
+      "index_name": "inventory_materials_name_index",
       "keys": [
         {
           "type": "atom",
-          "value": "key_hash"
+          "value": "name"
         }
       ],
-      "name": "key_hash",
+      "name": "name",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "inventory_materials_sku_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "sku"
+        }
+      ],
+      "name": "sku",
       "nils_distinct?": true,
       "where": null
     }
@@ -170,5 +227,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "accounts_api_keys"
+  "table": "inventory_materials"
 }

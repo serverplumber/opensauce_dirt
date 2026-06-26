@@ -25,6 +25,42 @@
       "type": "text"
     },
     {
+      "allow_nil?": false,
+      "default": "\"0\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "rate",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_compound",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "position",
+      "type": "bigint"
+    },
+    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -33,7 +69,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "address",
+      "source": "registration_number",
       "type": "text"
     },
     {
@@ -79,7 +115,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "operations_venues_organisation_id_fkey",
+        "name": "accounts_tax_rates_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -98,7 +134,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B8DDB34FF5261177757102F4A676145FADD427869AB4BDE34F3029D146EB74D1",
+  "hash": "CAAEF595E222C288FABBF67B7A947F481F760A918E898E01C16D7DD7A44045DA",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -107,5 +143,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "operations_venues"
+  "table": "accounts_tax_rates"
 }

@@ -40,7 +40,6 @@ defmodule OpenSauce.CRM.Invoice do
 
     update :update do
       accept [
-        :reference,
         :engagement_id,
         :issued_on,
         :due_on,
@@ -60,6 +59,11 @@ defmodule OpenSauce.CRM.Invoice do
       accept []
       change set_attribute(:status, :sent)
     end
+
+    update :void do
+      accept []
+      change set_attribute(:status, :void)
+    end
   end
 
   policies do
@@ -78,12 +82,6 @@ defmodule OpenSauce.CRM.Invoice do
     attribute :invoice_number, :integer do
       allow_nil? false
       public? true
-    end
-
-    attribute :reference, :string do
-      allow_nil? false
-      public? true
-      constraints max_length: 50
     end
 
     attribute :issued_on, :date do

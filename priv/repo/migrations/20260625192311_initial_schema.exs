@@ -375,6 +375,7 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
         default: fragment("(now() AT TIME ZONE 'utc')")
 
       add :organisation_id, :uuid, null: false
+      add :default_supplier_catalog_item_id, :uuid
     end
 
     create unique_index(:inventory_materials, [:organisation_id, :name], name: "inventory_materials_name_index")
@@ -413,7 +414,6 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
     create table(:crm_invoices, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :invoice_number, :bigint, null: false
-      add :reference, :text, null: false
       add :issued_on, :date, null: false, default: fragment("CURRENT_DATE")
       add :due_on, :date
       add :amount, :decimal, null: false
@@ -932,6 +932,14 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
                type: :uuid,
                prefix: "public"
              )
+
+      modify :default_supplier_catalog_item_id,
+             references(:inventory_supplier_catalog_items,
+               column: :id,
+               name: "inventory_materials_default_supplier_catalog_item_id_fkey",
+               type: :uuid,
+               prefix: "public"
+             )
     end
 
     alter table(:inventory_lots) do
@@ -1399,7 +1407,13 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
 
     drop constraint(:inventory_materials, "inventory_materials_organisation_id_fkey")
 
+    drop constraint(
+           :inventory_materials,
+           "inventory_materials_default_supplier_catalog_item_id_fkey"
+         )
+
     alter table(:inventory_materials) do
+      modify :default_supplier_catalog_item_id, :uuid
       modify :organisation_id, :uuid
     end
 
@@ -1619,6 +1633,7 @@ defmodule OpenSauce.Repo.Migrations.InitialSchema do
     drop_if_exists unique_index(:inventory_materials, [:organisation_id, :name], name: "inventory_materials_name_index")
 
     alter table(:inventory_materials) do
+      remove :default_supplier_catalog_item_id
       remove :organisation_id
       remove :updated_at
       remove :inserted_at

@@ -15,61 +15,25 @@
     {
       "allow_nil?": false,
       "default": "nil",
-      "generated?": false,
+      "generated?": true,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "reference",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"draft\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "sku",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "unit",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "price",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"supply\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "material_type",
+      "source": "status",
       "type": "text"
     },
     {
@@ -81,8 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "minimum_stock",
-      "type": "decimal"
+      "source": "ordered_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": true,
@@ -93,8 +57,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "maximum_stock",
-      "type": "decimal"
+      "source": "received_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -139,7 +103,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_materials_organisation_id_fkey",
+        "name": "inventory_purchase_orders_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -150,6 +114,37 @@
       "size": null,
       "source": "organisation_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": "organisation_id",
+          "global": false,
+          "strategy": "attribute"
+        },
+        "name": "inventory_purchase_orders_supplier_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "inventory_suppliers"
+      },
+      "scale": null,
+      "size": null,
+      "source": "supplier_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -158,33 +153,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "CBB0DDAA410F954EFA3C223F8186AB1D9C53AE0E55AC1E9F4E19C27800806DB0",
+  "hash": "D83F303635F663C051B169B9D865B73D38605B006E591DF7AE5EF774CCAF1A65",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "inventory_materials_name_index",
+      "index_name": "inventory_purchase_orders_reference_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "reference"
         }
       ],
-      "name": "name",
-      "nils_distinct?": true,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "inventory_materials_sku_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "sku"
-        }
-      ],
-      "name": "sku",
+      "name": "reference",
       "nils_distinct?": true,
       "where": null
     }
@@ -196,5 +177,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_materials"
+  "table": "inventory_purchase_orders"
 }
