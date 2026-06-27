@@ -1,63 +1,98 @@
-defmodule OpenSauceWeb.EngagementLive.Estimate do
+defmodule OpenSauceWeb.PortalLive.Estimate do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.CRM
   alias OpenSauceWeb.HtmlHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :signing, false)}
   end
 
   @impl true
-  def handle_params(%{"reference" => reference, "engagement_id" => engagement_id} = params, _uri, socket) do
-    member = socket.assigns.current_member
-    return_to = Map.get(params, "return_to", ~p"/manage/customers/#{reference}/engagements/#{engagement_id}")
+  def handle_params(%{"id" => id}, _uri, socket) do
+    org_id = socket.assigns.portal_org_id
+    customer = socket.assigns.current_customer
 
     engagement =
-      Ash.get!(OpenSauce.CRM.Engagement, engagement_id,
-        actor: member,
-        tenant: member.organisation_id,
+      Ash.get!(CRM.Engagement, id,
+        authorize?: false,
+        tenant: org_id,
         load: [:customer, :garden, :images]
       )
+
+    if engagement.customer_id != customer.id do
+      raise Ash.Error.Query.NotFound, resource: CRM.Engagement
+    end
 
     paintings = Enum.filter(engagement.images, &(&1.type == :painting))
 
     {:noreply,
      socket
-     |> assign(:reference, reference)
-     |> assign(:return_to, return_to)
      |> assign(:engagement, engagement)
      |> assign(:paintings, paintings)
-     |> assign(:page_title, "Estimate — #{engagement.scope_title || "Engagement"}")
+     |> assign(:page_title, engagement.scope_title || "Estimate")
      |> assign(:main_bg, "bg-[#16140E]")}
+  end
+
+  @impl true
+  def handle_event("start_sign", _params, socket) do
+    {:noreply, assign(socket, :signing, true)}
+  end
+
+  def handle_event("cancel_sign", _params, socket) do
+    {:noreply, assign(socket, :signing, false)}
+  end
+
+  def handle_event("confirm_sign", _params, socket) do
+    engagement = socket.assigns.engagement
+    customer = socket.assigns.current_customer
+    org_id = socket.assigns.portal_org_id
+    consent = consent_text(engagement, socket.assigns.organisation)
+
+    signature = %{
+      signed_by_name: OpenSauce.Portal.customer_name(customer),
+      signed_by_email: customer.email,
+      signed_at: DateTime.utc_now(),
+      signed_from_ip: "portal",
+      user_agent: "portal",
+      engagement_snapshot: %{
+        scope_title: engagement.scope_title,
+        scope_description: engagement.scope_description,
+        install_price: engagement.install_price && Decimal.to_string(engagement.install_price),
+        maintenance_price_annual: engagement.maintenance_price_annual && Decimal.to_string(engagement.maintenance_price_annual)
+      },
+      consent_text: consent
+    }
+
+    {:ok, signed} =
+      engagement
+      |> Ash.Changeset.for_update(:sign, %{signature: signature}, authorize?: false, tenant: org_id)
+      |> Ash.update()
+
+    {:noreply,
+     socket
+     |> assign(:engagement, signed)
+     |> assign(:signing, false)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:100px;">
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:120px;">
 
-      <%!-- top bar --%>
-      <div style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
-        <.link navigate={@return_to}>
-          <button
-            type="button"
-            ontouchstart=""
-            style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
-          </button>
-        </.link>
-        <p style="flex:1;font-size:13px;font-weight:600;color:#9A9384;">Estimate</p>
-        <span style={"#{status_badge_style(@engagement.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
+      <%!-- minimal top bar --%>
+      <div style="padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;">
+        <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#54B57E;">
+          {@organisation.name}
+        </p>
+        <span style={"#{status_style(@engagement.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
           {Phoenix.Naming.humanize(@engagement.status)}
         </span>
       </div>
 
-      <%!-- estimate document --%>
+      <%!-- document --%>
       <div style="padding:0 16px 16px;">
         <div style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:20px;overflow:hidden;">
 
@@ -66,9 +101,7 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
             <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
               {@organisation.name}
             </p>
-            <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">
-              {@organisation.legal_name}
-            </p>
+            <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">{@organisation.legal_name}</p>
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
               <span :if={@organisation.phone} style="font-size:12px;color:#6E675A;">{@organisation.phone}</span>
               <span :if={@organisation.phone && @organisation.website} style="color:#6E675A;">·</span>
@@ -80,7 +113,6 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
 
           <%!-- estimate label + prepared for --%>
           <div style="padding:16px 20px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;gap:20px;align-items:flex-start;">
-            <%!-- left: document type + dates --%>
             <div style="flex:1;min-width:0;">
               <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Estimate</p>
               <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:#F4EFE2;margin-top:2px;letter-spacing:-0.02em;">
@@ -97,18 +129,15 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
                 </div>
               </div>
             </div>
-            <%!-- right: prepared for --%>
             <div style="flex:1;min-width:0;">
               <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Prepared For</p>
-              <p style="font-size:14px;font-weight:600;color:#F4EFE2;margin-top:4px;">{customer_name(@engagement.customer)}</p>
+              <p style="font-size:14px;font-weight:600;color:#F4EFE2;margin-top:4px;">{portal_customer_name(@current_customer)}</p>
               <p :if={@engagement.garden} style="font-size:12px;color:#9A9384;margin-top:2px;">{@engagement.garden.name}</p>
-              <p :if={@engagement.customer && @engagement.customer.email} style="font-size:12px;color:#6E675A;margin-top:4px;">
-                {@engagement.customer.email}
-              </p>
+              <p :if={@current_customer.email} style="font-size:12px;color:#6E675A;margin-top:4px;">{@current_customer.email}</p>
             </div>
           </div>
 
-          <%!-- scope description --%>
+          <%!-- scope statement --%>
           <div style="padding:16px 20px;border-bottom:1px solid rgba(52,48,37,0.58);">
             <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;margin-bottom:8px;">Scope</p>
             <p style="font-size:13px;color:#F4EFE2;line-height:1.6;font-style:italic;">
@@ -119,13 +148,10 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
             </p>
           </div>
 
-          <%!-- garden drawings — each painting is part of the contract document --%>
+          <%!-- paintings --%>
           <div :if={@paintings != []} style="border-bottom:1px solid rgba(52,48,37,0.58);">
             <div :for={painting <- @paintings}>
-              <img
-                src={OpenSauce.Storage.url(painting.storage_key)}
-                style="display:block;width:100%;height:auto;"
-              />
+              <img src={OpenSauce.Storage.url(painting.storage_key)} style="display:block;width:100%;height:auto;" />
             </div>
           </div>
 
@@ -143,7 +169,7 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
               </div>
             </div>
             <div :if={is_nil(@engagement.signature)} style="border:1px dashed rgba(52,48,37,0.58);border-radius:10px;padding:14px;text-align:center;">
-              <p style="font-size:12px;color:#6E675A;">Awaiting client signature</p>
+              <p style="font-size:12px;color:#6E675A;">Awaiting signature</p>
             </div>
           </div>
 
@@ -156,34 +182,45 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
         </div>
       </div>
 
-      <%!-- sticky send CTA --%>
-      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;">
-        <button
-          type="button"
-          phx-click="send_to_client"
-          ontouchstart=""
-          style="width:100%;background:rgba(84,181,126,0.08);border:1px solid rgba(84,181,126,0.3);border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#54B57E;cursor:pointer;"
-        >
-          Send to Client
-        </button>
+      <%!-- sticky sign CTA --%>
+      <div :if={is_nil(@engagement.signature)} style="position:fixed;bottom:0;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
+        <div :if={!@signing}>
+          <button
+            type="button"
+            phx-click="start_sign"
+            ontouchstart=""
+            style="width:100%;background:#54B57E;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
+          >
+            Sign this estimate
+          </button>
+        </div>
+        <div :if={@signing}>
+          <p style="font-size:12px;color:#9A9384;line-height:1.6;margin-bottom:12px;text-align:center;">
+            {consent_text(@engagement, @organisation)}
+          </p>
+          <div style="display:flex;gap:8px;">
+            <button
+              type="button"
+              phx-click="cancel_sign"
+              ontouchstart=""
+              style="flex:1;background:rgba(154,147,132,0.1);border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#9A9384;cursor:pointer;"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              phx-click="confirm_sign"
+              ontouchstart=""
+              style="flex:2;background:#54B57E;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+            >
+              I agree — sign
+            </button>
+          </div>
+        </div>
       </div>
+
     </div>
     """
-  end
-
-  @impl true
-  def handle_event("send_to_client", _params, socket) do
-    engagement = socket.assigns.engagement
-    member = socket.assigns.current_member
-
-    customer =
-      Ash.get!(OpenSauce.CRM.Customer, engagement.customer_id,
-        actor: member,
-        tenant: member.organisation_id
-      )
-
-    OpenSauce.Portal.send_resource_link(customer, socket.assigns.organisation, "estimate", engagement.id)
-    {:noreply, put_flash(socket, :info, "Estimate link sent to #{customer.email}.")}
   end
 
   defp scope_statement(%{status: status}, has_painting) do
@@ -196,15 +233,19 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
     end
   end
 
-  defp customer_name(%{company_name_nickname: n}) when is_binary(n) and n != "", do: n
-  defp customer_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
-  defp customer_name(_), do: "Client"
+  defp consent_text(engagement, org) do
+    title = engagement.scope_title || "this estimate"
+    "By signing, I agree to the terms of #{title} as presented by #{org.name}."
+  end
 
-  defp status_badge_style(:draft), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
-  defp status_badge_style(:proposed), do: "background:rgba(90,180,216,0.15);color:#5AB4D8;"
-  defp status_badge_style(:signed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
-  defp status_badge_style(:in_progress), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
-  defp status_badge_style(:completed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
-  defp status_badge_style(:cancelled), do: "background:rgba(232,126,126,0.15);color:#E87E7E;"
-  defp status_badge_style(_), do: "background:rgba(154,147,132,0.15);color:#9A9384;"
+  defp portal_customer_name(%{company_name_nickname: n}) when is_binary(n) and n != "", do: n
+  defp portal_customer_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
+
+  defp status_style(:draft), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
+  defp status_style(:proposed), do: "background:rgba(90,180,216,0.15);color:#5AB4D8;"
+  defp status_style(:signed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
+  defp status_style(:in_progress), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
+  defp status_style(:completed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
+  defp status_style(:cancelled), do: "background:rgba(232,126,126,0.15);color:#E87E7E;"
+  defp status_style(_), do: "background:rgba(154,147,132,0.15);color:#9A9384;"
 end

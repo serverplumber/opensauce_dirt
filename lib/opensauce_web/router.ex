@@ -78,6 +78,25 @@ defmodule OpenSauceWeb.Router do
   end
 
   #
+  # Customer Portal Routes (token-based session, no staff auth)
+  #
+
+  scope "/c", OpenSauceWeb do
+    pipe_through :browser
+
+    get "/view/:token", PortalController, :view
+    get "/access/:token", PortalController, :access
+    get "/expired", PortalController, :expired
+
+    live_session :portal,
+      layout: {OpenSauceWeb.Layouts, :portal},
+      on_mount: [{OpenSauceWeb.PortalAuth, :require_customer}] do
+      live "/invoice/:id", PortalLive.Invoice, :show
+      live "/estimate/:id", PortalLive.Estimate, :show
+    end
+  end
+
+  #
   # Org Picker Routes (authenticated user, no org selected yet)
   #
 

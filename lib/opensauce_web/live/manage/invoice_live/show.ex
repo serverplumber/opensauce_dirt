@@ -7,6 +7,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   alias Decimal, as: D
   alias OpenSauce.Accounts
   alias OpenSauce.CRM
+  alias OpenSauce.Portal
   alias OpenSauce.Work
 
   @impl true
@@ -232,32 +233,29 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
       </div>
 
       <%!-- sticky action buttons --%>
-      <div
-        :if={@invoice.status in [:draft, :sent]}
-        style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;flex-direction:column;gap:8px;"
-      >
-        <%!-- primary row --%>
+      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;flex-direction:column;gap:8px;">
+        <%!-- send + mark sent (always visible; mark sent also sends) --%>
         <div style="display:flex;gap:8px;">
           <button
-            :if={@invoice.status == :draft}
             type="button"
-            phx-click="mark_sent"
+            phx-click="send_to_client"
             ontouchstart=""
-            style="flex:1;background:rgba(90,180,216,0.15);border:1px solid rgba(90,180,216,0.3);border-radius:12px;padding:11px;font-size:14px;font-weight:600;color:#5AB4D8;cursor:pointer;"
+            style="flex:1;background:rgba(84,181,126,0.08);border:1px solid rgba(84,181,126,0.3);border-radius:12px;padding:11px;font-size:14px;font-weight:600;color:#54B57E;cursor:pointer;"
           >
-            Mark Sent
+            Send to Client
           </button>
           <button
+            :if={@invoice.status in [:draft, :sent]}
             type="button"
             phx-click="mark_paid"
             ontouchstart=""
             style="flex:1;background:#54B57E;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
           >
-            Mark Paid
+            Paid
           </button>
         </div>
-        <%!-- void --%>
         <button
+          :if={@invoice.status in [:draft, :sent]}
           type="button"
           phx-click="void_invoice"
           ontouchstart=""
@@ -302,15 +300,41 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     member = socket.assigns.current_member
     {:ok, _} = CRM.mark_invoice_paid(socket.assigns.invoice, actor: member, tenant: member.organisation_id)
     invoice = load_invoice(socket.assigns.invoice.id, member)
-    {:noreply, assign(socket, :invoice, invoice)}
+
+    customer = Ash.get!(CRM.Customer, invoice.customer_id, actor: member, tenant: member.organisation_id)
+    Portal.send_invoice_receipt(customer, socket.assigns.organisation, invoice, socket.assigns.tax_lines, socket.assigns.grand_total)
+
+    {:noreply, socket |> assign(:invoice, invoice) |> put_flash(:info, "Marked paid — receipt sent to #{customer.email}.")}
   end
 
   @impl true
-  def handle_event("mark_sent", _params, socket) do
+  def handle_event("send_to_client", _params, socket) do
     member = socket.assigns.current_member
-    {:ok, _} = CRM.mark_invoice_sent(socket.assigns.invoice, actor: member, tenant: member.organisation_id)
-    invoice = load_invoice(socket.assigns.invoice.id, member)
-    {:noreply, assign(socket, :invoice, invoice)}
+    invoice = socket.assigns.invoice
+
+    # Advance draft → sent before the customer ever sees it.
+    invoice =
+      if invoice.status == :draft do
+        {:ok, sent} = CRM.mark_invoice_sent(invoice, actor: member, tenant: member.organisation_id)
+        sent
+      else
+        invoice
+      end
+
+    invoice = load_invoice(invoice.id, member)
+    customer = Ash.get!(CRM.Customer, invoice.customer_id, actor: member, tenant: member.organisation_id)
+
+    {tax_lines, grand_total} =
+      compute_taxes(invoice.amount, socket.assigns.tax_rates, socket.assigns.organisation.tax_mode)
+
+    Portal.send_invoice_to_client(customer, socket.assigns.organisation, invoice, tax_lines, grand_total)
+
+    {:noreply,
+     socket
+     |> assign(:invoice, invoice)
+     |> assign(:tax_lines, tax_lines)
+     |> assign(:grand_total, grand_total)
+     |> put_flash(:info, "Invoice sent to #{customer.email}.")}
   end
 
   @impl true
