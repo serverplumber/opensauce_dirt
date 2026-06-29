@@ -335,18 +335,6 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
             </div>
           </div>
 
-          <%!-- status --%>
-          <div>
-            <label class="dark-label" for={@form[:status].id}>Status</label>
-            <select class="dark-select" name={@form[:status].name} id={@form[:status].id}>
-              <option :for={{label, val} <- status_options()} value={val}
-                selected={to_string(@form[:status].value) == to_string(val)}>
-                {label}
-              </option>
-            </select>
-            <span :for={msg <- @form[:status].errors} class="dark-field-error">{elem(msg, 0)}</span>
-          </div>
-
           <%!-- submit --%>
           <div style="padding-top:4px;">
             <.glow_button
@@ -573,17 +561,6 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
     customer_set? = not standalone or customer_id != ""
 
     title_set? and garden_set? and scope_set? and term_set? and customer_set?
-  end
-
-  defp status_options do
-    [
-      {"Draft", :draft},
-      {"Proposed", :proposed},
-      {"Signed", :signed},
-      {"In progress", :in_progress},
-      {"Completed", :completed},
-      {"Cancelled", :cancelled}
-    ]
   end
 
   defp currency_symbol(:CAD), do: "$"

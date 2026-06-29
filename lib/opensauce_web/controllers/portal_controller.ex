@@ -2,6 +2,9 @@ defmodule OpenSauceWeb.PortalController do
   @moduledoc false
   use OpenSauceWeb, :controller
 
+  plug :put_layout, false
+  plug :put_root_layout, false
+
   alias OpenSauce.Accounts
   alias OpenSauce.CRM
   alias OpenSauce.Portal

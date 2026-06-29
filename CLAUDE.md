@@ -223,6 +223,10 @@ defp nilify(s), do: s
 defp nilify_map_values(map), do: Map.new(map, fn {k, v} -> {k, nilify(v)} end)
 ```
 
+## Git
+
+**Never run `git add`, `git commit`, or `git push` unless explicitly asked.** This applies even after completing a feature or a set of changes. Wait for the user to say "commit" or "push".
+
 ## Commit Convention
 
 Commits follow the pattern: `type(scope): description` (e.g., `feat(jobs):`, `fix(crm):`, `chore(inventory):`)
