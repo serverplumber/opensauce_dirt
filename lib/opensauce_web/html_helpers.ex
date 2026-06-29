@@ -562,6 +562,13 @@ defmodule OpenSauceWeb.HtmlHelpers do
   def emoji_for_payment(:refunded), do: "🔄"
   def emoji_for_payment(_), do: "❓"
 
+  def storage_url(storage_key) do
+    case OpenSauce.Storage.url(storage_key) do
+      {:ok, url} -> url
+      _ -> ""
+    end
+  end
+
   defp normalize_datetime(nil, _timezone), do: nil
 
   defp normalize_datetime(%Date{} = date, _timezone), do: date

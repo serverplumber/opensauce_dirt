@@ -3,7 +3,7 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.CRM
-  alias OpenSauce.Storage
+  alias OpenSauce.Portal
   alias OpenSauceWeb.HtmlHelpers
 
   @impl true
@@ -50,6 +50,35 @@ defmodule OpenSauceWeb.EngagementLive.Show do
 
   def handle_event("close_job_sheet", _params, socket) do
     {:noreply, assign(socket, :show_job_sheet, false)}
+  end
+
+  @impl true
+  def handle_event("send_to_client", _params, socket) do
+    member = socket.assigns.current_member
+    engagement = socket.assigns.engagement
+
+    engagement =
+      if engagement.status == :draft do
+        {:ok, proposed} = CRM.update_engagement(engagement, %{status: :proposed}, actor: member, tenant: member.organisation_id)
+        proposed
+      else
+        engagement
+      end
+
+    customer = Ash.get!(CRM.Customer, engagement.customer_id, actor: member, tenant: member.organisation_id)
+    Portal.send_resource_link(customer, socket.assigns.organisation, "estimate", engagement.id)
+
+    {:noreply,
+     socket
+     |> assign(:engagement, engagement)
+     |> put_flash(:info, "Estimate sent to #{customer.email}.")}
+  end
+
+  @impl true
+  def handle_event("set_status", %{"status" => status}, socket) do
+    member = socket.assigns.current_member
+    {:ok, engagement} = CRM.update_engagement(socket.assigns.engagement, %{status: String.to_existing_atom(status)}, actor: member, tenant: member.organisation_id)
+    {:noreply, assign(socket, :engagement, engagement)}
   end
 
   @impl true
@@ -143,17 +172,17 @@ defmodule OpenSauceWeb.EngagementLive.Show do
             <span class="dark-label" style="margin-bottom:0;">
               {gallery_heading(@images)}
             </span>
-            <span :if={length(@images) > 3} style="font-size:11px;color:#54B57E;">
-              view all {length(@images)}
-            </span>
+            <.link :if={length(@images) > 3} navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/edit"}>
+              <span style="font-size:11px;color:#54B57E;">view all {length(@images)}</span>
+            </.link>
           </div>
           <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">
             <div :for={img <- Enum.take(@images, 6)}
-              style={"position:relative;border-radius:8px;overflow:hidden;background:#211E16;flex:0 0 auto;#{if img.type == :painting, do: "width:96px;height:96px;", else: "width:72px;height:96px;"}"}>
-              <img src={Storage.url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+              style={"position:relative;border-radius:8px;overflow:hidden;background:#211E16;flex:0 0 auto;#{if img.type == :painting, do: "width:96px;height:96px;border:1.5px solid rgba(84,181,126,0.5);", else: "width:72px;height:96px;"}"}>
+              <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
               <span :if={img.type == :painting}
-                style="position:absolute;left:4px;top:4px;background:rgba(0,0,0,0.6);border-radius:4px;padding:2px 5px;font-size:10px;color:#F4EFE2;">
-                painting
+                style="position:absolute;left:0;bottom:0;right:0;background:rgba(84,181,126,0.85);padding:2px 5px;font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#0C1F15;text-align:center;">
+                contract
               </span>
             </div>
             <%!-- empty state or add button --%>
@@ -264,6 +293,42 @@ defmodule OpenSauceWeb.EngagementLive.Show do
           </div>
         </div>
 
+      </div>
+
+      <%!-- sticky CTA --%>
+      <div :if={@engagement.status not in [:completed, :cancelled]}
+        style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;">
+          <button
+            :if={@engagement.status in [:draft, :proposed]}
+            type="button"
+            phx-click="send_to_client"
+            ontouchstart=""
+            style="flex:1;background:rgba(84,181,126,0.08);border:1px solid rgba(84,181,126,0.3);border-radius:12px;padding:11px;font-size:14px;font-weight:600;color:#54B57E;cursor:pointer;"
+          >
+            Send to Client
+          </button>
+          <button
+            :if={@engagement.status == :signed}
+            type="button"
+            phx-click="set_status"
+            phx-value-status="in_progress"
+            ontouchstart=""
+            style="flex:1;background:#54B57E;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+          >
+            Start Work
+          </button>
+          <button
+            :if={@engagement.status == :in_progress}
+            type="button"
+            phx-click="set_status"
+            phx-value-status="completed"
+            ontouchstart=""
+            style="flex:1;background:#54B57E;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+          >
+            Mark Complete
+          </button>
+        </div>
       </div>
 
       <.modal

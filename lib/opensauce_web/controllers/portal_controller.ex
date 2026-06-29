@@ -21,12 +21,19 @@ defmodule OpenSauceWeb.PortalController do
   end
 
   # Step 2: decode the access token, write session, redirect into portal.
+  # IP and UA are captured here — the HTTP connection where the magic link was clicked.
+  # By the time the client signs, we're in a LiveView WebSocket and can't read these directly.
   def access(conn, %{"token" => token}) do
     case Portal.verify_access_token(token) do
       {:ok, %{org_id: org_id, customer_id: customer_id, type: type, id: resource_id}} ->
+        peer_ip = :inet.ntoa(conn.remote_ip) |> to_string()
+        user_agent = get_req_header(conn, "user-agent") |> List.first() || "unknown"
+
         conn
         |> put_session("portal_customer_id", customer_id)
         |> put_session("portal_org_id", org_id)
+        |> put_session("portal_peer_ip", peer_ip)
+        |> put_session("portal_user_agent", user_agent)
         |> redirect(to: portal_path(type, resource_id))
 
       {:error, _} ->

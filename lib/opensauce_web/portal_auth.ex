@@ -13,6 +13,8 @@ defmodule OpenSauceWeb.PortalAuth do
         |> assign(:current_customer, customer)
         |> assign(:portal_org_id, org_id)
         |> assign(:organisation, org)
+        |> assign(:portal_peer_ip, session["portal_peer_ip"] || "unknown")
+        |> assign(:portal_user_agent, session["portal_user_agent"] || "unknown")
 
       {:cont, socket}
     else

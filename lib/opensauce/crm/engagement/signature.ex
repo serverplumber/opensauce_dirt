@@ -35,6 +35,14 @@ defmodule OpenSauce.CRM.Engagement.Signature do
       public? true
     end
 
+    # Full text of each sign-off item the client explicitly checked before signing.
+    # Each entry: %{"label" => string, "body" => string | nil}
+    attribute :agreed_items, {:array, :map} do
+      allow_nil? true
+      public? true
+      default []
+    end
+
     # The exact words the signer agreed to (rendered consent copy, not a reference).
     attribute :consent_text, :string do
       allow_nil? false

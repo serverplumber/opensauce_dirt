@@ -4,6 +4,7 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
 
   alias OpenSauce.CRM
   alias OpenSauce.Storage
+  alias OpenSauceWeb.HtmlHelpers
 
   @impl true
   def render(assigns) do
@@ -62,7 +63,61 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
             ><%= Phoenix.HTML.Form.normalize_value("textarea", @form[:scope_description].value) %></textarea>
           </div>
 
-          <%!-- photos --%>
+          <%!-- digital renderings (paintings) — these are the contract images --%>
+          <div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px;">
+              <div style="flex:1;min-width:0;">
+                <span class="dark-label" style="margin-bottom:2px;color:#54B57E;">Digital Renderings</span>
+                <p style="font-size:11px;color:#6E675A;line-height:1.4;margin-top:2px;">
+                  The visual scope the client signs off on. An engagement with a rendering uses "Garden as drawn" on invoices — without one it reads "Garden as described".
+                </p>
+              </div>
+              <label for={@uploads.paintings.ref} ontouchstart=""
+                style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;flex-shrink:0;padding-top:1px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Add
+              </label>
+            </div>
+            <.live_file_input upload={@uploads.paintings} style="display:none;" />
+            <p :for={err <- upload_errors(@uploads.paintings)} class="dark-field-error" style="margin-bottom:6px;">
+              {upload_error_to_string(err)}
+            </p>
+            <div :if={@uploads.paintings.entries != [] or @existing_paintings != []}
+              style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+              <div :for={entry <- @uploads.paintings.entries}
+                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);">
+                <.live_img_preview entry={entry} style="width:100%;height:100%;object-fit:cover;" />
+                <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
+                  <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="paintings" phx-target={@myself}
+                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                    ✕
+                  </button>
+                </div>
+                <div :if={entry.progress > 0 and entry.progress < 100}
+                  style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}>
+                </div>
+              </div>
+              <div :for={img <- @existing_paintings}
+                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);">
+                <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+                <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
+                  <button type="button" phx-click="delete_image" phx-value-id={img.id} phx-target={@myself}
+                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div :if={@uploads.paintings.entries == [] and @existing_paintings == []}
+              style="border-radius:12px;border:1.5px dashed rgba(84,181,126,0.25);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+              No renderings yet — add one to define visual scope
+            </div>
+          </div>
+
+          <%!-- photos — documentary, not contract items --%>
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span class="dark-label" style="margin-bottom:0;">Photos</span>
@@ -85,7 +140,7 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
                 style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
                 <.live_img_preview entry={entry} style="width:100%;height:100%;object-fit:cover;" />
                 <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                  <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-target={@myself}
+                  <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="photos" phx-target={@myself}
                     style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
                     ✕
                   </button>
@@ -96,7 +151,7 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
               </div>
               <div :for={img <- @existing_photos}
                 style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
-                <img src={Storage.url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+                <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
                 <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
                   <button type="button" phx-click="delete_image" phx-value-id={img.id} phx-target={@myself}
                     style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
@@ -242,12 +297,18 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
           max_entries: 20,
           max_file_size: 20_000_000
         )
+        |> allow_upload(:paintings,
+          accept: ~w(image/*),
+          max_entries: 10,
+          max_file_size: 20_000_000
+        )
         |> assign(:_upload_init, true)
       end
 
     {:ok,
      socket
      |> assign(assigns)
+     |> assign_new(:existing_paintings, fn -> load_existing_paintings(engagement, member) end)
      |> assign_new(:existing_photos, fn -> load_existing_photos(engagement, member) end)
      |> assign(:standalone, standalone)
      |> assign(:customer_id, customer_id)
@@ -283,8 +344,8 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
      |> assign(:gardens, gardens)}
   end
 
-  def handle_event("cancel_upload", %{"ref" => ref}, socket) do
-    {:noreply, cancel_upload(socket, :photos, ref)}
+  def handle_event("cancel_upload", %{"ref" => ref, "upload" => upload_name}, socket) do
+    {:noreply, cancel_upload(socket, String.to_existing_atom(upload_name), ref)}
   end
 
   def handle_event("delete_image", %{"id" => id}, socket) do
@@ -297,8 +358,17 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
       {:ok, image} ->
         Storage.delete(image.storage_key)
         Ash.destroy!(image, actor: member, tenant: member.organisation_id)
-        remaining = Enum.reject(socket.assigns.existing_photos, &(&1.id == id))
-        {:noreply, assign(socket, :existing_photos, remaining)}
+
+        socket =
+          if image.type == :painting do
+            remaining = Enum.reject(socket.assigns.existing_paintings, &(&1.id == id))
+            assign(socket, :existing_paintings, remaining)
+          else
+            remaining = Enum.reject(socket.assigns.existing_photos, &(&1.id == id))
+            assign(socket, :existing_photos, remaining)
+          end
+
+        {:noreply, socket}
 
       _ ->
         {:noreply, socket}
@@ -337,14 +407,16 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   end
 
   defp process_uploads(socket, engagement) do
-    entries = socket.assigns.uploads.photos.entries
+    member = socket.assigns.current_member
+    socket = consume_images(socket, :paintings, :painting, engagement, member)
+    consume_images(socket, :photos, :photo, engagement, member)
+  end
 
-    if entries == [] do
+  defp consume_images(socket, upload_name, image_type, engagement, member) do
+    if socket.assigns.uploads[upload_name].entries == [] do
       socket
     else
-      member = socket.assigns.current_member
-
-      consume_uploaded_entries(socket, :photos, fn %{path: path}, entry ->
+      consume_uploaded_entries(socket, upload_name, fn %{path: path}, entry ->
         with {:ok, binary} <- File.read(path),
              {:ok, key} <-
                Storage.put(
@@ -353,13 +425,16 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
                  entry.client_type,
                  binary
                ) do
+          hash = :crypto.hash(:sha256, binary) |> Base.encode16(case: :lower)
+
           CRM.create_engagement_image!(%{
             engagement_id: engagement.id,
-            type: :photo,
+            type: image_type,
             captured_on: Date.utc_today(),
             storage_key: key,
             content_type: entry.client_type,
-            original_filename: entry.client_name
+            original_filename: entry.client_name,
+            content_hash: hash
           },
             actor: member,
             tenant: member.organisation_id
@@ -406,15 +481,28 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
 
   defp upload_error_to_string(:too_large), do: "File too large (max 20 MB)"
   defp upload_error_to_string(:not_accepted), do: "Only images are accepted"
-  defp upload_error_to_string(:too_many_files), do: "Too many files (max 20)"
+  defp upload_error_to_string(:too_many_files), do: "Too many files (max 10)"
   defp upload_error_to_string(err), do: to_string(err)
+
+  defp load_existing_paintings(nil, _member), do: []
+
+  defp load_existing_paintings(engagement, member) do
+    CRM.list_engagement_paintings!(engagement.id,
+      actor: member,
+      tenant: member.organisation_id
+    )
+  rescue
+    _ -> []
+  end
 
   defp load_existing_photos(nil, _member), do: []
 
   defp load_existing_photos(engagement, member) do
-    CRM.EngagementImage
-    |> Ash.Query.for_read(:for_engagement, %{engagement_id: engagement.id})
-    |> Ash.read!(actor: member, tenant: member.organisation_id)
+    CRM.list_engagement_images!(engagement.id,
+      actor: member,
+      tenant: member.organisation_id
+    )
+    |> Enum.filter(&(&1.type == :photo))
   rescue
     _ -> []
   end

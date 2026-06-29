@@ -25,7 +25,8 @@ defmodule OpenSauce.Accounts.Organisation do
       :contact_name,
       :contact_title,
       :contact_phone,
-      :contact_email
+      :contact_email,
+      :estimate_sign_off_items
     ]
 
     update :update do
@@ -128,6 +129,15 @@ defmodule OpenSauce.Accounts.Organisation do
     attribute :invoice_footer, :string do
       public? true
       allow_nil? true
+    end
+
+    # Items the client must acknowledge before signing an estimate.
+    # Each item: %{"label" => string, "body" => string | nil}
+    # label = the checkbox text; body = optional terms text shown above it.
+    attribute :estimate_sign_off_items, {:array, :map} do
+      public? true
+      allow_nil? false
+      default []
     end
 
     attribute :contact_name, :string do

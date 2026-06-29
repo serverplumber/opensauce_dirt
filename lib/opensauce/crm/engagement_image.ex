@@ -77,7 +77,7 @@ defmodule OpenSauce.CRM.EngagementImage do
 
     create :create do
       primary? true
-      accept [:engagement_id, :type, :captured_on, :storage_key, :content_type, :original_filename, :notes, :organisation_id]
+      accept [:engagement_id, :type, :captured_on, :storage_key, :content_type, :original_filename, :content_hash, :notes, :organisation_id]
     end
 
     # Allows updating the date and notes after upload. The storage_key and
@@ -150,6 +150,13 @@ defmodule OpenSauce.CRM.EngagementImage do
     # The filename as provided by the uploader — for display and download headers.
     attribute :original_filename, :string do
       allow_nil? false
+      public? true
+    end
+
+    # SHA-256 hex digest of the file bytes, computed at upload time.
+    # Used in signature snapshots to prove the exact file content agreed to.
+    attribute :content_hash, :string do
+      allow_nil? true
       public? true
     end
 

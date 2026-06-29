@@ -123,7 +123,7 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
           <div :if={@paintings != []} style="border-bottom:1px solid rgba(52,48,37,0.58);">
             <div :for={painting <- @paintings}>
               <img
-                src={OpenSauce.Storage.url(painting.storage_key)}
+                src={HtmlHelpers.storage_url(painting.storage_key)}
                 style="display:block;width:100%;height:auto;"
               />
             </div>

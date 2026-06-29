@@ -170,31 +170,26 @@ defmodule OpenSauceWeb.CustomerLive.Show do
             No engagements yet
           </div>
           <div :if={not Enum.empty?(@customer.engagements)} style="display:flex;flex-direction:column;gap:8px;">
-            <div :for={e <- @customer.engagements} class="jcard">
-              <div style="display:flex;align-items:flex-start;gap:10px;">
-                <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}"} style="flex:1;min-width:0;text-decoration:none;">
+            <.link :for={e <- @customer.engagements}
+              navigate={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}"}
+              style="text-decoration:none;">
+              <div class="jcard" ontouchstart="" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <div style="min-width:0;flex:1;">
                   <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {e.scope_title || (if e.garden, do: e.garden.name || "Unnamed site", else: "No site")}
                   </p>
-                  <p style="font-size:12px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {if e.garden, do: e.garden.name || "—", else: "—"}
-                  </p>
-                  <p :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:12px;color:#9A9384;margin-top:1px;">
-                    {format_term(e.term_start, e.term_end)}
-                  </p>
-                </.link>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto;">
-                  <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">
                     <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>
+                    <span :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:11px;color:#9A9384;">
+                      {format_term(e.term_start, e.term_end)}
+                    </span>
                   </div>
-                  <.link navigate={~p"/manage/jobs/new?engagement_id=#{e.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
-                    <div style="width:40px;height:40px;border-radius:10px;background:#54B57E;display:flex;align-items:center;justify-content:center;color:#0C1F15;">
-                      <.add_job_icon />
-                    </div>
-                  </.link>
                 </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                  <path d="M9 6l6 6-6 6" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </div>
-            </div>
+            </.link>
           </div>
         </div>
 

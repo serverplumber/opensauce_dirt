@@ -29,7 +29,11 @@ defmodule OpenSauceWeb.OrgLive do
      |> assign(:tax_rates, tax_rates)
      |> assign(:show_tax_sheet, false)
      |> assign(:editing_tax_rate, nil)
-     |> assign(:tax_params, default_tax_params())}
+     |> assign(:tax_params, default_tax_params())
+     |> assign(:sign_off_items, org.estimate_sign_off_items || [])
+     |> assign(:show_sign_off_sheet, false)
+     |> assign(:editing_sign_off_index, nil)
+     |> assign(:sign_off_params, %{"label" => "", "body" => ""})}
   end
 
   # -- Org form --
@@ -353,6 +357,88 @@ defmodule OpenSauceWeb.OrgLive do
 
   defp default_tax_params, do: %{"name" => "", "rate" => "0", "registration_number" => "", "is_compound" => false}
 
+  # -- Sign-off items --
+
+  @impl true
+  def handle_event("open_sign_off_form", %{"index" => idx_str}, socket) do
+    idx = String.to_integer(idx_str)
+    item = Enum.at(socket.assigns.sign_off_items, idx)
+
+    params = %{
+      "label" => item["label"] || "",
+      "body" => item["body"] || ""
+    }
+
+    {:noreply,
+     socket
+     |> assign(:show_sign_off_sheet, true)
+     |> assign(:editing_sign_off_index, idx)
+     |> assign(:sign_off_params, params)}
+  end
+
+  @impl true
+  def handle_event("open_sign_off_form", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_sign_off_sheet, true)
+     |> assign(:editing_sign_off_index, nil)
+     |> assign(:sign_off_params, %{"label" => "", "body" => ""})}
+  end
+
+  @impl true
+  def handle_event("close_sign_off_form", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_sign_off_sheet, false)
+     |> assign(:editing_sign_off_index, nil)
+     |> assign(:sign_off_params, %{"label" => "", "body" => ""})}
+  end
+
+  @impl true
+  def handle_event("update_sign_off_field", %{"field" => field, "value" => value}, socket) do
+    {:noreply, assign(socket, :sign_off_params, Map.put(socket.assigns.sign_off_params, field, value))}
+  end
+
+  @impl true
+  def handle_event("save_sign_off_item", _, socket) do
+    p = socket.assigns.sign_off_params
+    item = %{"label" => String.trim(p["label"] || ""), "body" => nilify(p["body"])}
+
+    items =
+      case socket.assigns.editing_sign_off_index do
+        nil -> socket.assigns.sign_off_items ++ [item]
+        idx -> List.replace_at(socket.assigns.sign_off_items, idx, item)
+      end
+
+    save_sign_off_items(socket, items)
+  end
+
+  @impl true
+  def handle_event("remove_sign_off_item", %{"index" => idx_str}, socket) do
+    idx = String.to_integer(idx_str)
+    items = List.delete_at(socket.assigns.sign_off_items, idx)
+    save_sign_off_items(socket, items)
+  end
+
+  defp save_sign_off_items(socket, items) do
+    case Ash.update(socket.assigns.org, %{estimate_sign_off_items: items},
+           action: :update_settings,
+           authorize?: false
+         ) do
+      {:ok, updated_org} ->
+        {:noreply,
+         socket
+         |> assign(:org, updated_org)
+         |> assign(:sign_off_items, items)
+         |> assign(:show_sign_off_sheet, false)
+         |> assign(:editing_sign_off_index, nil)
+         |> assign(:sign_off_params, %{"label" => "", "body" => ""})}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not save sign-off items.")}
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -643,6 +729,71 @@ defmodule OpenSauceWeb.OrgLive do
           <div style="padding:16px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom));flex-shrink:0;">
             <.glow_button type="button" phx-click="save_tax_rate" valid={tax_rate_valid?(@tax_params)}>
               {if @editing_tax_rate, do: "Save changes", else: "Add tax rate"}
+            </.glow_button>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Sign-off item sheet --%>
+      <div
+        :if={@show_sign_off_sheet}
+        class="fixed inset-0 z-[60] flex items-end justify-center"
+        role="dialog"
+        aria-label={if @editing_sign_off_index, do: "Edit sign-off item", else: "Add sign-off item"}
+      >
+        <div class="absolute inset-0 bg-black/50" phx-click="close_sign_off_form" aria-hidden="true" />
+        <div
+          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl"
+          style="border-top:1.5px solid rgba(52,48,37,0.58);max-height:90dvh;display:flex;flex-direction:column;overflow:hidden;"
+        >
+          <div style="padding:20px 20px 12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
+                {if @editing_sign_off_index, do: "Edit item", else: "Add sign-off item"}
+              </p>
+              <button type="button" phx-click="close_sign_off_form" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div style="overflow-y:auto;flex:1;min-height:0;padding:0 20px 12px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label class="dark-label">Checkbox label <span style="color:#E87E7E;">*</span></label>
+              <input
+                class="dark-input"
+                type="text"
+                name="label"
+                value={@sign_off_params["label"]}
+                placeholder="I agree to the payment terms listed above"
+                phx-blur="update_sign_off_field"
+                phx-value-field="label"
+              />
+              <p style="font-size:11px;color:#6E675A;margin-top:4px;">The text that appears beside the checkbox the client must tick.</p>
+            </div>
+            <div>
+              <label class="dark-label">Terms text <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <textarea
+                class="dark-textarea"
+                name="body"
+                rows="5"
+                placeholder="Payment is due within 30 days of invoice. Overdue balances accrue interest at 24% per annum…"
+                phx-blur="update_sign_off_field"
+                phx-value-field="body"
+              >{@sign_off_params["body"]}</textarea>
+              <p style="font-size:11px;color:#6E675A;margin-top:4px;">Shown above the checkbox. Leave blank if no text is needed.</p>
+            </div>
+          </div>
+
+          <div style="padding:16px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom));flex-shrink:0;">
+            <.glow_button
+              type="button"
+              phx-click="save_sign_off_item"
+              valid={String.trim(@sign_off_params["label"] || "") != ""}
+            >
+              {if @editing_sign_off_index, do: "Save changes", else: "Add item"}
             </.glow_button>
           </div>
         </div>
@@ -1129,6 +1280,70 @@ defmodule OpenSauceWeb.OrgLive do
                 value={@form[:email_from_address].value || ""}
                 placeholder="hello@example.com"
               />
+            </div>
+          </div>
+        </div>
+
+        <%!-- Estimate sign-off items --%>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div>
+              <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Estimate sign-off</p>
+              <p style="font-size:11px;color:#6E675A;margin-top:2px;">Items the client must acknowledge before signing an estimate.</p>
+            </div>
+            <button
+              :if={Roles.manager_or_above?(@current_member)}
+              type="button"
+              phx-click="open_sign_off_form"
+              ontouchstart=""
+              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;flex-shrink:0;"
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
+              </svg>
+              Add
+            </button>
+          </div>
+          <div :if={@sign_off_items == []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;">
+            <p style="font-size:13px;color:#6E675A;">No sign-off items — clients can sign immediately</p>
+          </div>
+          <div :if={@sign_off_items != []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;">
+            <div
+              :for={{item, idx} <- Enum.with_index(@sign_off_items)}
+              style={"padding:12px 14px;display:flex;align-items:flex-start;gap:10px;#{if idx > 0, do: "border-top:1px solid rgba(52,48,37,0.58);"}"}
+            >
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;line-height:1.3;">{item["label"]}</p>
+                <p :if={item["body"]} style="font-size:11.5px;color:#6E675A;margin-top:3px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+                  {item["body"]}
+                </p>
+              </div>
+              <div :if={Roles.manager_or_above?(@current_member)} style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                <button
+                  type="button"
+                  phx-click="open_sign_off_form"
+                  phx-value-index={idx}
+                  ontouchstart=""
+                  style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+                  aria-label="Edit"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  phx-click="remove_sign_off_item"
+                  phx-value-index={idx}
+                  ontouchstart=""
+                  style="color:#E87E7E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+                  aria-label="Remove"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>

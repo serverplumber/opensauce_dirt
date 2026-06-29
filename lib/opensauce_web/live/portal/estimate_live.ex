@@ -7,7 +7,10 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :signing, false)}
+    {:ok,
+     socket
+     |> assign(:signing, false)
+     |> assign(:checked, MapSet.new())}
   end
 
   @impl true
@@ -27,16 +30,30 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
     end
 
     paintings = Enum.filter(engagement.images, &(&1.type == :painting))
+    sign_off_items = socket.assigns.organisation.estimate_sign_off_items || []
 
     {:noreply,
      socket
      |> assign(:engagement, engagement)
      |> assign(:paintings, paintings)
+     |> assign(:sign_off_items, sign_off_items)
+     |> assign(:checked, MapSet.new())
      |> assign(:page_title, engagement.scope_title || "Estimate")
      |> assign(:main_bg, "bg-[#16140E]")}
   end
 
   @impl true
+  def handle_event("toggle_sign_off", %{"index" => idx}, socket) do
+    checked =
+      if MapSet.member?(socket.assigns.checked, idx) do
+        MapSet.delete(socket.assigns.checked, idx)
+      else
+        MapSet.put(socket.assigns.checked, idx)
+      end
+
+    {:noreply, assign(socket, :checked, checked)}
+  end
+
   def handle_event("start_sign", _params, socket) do
     {:noreply, assign(socket, :signing, true)}
   end
@@ -51,18 +68,44 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
     org_id = socket.assigns.portal_org_id
     consent = consent_text(engagement, socket.assigns.organisation)
 
+    org = socket.assigns.organisation
+    signed_at = DateTime.utc_now()
+
+    agreed_items =
+      Enum.map(socket.assigns.sign_off_items, fn item ->
+        %{"label" => item["label"], "body" => item["body"]}
+      end)
+
     signature = %{
       signed_by_name: OpenSauce.Portal.customer_name(customer),
       signed_by_email: customer.email,
-      signed_at: DateTime.utc_now(),
-      signed_from_ip: "portal",
-      user_agent: "portal",
+      signed_at: signed_at,
+      signed_from_ip: socket.assigns.portal_peer_ip,
+      user_agent: socket.assigns.portal_user_agent,
       engagement_snapshot: %{
+        signed_at_iso: DateTime.to_iso8601(signed_at),
+        parties: %{
+          client: %{name: OpenSauce.Portal.customer_name(customer), email: customer.email},
+          contractor: %{name: org.name, legal_name: org.legal_name}
+        },
         scope_title: engagement.scope_title,
         scope_description: engagement.scope_description,
         install_price: engagement.install_price && Decimal.to_string(engagement.install_price),
-        maintenance_price_annual: engagement.maintenance_price_annual && Decimal.to_string(engagement.maintenance_price_annual)
+        maintenance_price_annual:
+          engagement.maintenance_price_annual &&
+            Decimal.to_string(engagement.maintenance_price_annual),
+        term_start: engagement.term_start && Date.to_iso8601(engagement.term_start),
+        term_end: engagement.term_end && Date.to_iso8601(engagement.term_end),
+        paintings:
+          Enum.map(socket.assigns.paintings, fn p ->
+            %{
+              filename: p.original_filename,
+              storage_key: p.storage_key,
+              sha256: p.content_hash
+            }
+          end)
       },
+      agreed_items: agreed_items,
       consent_text: consent
     }
 
@@ -148,10 +191,14 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
             </p>
           </div>
 
-          <%!-- paintings --%>
+          <%!-- paintings — contract scope images --%>
           <div :if={@paintings != []} style="border-bottom:1px solid rgba(52,48,37,0.58);">
+            <div style="padding:12px 20px 10px;background:rgba(84,181,126,0.05);border-bottom:1px solid rgba(84,181,126,0.15);">
+              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#54B57E;">Garden as digitally rendered</p>
+              <p style="font-size:11px;color:#9A9384;margin-top:3px;line-height:1.4;">The images below show the exact scope of this engagement. By signing, you confirm these renderings reflect the agreed design.</p>
+            </div>
             <div :for={painting <- @paintings}>
-              <img src={OpenSauce.Storage.url(painting.storage_key)} style="display:block;width:100%;height:auto;" />
+              <img src={HtmlHelpers.storage_url(painting.storage_key)} style="display:block;width:100%;height:auto;" />
             </div>
           </div>
 
@@ -183,18 +230,48 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
       </div>
 
       <%!-- sticky sign CTA --%>
-      <div :if={is_nil(@engagement.signature)} style="position:fixed;bottom:0;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
+      <div :if={is_nil(@engagement.signature)} style="position:fixed;bottom:0;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);">
+
+        <%!-- normal mode: checkboxes + sign button --%>
         <div :if={!@signing}>
-          <button
-            type="button"
-            phx-click="start_sign"
-            ontouchstart=""
-            style="width:100%;background:#54B57E;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;color:#0C1F15;cursor:pointer;"
-          >
-            Sign this estimate
-          </button>
+          <%!-- scrollable sign-off checklist --%>
+          <div :if={@sign_off_items != []}
+            style="max-height:40vh;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid rgba(52,48,37,0.4);">
+            <div :for={{item, idx} <- Enum.with_index(@sign_off_items)}>
+              <div :if={item["body"]}
+                style="font-size:11.5px;color:#9A9384;line-height:1.55;margin-bottom:6px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(52,48,37,0.58);white-space:pre-line;">
+                {item["body"]}
+              </div>
+              <button
+                type="button"
+                phx-click="toggle_sign_off"
+                phx-value-index={idx}
+                ontouchstart=""
+                style="width:100%;display:flex;align-items:flex-start;gap:10px;background:none;border:none;padding:0;cursor:pointer;text-align:left;"
+              >
+                <div style={"width:22px;height:22px;border-radius:6px;flex-shrink:0;margin-top:1px;transition:all 0.1s;border:1.5px solid #{if MapSet.member?(@checked, to_string(idx)), do: "#54B57E", else: "rgba(110,103,90,0.6)"};background:#{if MapSet.member?(@checked, to_string(idx)), do: "#54B57E", else: "transparent"};display:flex;align-items:center;justify-content:center;"}>
+                  <span :if={MapSet.member?(@checked, to_string(idx))} style="color:#0C1F15;font-size:13px;font-weight:800;line-height:1;">✓</span>
+                </div>
+                <span style="font-size:13px;color:#F4EFE2;line-height:1.5;">{item["label"]}</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="padding:10px 16px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));">
+            <button
+              type="button"
+              phx-click="start_sign"
+              ontouchstart=""
+              disabled={not all_checked?(@checked, @sign_off_items)}
+              style={"width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:#{if all_checked?(@checked, @sign_off_items), do: "pointer", else: "default"};transition:all 0.15s;#{if all_checked?(@checked, @sign_off_items), do: "background:#54B57E;color:#0C1F15;", else: "background:rgba(52,48,37,0.8);color:#6E675A;"}"}
+            >
+              Sign this estimate
+            </button>
+          </div>
         </div>
-        <div :if={@signing}>
+
+        <%!-- confirmation mode --%>
+        <div :if={@signing} style="padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));">
           <p style="font-size:12px;color:#9A9384;line-height:1.6;margin-bottom:12px;text-align:center;">
             {consent_text(@engagement, @organisation)}
           </p>
@@ -235,11 +312,17 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
 
   defp consent_text(engagement, org) do
     title = engagement.scope_title || "this estimate"
-    "By signing, I agree to the terms of #{title} as presented by #{org.name}."
+    "By signing, I confirm I have reviewed the scope#{if engagement.images != [] and Enum.any?(engagement.images, &(&1.type == :painting)), do: " and digital renderings", else: ""} above and agree to the terms of #{title} as presented by #{org.name}."
   end
 
   defp portal_customer_name(%{company_name_nickname: n}) when is_binary(n) and n != "", do: n
   defp portal_customer_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
+
+  defp all_checked?(_checked, []), do: true
+
+  defp all_checked?(checked, items) do
+    Enum.all?(0..(length(items) - 1)//1, &MapSet.member?(checked, to_string(&1)))
+  end
 
   defp status_style(:draft), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
   defp status_style(:proposed), do: "background:rgba(90,180,216,0.15);color:#5AB4D8;"
