@@ -30,6 +30,13 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
         <p style="flex:1;font-family:monospace;font-size:14px;color:#6E675A;">
           #{format_invoice_number(@invoice.invoice_number)}
         </p>
+        <.link :if={@invoice.status != :paid} navigate={~p"/manage/invoices/#{@invoice.id}/edit"}>
+          <button type="button" ontouchstart="" style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
+        </.link>
         <span style={"#{status_badge_style(@invoice.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
           {status_label(@invoice.status)}
         </span>
@@ -102,6 +109,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
               <div :for={group_items <- @item_groups}>
                 <% eng = Enum.find(group_items, &(&1["type"] == "engagement")) %>
                 <% jobs = Enum.filter(group_items, &(&1["type"] == "job")) %>
+                <% group_customs = Enum.filter(group_items, &(&1["type"] == "custom")) %>
                 <%!-- engagement fee row --%>
                 <div
                   :if={eng}
@@ -129,6 +137,19 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                     style="font-size:12.5px;color:#9A9384;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;"
                   >
                     {format_money(@organisation.currency, job["amount"])}
+                  </span>
+                </div>
+                <%!-- group custom line item rows --%>
+                <div
+                  :for={item <- group_customs}
+                  style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:7px 0 7px 12px;border-bottom:1px solid rgba(52,48,37,0.3);"
+                >
+                  <p style="flex:1;font-size:12.5px;color:#9A9384;min-width:0;">{item["label"]}</p>
+                  <span
+                    :if={item["amount"] && item["amount"] != "0.00"}
+                    style="font-size:12.5px;color:#9A9384;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;"
+                  >
+                    {format_money(@organisation.currency, item["amount"])}
                   </span>
                 </div>
               </div>

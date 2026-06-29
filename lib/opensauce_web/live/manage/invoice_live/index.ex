@@ -80,7 +80,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       </div>
 
       <%!-- FAB --%>
-      <.link :if={is_nil(@customer_filter) || @has_invoiceable_work} patch={~p"/manage/invoices/new"}>
+      <.link :if={is_nil(@customer_filter) || @has_invoiceable_work} navigate={~p"/manage/invoices/new"}>
         <button
           type="button"
           ontouchstart=""
@@ -91,41 +91,6 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
           </svg>
         </button>
       </.link>
-
-      <%!-- new invoice bottom sheet --%>
-      <div
-        :if={@live_action == :new}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
-        role="dialog"
-        aria-label="New Invoice"
-      >
-        <div class="absolute inset-0 bg-black/50" phx-click={JS.patch(~p"/manage/invoices")} aria-hidden="true" />
-        <div
-          class="relative w-full max-w-lg mobile-scroll"
-          style="background:#211E16;border-top:1.5px solid rgba(52,48,37,0.58);border-radius:20px 20px 0 0;max-height:92svh;overflow-y:auto;padding-bottom:max(1.5rem,env(safe-area-inset-bottom));"
-        >
-          <div style="padding:16px 16px 4px;display:flex;align-items:center;justify-content:space-between;">
-            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
-              New Invoice
-            </p>
-            <.link patch={~p"/manage/invoices"}>
-              <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </.link>
-          </div>
-          <.live_component
-            module={OpenSauceWeb.InvoiceLive.FormComponent}
-            id={:new}
-            current_member={@current_member}
-            organisation={@organisation}
-            invoice={nil}
-            patch={~p"/manage/invoices"}
-          />
-        </div>
-      </div>
     </div>
     """
   end
@@ -197,12 +162,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_info({OpenSauceWeb.InvoiceLive.FormComponent, {:saved, _invoice}}, socket) do
-    {:noreply, load_invoices(socket, socket.assigns[:customer_filter] && socket.assigns.customer_filter.id)}
-  end
-
-  defp load_invoices(socket, customer_id \\ nil) do
+  defp load_invoices(socket, customer_id) do
     member = socket.assigns.current_member
 
     query =

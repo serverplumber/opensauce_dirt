@@ -10,24 +10,59 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
   @impl true
   def update(assigns, socket) do
+    invoice = assigns[:invoice]
+
     socket =
       socket
       |> assign(assigns)
-      |> assign_new(:customer_id, fn -> nil end)
-      |> assign_new(:groups, fn -> [] end)
       |> assign_new(:hidden_job_ids, fn -> MapSet.new() end)
-      |> assign_new(:custom_line_items, fn -> [] end)
-      |> assign_new(:params, fn ->
-        %{
-          "issued_on" => Date.to_iso8601(Date.utc_today()),
-          "due_on" => "",
-          "notes" => "",
-          "status" => "draft"
-        }
-      end)
-      |> load_customers()
+
+    socket =
+      cond do
+        invoice && !Map.has_key?(socket.assigns, :__edit_initialized__) ->
+          init_for_edit(socket, invoice)
+
+        !invoice ->
+          socket
+          |> assign_new(:customer_id, fn -> nil end)
+          |> assign_new(:groups, fn -> [] end)
+          |> assign_new(:custom_line_items, fn -> [] end)
+          |> assign_new(:original_job_ids, fn -> MapSet.new() end)
+          |> assign_new(:params, fn ->
+            %{
+              "issued_on" => Date.to_iso8601(Date.utc_today()),
+              "due_on" => "",
+              "notes" => "",
+              "status" => "draft"
+            }
+          end)
+          |> load_customers()
+
+        true ->
+          socket
+      end
 
     {:ok, socket}
+  end
+
+  defp init_for_edit(socket, invoice) do
+    member = socket.assigns.current_member
+    invoice_jobs = load_invoice_jobs(invoice.id, member)
+    extra_jobs = load_uninvoiced_jobs(invoice.customer_id, member)
+
+    invoice_job_ids = MapSet.new(invoice_jobs, & &1.id)
+    all_jobs = invoice_jobs ++ Enum.reject(extra_jobs, &MapSet.member?(invoice_job_ids, &1.id))
+
+    groups = build_groups_for_edit(all_jobs, invoice.line_items)
+
+    socket
+    |> assign(:customer_id, invoice.customer_id)
+    |> assign(:customers, [])
+    |> assign(:groups, groups)
+    |> assign(:custom_line_items, load_custom_items_from_stored(invoice.line_items))
+    |> assign(:original_job_ids, invoice_job_ids)
+    |> assign(:params, invoice_to_params(invoice))
+    |> assign(:__edit_initialized__, true)
   end
 
   @impl true
@@ -40,7 +75,11 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
             <label class="dark-label">Customer</label>
-            <select name="invoice[customer_id]" class="dark-select">
+            <div :if={@invoice} style="font-size:15px;font-weight:600;color:#F4EFE2;padding:10px 0 2px;">
+              {@invoice.customer.first_name} {@invoice.customer.last_name}
+              <input type="hidden" name="invoice[customer_id]" value={@customer_id} />
+            </div>
+            <select :if={!@invoice} name="invoice[customer_id]" class="dark-select">
               <option value="">Select customer…</option>
               <option :for={{label, id} <- @customers} value={id} selected={id == @customer_id}>
                 {label}
@@ -323,7 +362,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
             valid={can_save?(@params, @customer_id)}
             phx-disable-with="Saving…"
           >
-            Create invoice
+            {if @invoice, do: "Update invoice", else: "Create invoice"}
           </.glow_button>
         </div>
       </form>
@@ -458,7 +497,6 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     groups = socket.assigns.groups
     custom_items = socket.assigns.custom_line_items
     engagement_amounts = params["engagement_amounts"] || %{}
-
     group_lines_params = params["group_lines"] || %{}
 
     line_items_from_groups =
@@ -552,6 +590,14 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       |> Enum.flat_map(& &1.jobs)
       |> Enum.reject(&MapSet.member?(hidden_job_ids, &1.id))
 
+    if socket.assigns.invoice do
+      do_update(socket, params, total, line_items_to_save, all_visible_jobs, member)
+    else
+      do_create(socket, params, total, line_items_to_save, all_visible_jobs, member)
+    end
+  end
+
+  defp do_create(socket, params, total, line_items, all_visible_jobs, member) do
     attrs = %{
       customer_id: params["customer_id"],
       issued_on: parse_date(params["issued_on"]),
@@ -559,7 +605,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       amount: total,
       status: :draft,
       notes: params["notes"],
-      line_items: line_items_to_save,
+      line_items: line_items,
       organisation_id: member.organisation_id
     }
 
@@ -596,6 +642,44 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Invoice created.")
+         |> push_patch(to: socket.assigns.patch)}
+
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, "Could not save: #{inspect(error)}")}
+    end
+  end
+
+  defp do_update(socket, params, total, line_items, all_visible_jobs, member) do
+    invoice = socket.assigns.invoice
+
+    attrs = %{
+      issued_on: parse_date(params["issued_on"]),
+      due_on: parse_date(params["due_on"]),
+      amount: total,
+      notes: params["notes"],
+      line_items: line_items
+    }
+
+    case CRM.update_invoice(invoice, attrs, actor: member, tenant: member.organisation_id) do
+      {:ok, updated_invoice} ->
+        original_ids = socket.assigns.original_job_ids
+        current_ids = MapSet.new(all_visible_jobs, & &1.id)
+
+        for removed_id <- MapSet.difference(original_ids, current_ids) do
+          with {:ok, job} <- Work.get_job_by_id(removed_id, actor: member, tenant: member.organisation_id) do
+            Work.assign_job_invoice(job, %{invoice_id: nil}, actor: member, tenant: member.organisation_id)
+          end
+        end
+
+        for job <- Enum.reject(all_visible_jobs, &MapSet.member?(original_ids, &1.id)) do
+          Work.assign_job_invoice(job.struct, %{invoice_id: invoice.id}, actor: member, tenant: member.organisation_id)
+        end
+
+        notify_parent({:saved, updated_invoice})
+
+        {:noreply,
+         socket
+         |> put_flash(:info, "Invoice updated.")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, error} ->
@@ -661,6 +745,89 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     end)
   rescue
     _ -> []
+  end
+
+  defp load_invoice_jobs(invoice_id, member) do
+    Work.Job
+    |> filter(invoice_id == ^invoice_id)
+    |> Ash.Query.sort(scheduled_for: :asc)
+    |> Ash.Query.load([:materials_cost, :garden, engagement: [:garden]])
+    |> Ash.read!(actor: member, tenant: member.organisation_id)
+    |> Enum.map(fn job ->
+      eng_line = if job.engagement, do: engagement_to_line(job.engagement), else: nil
+
+      %{
+        id: job.id,
+        struct: job,
+        service_type: job.service_category || job.type,
+        garden_name: job.garden && job.garden.name,
+        scheduled_at: job.scheduled_for,
+        amount: job.materials_cost |> D.round(2) |> D.to_string(),
+        engagement: eng_line
+      }
+    end)
+  rescue
+    _ -> []
+  end
+
+  defp build_groups_for_edit(all_jobs, stored_line_items) do
+    eng_amounts =
+      stored_line_items
+      |> Enum.filter(&(&1["type"] == "engagement"))
+      |> Map.new(fn item -> {item["group_id"], item["amount"]} end)
+
+    group_customs =
+      stored_line_items
+      |> Enum.filter(&(&1["type"] == "custom" and not is_nil(&1["group_id"])))
+      |> Enum.group_by(& &1["group_id"])
+      |> Map.new(fn {gid, items} ->
+        custom_items =
+          Enum.map(items, fn i ->
+            %{id: "gl_#{:erlang.unique_integer([:positive])}", label: i["label"] || "", amount: i["amount"] || "", hidden: false}
+          end)
+
+        {gid, custom_items}
+      end)
+
+    all_jobs
+    |> Enum.group_by(fn j -> j.engagement && j.engagement.id end)
+    |> Enum.map(fn {_id, group_jobs} ->
+      eng_line =
+        case List.first(group_jobs).engagement do
+          nil ->
+            nil
+
+          e ->
+            stored = Map.get(eng_amounts, e.id)
+            Map.merge(e, %{amount: stored || default_engagement_amount(e), hidden: false})
+        end
+
+      custom_items = if eng_line, do: Map.get(group_customs, eng_line.id, []), else: []
+      %{engagement: eng_line, jobs: group_jobs, custom_items: custom_items}
+    end)
+    |> Enum.sort_by(fn g ->
+      g.jobs |> Enum.map(& &1.scheduled_at) |> Enum.filter(& &1) |> case do
+        [] -> ~D[9999-12-31]
+        dates -> Enum.min(dates)
+      end
+    end)
+  end
+
+  defp load_custom_items_from_stored(line_items) do
+    line_items
+    |> Enum.filter(&(&1["type"] == "custom" and is_nil(&1["group_id"])))
+    |> Enum.map(fn i ->
+      %{id: "li_#{:erlang.unique_integer([:positive])}", label: i["label"] || "", amount: i["amount"] || ""}
+    end)
+  end
+
+  defp invoice_to_params(invoice) do
+    %{
+      "issued_on" => if(invoice.issued_on, do: Date.to_iso8601(invoice.issued_on), else: Date.to_iso8601(Date.utc_today())),
+      "due_on" => if(invoice.due_on, do: Date.to_iso8601(invoice.due_on), else: ""),
+      "notes" => invoice.notes || "",
+      "status" => to_string(invoice.status)
+    }
   end
 
   defp engagement_to_line(e) do

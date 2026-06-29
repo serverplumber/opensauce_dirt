@@ -182,9 +182,9 @@ defmodule OpenSauceWeb.Router do
 
       # Invoices
       live "/manage/invoices", InvoiceLive.Index, :index
-      live "/manage/invoices/new", InvoiceLive.Index, :new
+      live "/manage/invoices/new", InvoiceLive.New, :new
       live "/manage/invoices/:id", InvoiceLive.Show, :show
-      live "/manage/invoices/:id/edit", InvoiceLive.Show, :edit
+      live "/manage/invoices/:id/edit", InvoiceLive.Edit, :edit
 
       # Purchasing
       live "/manage/purchasing", PurchasingLive.Index, :index
