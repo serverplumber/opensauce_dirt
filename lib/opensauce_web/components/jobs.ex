@@ -25,21 +25,21 @@ defmodule OpenSauceWeb.Components.Jobs do
   - `return_to` — appended as `?return_to=` on the navigate path. Default nil.
   - `org_members` — list of org members; enables the crew row and live strip. Default [].
   - `show_due` — show the due date on unscheduled cards. Default false.
-  - `on_place` — event name to fire when the Place chip is tapped. When nil the chip is a label, not a button. Default nil.
-  - `show_start` — show the Start button for unscheduled jobs (internally shift-gated). Default false.
+  - `place_on_tap` — when true, tapping a `:scheduling` job card (shift off) navigates to the schedule screen to place it. Default false.
+  - `show_start` — when true, card tap on a `:scheduling` job navigates to the arrive screen (shift is on). Takes precedence over `place_on_tap`. Default false.
   """
   attr :job, :any, required: true
   attr :return_to, :string, default: nil
   attr :org_members, :list, default: []
   attr :show_due, :boolean, default: false
-  attr :on_place, :string, default: nil
+  attr :place_on_tap, :boolean, default: false
   attr :show_start, :boolean, default: false
 
   def job_card(assigns) do
     ~H"""
     <div
       class={["jcard", @job.status == :in_progress && "live"]}
-      phx-click={card_navigate(@job, @return_to, @on_place)}
+      phx-click={card_navigate(@job, @return_to, @place_on_tap, @show_start)}
       ontouchstart=""
     >
       <%!-- top row: title + status chip --%>
@@ -64,46 +64,7 @@ defmodule OpenSauceWeb.Components.Jobs do
           </div>
         </div>
 
-        <.job_status_chip status={@job.status} />
-
-        <%!-- unscheduled: Start when shift on, Place when not — never both --%>
-        <div :if={@job.status == :scheduling} style="display:flex;gap:6px;flex-shrink:0;">
-          <button
-            :if={@show_start}
-            class="pill live"
-            type="button"
-            style="border:none;cursor:pointer;"
-            phx-click="open_event_log"
-            phx-value-id={@job.id}
-            onclick="event.stopPropagation()"
-            ontouchstart=""
-          >
-            Start
-          </button>
-          <button
-            :if={!@show_start && @on_place}
-            class="pill cancel"
-            type="button"
-            ontouchstart=""
-            style="border:none;cursor:pointer;"
-            phx-click={@on_place}
-            phx-value-id={@job.id}
-            onclick="event.stopPropagation()"
-          >
-            Place
-          </button>
-          <button
-            :if={!@show_start && !@on_place}
-            class="pill cancel"
-            type="button"
-            style="border:none;cursor:pointer;"
-            phx-click={JS.navigate(~p"/manage/today?place_job_id=#{@job.id}")}
-            onclick="event.stopPropagation()"
-            ontouchstart=""
-          >
-            Place
-          </button>
-        </div>
+        <.job_status_chip status={@job.status} scheduling_label={scheduling_chip_label(@show_start, @place_on_tap)} />
       </div>
 
       <%!-- meta row: start time + category + due date --%>
@@ -161,11 +122,22 @@ defmodule OpenSauceWeb.Components.Jobs do
     """
   end
 
-  # Navigate the card on tap. Disabled for :scheduling jobs when Place is an action button
-  # (so tapping outside the Place chip does nothing).
-  defp card_navigate(%{status: :scheduling}, _return_to, on_place) when not is_nil(on_place), do: nil
-  defp card_navigate(job, nil, _on_place), do: JS.navigate(~p"/manage/jobs/#{job.id}")
-  defp card_navigate(job, return_to, _on_place), do: JS.navigate(~p"/manage/jobs/#{job.id}?return_to=#{return_to}")
+  defp scheduling_chip_label(true, _), do: "Start"
+  defp scheduling_chip_label(_, true), do: "Place"
+  defp scheduling_chip_label(_, _), do: "Unscheduled"
+
+  # For :scheduling jobs: start (arrive) when shift active; navigate to schedule screen to place
+  # when place_on_tap; otherwise fall through to detail navigate like any other status.
+  defp card_navigate(%{status: :scheduling} = job, _return_to, _place_on_tap, true),
+    do: JS.navigate(~p"/manage/jobs/#{job.id}/arrive")
+
+  defp card_navigate(%{status: :scheduling} = job, _return_to, true, _show_start),
+    do: JS.navigate(~p"/manage/schedule?place_job_id=#{job.id}")
+
+  defp card_navigate(job, nil, _place_on_tap, _show_start), do: JS.navigate(~p"/manage/jobs/#{job.id}")
+
+  defp card_navigate(job, return_to, _place_on_tap, _show_start),
+    do: JS.navigate(~p"/manage/jobs/#{job.id}?return_to=#{return_to}")
 
   defp member_ids(%{staff_assignments: assignments}) when is_list(assignments),
     do: Enum.map(assignments, & &1.member_id)
@@ -235,21 +207,14 @@ defmodule OpenSauceWeb.Components.Jobs do
   # ---------------------------------------------------------------------------
 
   attr :status, :atom, required: true
-  attr :job_id, :string, default: nil
+  attr :scheduling_label, :string, default: "Unscheduled"
 
   def job_status_chip(assigns) do
     ~H"""
     <span :if={@status == :in_progress} class="pill live" style="flex-shrink:0;">
       <span class="dot pulse"></span>On site
     </span>
-    <div :if={@status == :scheduling && @job_id} style="display:flex;gap:6px;flex-shrink:0;">
-      <span class="pill cancel">Place</span>
-      <.link navigate={~p"/manage/jobs/#{@job_id}/arrive"}>
-        <button class="pill live" type="button" style="border:none;cursor:pointer;" ontouchstart="">
-          Start
-        </button>
-      </.link>
-    </div>
+    <span :if={@status == :scheduling} class="pill cancel" style="flex-shrink:0;">{@scheduling_label}</span>
     <span :if={@status == :completed} class="pill done" style="flex-shrink:0;">Done</span>
     <span :if={@status == :cancelled} class="pill cancel" style="flex-shrink:0;">Cancelled</span>
     """

@@ -13,7 +13,8 @@ defmodule OpenSauceWeb.JobLive.Show do
      |> assign(:main_bg, "bg-[#16140E]")
      |> assign(:show_staff_sheet, false)
      |> assign(:show_delete_confirm, false)
-     |> assign(:org_members, [])}
+     |> assign(:org_members, [])
+     |> assign(:active_shift, nil)}
   end
 
   @impl true
@@ -22,6 +23,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     return_to = Map.get(params, "return_to", ~p"/manage/jobs")
 
     org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+    active_shift = Work.find_active_shift!(actor: member, tenant: member.organisation_id)
 
     job =
       Work.get_job_by_id!(id,
@@ -48,6 +50,7 @@ defmodule OpenSauceWeb.JobLive.Show do
     {:noreply,
      socket
      |> assign(:org_members, org_members)
+     |> assign(:active_shift, active_shift)
      |> assign(:job, job)
      |> assign(:return_to, return_to)
      |> assign(:page_title, page_title(job))
@@ -173,14 +176,18 @@ defmodule OpenSauceWeb.JobLive.Show do
       </div>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:14px;">
-        <%!-- job hero card --%>
-        <div style="background:#211E16;border-radius:14px;border:1px solid rgba(52,48,37,0.58);padding:16px;">
+        <%!-- job hero card — tappable for :scheduling jobs (start or place) --%>
+        <div
+          style={"background:#211E16;border-radius:14px;border:1px solid rgba(52,48,37,0.58);padding:16px;#{if @job.status == :scheduling, do: "cursor:pointer;", else: ""}"}
+          phx-click={scheduling_hero_click(@job, @active_shift)}
+          ontouchstart=""
+        >
           <%!-- title + status chip --%>
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
             <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.2;margin:0;min-width:0;flex:1;">
               {hero_title(@job)}
             </h1>
-            <.job_status_chip status={@job.status} job_id={@job.id} />
+            <.job_status_chip status={@job.status} scheduling_label={if @active_shift, do: "Start", else: "Place"} />
           </div>
 
           <%!-- customer nickname · scope title --%>
@@ -487,6 +494,16 @@ defmodule OpenSauceWeb.JobLive.Show do
     </div>
     """
   end
+
+  defp scheduling_hero_click(%{status: :scheduling} = job, active_shift) do
+    if active_shift do
+      JS.navigate(~p"/manage/jobs/#{job.id}/arrive")
+    else
+      JS.navigate(~p"/manage/schedule?place_job_id=#{job.id}")
+    end
+  end
+
+  defp scheduling_hero_click(_job, _shift), do: nil
 
   defp elapsed_label(nil), do: "—"
 

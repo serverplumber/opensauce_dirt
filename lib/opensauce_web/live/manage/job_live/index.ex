@@ -65,7 +65,7 @@ defmodule OpenSauceWeb.JobLive.Index do
                 <span class="line"></span>
                 <span class="dn">{day_date_label(date, today)}</span>
               </div>
-              <.job_card :for={job <- date_jobs} job={job} org_members={@org_members} show_start={not is_nil(@active_shift)} />
+              <.job_card :for={job <- date_jobs} job={job} org_members={@org_members} />
             </div>
           </div>
           <div
@@ -79,7 +79,7 @@ defmodule OpenSauceWeb.JobLive.Index do
         <%!-- unscheduled tab: flat list --%>
         <div :if={@tab == :unscheduled}>
           <div :if={@counts.unscheduled > 0}>
-            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} org_members={@org_members} show_start={not is_nil(@active_shift)} />
+            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} org_members={@org_members} />
           </div>
           <div
             :if={@counts.unscheduled == 0}

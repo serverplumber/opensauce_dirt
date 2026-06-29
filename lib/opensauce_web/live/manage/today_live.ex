@@ -232,7 +232,7 @@ defmodule OpenSauceWeb.TodayLive do
         >
           Nothing scheduled
         </div>
-        <.job_card :for={job <- day_jobs} job={job} return_to="/manage/today" on_place="place_open" />
+        <.job_card :for={job <- day_jobs} job={job} return_to="/manage/today" place_on_tap show_start={not is_nil(@active_shift)} />
 
         <%!-- Unscheduled --%>
         <% unsched = unscheduled_jobs(@jobs) %>
@@ -249,7 +249,7 @@ defmodule OpenSauceWeb.TodayLive do
           >
             None
           </div>
-          <.job_card :for={job <- unsched} job={job} return_to="/manage/today" on_place="place_open" show_due />
+          <.job_card :for={job <- unsched} job={job} return_to="/manage/today" place_on_tap show_start={not is_nil(@active_shift)} show_due />
         </div>
 
         <%!-- Engagements --%>

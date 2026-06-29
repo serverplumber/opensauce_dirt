@@ -22,6 +22,30 @@ defmodule OpenSauceWeb.ScheduleLive do
   end
 
   @impl true
+  def handle_params(%{"place_job_id" => job_id}, _url, socket) do
+    job = Enum.find(socket.assigns.jobs, &(&1.id == job_id))
+
+    if job do
+      today = Date.utc_today()
+      place_day = job.scheduled_for || today
+
+      place_minutes =
+        if job.start_time,
+          do: job.start_time.hour * 60 + job.start_time.minute,
+          else: next_available_minutes(socket.assigns.jobs, place_day)
+
+      {:noreply,
+       assign(socket,
+         place_job: job,
+         place_day: place_day,
+         place_minutes: place_minutes,
+         place_duration: job.duration_estimate || 120
+       )}
+    else
+      {:noreply, socket}
+    end
+  end
+
   def handle_params(_params, _url, socket), do: {:noreply, socket}
 
   @impl true
@@ -421,11 +445,10 @@ defmodule OpenSauceWeb.ScheduleLive do
     <div
       class={["jcard", @job.status == :in_progress && "live"]}
       phx-click={
-        if @open_drawer,
-          do: "place_open",
-          else: if(@job.status != :scheduling, do: JS.navigate(~p"/manage/jobs/#{@job.id}"))
+        if @open_drawer or @job.status == :scheduling,
+          do: JS.push("place_open", value: %{id: @job.id}),
+          else: JS.navigate(~p"/manage/jobs/#{@job.id}")
       }
-      phx-value-id={@job.id}
       ontouchstart=""
     >
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
@@ -454,17 +477,7 @@ defmodule OpenSauceWeb.ScheduleLive do
         <span :if={@job.status == :scheduled} class="pill sched">
           <span class="dot"></span>Sched
         </span>
-        <button
-          :if={@job.status == :scheduling}
-          class="pill cancel"
-          type="button"
-          ontouchstart=""
-          style="border:none;cursor:pointer;"
-          phx-click="place_open"
-          phx-value-id={@job.id}
-        >
-          Place
-        </button>
+        <span :if={@job.status == :scheduling} class="pill cancel" style="flex-shrink:0;">Place</span>
       </div>
 
       <div style="margin-top:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
