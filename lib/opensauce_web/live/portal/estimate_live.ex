@@ -128,13 +128,10 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:120px;">
 
       <%!-- minimal top bar --%>
-      <div style="padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="padding:16px 16px 10px;">
         <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#54B57E;">
           {@organisation.name}
         </p>
-        <span style={"#{status_style(@engagement.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
-          {Phoenix.Naming.humanize(@engagement.status)}
-        </span>
       </div>
 
       <%!-- document --%>
@@ -326,11 +323,4 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
     Enum.all?(0..(length(items) - 1)//1, &MapSet.member?(checked, to_string(&1)))
   end
 
-  defp status_style(:draft), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
-  defp status_style(:proposed), do: "background:rgba(90,180,216,0.15);color:#5AB4D8;"
-  defp status_style(:signed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
-  defp status_style(:in_progress), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
-  defp status_style(:completed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
-  defp status_style(:cancelled), do: "background:rgba(232,126,126,0.15);color:#E87E7E;"
-  defp status_style(_), do: "background:rgba(154,147,132,0.15);color:#9A9384;"
 end
