@@ -178,6 +178,11 @@ defmodule OpenSauce.CRM.Customer do
       prepare build(sort: :first_name)
       pagination keyset?: true
     end
+
+    read :with_uninvoiced_jobs do
+      prepare build(sort: :first_name)
+      filter expr(exists(engagements, exists(jobs, is_nil(invoice_id) or invoice.status == :void)))
+    end
   end
 
   policies do
@@ -304,6 +309,7 @@ defmodule OpenSauce.CRM.Customer do
 
   calculations do
     calculate :full_name, :string, expr(first_name <> " " <> last_name)
+    calculate :has_uninvoiced_jobs, :boolean, expr(exists(engagements, exists(jobs, is_nil(invoice_id) or invoice.status == :void)))
   end
 
   aggregates do

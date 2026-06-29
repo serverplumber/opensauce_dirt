@@ -606,24 +606,9 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   defp load_customers(socket) do
     member = socket.assigns.current_member
 
-    customer_ids =
-      Work.Job
-      |> filter(is_nil(invoice_id) or invoice.status == :void)
-      |> Ash.Query.load(:engagement)
-      |> Ash.read!(actor: member, tenant: member.organisation_id)
-      |> Enum.flat_map(fn job ->
-        case job.engagement do
-          %{customer_id: id} when not is_nil(id) -> [id]
-          _ -> []
-        end
-      end)
-      |> MapSet.new()
-
     customers =
-      CRM.list_customers!(actor: member, tenant: member.organisation_id)
-      |> Enum.filter(&MapSet.member?(customer_ids, &1.id))
+      CRM.list_customers_with_uninvoiced_jobs!(actor: member, tenant: member.organisation_id)
       |> Enum.map(fn c -> {"#{c.first_name} #{c.last_name}", c.id} end)
-      |> Enum.sort_by(&elem(&1, 0))
 
     assign(socket, :customers, customers)
   rescue

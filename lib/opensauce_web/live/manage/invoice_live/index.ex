@@ -10,10 +10,20 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:100px;">
       <%!-- header --%>
       <div style="padding:12px 16px 14px;">
+        <div :if={@customer_filter} style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <.link navigate={~p"/manage/invoices"}>
+            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </.link>
+          <span style="font-size:12px;color:#9A9384;">{@customer_filter.first_name} {@customer_filter.last_name}</span>
+        </div>
         <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
           Invoices
         </h1>
-        <p style="font-size:13px;color:#9A9384;margin-top:3px;">
+        <p :if={!@customer_filter} style="font-size:13px;color:#9A9384;margin-top:3px;">
           Billing across jobs and engagements.
         </p>
       </div>
@@ -70,7 +80,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       </div>
 
       <%!-- FAB --%>
-      <.link patch={~p"/manage/invoices/new"}>
+      <.link :if={is_nil(@customer_filter) || @has_invoiceable_work} patch={~p"/manage/invoices/new"}>
         <button
           type="button"
           ontouchstart=""
@@ -155,30 +165,56 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, drafts: [], sent: [], paid: [], voided: [])}
+    {:ok, assign(socket, drafts: [], sent: [], paid: [], voided: [], customer_filter: nil, has_invoiceable_work: true)}
   end
 
   @impl true
-  def handle_params(_params, _url, socket) do
+  def handle_params(params, _url, socket) do
+    member = socket.assigns.current_member
+    customer_id = params["customer_id"]
+
+    customer_filter =
+      if customer_id do
+        Ash.get!(CRM.Customer, customer_id, actor: member, tenant: member.organisation_id)
+      end
+
+    uninvoiced_ids =
+      CRM.list_customers_with_uninvoiced_jobs!(actor: member, tenant: member.organisation_id)
+      |> MapSet.new(& &1.id)
+
+    has_invoiceable_work =
+      not MapSet.equal?(uninvoiced_ids, MapSet.new()) and
+        (is_nil(customer_filter) or MapSet.member?(uninvoiced_ids, customer_filter.id))
+
     socket =
       socket
       |> assign(:page_title, "Invoices")
       |> assign(:main_bg, "bg-[#16140E]")
-      |> load_invoices()
+      |> assign(:customer_filter, customer_filter)
+      |> assign(:has_invoiceable_work, has_invoiceable_work)
+      |> load_invoices(customer_id)
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({OpenSauceWeb.InvoiceLive.FormComponent, {:saved, _invoice}}, socket) do
-    {:noreply, load_invoices(socket)}
+    {:noreply, load_invoices(socket, socket.assigns[:customer_filter] && socket.assigns.customer_filter.id)}
   end
 
-  defp load_invoices(socket) do
+  defp load_invoices(socket, customer_id \\ nil) do
     member = socket.assigns.current_member
 
+    query =
+      if customer_id do
+        import Ash.Query
+        CRM.Invoice |> filter(customer_id == ^customer_id)
+      else
+        CRM.Invoice
+      end
+
     all =
-      CRM.list_invoices!(
+      Ash.read!(query,
         actor: member,
         tenant: member.organisation_id,
         load: [:customer]

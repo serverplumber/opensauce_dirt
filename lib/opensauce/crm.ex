@@ -27,6 +27,7 @@ defmodule OpenSauce.CRM do
       define :get_customer_by_email, args: [:email], action: :get_by_email
       define :list_customers, action: :list
       define :list_customers_with_keyset, action: :keyset
+      define :list_customers_with_uninvoiced_jobs, action: :with_uninvoiced_jobs
       define :destroy_customer, action: :destroy
     end
 

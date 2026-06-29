@@ -85,12 +85,14 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           </p>
           <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Eng · Jobs</p>
         </div>
-        <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;">
-          <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:#54B57E;line-height:1.2;">
-            {format_due_billed(@customer.invoices)}
-          </p>
-          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Due · Billed</p>
-        </div>
+        <.link navigate={~p"/manage/invoices?customer_id=#{@customer.id}"}>
+          <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;" ontouchstart="">
+            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:#54B57E;line-height:1.2;">
+              {format_due_billed(@customer.invoices)}
+            </p>
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Due · Billed</p>
+          </div>
+        </.link>
       </div>
 
       <div style="padding:0 16px 100px;display:flex;flex-direction:column;gap:24px;">
