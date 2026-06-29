@@ -10,7 +10,112 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-      <.form for={@form} id="engagement-form" phx-target={@myself} phx-change="validate" phx-submit="save">
+
+      <%!-- SIGNED: read-only scope + photo management only --%>
+      <div :if={@signed?} style="display:flex;flex-direction:column;gap:20px;padding:4px 0 0;">
+
+        <%!-- locked notice --%>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(84,181,126,0.07);border:1px solid rgba(84,181,126,0.2);border-radius:10px;">
+          <span style="color:#54B57E;font-size:14px;line-height:1;">✓</span>
+          <p style="font-size:12px;color:#54B57E;line-height:1.4;">
+            Signed {signature_label_text(@engagement.signature)} — scope is locked
+          </p>
+        </div>
+
+        <%!-- static scope --%>
+        <div :if={@engagement.scope_title} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;">
+          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:4px;">Title</p>
+          <p style="font-size:14px;color:#F4EFE2;">{@engagement.scope_title}</p>
+        </div>
+
+        <div :if={@engagement.scope_description} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;">
+          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:4px;">Scope</p>
+          <p style="font-size:13px;color:#F4EFE2;line-height:1.55;">{@engagement.scope_description}</p>
+        </div>
+
+        <%!-- pricing read-only --%>
+        <div :if={@engagement.install_price || @engagement.maintenance_price_annual}
+          style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div :if={@engagement.install_price} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;">
+            <p style="font-size:10px;color:#6E675A;margin-bottom:3px;">Install</p>
+            <p style="font-size:16px;font-weight:700;color:#F4EFE2;">{HtmlHelpers.format_currency(@currency, @engagement.install_price)}</p>
+          </div>
+          <div :if={@engagement.maintenance_price_annual} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;">
+            <p style="font-size:10px;color:#6E675A;margin-bottom:3px;">Maintenance / yr</p>
+            <p style="font-size:16px;font-weight:700;color:#F4EFE2;">{HtmlHelpers.format_currency(@currency, @engagement.maintenance_price_annual)}</p>
+          </div>
+        </div>
+
+        <%!-- digital renderings: read-only --%>
+        <div :if={@existing_paintings != []}>
+          <span class="dark-label" style="margin-bottom:6px;display:block;color:#54B57E;">Digital Renderings</span>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+            <div :for={img <- @existing_paintings}
+              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);">
+              <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+            </div>
+          </div>
+        </div>
+
+        <%!-- photos: still editable after signing --%>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span class="dark-label" style="margin-bottom:0;">Photos</span>
+            <label for={@uploads.photos.ref} ontouchstart=""
+              style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Add
+            </label>
+          </div>
+          <.live_file_input upload={@uploads.photos} style="display:none;" />
+          <p :for={err <- upload_errors(@uploads.photos)} class="dark-field-error" style="margin-bottom:6px;">
+            {upload_error_to_string(err)}
+          </p>
+          <div :if={@uploads.photos.entries != [] or @existing_photos != []}
+            style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <div :for={entry <- @uploads.photos.entries}
+              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
+              <.live_img_preview entry={entry} style="width:100%;height:100%;object-fit:cover;" />
+              <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
+                <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="photos" phx-target={@myself}
+                  style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                  ✕
+                </button>
+              </div>
+              <div :if={entry.progress > 0 and entry.progress < 100}
+                style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}>
+              </div>
+            </div>
+            <div :for={img <- @existing_photos}
+              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
+              <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+              <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
+                <button type="button" phx-click="delete_image" phx-value-id={img.id} phx-target={@myself}
+                  style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+          <div :if={@uploads.photos.entries == [] and @existing_photos == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+            No photos yet
+          </div>
+        </div>
+
+        <div :if={@uploads.photos.entries != []} style="padding-top:4px;">
+          <.glow_button valid={true} type="button" phx-click="save_photos" phx-target={@myself} phx-disable-with="Saving…">
+            Save photos
+          </.glow_button>
+        </div>
+
+      </div>
+
+      <%!-- UNSIGNED: full editable form --%>
+      <.form :if={not @signed?} for={@form} id="engagement-form" phx-target={@myself} phx-change="validate" phx-submit="save">
         <div style="display:flex;flex-direction:column;gap:20px;padding:4px 0 0;">
 
           <%!-- customer — standalone only --%>
@@ -255,6 +360,7 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
 
         </div>
       </.form>
+
     </div>
     """
   end
@@ -310,6 +416,7 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
      |> assign(assigns)
      |> assign_new(:existing_paintings, fn -> load_existing_paintings(engagement, member) end)
      |> assign_new(:existing_photos, fn -> load_existing_photos(engagement, member) end)
+     |> assign(:signed?, engagement != nil && engagement.signature != nil)
      |> assign(:standalone, standalone)
      |> assign(:customer_id, customer_id)
      |> assign(:customers, customers)
@@ -373,6 +480,12 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
       _ ->
         {:noreply, socket}
     end
+  end
+
+  def handle_event("save_photos", _params, socket) do
+    socket = process_uploads(socket, socket.assigns.engagement)
+    notify_parent({:saved, socket.assigns.engagement})
+    {:noreply, socket}
   end
 
   def handle_event("save", %{"engagement" => params}, socket) do
@@ -529,6 +642,13 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
       do: "#{c.company_name_nickname} (#{c.first_name} #{c.last_name})",
       else: "#{c.first_name} #{c.last_name}"
   end
+
+  defp signature_label_text(%{signed_by_name: name, signed_at: at}) when is_binary(name) do
+    date = if at, do: " · #{Calendar.strftime(at, "%d %b %Y")}", else: ""
+    "by #{name}#{date}"
+  end
+
+  defp signature_label_text(_), do: ""
 
   defp garden_label(addr) do
     name = addr.name || "Garden"

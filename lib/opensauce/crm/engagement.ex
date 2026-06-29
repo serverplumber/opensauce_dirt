@@ -58,6 +58,28 @@ defmodule OpenSauce.CRM.Engagement do
     update :update do
       primary? true
       require_atomic? false
+
+      validate fn changeset, _ ->
+        if Ash.Changeset.get_data(changeset, :signature) do
+          locked = [
+            :scope_title,
+            :scope_description,
+            :garden_id,
+            :install_price,
+            :maintenance_price_annual,
+            :term_start,
+            :term_end
+          ]
+
+          if Enum.any?(locked, &Ash.Changeset.changing_attribute?(changeset, &1)) do
+            {:error, field: :base, message: "Scope cannot be changed after the engagement has been signed"}
+          else
+            :ok
+          end
+        else
+          :ok
+        end
+      end
     end
 
     update :sign do
