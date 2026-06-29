@@ -103,7 +103,9 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
               storage_key: p.storage_key,
               sha256: p.content_hash
             }
-          end)
+          end),
+        payment_info: org.payment_info,
+        invoice_terms: org.invoice_terms
       },
       agreed_items: agreed_items,
       consent_text: consent

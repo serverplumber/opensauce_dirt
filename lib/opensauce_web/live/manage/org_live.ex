@@ -905,12 +905,11 @@ defmodule OpenSauceWeb.OrgLive do
               type="button"
               phx-click="open_invite"
               ontouchstart=""
-              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;"
+              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
               </svg>
-              Add
             </button>
           </div>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;">
@@ -1044,12 +1043,11 @@ defmodule OpenSauceWeb.OrgLive do
               type="button"
               phx-click="open_tax_form"
               ontouchstart=""
-              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;"
+              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
               </svg>
-              Add
             </button>
           </div>
           <div :if={@tax_rates == []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;">
@@ -1296,12 +1294,11 @@ defmodule OpenSauceWeb.OrgLive do
               type="button"
               phx-click="open_sign_off_form"
               ontouchstart=""
-              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;flex-shrink:0;"
+              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
               </svg>
-              Add
             </button>
           </div>
           <div :if={@sign_off_items == []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;">
