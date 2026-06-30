@@ -113,38 +113,45 @@ defmodule OpenSauceWeb.MobileSignInLive do
 
       <%!-- L2: check email --%>
       <div :if={@state == :check_email} style="min-height:100dvh;display:flex;flex-direction:column;">
-        <%!-- back button --%>
-        <div style="height:56px;flex:0 0 auto;display:flex;align-items:center;padding:0 18px;">
+        <%!-- green hero panel --%>
+        <div style="background:radial-gradient(130% 120% at 80% -20%,#245A40 0%,#1C4631 45%,#0E2419 100%);padding:56px 30px 46px;border-bottom-left-radius:34px;border-bottom-right-radius:34px;position:relative;overflow:hidden;">
+          <%!-- watermark leaf --%>
+          <svg style="position:absolute;right:-28px;top:30px;opacity:0.13;transform:rotate(8deg);" width="180" height="180" viewBox="0 0 24 24" fill="none">
+            <path d="M12 21c0-5 0-8 3-11 2-2 5-2 6-2 0 3-1 6-3 8-2.4 2.4-6 5-6 5Z" fill="#fff"/>
+            <path d="M12 21c0-4-1-6-4-8-1.6-1.1-4-1.3-5-1.3.2 2.6 1.3 4.8 3.2 6.2C8.4 19.4 12 21 12 21Z" fill="#fff"/>
+          </svg>
+          <%!-- back button --%>
           <button
             type="button"
             phx-click="reset"
-            style="width:40px;height:40px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+            style="position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.18);background:rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#9A9384" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#9FD9B2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-        </div>
-
-        <%!-- centred content --%>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 32px 30px;">
-          <div style="width:92px;height:92px;border-radius:26px;background:rgba(84,181,126,0.14);border:1.5px solid rgba(84,181,126,0.35);display:flex;align-items:center;justify-content:center;margin-top:36px;">
-            <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="5" width="18" height="14" rx="3" stroke="#54B57E" stroke-width="1.7"/>
-              <path d="M4 7l8 6 8-6" stroke="#54B57E" stroke-width="1.7" stroke-linecap="round"/>
+          <%!-- envelope checkmark --%>
+          <div style="width:68px;height:68px;border-radius:20px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="3" stroke="#9FD9B2" stroke-width="1.7"/>
+              <path d="M4 7l8 6 8-6" stroke="#9FD9B2" stroke-width="1.7" stroke-linecap="round"/>
               <circle cx="19" cy="6" r="4" fill="#3D9A63"/>
               <path d="M17.4 6l1.1 1.1 2-2.2" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
+          <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:28px;line-height:1.15;letter-spacing:-0.02em;color:#F4EFE2;">Check your<br/>email</h2>
+          <p style="margin-top:10px;font-size:13.5px;color:#9FD9B2;">Link sent to</p>
+          <p style="margin-top:3px;font-size:15px;font-weight:700;color:#fff;word-break:break-all;">{@email}</p>
+        </div>
 
-          <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:25px;letter-spacing:-0.02em;color:#F4EFE2;margin-top:26px;">Check your email</h2>
-          <p style="margin-top:12px;font-size:14.5px;color:#9A9384;">We sent a one-tap sign-in link to</p>
-          <p style="margin-top:5px;font-size:16px;font-weight:700;color:#F4EFE2;word-break:break-all;">{@email}</p>
-          <p style="margin-top:16px;font-size:13.5px;color:#9A9384;line-height:1.5;max-width:240px;">
+        <%!-- body --%>
+        <div style="flex:1;padding:30px 30px 26px;display:flex;flex-direction:column;">
+          <p style="font-size:14.5px;color:#9A9384;line-height:1.55;">
             Tap the link on this phone and you're in. It works once and expires in 15&nbsp;minutes.
           </p>
 
-          <div style="width:100%;margin-top:30px;display:flex;flex-direction:column;gap:12px;">
-            <.glow_button href="mailto:">
+          <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px;">
+            <.glow_button href="mailto:" valid={true}>
               Open mail app
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="#0C1F15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </.glow_button>
             <div style="display:flex;gap:22px;justify-content:center;margin-top:2px;">
               <button
@@ -167,7 +174,7 @@ defmodule OpenSauceWeb.MobileSignInLive do
             </div>
           </div>
 
-          <p style="margin-top:auto;padding-top:24px;font-size:12.5px;color:#9A9384;">
+          <p style="margin-top:auto;padding-top:24px;font-size:12px;color:#6E675A;text-align:center;line-height:1.5;">
             Can't find it? Check your spam folder.
           </p>
         </div>

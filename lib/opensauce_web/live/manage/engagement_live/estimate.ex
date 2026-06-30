@@ -62,20 +62,27 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
         <div style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:20px;overflow:hidden;">
 
           <%!-- org header --%>
-          <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
-            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
-              {@organisation.name}
-            </p>
-            <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">
-              {@organisation.legal_name}
-            </p>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-              <span :if={@organisation.phone} style="font-size:12px;color:#6E675A;">{@organisation.phone}</span>
-              <span :if={@organisation.phone && @organisation.website} style="color:#6E675A;">·</span>
-              <span :if={@organisation.website} style="font-size:12px;color:#6E675A;">{@organisation.website}</span>
-              <span :if={@organisation.contact_email} style="color:#6E675A;">·</span>
-              <span :if={@organisation.contact_email} style="font-size:12px;color:#6E675A;">{@organisation.contact_email}</span>
+          <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+            <div style="flex:1;min-width:0;">
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
+                {@organisation.name}
+              </p>
+              <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">
+                {@organisation.legal_name}
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                <span :if={@organisation.phone} style="font-size:12px;color:#6E675A;">{@organisation.phone}</span>
+                <span :if={@organisation.phone && @organisation.website} style="color:#6E675A;">·</span>
+                <span :if={@organisation.website} style="font-size:12px;color:#6E675A;">{@organisation.website}</span>
+                <span :if={@organisation.contact_email} style="color:#6E675A;">·</span>
+                <span :if={@organisation.contact_email} style="font-size:12px;color:#6E675A;">{@organisation.contact_email}</span>
+              </div>
             </div>
+            <% logo_url = case @organisation.logo_colour_key do
+              nil -> nil
+              key -> case OpenSauce.Storage.url(key) do {:ok, u} -> u; _ -> nil end
+            end %>
+            <img :if={logo_url} src={logo_url} style="width:64px;height:64px;object-fit:contain;flex-shrink:0;" alt="" />
           </div>
 
           <%!-- estimate label + prepared for --%>

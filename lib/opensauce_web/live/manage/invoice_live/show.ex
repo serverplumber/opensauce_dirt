@@ -2,13 +2,10 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  import Ash.Query
-
   alias Decimal, as: D
   alias OpenSauce.Accounts
   alias OpenSauce.CRM
   alias OpenSauce.Portal
-  alias OpenSauce.Work
 
   @impl true
   def render(assigns) do
@@ -47,20 +44,27 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
         <div style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:20px;overflow:hidden;">
 
           <%!-- org header --%>
-          <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
-            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
-              {@organisation.name}
-            </p>
-            <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">
-              {@organisation.legal_name}
-            </p>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-              <span :if={@organisation.phone} style="font-size:12px;color:#6E675A;">{@organisation.phone}</span>
-              <span :if={@organisation.phone && @organisation.website} style="color:#6E675A;">·</span>
-              <span :if={@organisation.website} style="font-size:12px;color:#6E675A;">{@organisation.website}</span>
-              <span :if={@organisation.contact_email} style="color:#6E675A;">·</span>
-              <span :if={@organisation.contact_email} style="font-size:12px;color:#6E675A;">{@organisation.contact_email}</span>
+          <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+            <div style="flex:1;min-width:0;">
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
+                {@display_org.name}
+              </p>
+              <p :if={@display_org.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">
+                {@display_org.legal_name}
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                <span :if={@display_org.phone} style="font-size:12px;color:#6E675A;">{@display_org.phone}</span>
+                <span :if={@display_org.phone && @display_org.website} style="color:#6E675A;">·</span>
+                <span :if={@display_org.website} style="font-size:12px;color:#6E675A;">{@display_org.website}</span>
+                <span :if={@display_org.contact_email} style="color:#6E675A;">·</span>
+                <span :if={@display_org.contact_email} style="font-size:12px;color:#6E675A;">{@display_org.contact_email}</span>
+              </div>
             </div>
+            <% logo_url = case @display_org.logo_colour_key do
+              nil -> nil
+              key -> case OpenSauce.Storage.url(key) do {:ok, u} -> u; _ -> nil end
+            end %>
+            <img :if={logo_url} src={logo_url} style="width:64px;height:64px;object-fit:contain;flex-shrink:0;" alt="" />
           </div>
 
           <%!-- invoice meta + bill to --%>
@@ -85,15 +89,15 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
             <%!-- right: bill to --%>
             <div style="flex:1;min-width:0;">
               <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Bill To</p>
-              <p style="font-size:14px;font-weight:600;color:#F4EFE2;margin-top:4px;">{customer_name(@invoice)}</p>
-              <div :if={billing_address = @invoice.customer && @invoice.customer.billing_address} style="margin-top:4px;">
+              <p style="font-size:14px;font-weight:600;color:#F4EFE2;margin-top:4px;">{customer_name(@display_customer)}</p>
+              <div :if={billing_address = @display_customer && billing_address_of(@display_customer)} style="margin-top:4px;">
                 <p :if={billing_address.street} style="font-size:12px;color:#9A9384;">{billing_address.street}</p>
                 <p style="font-size:12px;color:#9A9384;">
                   {[billing_address.city, billing_address.province, billing_address.zip] |> Enum.reject(&is_nil/1) |> Enum.join(", ")}
                 </p>
               </div>
-              <p :if={@invoice.customer && @invoice.customer.email} style="font-size:12px;color:#6E675A;margin-top:4px;">
-                {@invoice.customer.email}
+              <p :if={@display_customer && email_of(@display_customer)} style="font-size:12px;color:#6E675A;margin-top:4px;">
+                {email_of(@display_customer)}
               </p>
             </div>
           </div>
@@ -120,7 +124,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                     :if={eng["amount"] && eng["amount"] != "0.00"}
                     style="font-size:13px;font-weight:700;color:#F4EFE2;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;"
                   >
-                    {format_money(@organisation.currency, eng["amount"])}
+                    {format_money(@display_org.currency, eng["amount"])}
                   </span>
                 </div>
                 <%!-- job rows --%>
@@ -136,7 +140,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                     :if={job["amount"] && job["amount"] != "0.00"}
                     style="font-size:12.5px;color:#9A9384;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;"
                   >
-                    {format_money(@organisation.currency, job["amount"])}
+                    {format_money(@display_org.currency, job["amount"])}
                   </span>
                 </div>
                 <%!-- group custom line item rows --%>
@@ -149,7 +153,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                     :if={item["amount"] && item["amount"] != "0.00"}
                     style="font-size:12.5px;color:#9A9384;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;"
                   >
-                    {format_money(@organisation.currency, item["amount"])}
+                    {format_money(@display_org.currency, item["amount"])}
                   </span>
                 </div>
               </div>
@@ -166,7 +170,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                   :if={item["amount"] && item["amount"] != "0.00"}
                   style="font-size:13px;color:#F4EFE2;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;"
                 >
-                  {format_money(@organisation.currency, item["amount"])}
+                  {format_money(@display_org.currency, item["amount"])}
                 </span>
               </div>
               <div :if={@item_groups == [] && @ungrouped_items == []} style="padding:12px 0;text-align:center;">
@@ -179,12 +183,12 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
           <div style="padding:0 20px 20px;">
             <%!-- subtotal row (only shown when there are taxes) --%>
             <div
-              :if={@tax_rates != [] && @organisation.tax_mode == :exclusive}
+              :if={@tax_lines != [] && @display_org.tax_mode == :exclusive}
               style="display:flex;justify-content:space-between;padding:6px 0;"
             >
               <span style="font-size:12px;color:#9A9384;">Subtotal</span>
               <span style="font-size:12px;color:#9A9384;font-variant-numeric:tabular-nums;">
-                {format_money(@organisation.currency, @invoice.amount)}
+                {format_money(@display_org.currency, @invoice.amount)}
               </span>
             </div>
 
@@ -195,7 +199,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
                 <span :if={tax.registration_number} style="color:#6E675A;font-size:11px;">· {tax.registration_number}</span>
               </span>
               <span style="font-size:12px;color:#9A9384;font-variant-numeric:tabular-nums;">
-                {format_money(@organisation.currency, tax.amount)}
+                {format_money(@display_org.currency, tax.amount)}
               </span>
             </div>
 
@@ -203,24 +207,24 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
             <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;margin-top:4px;border-top:1px solid rgba(52,48,37,0.58);">
               <span style="font-size:14px;font-weight:700;color:#F4EFE2;letter-spacing:0.02em;">Total</span>
               <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;color:#54B57E;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">
-                {format_money(@organisation.currency, @grand_total)}
+                {format_money(@display_org.currency, @grand_total)}
               </span>
             </div>
 
-            <p :if={@organisation.tax_mode == :inclusive && @tax_lines != []} style="font-size:11px;color:#6E675A;margin-top:6px;text-align:right;">
+            <p :if={@display_org.tax_mode == :inclusive && @tax_lines != []} style="font-size:11px;color:#6E675A;margin-top:6px;text-align:right;">
               Includes {Enum.map_join(@tax_lines, ", ", fn t -> "#{D.normalize(t.rate) |> D.to_string()}% #{t.name}" end)}
             </p>
           </div>
 
           <%!-- payment info --%>
           <div
-            :if={@organisation.payment_info}
+            :if={@display_org.payment_info}
             style="padding:14px 20px;border-top:1px solid rgba(52,48,37,0.58);"
           >
             <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;margin-bottom:6px;">
               Payment
             </p>
-            <p style="font-size:12px;color:#9A9384;white-space:pre-line;">{@organisation.payment_info}</p>
+            <p style="font-size:12px;color:#9A9384;white-space:pre-line;">{@display_org.payment_info}</p>
           </div>
 
           <%!-- notes --%>
@@ -236,18 +240,18 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
 
           <%!-- invoice terms --%>
           <div
-            :if={@organisation.invoice_terms}
+            :if={@display_org.invoice_terms}
             style="padding:14px 20px;border-top:1px solid rgba(52,48,37,0.58);"
           >
-            <p style="font-size:11px;color:#6E675A;white-space:pre-line;">{@organisation.invoice_terms}</p>
+            <p style="font-size:11px;color:#6E675A;white-space:pre-line;">{@display_org.invoice_terms}</p>
           </div>
 
           <%!-- footer --%>
           <div
-            :if={@organisation.invoice_footer}
+            :if={@display_org.invoice_footer}
             style="padding:10px 20px;border-top:1px solid rgba(52,48,37,0.58);text-align:center;"
           >
-            <p style="font-size:11px;color:#6E675A;">{@organisation.invoice_footer}</p>
+            <p style="font-size:11px;color:#6E675A;">{@display_org.invoice_footer}</p>
           </div>
 
         </div>
@@ -298,14 +302,26 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   def handle_params(%{"id" => id}, _url, socket) do
     member = socket.assigns.current_member
     invoice = load_invoice(id, member)
-    tax_rates = load_tax_rates(member)
-    {tax_lines, grand_total} = compute_taxes(invoice.amount, tax_rates, socket.assigns.organisation.tax_mode)
+    live_org = socket.assigns.organisation
+
+    {display_org, display_customer, tax_lines, grand_total} =
+      case invoice.snapshot do
+        nil ->
+          tax_rates = load_tax_rates(member)
+          {tl, gt} = compute_taxes(invoice.amount, tax_rates, live_org.tax_mode)
+          {live_org, invoice.customer, tl, gt}
+
+        snap ->
+          restore_from_snapshot(snap, live_org, invoice.customer)
+      end
+
     {item_groups, ungrouped_items} = group_line_items(invoice.line_items)
 
     socket =
       socket
       |> assign(:invoice, invoice)
-      |> assign(:tax_rates, tax_rates)
+      |> assign(:display_org, display_org)
+      |> assign(:display_customer, display_customer)
       |> assign(:tax_lines, tax_lines)
       |> assign(:grand_total, grand_total)
       |> assign(:item_groups, item_groups)
@@ -319,11 +335,25 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   @impl true
   def handle_event("mark_paid", _params, socket) do
     member = socket.assigns.current_member
-    {:ok, _} = CRM.mark_invoice_paid(socket.assigns.invoice, actor: member, tenant: member.organisation_id)
-    invoice = load_invoice(socket.assigns.invoice.id, member)
+    invoice = socket.assigns.invoice
+    org = socket.assigns.organisation
+
+    invoice =
+      if is_nil(invoice.snapshot) do
+        tax_rates = load_tax_rates(member)
+        {tax_lines, grand_total} = compute_taxes(invoice.amount, tax_rates, org.tax_mode)
+        snap = build_snapshot(invoice, org, tax_lines, grand_total)
+        {:ok, snapped} = CRM.update_invoice(invoice, %{snapshot: snap}, actor: member, tenant: member.organisation_id)
+        snapped
+      else
+        invoice
+      end
+
+    {:ok, _} = CRM.mark_invoice_paid(invoice, actor: member, tenant: member.organisation_id)
+    invoice = load_invoice(invoice.id, member)
 
     customer = Ash.get!(CRM.Customer, invoice.customer_id, actor: member, tenant: member.organisation_id)
-    Portal.send_invoice_receipt(customer, socket.assigns.organisation, invoice, socket.assigns.tax_lines, socket.assigns.grand_total)
+    Portal.send_invoice_receipt(customer, org, invoice, socket.assigns.tax_lines, socket.assigns.grand_total)
 
     {:noreply, socket |> assign(:invoice, invoice) |> put_flash(:info, "Marked paid — receipt sent to #{customer.email}.")}
   end
@@ -332,8 +362,8 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   def handle_event("send_to_client", _params, socket) do
     member = socket.assigns.current_member
     invoice = socket.assigns.invoice
+    org = socket.assigns.organisation
 
-    # Advance draft → sent before the customer ever sees it.
     invoice =
       if invoice.status == :draft do
         {:ok, sent} = CRM.mark_invoice_sent(invoice, actor: member, tenant: member.organisation_id)
@@ -345,14 +375,19 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     invoice = load_invoice(invoice.id, member)
     customer = Ash.get!(CRM.Customer, invoice.customer_id, actor: member, tenant: member.organisation_id)
 
-    {tax_lines, grand_total} =
-      compute_taxes(invoice.amount, socket.assigns.tax_rates, socket.assigns.organisation.tax_mode)
+    tax_rates = load_tax_rates(member)
+    {tax_lines, grand_total} = compute_taxes(invoice.amount, tax_rates, org.tax_mode)
 
-    Portal.send_invoice_to_client(customer, socket.assigns.organisation, invoice, tax_lines, grand_total)
+    snap = build_snapshot(invoice, org, tax_lines, grand_total)
+    {:ok, invoice} = CRM.update_invoice(invoice, %{snapshot: snap}, actor: member, tenant: member.organisation_id)
+
+    Portal.send_invoice_to_client(customer, org, invoice, tax_lines, grand_total)
 
     {:noreply,
      socket
      |> assign(:invoice, invoice)
+     |> assign(:display_org, org)
+     |> assign(:display_customer, customer)
      |> assign(:tax_lines, tax_lines)
      |> assign(:grand_total, grand_total)
      |> put_flash(:info, "Invoice sent to #{customer.email}.")}
@@ -381,10 +416,108 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     _ -> []
   end
 
+  defp build_snapshot(invoice, org, tax_lines, grand_total) do
+    customer = invoice.customer
+    addr = customer && customer.billing_address
+
+    %{
+      "org" => %{
+        "name" => org.name,
+        "legal_name" => org.legal_name,
+        "phone" => org.phone,
+        "website" => org.website,
+        "contact_email" => org.contact_email,
+        "payment_info" => org.payment_info,
+        "invoice_terms" => org.invoice_terms,
+        "invoice_footer" => org.invoice_footer,
+        "logo_colour_key" => org.logo_colour_key,
+        "currency" => to_string(org.currency),
+        "tax_mode" => to_string(org.tax_mode)
+      },
+      "customer" => %{
+        "first_name" => customer && customer.first_name,
+        "last_name" => customer && customer.last_name,
+        "email" => customer && customer.email,
+        "billing_address" =>
+          addr &&
+            %{
+              "street" => addr.street,
+              "city" => addr.city,
+              "province" => addr.province,
+              "zip" => addr.zip
+            }
+      },
+      "tax_lines" =>
+        Enum.map(tax_lines, fn t ->
+          %{
+            "name" => t.name,
+            "rate" => D.to_string(D.normalize(t.rate)),
+            "registration_number" => t.registration_number,
+            "amount" => D.to_string(t.amount)
+          }
+        end),
+      "grand_total" => D.to_string(grand_total)
+    }
+  end
+
+  defp restore_from_snapshot(snap, live_org, live_customer) do
+    org_snap = snap["org"] || %{}
+    cust_snap = snap["customer"] || %{}
+    addr_snap = cust_snap["billing_address"]
+
+    display_org = %{
+      live_org
+      | name: org_snap["name"] || live_org.name,
+        legal_name: org_snap["legal_name"],
+        phone: org_snap["phone"],
+        website: org_snap["website"],
+        contact_email: org_snap["contact_email"],
+        payment_info: org_snap["payment_info"],
+        invoice_terms: org_snap["invoice_terms"],
+        invoice_footer: org_snap["invoice_footer"],
+        logo_colour_key: org_snap["logo_colour_key"],
+        currency: if(c = org_snap["currency"], do: String.to_atom(c), else: live_org.currency),
+        tax_mode: if(m = org_snap["tax_mode"], do: String.to_atom(m), else: live_org.tax_mode)
+    }
+
+    display_customer =
+      if cust_snap == %{} do
+        live_customer
+      else
+        %{
+          first_name: cust_snap["first_name"],
+          last_name: cust_snap["last_name"],
+          email: cust_snap["email"],
+          billing_address:
+            addr_snap &&
+              %{
+                street: addr_snap["street"],
+                city: addr_snap["city"],
+                province: addr_snap["province"],
+                zip: addr_snap["zip"]
+              }
+        }
+      end
+
+    tax_lines =
+      Enum.map(snap["tax_lines"] || [], fn l ->
+        %{
+          name: l["name"],
+          rate: parse_decimal(l["rate"]),
+          registration_number: l["registration_number"],
+          amount: parse_decimal(l["amount"])
+        }
+      end)
+
+    grand_total = parse_decimal(snap["grand_total"])
+
+    {display_org, display_customer, tax_lines, grand_total}
+  end
+
   defp compute_taxes(subtotal, tax_rates, :exclusive) do
     subtotal_d = parse_decimal(subtotal)
 
-    {tax_lines, running} =
+    {tax_lines, _running} =
       Enum.map_reduce(tax_rates, subtotal_d, fn rate, acc ->
         base = if rate.is_compound, do: acc, else: subtotal_d
         amount = D.mult(base, D.div(rate.rate, D.new(100))) |> D.round(2)
@@ -430,8 +563,14 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     end
   end
 
-  defp customer_name(%{customer: %{first_name: f, last_name: l}}), do: "#{f} #{l}"
+  defp customer_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
   defp customer_name(_), do: "Unknown customer"
+
+  defp billing_address_of(%{billing_address: addr}), do: addr
+  defp billing_address_of(_), do: nil
+
+  defp email_of(%{email: email}), do: email
+  defp email_of(_), do: nil
 
   defp format_invoice_number(n), do: String.pad_leading(Integer.to_string(n), 4, "0")
 

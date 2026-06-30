@@ -46,7 +46,8 @@ defmodule OpenSauce.CRM.Invoice do
         :amount,
         :status,
         :notes,
-        :line_items
+        :line_items,
+        :snapshot
       ]
     end
 
@@ -118,6 +119,13 @@ defmodule OpenSauce.CRM.Invoice do
       allow_nil? false
       public? true
       default []
+    end
+
+    # Frozen at send time: tax_mode, tax_lines (name/rate/reg/amount), grand_total.
+    # Once set, views load totals from here rather than recomputing against live tax rates.
+    attribute :snapshot, :map do
+      allow_nil? true
+      public? true
     end
 
     timestamps()
