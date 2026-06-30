@@ -30,11 +30,34 @@ defmodule OpenSauce.Accounts.Organisation do
     ]
 
     update :update do
-      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :head_office_venue_id] ++ @new_fields
+      accept [
+               :name,
+               :currency,
+               :tax_mode,
+               :labor_overhead_percent,
+               :mileage_cost_per_km,
+               :email_from_name,
+               :email_from_address,
+               :head_office_venue_id
+             ] ++ @new_fields
     end
 
     update :update_settings do
-      accept [:name, :currency, :tax_mode, :labor_overhead_percent, :mileage_cost_per_km, :email_from_name, :email_from_address, :next_invoice_number, :invoice_annual_nominal_rate] ++ @new_fields
+      accept [
+               :name,
+               :currency,
+               :tax_mode,
+               :labor_overhead_percent,
+               :mileage_cost_per_km,
+               :email_from_name,
+               :email_from_address,
+               :next_invoice_number,
+               :invoice_annual_nominal_rate
+             ] ++ @new_fields
+    end
+
+    update :update_logos do
+      accept [:logo_colour_key, :logo_greyscale_key]
     end
   end
 
@@ -117,6 +140,7 @@ defmodule OpenSauce.Accounts.Organisation do
     attribute :invoice_terms, :string do
       public? true
       allow_nil? true
+
       default "Tout solde impayé porte intérêt à compter du 31e jour suivant la date de facturation, au taux annuel de 24 %, composé quotidiennement."
     end
 
@@ -165,6 +189,16 @@ defmodule OpenSauce.Accounts.Organisation do
       allow_nil? false
       default 1
       constraints min: 1
+    end
+
+    attribute :logo_colour_key, :string do
+      public? true
+      allow_nil? true
+    end
+
+    attribute :logo_greyscale_key, :string do
+      public? true
+      allow_nil? true
     end
 
     timestamps()

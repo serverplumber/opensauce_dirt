@@ -25,7 +25,12 @@ defmodule OpenSauceWeb.OrgLive do
      |> assign(:show_invite_sheet, false)
      |> assign(:show_edit_sheet, false)
      |> assign(:editing_member, nil)
-     |> assign(:invite_params, %{"email" => "", "role" => "staff", "display_title" => "", "labor_hourly_rate" => "0"})
+     |> assign(:invite_params, %{
+       "email" => "",
+       "role" => "staff",
+       "display_title" => "",
+       "labor_hourly_rate" => "0"
+     })
      |> assign(:tax_rates, tax_rates)
      |> assign(:show_tax_sheet, false)
      |> assign(:editing_tax_rate, nil)
@@ -33,7 +38,19 @@ defmodule OpenSauceWeb.OrgLive do
      |> assign(:sign_off_items, org.estimate_sign_off_items || [])
      |> assign(:show_sign_off_sheet, false)
      |> assign(:editing_sign_off_index, nil)
-     |> assign(:sign_off_params, %{"label" => "", "body" => ""})}
+     |> assign(:sign_off_params, %{"label" => "", "body" => ""})
+     |> allow_upload(:logo_colour,
+       accept: ~w(image/png),
+       max_entries: 1,
+       max_file_size: 10_000_000
+     )
+     |> allow_upload(:logo_greyscale,
+       accept: ~w(image/png),
+       max_entries: 1,
+       max_file_size: 10_000_000
+     )
+     |> assign(:logo_colour_warning, nil)
+     |> assign(:logo_greyscale_warning, nil)}
   end
 
   # -- Org form --
@@ -54,8 +71,16 @@ defmodule OpenSauceWeb.OrgLive do
     case Form.submit(socket.assigns.form.source, params: org_params) do
       {:ok, updated_org} ->
         upsert_org_address(socket.assigns.org, address_params)
-        updated_org = Accounts.get_organisation!(updated_org.id, authorize?: false, load: [:address])
-        form = Form.for_update(updated_org, :update_settings, authorize?: false, domain: Accounts, as: "org")
+
+        updated_org =
+          Accounts.get_organisation!(updated_org.id, authorize?: false, load: [:address])
+
+        form =
+          Form.for_update(updated_org, :update_settings,
+            authorize?: false,
+            domain: Accounts,
+            as: "org"
+          )
 
         {:noreply,
          socket
@@ -63,8 +88,11 @@ defmodule OpenSauceWeb.OrgLive do
          |> assign(:form, to_form(form))
          |> put_flash(:info, "Organisation updated.")}
 
-      {:error, %AshPhoenix.Form{} = form} ->
-        {:noreply, socket |> assign(:form, to_form(form)) |> put_flash(:error, "Could not save — check the fields below.")}
+      {:error, %Form{} = form} ->
+        {:noreply,
+         socket
+         |> assign(:form, to_form(form))
+         |> put_flash(:error, "Could not save — check the fields below.")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not save.")}
@@ -83,7 +111,12 @@ defmodule OpenSauceWeb.OrgLive do
     {:noreply,
      socket
      |> assign(:show_invite_sheet, false)
-     |> assign(:invite_params, %{"email" => "", "role" => "staff", "display_title" => "", "labor_hourly_rate" => "0"})}
+     |> assign(:invite_params, %{
+       "email" => "",
+       "role" => "staff",
+       "display_title" => "",
+       "labor_hourly_rate" => "0"
+     })}
   end
 
   @impl true
@@ -122,17 +155,28 @@ defmodule OpenSauceWeb.OrgLive do
 
       case result do
         {:ok, _} ->
-          members = Accounts.list_members_for_organisation!(actor.organisation_id, authorize?: false)
+          members =
+            Accounts.list_members_for_organisation!(actor.organisation_id, authorize?: false)
 
           {:noreply,
            socket
            |> assign(:members, members)
            |> assign(:show_invite_sheet, false)
-           |> assign(:invite_params, %{"email" => "", "role" => "staff", "display_title" => "", "labor_hourly_rate" => "0"})
+           |> assign(:invite_params, %{
+             "email" => "",
+             "role" => "staff",
+             "display_title" => "",
+             "labor_hourly_rate" => "0"
+           })
            |> put_flash(:info, "Member added.")}
 
         {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Could not add member — they may already belong to this organisation.")}
+          {:noreply,
+           put_flash(
+             socket,
+             :error,
+             "Could not add member — they may already belong to this organisation."
+           )}
       end
     end
   end
@@ -198,7 +242,9 @@ defmodule OpenSauceWeb.OrgLive do
 
     case Accounts.suspend_organisation_member(member, authorize?: false) do
       {:ok, _} ->
-        members = Accounts.list_members_for_organisation!(actor.organisation_id, authorize?: false)
+        members =
+          Accounts.list_members_for_organisation!(actor.organisation_id, authorize?: false)
+
         {:noreply, socket |> assign(:members, members) |> put_flash(:info, "Access suspended.")}
 
       {:error, _} ->
@@ -213,7 +259,9 @@ defmodule OpenSauceWeb.OrgLive do
 
     case Accounts.activate_organisation_member(member, authorize?: false) do
       {:ok, _} ->
-        members = Accounts.list_members_for_organisation!(actor.organisation_id, authorize?: false)
+        members =
+          Accounts.list_members_for_organisation!(actor.organisation_id, authorize?: false)
+
         {:noreply, socket |> assign(:members, members) |> put_flash(:info, "Access restored.")}
 
       {:error, _} ->
@@ -234,17 +282,29 @@ defmodule OpenSauceWeb.OrgLive do
       "is_compound" => rate.is_compound
     }
 
-    {:noreply, socket |> assign(:show_tax_sheet, true) |> assign(:editing_tax_rate, rate) |> assign(:tax_params, params)}
+    {:noreply,
+     socket
+     |> assign(:show_tax_sheet, true)
+     |> assign(:editing_tax_rate, rate)
+     |> assign(:tax_params, params)}
   end
 
   @impl true
   def handle_event("open_tax_form", _params, socket) do
-    {:noreply, socket |> assign(:show_tax_sheet, true) |> assign(:editing_tax_rate, nil) |> assign(:tax_params, default_tax_params())}
+    {:noreply,
+     socket
+     |> assign(:show_tax_sheet, true)
+     |> assign(:editing_tax_rate, nil)
+     |> assign(:tax_params, default_tax_params())}
   end
 
   @impl true
   def handle_event("close_tax_form", _, socket) do
-    {:noreply, socket |> assign(:show_tax_sheet, false) |> assign(:editing_tax_rate, nil) |> assign(:tax_params, default_tax_params())}
+    {:noreply,
+     socket
+     |> assign(:show_tax_sheet, false)
+     |> assign(:editing_tax_rate, nil)
+     |> assign(:tax_params, default_tax_params())}
   end
 
   @impl true
@@ -262,6 +322,7 @@ defmodule OpenSauceWeb.OrgLive do
   def handle_event("save_tax_rate", _, socket) do
     member = socket.assigns.current_member
     p = socket.assigns.tax_params
+
     attrs = %{
       name: p["name"],
       rate: parse_rate(p["rate"]),
@@ -273,7 +334,11 @@ defmodule OpenSauceWeb.OrgLive do
       case socket.assigns.editing_tax_rate do
         nil ->
           position = length(socket.assigns.tax_rates)
-          Accounts.create_tax_rate(Map.put(attrs, :position, position), actor: member, tenant: member.organisation_id)
+
+          Accounts.create_tax_rate(Map.put(attrs, :position, position),
+            actor: member,
+            tenant: member.organisation_id
+          )
 
         rate ->
           Accounts.update_tax_rate(rate, attrs, actor: member, tenant: member.organisation_id)
@@ -340,11 +405,16 @@ defmodule OpenSauceWeb.OrgLive do
       |> Enum.with_index()
       |> Enum.each(fn {rate, i} ->
         if rate.position != i do
-          Accounts.update_tax_rate(rate, %{position: i}, actor: member, tenant: member.organisation_id)
+          Accounts.update_tax_rate(rate, %{position: i},
+            actor: member,
+            tenant: member.organisation_id
+          )
         end
       end)
 
-      saved_rates = reordered |> Enum.with_index() |> Enum.map(fn {r, i} -> %{r | position: i} end)
+      saved_rates =
+        reordered |> Enum.with_index() |> Enum.map(fn {r, i} -> %{r | position: i} end)
+
       assign(socket, :tax_rates, saved_rates)
     end
   end
@@ -439,30 +509,110 @@ defmodule OpenSauceWeb.OrgLive do
     end
   end
 
+  # -- Logos --
+
+  @impl true
+  def handle_event("cancel_upload", %{"ref" => ref, "name" => name}, socket) do
+    {:noreply, cancel_upload(socket, String.to_existing_atom(name), ref)}
+  end
+
+  @impl true
+  def handle_progress(:logo_colour, entry, socket) do
+    if entry.done?,
+      do:
+        consume_and_save_logo(
+          socket,
+          :logo_colour,
+          "logo_colour.png",
+          :logo_colour_key,
+          "Colour logo",
+          :logo_colour_warning
+        ),
+      else: {:noreply, socket}
+  end
+
+  @impl true
+  def handle_progress(:logo_greyscale, entry, socket) do
+    if entry.done?,
+      do:
+        consume_and_save_logo(
+          socket,
+          :logo_greyscale,
+          "logo_greyscale.png",
+          :logo_greyscale_key,
+          "Greyscale logo",
+          :logo_greyscale_warning
+        ),
+      else: {:noreply, socket}
+  end
+
+  defp consume_and_save_logo(socket, upload_name, storage_filename, attr, label, warning_assign) do
+    org = socket.assigns.org
+
+    {results, socket} =
+      consume_uploaded_entries(socket, upload_name, fn %{path: path}, _entry ->
+        {:ok, process_logo_file(path, org, storage_filename, label)}
+      end)
+
+    case results do
+      [] ->
+        {:noreply, socket}
+
+      [{:error, msg}] ->
+        {:noreply, put_flash(socket, :error, msg)}
+
+      [result] ->
+        {key, warning} =
+          case result do
+            {:ok, k} -> {k, nil}
+            {:warn, k, w} -> {k, w}
+          end
+
+        old_key = Map.get(org, attr)
+
+        case Ash.update(org, %{attr => key}, action: :update_logos, authorize?: false) do
+          {:ok, updated_org} ->
+            if old_key, do: OpenSauce.Storage.delete(old_key)
+            {:noreply, socket |> assign(:org, updated_org) |> assign(warning_assign, warning)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Could not save logo.")}
+        end
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;">
-
       <%!-- Invite sheet --%>
       <div
         :if={@show_invite_sheet}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label="Add member"
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="close_invite" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="close_invite" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl px-5 pt-5 space-y-4"
+          class="bg-[#211E16] relative w-full max-w-lg space-y-4 rounded-t-2xl px-5 pt-5"
           style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(2rem,env(safe-area-inset-bottom))"
         >
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
             <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
               Add member
             </p>
-            <button type="button" phx-click="close_invite" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              phx-click="close_invite"
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -488,7 +638,8 @@ defmodule OpenSauceWeb.OrgLive do
                 phx-change="update_invite_field"
                 phx-value-field="role"
               >
-                <option :for={{label, val} <- role_options(@current_member)}
+                <option
+                  :for={{label, val} <- role_options(@current_member)}
                   value={val}
                   selected={@invite_params["role"] == to_string(val)}
                 >
@@ -497,7 +648,9 @@ defmodule OpenSauceWeb.OrgLive do
               </select>
             </div>
             <div>
-              <label class="dark-label">Display title <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label">
+                Display title <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <input
                 class="dark-input"
                 type="text"
@@ -525,7 +678,11 @@ defmodule OpenSauceWeb.OrgLive do
           </div>
 
           <div style="padding-top:4px;">
-            <.glow_button type="button" phx-click="invite_member" valid={@invite_params["email"] != ""}>
+            <.glow_button
+              type="button"
+              phx-click="invite_member"
+              valid={@invite_params["email"] != ""}
+            >
               Add member
             </.glow_button>
           </div>
@@ -535,13 +692,13 @@ defmodule OpenSauceWeb.OrgLive do
       <%!-- Edit member sheet --%>
       <div
         :if={@show_edit_sheet && @editing_member}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label="Edit member"
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="close_edit" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="close_edit" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl"
+          class="bg-[#211E16] relative w-full max-w-lg rounded-t-2xl"
           style="border-top:1.5px solid rgba(52,48,37,0.58);max-height:90dvh;display:flex;flex-direction:column;overflow:hidden;"
         >
           <%!-- Fixed header --%>
@@ -550,9 +707,18 @@ defmodule OpenSauceWeb.OrgLive do
               <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
                 Edit member
               </p>
-              <button type="button" phx-click="close_edit" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <button
+                type="button"
+                phx-click="close_edit"
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+              >
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -561,7 +727,6 @@ defmodule OpenSauceWeb.OrgLive do
           <form phx-submit="save_member" style="display:contents;">
             <%!-- Scrollable fields --%>
             <div style="overflow-y:auto;flex:1;min-height:0;padding:0 20px 12px;display:flex;flex-direction:column;gap:12px;">
-
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
                   <label class="dark-label">First name</label>
@@ -601,7 +766,8 @@ defmodule OpenSauceWeb.OrgLive do
               <div>
                 <label class="dark-label">Role</label>
                 <select class="dark-select" name="member[role]">
-                  <option :for={{label, val} <- role_options(@current_member)}
+                  <option
+                    :for={{label, val} <- role_options(@current_member)}
                     value={val}
                     selected={@editing_member.role == val}
                   >
@@ -611,7 +777,9 @@ defmodule OpenSauceWeb.OrgLive do
               </div>
 
               <div>
-                <label class="dark-label">Display title <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+                <label class="dark-label">
+                  Display title <span style="color:#6E675A;font-weight:400;">(optional)</span>
+                </label>
                 <input
                   class="dark-input"
                   type="text"
@@ -648,13 +816,13 @@ defmodule OpenSauceWeb.OrgLive do
       <%!-- Tax rate sheet --%>
       <div
         :if={@show_tax_sheet}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label={if @editing_tax_rate, do: "Edit tax rate", else: "Add tax rate"}
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="close_tax_form" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="close_tax_form" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl"
+          class="bg-[#211E16] relative w-full max-w-lg rounded-t-2xl"
           style="border-top:1.5px solid rgba(52,48,37,0.58);max-height:90dvh;display:flex;flex-direction:column;overflow:hidden;"
         >
           <div style="padding:20px 20px 12px;flex-shrink:0;">
@@ -662,9 +830,18 @@ defmodule OpenSauceWeb.OrgLive do
               <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
                 {if @editing_tax_rate, do: "Edit tax rate", else: "Add tax rate"}
               </p>
-              <button type="button" phx-click="close_tax_form" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <button
+                type="button"
+                phx-click="close_tax_form"
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+              >
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -698,7 +875,9 @@ defmodule OpenSauceWeb.OrgLive do
               />
             </div>
             <div>
-              <label class="dark-label">Registration number <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label">
+                Registration number <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <input
                 class="dark-input"
                 type="text"
@@ -718,10 +897,13 @@ defmodule OpenSauceWeb.OrgLive do
             >
               <div>
                 <div style="font-size:13.5px;font-weight:600;color:#F4EFE2;">Compound tax</div>
-                <div style="font-size:12px;color:#9A9384;margin-top:2px;">Applied on top of prior non-compound taxes</div>
+                <div style="font-size:12px;color:#9A9384;margin-top:2px;">
+                  Applied on top of prior non-compound taxes
+                </div>
               </div>
               <div style={"width:40px;height:24px;border-radius:999px;flex-shrink:0;transition:background 0.15s;position:relative;#{if @tax_params["is_compound"], do: "background:#54B57E;", else: "background:#3A3528;"}"}>
-                <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @tax_params["is_compound"], do: "left:19px;", else: "left:3px;"}"}></div>
+                <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @tax_params["is_compound"], do: "left:19px;", else: "left:3px;"}"}>
+                </div>
               </div>
             </button>
           </div>
@@ -737,13 +919,13 @@ defmodule OpenSauceWeb.OrgLive do
       <%!-- Sign-off item sheet --%>
       <div
         :if={@show_sign_off_sheet}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label={if @editing_sign_off_index, do: "Edit sign-off item", else: "Add sign-off item"}
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="close_sign_off_form" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="close_sign_off_form" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl"
+          class="bg-[#211E16] relative w-full max-w-lg rounded-t-2xl"
           style="border-top:1.5px solid rgba(52,48,37,0.58);max-height:90dvh;display:flex;flex-direction:column;overflow:hidden;"
         >
           <div style="padding:20px 20px 12px;flex-shrink:0;">
@@ -751,9 +933,18 @@ defmodule OpenSauceWeb.OrgLive do
               <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
                 {if @editing_sign_off_index, do: "Edit item", else: "Add sign-off item"}
               </p>
-              <button type="button" phx-click="close_sign_off_form" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+              <button
+                type="button"
+                phx-click="close_sign_off_form"
+                style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+              >
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -771,10 +962,14 @@ defmodule OpenSauceWeb.OrgLive do
                 phx-blur="update_sign_off_field"
                 phx-value-field="label"
               />
-              <p style="font-size:11px;color:#6E675A;margin-top:4px;">The text that appears beside the checkbox the client must tick.</p>
+              <p style="font-size:11px;color:#6E675A;margin-top:4px;">
+                The text that appears beside the checkbox the client must tick.
+              </p>
             </div>
             <div>
-              <label class="dark-label">Terms text <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label">
+                Terms text <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <textarea
                 class="dark-textarea"
                 name="body"
@@ -783,7 +978,9 @@ defmodule OpenSauceWeb.OrgLive do
                 phx-blur="update_sign_off_field"
                 phx-value-field="body"
               >{@sign_off_params["body"]}</textarea>
-              <p style="font-size:11px;color:#6E675A;margin-top:4px;">Shown above the checkbox. Leave blank if no text is needed.</p>
+              <p style="font-size:11px;color:#6E675A;margin-top:4px;">
+                Shown above the checkbox. Leave blank if no text is needed.
+              </p>
             </div>
           </div>
 
@@ -799,13 +996,26 @@ defmodule OpenSauceWeb.OrgLive do
         </div>
       </div>
 
-      <.form for={@form} id="org-form" phx-change="validate_org" phx-submit="save_org" style="padding:16px 16px 96px;display:flex;flex-direction:column;gap:20px;">
-
+      <.form
+        for={@form}
+        id="org-form"
+        phx-change="validate_org"
+        phx-submit="save_org"
+        style="padding:16px 16px 96px;display:flex;flex-direction:column;gap:20px;"
+      >
         <%!-- Back --%>
         <div style="padding:4px 0;">
-          <.link navigate={~p"/manage/account"} style="display:inline-flex;align-items:center;gap:6px;color:#6E675A;text-decoration:none;font-size:13px;font-weight:600;">
+          <.link
+            navigate={~p"/manage/account"}
+            style="display:inline-flex;align-items:center;gap:6px;color:#6E675A;text-decoration:none;font-size:13px;font-weight:600;"
+          >
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5M12 19l-7-7 7-7"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 12H5M12 19l-7-7 7-7"
+              />
             </svg>
             Account
           </.link>
@@ -818,8 +1028,208 @@ defmodule OpenSauceWeb.OrgLive do
 
         <%!-- General: names + address --%>
         <div>
-          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">General</p>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
+            General
+          </p>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
+            <%!-- Logos — auto-save on upload complete via handle_progress --%>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <%!-- Colour --%>
+              <div>
+                <label class="dark-label">Colour</label>
+                <% colour_url = logo_url(@org.logo_colour_key) %>
+                <div style="position:relative;">
+                  <div style="aspect-ratio:1;background:#16140E;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid rgba(52,48,37,0.58);">
+                    <img
+                      :if={colour_url}
+                      src={colour_url}
+                      style="width:100%;height:100%;object-fit:contain;"
+                      alt="Colour logo"
+                    />
+                    <span
+                      :if={!colour_url && @uploads.logo_colour.entries == []}
+                      style="font-size:11px;color:#6E675A;"
+                    >
+                      No logo
+                    </span>
+                    <span
+                      :if={@uploads.logo_colour.entries != []}
+                      style="font-size:11px;color:#9A9384;"
+                    >
+                      Uploading…
+                    </span>
+                  </div>
+                  <label
+                    :if={@uploads.logo_colour.entries == []}
+                    ontouchstart=""
+                    style="position:absolute;top:6px;right:6px;width:28px;height:28px;background:rgba(33,30,22,0.85);border:1px solid rgba(52,48,37,0.58);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9A9384;"
+                  >
+                    <.live_file_input upload={@uploads.logo_colour} style="display:none;" />
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </label>
+                </div>
+                <div
+                  :for={err <- upload_errors(@uploads.logo_colour)}
+                  style="margin-top:4px;font-size:11px;color:#E87E7E;"
+                >
+                  {upload_error_to_string(err)}
+                </div>
+                <div
+                  :for={entry <- @uploads.logo_colour.entries}
+                  style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;"
+                >
+                  <div
+                    :for={err <- upload_errors(@uploads.logo_colour, entry)}
+                    style="font-size:11px;color:#E87E7E;"
+                  >
+                    {upload_error_to_string(err)}
+                  </div>
+                  <button
+                    type="button"
+                    phx-click="cancel_upload"
+                    phx-value-ref={entry.ref}
+                    phx-value-name="logo_colour"
+                    style="color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  :if={@logo_colour_warning}
+                  style="display:flex;align-items:flex-start;gap:5px;margin-top:5px;background:rgba(219,146,88,0.1);border:1px solid rgba(219,146,88,0.25);border-radius:7px;padding:6px 8px;"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="#DB9258"
+                    viewBox="0 0 24 24"
+                    style="flex-shrink:0;margin-top:1px;"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <span style="font-size:11px;color:#DB9258;">{@logo_colour_warning}</span>
+                </div>
+              </div>
+              <%!-- Greyscale --%>
+              <div>
+                <label class="dark-label">Greyscale</label>
+                <% grey_url = logo_url(@org.logo_greyscale_key) %>
+                <div style="position:relative;">
+                  <div style="aspect-ratio:1;background:#16140E;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid rgba(52,48,37,0.58);">
+                    <img
+                      :if={grey_url}
+                      src={grey_url}
+                      style="width:100%;height:100%;object-fit:contain;"
+                      alt="Greyscale logo"
+                    />
+                    <span
+                      :if={!grey_url && @uploads.logo_greyscale.entries == []}
+                      style="font-size:11px;color:#6E675A;"
+                    >
+                      No logo
+                    </span>
+                    <span
+                      :if={@uploads.logo_greyscale.entries != []}
+                      style="font-size:11px;color:#9A9384;"
+                    >
+                      Uploading…
+                    </span>
+                  </div>
+                  <label
+                    :if={@uploads.logo_greyscale.entries == []}
+                    ontouchstart=""
+                    style="position:absolute;top:6px;right:6px;width:28px;height:28px;background:rgba(33,30,22,0.85);border:1px solid rgba(52,48,37,0.58);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9A9384;"
+                  >
+                    <.live_file_input upload={@uploads.logo_greyscale} style="display:none;" />
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </label>
+                </div>
+                <div
+                  :for={err <- upload_errors(@uploads.logo_greyscale)}
+                  style="margin-top:4px;font-size:11px;color:#E87E7E;"
+                >
+                  {upload_error_to_string(err)}
+                </div>
+                <div
+                  :for={entry <- @uploads.logo_greyscale.entries}
+                  style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;"
+                >
+                  <div
+                    :for={err <- upload_errors(@uploads.logo_greyscale, entry)}
+                    style="font-size:11px;color:#E87E7E;"
+                  >
+                    {upload_error_to_string(err)}
+                  </div>
+                  <button
+                    type="button"
+                    phx-click="cancel_upload"
+                    phx-value-ref={entry.ref}
+                    phx-value-name="logo_greyscale"
+                    style="color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  :if={@logo_greyscale_warning}
+                  style="display:flex;align-items:flex-start;gap:5px;margin-top:5px;background:rgba(219,146,88,0.1);border:1px solid rgba(219,146,88,0.25);border-radius:7px;padding:6px 8px;"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="#DB9258"
+                    viewBox="0 0 24 24"
+                    style="flex-shrink:0;margin-top:1px;"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <span style="font-size:11px;color:#DB9258;">{@logo_greyscale_warning}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="height:1px;background:rgba(52,48,37,0.58);"></div>
+
             <div>
               <label class="dark-label" for={@form[:name].id}>Trading name</label>
               <input
@@ -833,7 +1243,9 @@ defmodule OpenSauceWeb.OrgLive do
               <span :for={msg <- @form[:name].errors} class="dark-field-error">{elem(msg, 0)}</span>
             </div>
             <div>
-              <label class="dark-label" for={@form[:legal_name].id}>Legal name <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label" for={@form[:legal_name].id}>
+                Legal name <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <input
                 class="dark-input"
                 type="text"
@@ -844,7 +1256,9 @@ defmodule OpenSauceWeb.OrgLive do
               />
             </div>
             <div>
-              <label class="dark-label" for={@form[:website].id}>Website <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label" for={@form[:website].id}>
+                Website <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <input
                 class="dark-input"
                 type="url"
@@ -871,26 +1285,64 @@ defmodule OpenSauceWeb.OrgLive do
 
             <div>
               <label class="dark-label">Street</label>
-              <input class="dark-input" id="hq-addr-street" type="text" name="address[street]" value={addr(@org.address, :street)} placeholder="123 Main St"/>
+              <input
+                class="dark-input"
+                id="hq-addr-street"
+                type="text"
+                name="address[street]"
+                value={addr(@org.address, :street)}
+                placeholder="123 Main St"
+              />
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <label class="dark-label">City</label>
-                <input class="dark-input" id="hq-addr-city" type="text" name="address[city]" value={addr(@org.address, :city)} placeholder="Ottawa" phx-hook="TitleCase"/>
+                <input
+                  class="dark-input"
+                  id="hq-addr-city"
+                  type="text"
+                  name="address[city]"
+                  value={addr(@org.address, :city)}
+                  placeholder="Ottawa"
+                  phx-hook="TitleCase"
+                />
               </div>
               <div>
                 <label class="dark-label">Province / State</label>
-                <input class="dark-input" id="hq-addr-province" type="text" name="address[province]" value={addr(@org.address, :province)} placeholder="ON"/>
+                <input
+                  class="dark-input"
+                  id="hq-addr-province"
+                  type="text"
+                  name="address[province]"
+                  value={addr(@org.address, :province)}
+                  placeholder="ON"
+                />
               </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <label class="dark-label">Postal code</label>
-                <input class="dark-input" id="hq-addr-zip" type="text" name="address[zip]" value={addr(@org.address, :zip)} placeholder="K1A 0A0" phx-hook="FormatPostal"/>
+                <input
+                  class="dark-input"
+                  id="hq-addr-zip"
+                  type="text"
+                  name="address[zip]"
+                  value={addr(@org.address, :zip)}
+                  placeholder="K1A 0A0"
+                  phx-hook="FormatPostal"
+                />
               </div>
               <div>
                 <label class="dark-label">Country</label>
-                <input class="dark-input" id="hq-addr-country" type="text" name="address[country]" value={addr(@org.address, :country)} placeholder="Canada" phx-hook="TitleCase"/>
+                <input
+                  class="dark-input"
+                  id="hq-addr-country"
+                  type="text"
+                  name="address[country]"
+                  value={addr(@org.address, :country)}
+                  placeholder="Canada"
+                  phx-hook="TitleCase"
+                />
               </div>
             </div>
           </div>
@@ -899,7 +1351,9 @@ defmodule OpenSauceWeb.OrgLive do
         <%!-- Staff --%>
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Staff</p>
+            <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Staff
+            </p>
             <button
               :if={Roles.can_create_staff?(@current_member)}
               type="button"
@@ -908,7 +1362,12 @@ defmodule OpenSauceWeb.OrgLive do
               style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M12 5v14M5 12h14"
+                />
               </svg>
             </button>
           </div>
@@ -933,7 +1392,10 @@ defmodule OpenSauceWeb.OrgLive do
                   </span>
                 </div>
               </div>
-              <div :if={Roles.can_manage_members?(@current_member)} style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <div
+                :if={Roles.can_manage_members?(@current_member)}
+                style="display:flex;align-items:center;gap:6px;flex-shrink:0;"
+              >
                 <button
                   type="button"
                   phx-click="open_edit"
@@ -943,7 +1405,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Edit"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -956,7 +1423,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Suspend"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                    />
                   </svg>
                 </button>
                 <button
@@ -969,7 +1441,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Restore access"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </button>
               </div>
@@ -979,12 +1456,21 @@ defmodule OpenSauceWeb.OrgLive do
 
         <%!-- Pricing: currency + tax settings + costs --%>
         <div>
-          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Pricing</p>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
+            Pricing
+          </p>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
             <div>
               <label class="dark-label" for={@form[:currency].id}>Currency</label>
               <select class="dark-select" name={@form[:currency].name} id={@form[:currency].id}>
-                <option :for={{label, val} <- [{"Canadian Dollar (CAD)", :CAD}, {"US Dollar (USD)", :USD}, {"Euro (EUR)", :EUR}]}
+                <option
+                  :for={
+                    {label, val} <- [
+                      {"Canadian Dollar (CAD)", :CAD},
+                      {"US Dollar (USD)", :USD},
+                      {"Euro (EUR)", :EUR}
+                    ]
+                  }
                   value={val}
                   selected={to_string(@form[:currency].value) == to_string(val)}
                 >
@@ -995,7 +1481,13 @@ defmodule OpenSauceWeb.OrgLive do
             <div>
               <label class="dark-label" for={@form[:tax_mode].id}>Tax mode</label>
               <select class="dark-select" name={@form[:tax_mode].name} id={@form[:tax_mode].id}>
-                <option :for={{label, val} <- [{"Exclusive — add tax on top", :exclusive}, {"Inclusive — price includes tax", :inclusive}]}
+                <option
+                  :for={
+                    {label, val} <- [
+                      {"Exclusive — add tax on top", :exclusive},
+                      {"Inclusive — price includes tax", :inclusive}
+                    ]
+                  }
                   value={val}
                   selected={to_string(@form[:tax_mode].value) == to_string(val)}
                 >
@@ -1004,7 +1496,9 @@ defmodule OpenSauceWeb.OrgLive do
               </select>
             </div>
             <div>
-              <label class="dark-label" for={@form[:labor_overhead_percent].id}>Labour overhead %</label>
+              <label class="dark-label" for={@form[:labor_overhead_percent].id}>
+                Labour overhead %
+              </label>
               <input
                 class="dark-input"
                 type="number"
@@ -1015,7 +1509,9 @@ defmodule OpenSauceWeb.OrgLive do
                 value={@form[:labor_overhead_percent].value || "0"}
                 placeholder="0.15"
               />
-              <span :for={msg <- @form[:labor_overhead_percent].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:labor_overhead_percent].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
             <div>
               <label class="dark-label" for={@form[:mileage_cost_per_km].id}>Mileage cost / km</label>
@@ -1029,7 +1525,9 @@ defmodule OpenSauceWeb.OrgLive do
                 value={@form[:mileage_cost_per_km].value || "0"}
                 placeholder="0.61"
               />
-              <span :for={msg <- @form[:mileage_cost_per_km].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:mileage_cost_per_km].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
           </div>
         </div>
@@ -1037,7 +1535,9 @@ defmodule OpenSauceWeb.OrgLive do
         <%!-- Tax rates --%>
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Tax rates</p>
+            <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Tax rates
+            </p>
             <button
               :if={Roles.manager_or_above?(@current_member)}
               type="button"
@@ -1046,19 +1546,33 @@ defmodule OpenSauceWeb.OrgLive do
               style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M12 5v14M5 12h14"
+                />
               </svg>
             </button>
           </div>
-          <div :if={@tax_rates == []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;">
+          <div
+            :if={@tax_rates == []}
+            style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;"
+          >
             <p style="font-size:13px;color:#6E675A;">No tax rates configured</p>
           </div>
-          <div :if={@tax_rates != []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;">
+          <div
+            :if={@tax_rates != []}
+            style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;"
+          >
             <div
               :for={{rate, idx} <- Enum.with_index(@tax_rates)}
               style={"padding:12px 14px;display:flex;align-items:center;gap:10px;#{if idx > 0, do: "border-top:1px solid rgba(52,48,37,0.58);"}"}
             >
-              <div :if={Roles.manager_or_above?(@current_member)} style="display:flex;flex-direction:column;gap:1px;flex-shrink:0;">
+              <div
+                :if={Roles.manager_or_above?(@current_member)}
+                style="display:flex;flex-direction:column;gap:1px;flex-shrink:0;"
+              >
                 <button
                   type="button"
                   phx-click="move_tax_up"
@@ -1069,7 +1583,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Move up"
                 >
                   <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 </button>
                 <button
@@ -1082,7 +1601,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Move down"
                 >
                   <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1090,15 +1614,24 @@ defmodule OpenSauceWeb.OrgLive do
                 <div style="display:flex;align-items:center;gap:8px;">
                   <span style="font-size:13.5px;font-weight:600;color:#F4EFE2;">{rate.name}</span>
                   <span style="font-size:13px;color:#9A9384;">{Decimal.to_string(rate.rate)}%</span>
-                  <span :if={rate.is_compound} style="font-size:10.5px;font-weight:700;letter-spacing:0.03em;padding:2px 7px;border-radius:999px;background:rgba(90,180,216,0.14);color:#5AB4D8;">
+                  <span
+                    :if={rate.is_compound}
+                    style="font-size:10.5px;font-weight:700;letter-spacing:0.03em;padding:2px 7px;border-radius:999px;background:rgba(90,180,216,0.14);color:#5AB4D8;"
+                  >
                     compound
                   </span>
                 </div>
-                <div :if={rate.registration_number} style="margin-top:2px;font-size:11.5px;color:#6E675A;">
+                <div
+                  :if={rate.registration_number}
+                  style="margin-top:2px;font-size:11.5px;color:#6E675A;"
+                >
                   Reg: {rate.registration_number}
                 </div>
               </div>
-              <div :if={Roles.manager_or_above?(@current_member)} style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <div
+                :if={Roles.manager_or_above?(@current_member)}
+                style="display:flex;align-items:center;gap:4px;flex-shrink:0;"
+              >
                 <button
                   type="button"
                   phx-click="open_tax_form"
@@ -1108,7 +1641,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Edit"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -1120,24 +1658,38 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Delete"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
-            <div :if={length(@tax_rates) > 1} style="border-top:1px solid rgba(52,48,37,0.58);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+            <div
+              :if={length(@tax_rates) > 1}
+              style="border-top:1px solid rgba(52,48,37,0.58);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;"
+            >
               <span style="font-size:12px;color:#6E675A;">Effective total</span>
-              <span style="font-size:13px;font-weight:600;color:#9A9384;">{effective_tax_rate(@tax_rates)}%</span>
+              <span style="font-size:13px;font-weight:600;color:#9A9384;">
+                {effective_tax_rate(@tax_rates)}%
+              </span>
             </div>
           </div>
         </div>
 
         <%!-- Invoice --%>
         <div>
-          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Invoice</p>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
+            Invoice
+          </p>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
             <div>
-              <label class="dark-label" for={@form[:next_invoice_number].id}>Next invoice number</label>
+              <label class="dark-label" for={@form[:next_invoice_number].id}>
+                Next invoice number
+              </label>
               <input
                 class="dark-input"
                 type="number"
@@ -1147,7 +1699,9 @@ defmodule OpenSauceWeb.OrgLive do
                 id={@form[:next_invoice_number].id}
                 value={@form[:next_invoice_number].value || 1}
               />
-              <span :for={msg <- @form[:next_invoice_number].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:next_invoice_number].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
             <div>
               <label class="dark-label" for={@form[:payment_info].id}>Payment info</label>
@@ -1170,7 +1724,9 @@ defmodule OpenSauceWeb.OrgLive do
               >{@form[:invoice_terms].value || ""}</textarea>
             </div>
             <div>
-              <label class="dark-label" for={@form[:invoice_annual_nominal_rate].id}>Annual nominal rate (%)</label>
+              <label class="dark-label" for={@form[:invoice_annual_nominal_rate].id}>
+                Annual nominal rate (%)
+              </label>
               <input
                 class="dark-input"
                 type="number"
@@ -1182,7 +1738,9 @@ defmodule OpenSauceWeb.OrgLive do
                 value={@form[:invoice_annual_nominal_rate].value || ""}
                 placeholder="e.g. 24"
               />
-              <span :for={msg <- @form[:invoice_annual_nominal_rate].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:invoice_annual_nominal_rate].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
             <div>
               <label class="dark-label" for={@form[:invoice_footer].id}>Footer</label>
@@ -1199,7 +1757,9 @@ defmodule OpenSauceWeb.OrgLive do
 
         <%!-- Contact --%>
         <div>
-          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Contact</p>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
+            Contact
+          </p>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
@@ -1255,7 +1815,9 @@ defmodule OpenSauceWeb.OrgLive do
 
         <%!-- Email --%>
         <div>
-          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">Email</p>
+          <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
+            Email
+          </p>
           <div style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:16px;display:flex;flex-direction:column;gap:14px;">
             <div>
               <label class="dark-label" for={@form[:email_from_name].id}>From name</label>
@@ -1286,8 +1848,12 @@ defmodule OpenSauceWeb.OrgLive do
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div>
-              <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Estimate sign-off</p>
-              <p style="font-size:11px;color:#6E675A;margin-top:2px;">Items the client must acknowledge before signing an estimate.</p>
+              <p style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+                Estimate sign-off
+              </p>
+              <p style="font-size:11px;color:#6E675A;margin-top:2px;">
+                Items the client must acknowledge before signing an estimate.
+              </p>
             </div>
             <button
               :if={Roles.manager_or_above?(@current_member)}
@@ -1297,25 +1863,46 @@ defmodule OpenSauceWeb.OrgLive do
               style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14M5 12h14"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M12 5v14M5 12h14"
+                />
               </svg>
             </button>
           </div>
-          <div :if={@sign_off_items == []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;">
-            <p style="font-size:13px;color:#6E675A;">No sign-off items — clients can sign immediately</p>
+          <div
+            :if={@sign_off_items == []}
+            style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);padding:20px 16px;text-align:center;"
+          >
+            <p style="font-size:13px;color:#6E675A;">
+              No sign-off items — clients can sign immediately
+            </p>
           </div>
-          <div :if={@sign_off_items != []} style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;">
+          <div
+            :if={@sign_off_items != []}
+            style="background:#211E16;border-radius:16px;border:1px solid rgba(52,48,37,0.58);overflow:hidden;"
+          >
             <div
               :for={{item, idx} <- Enum.with_index(@sign_off_items)}
               style={"padding:12px 14px;display:flex;align-items:flex-start;gap:10px;#{if idx > 0, do: "border-top:1px solid rgba(52,48,37,0.58);"}"}
             >
               <div style="flex:1;min-width:0;">
-                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;line-height:1.3;">{item["label"]}</p>
-                <p :if={item["body"]} style="font-size:11.5px;color:#6E675A;margin-top:3px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+                <p style="font-size:13.5px;font-weight:600;color:#F4EFE2;line-height:1.3;">
+                  {item["label"]}
+                </p>
+                <p
+                  :if={item["body"]}
+                  style="font-size:11.5px;color:#6E675A;margin-top:3px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;"
+                >
                   {item["body"]}
                 </p>
               </div>
-              <div :if={Roles.manager_or_above?(@current_member)} style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <div
+                :if={Roles.manager_or_above?(@current_member)}
+                style="display:flex;align-items:center;gap:4px;flex-shrink:0;"
+              >
                 <button
                   type="button"
                   phx-click="open_sign_off_form"
@@ -1325,7 +1912,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Edit"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -1337,7 +1929,12 @@ defmodule OpenSauceWeb.OrgLive do
                   aria-label="Remove"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1348,7 +1945,6 @@ defmodule OpenSauceWeb.OrgLive do
         <.glow_button type="submit" valid={true}>
           Save changes
         </.glow_button>
-
       </.form>
     </div>
     """
@@ -1357,7 +1953,11 @@ defmodule OpenSauceWeb.OrgLive do
   # -- Helpers --
 
   defp role_options(actor) do
-    roles = if Roles.can_promote_to_owner?(actor), do: [:owner, :manager, :staff], else: [:manager, :staff]
+    roles =
+      if Roles.can_promote_to_owner?(actor),
+        do: [:owner, :manager, :staff],
+        else: [:manager, :staff]
+
     Enum.map(roles, &{&1 |> to_string() |> String.capitalize(), &1})
   end
 
@@ -1395,8 +1995,16 @@ defmodule OpenSauceWeb.OrgLive do
   defp role_label(_), do: "Field crew"
 
   defp effective_tax_rate(rates) do
-    simple = rates |> Enum.reject(& &1.is_compound) |> Enum.reduce(Decimal.new(0), &Decimal.add(&2, &1.rate))
-    compound = rates |> Enum.filter(& &1.is_compound) |> Enum.reduce(Decimal.new(0), &Decimal.add(&2, &1.rate))
+    simple =
+      rates
+      |> Enum.reject(& &1.is_compound)
+      |> Enum.reduce(Decimal.new(0), &Decimal.add(&2, &1.rate))
+
+    compound =
+      rates
+      |> Enum.filter(& &1.is_compound)
+      |> Enum.reduce(Decimal.new(0), &Decimal.add(&2, &1.rate))
+
     total = Decimal.add(simple, Decimal.mult(compound, Decimal.add(1, Decimal.div(simple, 100))))
 
     total
@@ -1442,4 +2050,54 @@ defmodule OpenSauceWeb.OrgLive do
       _ -> 0
     end
   end
+
+  # -- Logo helpers --
+
+  defp logo_url(nil), do: nil
+
+  defp logo_url(key) do
+    case OpenSauce.Storage.url(key) do
+      {:ok, url} -> url
+      _ -> nil
+    end
+  end
+
+  defp upload_error_to_string(:too_large), do: "File too large (max 10 MB)"
+  defp upload_error_to_string(:not_accepted), do: "Must be a PNG file"
+  defp upload_error_to_string(:too_many_files), do: "Only one file allowed"
+  defp upload_error_to_string(err), do: inspect(err)
+
+  # Min dimension for a sharp half-width render on a high-density display.
+  # Half of ~430pt at 4× DPR is ~860px; 800 is a round number just under that.
+  # Update every few years as phone screen densities improve.
+  @min_logo_px 800
+
+  defp process_logo_file(path, org, storage_filename, label) do
+    data = File.read!(path)
+
+    case png_dimensions(data) do
+      :error ->
+        {:error, "Could not read PNG header from #{label}."}
+
+      {w, h} when w != h ->
+        {:error, "#{label} must be square — got #{w}×#{h}px."}
+
+      {size, _} ->
+        case OpenSauce.Storage.put("orgs/#{org.id}", storage_filename, "image/png", data) do
+          {:ok, key} when size < @min_logo_px ->
+            {:warn, key,
+             "#{label} is #{size}px — may look soft on high-density screens (#{@min_logo_px}px+ recommended)."}
+
+          {:ok, key} ->
+            {:ok, key}
+
+          {:error, reason} ->
+            {:error, "Could not store #{label}: #{inspect(reason)}"}
+        end
+    end
+  end
+
+  # PNG IHDR: 8-byte signature + 4-byte chunk length + 4-byte "IHDR" = 16 bytes, then width + height
+  defp png_dimensions(<<_::bytes-size(16), w::32-big, h::32-big, _::binary>>), do: {w, h}
+  defp png_dimensions(_), do: :error
 end
