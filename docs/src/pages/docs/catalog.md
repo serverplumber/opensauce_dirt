@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/DocsLayout.astro
-title: Catalog & BOMs
+title: Supplier Catalog & Materials
 ---
 
 _Documentation coming soon._

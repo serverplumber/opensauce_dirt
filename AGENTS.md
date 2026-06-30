@@ -1,13 +1,13 @@
 # OpenSauce Agent Guide
 
 ## Project Snapshot
-- OpenSauce Dirt is a self-hosted ERP for small landscaping and gardening businesses, covering client engagement management, field job scheduling, crew costing, inventory, purchasing, and invoicing.
+- OpenSauce Dirt is a self-hosted ERP for small landscaping and gardening businesses, covering client engagement management, field job scheduling, crew costing, materials inventory, purchasing, and invoicing.
 - Core stack: Elixir 1.18+, Ash Framework for domain modeling, AshPostgres for persistence, Phoenix LiveView + TailwindCSS for UI.
 - Product principles: model the real operational loop (engagements → jobs → events → invoices), capture costs at the point of work, keep the UI simple enough for field staff.
 
 ## Repo Layout Highlights
-- `lib/opensauce/`: Ash domains by context — `accounts`, `crm`, `orders`, `inventory`, `operations`; plus `storage.ex` (pluggable file storage behaviour) and `storage/local.ex`.
-- `lib/opensauce_web/`: Phoenix boundary — LiveViews in `live/manage/`, shared components in `components/`, controllers for non-LiveView endpoints, `navigation.ex` for nav section definitions.
+- `lib/opensauce/`: Ash domains by context — `accounts`, `crm`, `work`, `inventory`, `operations`; plus `storage.ex` (pluggable file storage behaviour) and `storage/local.ex`.
+- `lib/opensauce_web/`: Phoenix boundary — LiveViews in `live/manage/`, shared components in `components/`, controllers for non-LiveView endpoints, `live_nav.ex` for nav section definitions.
 - `priv/repo/`: Database migrations and `seeds.exs`. `priv/resource_snapshots/` tracks Ash schema state — always commit snapshots alongside their migration.
 - `assets/`: Frontend assets (requires `npm install --prefix assets` before builds).
 - `test/`: Domain tests under `opensauce/`, LiveView integration under `opensauce_web/`, shared helpers in `test/support`.

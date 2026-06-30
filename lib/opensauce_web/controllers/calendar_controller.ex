@@ -12,7 +12,7 @@ defmodule OpenSauceWeb.CalendarController do
 
     conn
     |> put_resp_content_type("text/calendar")
-    |> put_resp_header("content-disposition", ~s(inline; filename="craftplan.ics"))
+    |> put_resp_header("content-disposition", ~s(inline; filename="opensauce.ics"))
     |> send_resp(200, ics)
   end
 end

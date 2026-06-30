@@ -9,7 +9,7 @@ defmodule OpenSauceWeb.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_craftplan_key",
+    key: "_opensauce_key",
     signing_salt: "qsdH+y3l",
     same_site: "Lax"
   ]

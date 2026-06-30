@@ -1,1 +1,1 @@
-Open Sauce is resource planning for commercial kitchens.
+Open Sauce Dirt is an ERP for small landscaping and gardening businesses.

@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/DocsLayout.astro
-title: PLACEHOLDER
+title: Invoicing & Costing
 ---
 
 _Documentation coming soon._

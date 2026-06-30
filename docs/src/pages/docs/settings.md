@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/DocsLayout.astro
-title: PLACEHOLDER
+title: Settings & Organisation
 ---
 
 _Documentation coming soon._

@@ -4,30 +4,32 @@ import DocsLayout from "../../layouts/DocsLayout.astro";
 const base = import.meta.env.BASE_URL;
 ---
 
-<DocsLayout frontmatter={{ title: "Documentation", description: "Craftplan user guides and documentation" }}>
+<DocsLayout frontmatter={{ title: "Documentation", description: "OpenSauce Dirt — ERP for landscaping businesses" }}>
   <p>
-    Welcome to the Craftplan documentation. These guides cover every major
-    feature of the platform, from initial setup to day-to-day operations.
+    Welcome to the OpenSauce Dirt documentation. These guides cover the domain model, architecture,
+    and every major feature of the platform.
   </p>
 
   <h2>Getting Started</h2>
   <p>
-    New to Craftplan? Follow the <a href={`${base}docs/self-hosting/`}>Self-Hosting guide</a> to
-    get Craftplan running with Docker, then read the <a href={`${base}docs/overview/`}>Overview &amp; Planner</a> guide
-    to learn how the main workspace is organized.
+    Read the <a href={`${base}docs/overview/`}>App Overview</a> to learn how the main workspace is organized.
     Contributing? See the <a href={`${base}docs/getting-started/`}>Development Setup</a> for the Elixir dev environment.
   </p>
 
+  <h2>Architecture</h2>
+  <ul>
+    <li><a href={`${base}docs/domains/`}>Domain Architecture</a> &mdash; Ash domains, tenancy model, auth flow, and file layout</li>
+    <li><a href={`${base}docs/data-model/`}>Data Model &amp; Calculations</a> &mdash; Entity relationships, how costs are computed, and key invariants</li>
+  </ul>
+
   <h2>Feature Guides</h2>
   <ul>
-    <li><a href={`${base}docs/overview/`}>Overview &amp; Planner</a> &mdash; The landing page with schedule, make sheet, and materials tabs</li>
-    <li><a href={`${base}docs/catalog/`}>Catalog &amp; BOMs</a> &mdash; Products, BOM editor, versioning, labor steps, and pricing</li>
-    <li><a href={`${base}docs/inventory/`}>Inventory</a> &mdash; Materials, lots, stock movements, allergens, and forecasting</li>
-    <li><a href={`${base}docs/orders/`}>Orders</a> &mdash; Order lifecycle, statuses, calendar view, and invoicing</li>
+    <li><a href={`${base}docs/customers/`}>Customers &amp; Engagements</a> &mdash; Client records, garden sites, scope proposals, and client signing</li>
+    <li><a href={`${base}docs/orders/`}>Jobs &amp; Scheduling</a> &mdash; Job types, crew assignment, event logging, and realized cost</li>
+    <li><a href={`${base}docs/inventory/`}>Inventory</a> &mdash; Materials, lots, movements, and supplier catalogues</li>
     <li><a href={`${base}docs/purchasing/`}>Purchasing</a> &mdash; Suppliers, purchase orders, and receiving</li>
-    <li><a href={`${base}docs/production-batching/`}>Production Batching</a> &mdash; Batch workflow from allocation to completion</li>
-    <li><a href={`${base}docs/customers/`}>Customers</a> &mdash; Customer database, addresses, and order history</li>
-    <li><a href={`${base}docs/settings/`}>Settings</a> &mdash; General configuration, markup, allergens, CSV import/export</li>
+    <li><a href={`${base}docs/production-batching/`}>Invoicing &amp; Costing</a> &mdash; Invoice lifecycle, line items, tax modes, and snapshot freezing</li>
+    <li><a href={`${base}docs/settings/`}>Settings &amp; Organisation</a> &mdash; Org config, staff management, tax rates, and billing defaults</li>
   </ul>
 
   <h2>API</h2>

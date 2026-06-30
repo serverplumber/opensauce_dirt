@@ -3,25 +3,23 @@ layout: ../../layouts/DocsLayout.astro
 title: Introduction
 ---
 
-OpenSauce is an open-source ERP for small-scale manufacturers — bakeries,
-fermenters, food producers, and similar operations where production is
-recipe-driven and inventory is consumed in batches.
+OpenSauce Dirt is an open-source ERP for small landscaping and gardening businesses — covering client engagement management, field job scheduling, crew costing, materials purchasing, and invoicing.
 
-It is a complete rewrite of Craftplan, built on:
+It is built on:
 
 - [Ash Framework](https://ash-hq.org) — domain modelling and business logic
-- [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) — real-time UI
+- [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) — real-time mobile UI
 - PostgreSQL 16
 
-## Quick start
+## Feature guides
 
-```bash
-git clone https://github.com/serverplumber/opensauce
-cd opensauce
-cp .env.example .env
-docker compose up -d
-mix setup
-mix phx.server
-```
+- **Customers & Engagements** — Client records, garden sites, scope proposals, and client signing
+- **Jobs & Scheduling** — Job types (client work, shifts, internal), crew assignment, calendar
+- **Inventory** — Materials, lots, movements, supplier catalogues
+- **Purchasing** — Suppliers, purchase orders, receiving
+- **Invoicing & Costing** — Invoice lifecycle, line items, tax, realized cost
 
-Visit `localhost:4000`.
+## Architecture
+
+- **[Domain Architecture](/docs/domains/)** — Ash domains, tenancy model, auth flow
+- **[Data Model & Calculations](/docs/data-model/)** — Entity relationships and how costs and totals are computed

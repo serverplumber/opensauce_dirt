@@ -7,7 +7,7 @@ defmodule OpenSauce.Release do
 
   Usage:
 
-      bin/craftplan eval "OpenSauce.Release.migrate"
+      bin/opensauce eval "OpenSauce.Release.migrate"
   """
 
   @app :opensauce

@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/DocsLayout.astro
-title: PLACEHOLDER
+title: App Overview
 ---
 
 _Documentation coming soon._

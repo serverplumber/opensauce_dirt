@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/DocsLayout.astro
-title: PLACEHOLDER
+title: Purchasing
 ---
 
 _Documentation coming soon._

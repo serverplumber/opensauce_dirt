@@ -4,8 +4,6 @@ title: Development Setup
 description: Set up a local development environment for contributing to OpenSauce
 ---
 
-> **Looking to run OpenSauce?** See the [Self-Hosting guide](/opensauce/docs/self-hosting/). This page is for developers who want to contribute.
-
 ## Prerequisites
 
 Before setting up OpenSauce, make sure you have the following installed:
@@ -31,8 +29,8 @@ This starts PostgreSQL 16 on the default port and MinIO for file storage.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/puemos/opensauce.git
-   cd opensauce
+   git clone https://github.com/serverplumber/opensauce_dirt.git
+   cd opensauce_dirt
    ```
 
 2. Run the full setup (installs deps, runs migrations, builds assets, seeds data):
@@ -53,7 +51,7 @@ This starts PostgreSQL 16 on the default port and MinIO for file storage.
 
 ## Dev Accounts
 
-The seed data creates three accounts in the **Demo Bakery** organisation:
+The seed data creates three accounts in the **Plants Plan Designs Inc.** demo organisation:
 
 | Email | Role |
 |-------|------|
