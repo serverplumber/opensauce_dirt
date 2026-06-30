@@ -18,11 +18,11 @@ opensauce-*.tar
 /assets/node_modules/
 npm-debug.log
 
-# Dev services (Docker volumes)
+# Dev services (Docker / Podman volumes)
 .minio
 .postgres
 
-# Local secrets (not for source control)
+# Local secrets
 .env
 .envrc.local
 
@@ -34,7 +34,7 @@ npm-debug.log
 # macOS
 *.DS_Store
 
-# JetBrains / IntelliJ IDEA
+# JetBrains
 .idea/
 *.iml
 *.ipr
@@ -49,7 +49,9 @@ npm-debug.log
 # VS Code
 .vscode/
 
+# Nix
+result
+containers/**/*.tar.gz
+
 # Claude Code
 .claude/worktrees/
-todo/
-TODO.md
