@@ -1,6 +1,13 @@
 { pkgs }:
 {
   devTools = with pkgs; [
+    # Elixir / Phoenix stack
+    elixir
+    erlang
+    nodejs_22
+    postgresql_16 # client only — server runs in podman
+    inotify-tools # file watching for Phoenix live reload
+
     bat
     curl
     eza

@@ -173,6 +173,25 @@ devcontainer: _not-in-container
 staticserver: _not-in-container
     just _load-image staticserver-image
 
+# Generate docs/package-lock.json using nix-provided npm (commit the result)
+docs-lock:
+    just _build "cd /workspace/docs && npm install --package-lock-only"
+
+# Build and load the docs image (run `just docs-lock` first if no package-lock.json)
+docs: _not-in-container
+    just _load-image docs-image
+
+# Run the docs server on port 8080 (detached)
+run-docs:
+    {{podman}} run -d --rm \
+      --name {{project_name}}-docs \
+      -p 8080:8080 \
+      {{project_name}}-docs:latest
+
+# Stop the docs server
+stop-docs:
+    {{podman}} stop {{project_name}}-docs
+
 # Load busykrump image into podman
 busykrump: _not-in-container
     just _load-image busykrump-image

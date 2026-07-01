@@ -1,13 +1,1 @@
-{
-  "name": "opensauce_dirt",
-  "image": "localhost/opensauce_dirt-dev:latest",
-  "remoteUser": "root",
-  "mounts": [
-    {
-      "source": "nix-store",
-      "target": "/nix",
-      "type": "volume"
-    }
-  ],
-  "runArgs": ["--userns=keep-id:uid=0,gid=0"]
-}
+{"name":"opensauce_dirt","image":"localhost/opensauce_dirt-dev:latest","remoteUser":"root","mounts":[{"source":"nix-store","target":"/nix","type":"volume"}],"runArgs":["--userns=keep-id:uid=0,gid=0"]}
