@@ -177,6 +177,10 @@ staticserver: _not-in-container
 docs-lock:
     just _build "cd /workspace/docs && npm install --package-lock-only"
 
+# Build and load the prod image
+prod-build: _not-in-container
+    just _load-image prod-image
+
 # Build and load the docs image (run `just docs-lock` first if no package-lock.json)
 docs: _not-in-container
     just _load-image docs-image

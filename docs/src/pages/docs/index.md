@@ -3,7 +3,7 @@ layout: ../../layouts/DocsLayout.astro
 title: Introduction
 ---
 
-OpenSauce Dirt is an open-source ERP for small landscaping and gardening businesses — covering client engagement management, field job scheduling, crew costing, materials purchasing, and invoicing.
+Dirt is an open-source ERP for small landscaping and gardening businesses — covering client engagement management, field job scheduling, crew costing, materials purchasing, and invoicing.
 
 It is built on:
 

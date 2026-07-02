@@ -25,6 +25,9 @@ npm-debug.log
 # Local secrets
 .env
 .envrc.local
+prod/.env.prod
+prod/.env.preprod
+prod/backups/
 
 # Language servers
 .elixir_ls

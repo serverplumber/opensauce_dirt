@@ -1,28 +1,28 @@
 ---
 layout: ../../layouts/DocsLayout.astro
 title: Development Setup
-description: Set up a local development environment for contributing to OpenSauce
+description: Set up a local development environment for contributing to Dirt
 ---
 
 ## Prerequisites
 
-Before setting up OpenSauce, make sure you have the following installed:
+Before setting up Dirt, make sure you have the following installed:
 
 - **Elixir** 1.18 or later
 - **Erlang/OTP** 25 or later
 - **PostgreSQL** 16 or later
-- **Node.js** 18 or later (for asset building)
-- **Docker** and **Docker Compose** (recommended for running PostgreSQL and MinIO)
+- **Node.js** 22 or later (for asset building)
+- **Podman** (for running PostgreSQL and MinIO)
 
 ## Starting Dependencies
 
-The easiest way to run PostgreSQL and MinIO (S3-compatible object storage) is with Docker Compose:
+Start PostgreSQL and MinIO (S3-compatible object storage) with:
 
 ```bash
-docker-compose up -d
+just up
 ```
 
-This starts PostgreSQL 16 on the default port and MinIO for file storage.
+This starts PostgreSQL 16 and MinIO as podman containers.
 
 ## Installation
 
@@ -87,4 +87,4 @@ Copy and paste the URL into your browser to sign in.
 
 ## What's Next
 
-After signing in, you land on **Manage → Overview**. Read the [Overview & Planner](/opensauce/docs/overview/) guide to learn how the main workspace is organized.
+After signing in, you land on **Manage → Overview**. Read the [Overview & Planner](/docs/overview/) guide to learn how the main workspace is organized.
