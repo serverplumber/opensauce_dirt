@@ -42,7 +42,7 @@ up:
         -e POSTGRES_PASSWORD=postgres \
         -e PGDATA=/var/lib/postgresql/data/pgdata \
         -v "$(pwd)/{{postgres_dir}}:/var/lib/postgresql/data:Z" \
-        postgres:16
+        postgres:18
 
 # Set up the app and start the dev server (run `just up` first)
 dev:
