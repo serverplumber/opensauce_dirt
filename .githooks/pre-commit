@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+staged=$(git diff --cached --name-only)
+
+mix_lock_changed=$(echo "$staged" | grep -c '^mix\.lock$' || true)
+nix_prod_changed=$(echo "$staged" | grep -c '^containers/prod/default\.nix$' || true)
+
+if [ "$mix_lock_changed" -gt 0 ] && [ "$nix_prod_changed" -eq 0 ]; then
+  echo ""
+  echo "  mix.lock changed but containers/prod/default.nix was not updated."
+  echo "  Run: just prod-deps-hash"
+  echo ""
+  exit 1
+fi
+
+if [ "$nix_prod_changed" -gt 0 ]; then
+  if git show :containers/prod/default.nix | grep -q 'fakeHash'; then
+    echo ""
+    echo "  containers/prod/default.nix still contains fakeHash."
+    echo "  Run: just prod-deps-hash"
+    echo ""
+    exit 1
+  fi
+fi

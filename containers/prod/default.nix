@@ -7,28 +7,76 @@ let
 
   mixDeps = beamPackages.fetchMixDeps {
     pname = "${projectName}-deps";
+    version = "0.1.0";
     inherit src;
-    sha256 = pkgs.lib.fakeHash;
-    MIX_ENV = "prod";
+    hash = "sha256-01ri6usMjR5CpXpsWbOFK2s0O8eAxc9u5derH67M+TM=";
+  };
+
+  # Vendor cargo deps for imprintor's Rust NIF — no network access in nix sandbox.
+  # runCommandLocal wraps the directory into a proper derivation so fetchCargoVendor
+  # can unpack it (passing a string path directly fails stdenv's unpackPhase).
+  imprintorNative = pkgs.runCommandLocal "imprintor-native" { } ''
+    cp -r ${mixDeps}/imprintor/native/imprintor $out
+  '';
+
+  imprintorCargoVendor = pkgs.rustPlatform.fetchCargoVendor {
+    pname = "imprintor-cargo-deps";
+    version = "0.6.0";
+    src = imprintorNative;
+    hash = "sha256-UqZLWE5zsBZYpLyyqI9Ruzz5N2PiE0AvJrxpoJbIrH0=";
   };
 
   release = beamPackages.mixRelease {
     pname = projectName;
     version = "0.1.0";
     inherit src;
-    mixNixDeps = mixDeps;
-    MIX_ENV = "prod";
+    mixFodDeps = mixDeps;
+    elixir = beamPackages.elixir_1_19;
 
-    nativeBuildInputs = [ pkgs.esbuild pkgs.tailwindcss pkgs.nodejs_22 ];
+    nativeBuildInputs = [ pkgs.esbuild pkgs.tailwindcss_4 pkgs.nodejs_22 pkgs.rustc pkgs.cargo ];
+
+    env.RUSTLER_PRECOMPILED_FORCE_BUILD_ALL = "true";
+    env.CARGO_NET_OFFLINE = "true";
+
+    # Deps (including imprintor's Rust NIF) compile during configurePhase, so the
+    # cargo vendor config must be in place before that phase runs — preBuild is too late.
+    preConfigure = ''
+      export CARGO_HOME="$(pwd)/.cargo-home"
+      mkdir -p "$CARGO_HOME" .cargo
+      for _dir in "$CARGO_HOME" ".cargo"; do
+        cat > "$_dir/config.toml" << 'CARGO_EOF'
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "${imprintorCargoVendor}/source-registry-0"
+CARGO_EOF
+      done
+    '';
+
+    # Override buildPhase to run all mix tasks in a single invocation via `mix do`.
+    # Mix.Task.run/2 tracks which tasks have already run in the current session;
+    # once compile --no-deps-check finishes, any internal compile call from tailwind
+    # or esbuild is a no-op, so the git dep check for heroicons never re-runs.
+    buildPhase = ''
+      runHook preBuild
+
+      rm -rf deps
+      cp --no-preserve=mode -r ${mixDeps} deps
+
+      MIX_ENV=prod mix do compile --no-deps-check, assets.deploy, release --no-deps-check
+
+      runHook postBuild
+    '';
 
     preBuild = ''
       # Point hex asset packages at nix-provided binaries (no network in sandbox)
       echo 'import Config' > config/nix_assets.exs
+      echo 'config :esbuild, :version_check, false' >> config/nix_assets.exs
       echo 'config :esbuild, :path, "${pkgs.esbuild}/bin/esbuild"' >> config/nix_assets.exs
-      echo 'config :tailwind, :path, "${pkgs.tailwindcss}/bin/tailwind"' >> config/nix_assets.exs
+      echo 'config :tailwind, :version_check, false' >> config/nix_assets.exs
+      echo 'config :tailwind, :path, "${pkgs.tailwindcss_4}/bin/tailwindcss"' >> config/nix_assets.exs
       echo 'import_config "nix_assets.exs"' >> config/prod.exs
-
-      mix assets.deploy
     '';
   };
 

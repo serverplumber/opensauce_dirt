@@ -84,7 +84,7 @@ unnuke:
 # Nix / Container (krump)
 # ─────────────────────────────────────────
 
-# Bootstrap the nix-store volume and generate devcontainer.json
+# Bootstrap the nix-store volume, git hooks, and generate devcontainer.json
 bootstrap: devcontainer-json
     #!/usr/bin/env bash
     if [ -z "{{_has-nix-store}}" ]; then
@@ -95,6 +95,8 @@ bootstrap: devcontainer-json
           cp -a /nix/. /nix/
         echo "nix-store volume ready."
     fi
+    git config core.hooksPath .githooks
+    echo "Git hooks installed."
 
 devcontainer-json:
     echo '{"name":"{{project_name}}","image":"localhost/{{project_name}}-dev:latest","remoteUser":"root","mounts":[{"source":"nix-store","target":"/nix","type":"volume"}],"runArgs":["--userns=keep-id:uid=0,gid=0"]}' > .devcontainer/devcontainer.json
@@ -176,6 +178,27 @@ staticserver: _not-in-container
 # Generate docs/package-lock.json using nix-provided npm (commit the result)
 docs-lock:
     just _build "cd /workspace/docs && npm install --package-lock-only"
+
+# Update the mix deps hash in containers/prod/default.nix (run when mix.lock changes)
+prod-deps-hash: _not-in-container _need-nix-store
+    #!/usr/bin/env bash
+    set -euo pipefail
+    output=$({{podman}} run --rm \
+      -v {{project_root}}:{{workspace}}:z \
+      -v nix-store:/nix \
+      --userns keep-id:uid=0,gid=0 \
+      -w {{workspace}} \
+      {{nix_image}} \
+      nix {{nix_flags}} --show-trace run .#prod-image 2>&1 || true)
+    hash=$(echo "$output" | grep 'got:' | grep -oP 'sha256-[A-Za-z0-9+/=]+' || true)
+    if [ -z "$hash" ]; then
+      echo "Could not extract hash — nix output:"
+      echo "$output"
+      exit 1
+    fi
+    sed -i "s|hash = pkgs.lib.fakeHash;|hash = \"${hash}\";|" containers/prod/default.nix
+    sed -i -E "s|hash = \"sha256-[A-Za-z0-9+/=]+\";|hash = \"${hash}\";|" containers/prod/default.nix
+    echo "Updated containers/prod/default.nix with sha256 = \"${hash}\""
 
 # Build and load the prod image
 prod-build: _not-in-container

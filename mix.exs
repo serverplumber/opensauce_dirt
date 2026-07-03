@@ -80,6 +80,7 @@ defmodule OpenSauce.MixProject do
       {:nimble_csv, "~> 1.2"},
       {:gen_smtp, "~> 1.0"},
       {:imprintor, "~> 0.5"},
+      {:rustler, ">= 0.0.0", optional: true},
       {:open_api_spex, "~> 3.16"},
       {:req, "~> 0.5"}
     ]
