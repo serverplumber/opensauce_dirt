@@ -22,8 +22,9 @@ just fetch-backup    ◀─── dump ───── raw prod pg_dump (off-hos
 ## Environments
 
 Both environments live on the VPS as podman pods. All VPS-side commands target
-**preprod by default**; pass `env=prod` to aim at production. The only
-exceptions are `backup` and `backup-uploads`, which always read from prod.
+**preprod by default**; pass `env=prod` — *before* the recipe name, just
+requires overrides there — to aim at production. The only exceptions are
+`backup` and `backup-uploads`, which always read from prod.
 
 Preprod listens on port **4001**, prod on **4000**. Containers in a pod share a
 network namespace, so the app reaches postgres on `localhost` and postgres is
@@ -108,7 +109,7 @@ Data lives in named volumes that survive restarts, rebuilds, and `destroy`:
    just deploy-caddy             # digest-pinned caddy image
    just vps caddy-start          # TLS edge up (certs issue on first request)
    just vps start                # preprod up, migrations run on boot
-   just vps start env=prod
+   just vps env=prod start
    ```
 
 ---
@@ -119,29 +120,21 @@ The image version comes from the `VERSION` file at the repo root — bump it
 when you cut a release. `just deploy` builds, streams the image to the VPS,
 and tags it both `:<version>` and `:latest`.
 
-Migrations run automatically when the app container boots, so a rollout is:
+Migrations run automatically when the app container boots. Containers are
+recreated (not restarted) to pick up the new image — volumes survive, so a
+rollout is:
 
 ```
 just deploy
-just vps restart                # test on preprod first
-just vps restart env=prod
+just vps destroy && just vps start                    # test on preprod first
+just vps env=prod destroy && just vps env=prod start
 ```
-
-`restart` reuses the existing container (and its image) if one exists — after
-shipping a new image, recreate the app container instead:
-
-```
-just vps destroy && just vps start
-just vps destroy env=prod && just vps start env=prod
-```
-
-Volumes are preserved by `destroy`; only the containers are replaced.
 
 **Rollback** — every shipped version stays tagged on the VPS:
 
 ```
-just vps destroy env=prod
-just vps start env=prod image_tag=0.4.0
+just vps env=prod destroy
+just vps env=prod image_tag=0.4.0 start
 ```
 
 (Only helps if the bad version didn't run destructive migrations — check
@@ -163,7 +156,8 @@ a dump/restore, not just a container swap.
 ## Day-to-day commands
 
 Run from the dev machine via `just vps <target>`, or directly on the VPS in
-`~/dirt/`. Everything defaults to preprod; append `env=prod` for production.
+`~/dirt/`. Everything defaults to preprod; for production put `env=prod`
+before the target: `just vps env=prod <target>`.
 
 | Command | What it does |
 |---|---|
@@ -211,12 +205,15 @@ restore fails loudly instead of half-applying.
 One command from the dev machine:
 
 ```
-just fetch-anon
+just dev_email=you@example.com fetch-anon   # or set DEV_EMAIL once
 ```
 
 That runs `anon-from-prod` on the VPS (dump prod → restore into preprod →
 anonymise in place), then pulls a dump of the **anonymised preprod** database
-down to `prod/backups/opensauce_anon_*.sql.gz`. Load it into the local dev DB
+down to `prod/backups/opensauce_anon_*.sql.gz`. All user and customer emails
+become plus-addressed variants of `dev_email` (`you+staff1@example.com`,
+`you+customer1@example.com`), so the developer can sign in with any account —
+magic links land in their real inbox. Load the dump into the local dev DB
 with:
 
 ```
@@ -225,9 +222,9 @@ just load-anon prod/backups/opensauce_anon_<timestamp>.sql.gz
 
 What gets anonymised (`prod/anonymise.sql`, idempotent):
 
-- **crm_customers** — names, email, phone
+- **crm_customers** — names, phone; email → `dev+customerN@…`
 - **crm_addresses** — street, city, province, postal, notes, coordinates
-- **accounts_users** — names, email (emails made unique via row number)
+- **accounts_users** — names; email → `dev+staffN@…`
 - **accounts_organisations** — phone, payment info, contact details (org name preserved)
 - **accounts_tokens** — truncated (all invalid after a data move)
 - **accounts_api_keys** — truncated (hashes remain valid credentials)

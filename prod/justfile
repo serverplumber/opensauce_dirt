@@ -8,15 +8,16 @@ project  := "opensauce_dirt"
 podman   := "podman"
 
 # ── Environment ───────────────────────────────────────────────────────────────
-# Default is preprod. To target production, pass env=prod on the command line.
+# Default is preprod. To target production, pass env=prod BEFORE the recipe
+# name (just requires overrides before recipes):
 #   just start            → preprod
-#   just start env=prod   → prod
+#   just env=prod start   → prod
 # Exception: backup and backup-uploads always target prod.
 env      := "preprod"
 
 # Image tag to run. `just deploy` (dev machine) tags every shipped version
 # as both :<version> and :latest. For a rollback:
-#   just destroy env=prod && just start env=prod image_tag=0.4.0
+#   just env=prod destroy && just env=prod image_tag=0.4.0 start
 image_tag := "latest"
 
 # Digest-pinned postgres, shipped from the dev machine via `just deploy-db`.
@@ -40,6 +41,11 @@ _prod_uploads := project + "-prod-uploads"
 
 # TLS edge — one caddy serves both environments (env= has no effect)
 caddy := project + "-caddy"
+
+# Developer email for anonymisation — all user/customer emails become
+# plus-addressed variants of it so magic links reach whoever is coding.
+# Pass before the recipe name: just dev_email=dev@example.com anonymise
+dev_email := ""
 
 _default:
     @just --list
@@ -129,34 +135,45 @@ backups:
 
 # Restore a backup. Targets preprod by default.
 #   just restore backups/opensauce_20240101_120000.sql.gz
-#   just restore backups/opensauce_20240101_120000.sql.gz env=prod
+#   just env=prod restore backups/opensauce_20240101_120000.sql.gz
 restore file:
     @echo "Restoring {{file}} into {{env}} ({{db_name}}) — Ctrl-C to cancel."
     @sleep 3
     just _restore {{file}}
 
 # Anonymise PII in the target env database. Targets preprod by default.
-anonymise:
-    {{podman}} exec -i {{db}} psql -v ON_ERROR_STOP=1 -U postgres {{db_name}} < anonymise.sql
-    @echo "Anonymisation complete on {{env}} ({{db_name}})."
+#   just dev_email=dev@example.com anonymise
+anonymise: _check-dev-email
+    {{podman}} exec -i {{db}} psql -v ON_ERROR_STOP=1 -v "dev_email={{dev_email}}" \
+      -U postgres {{db_name}} < anonymise.sql
+    @echo "Anonymisation complete on {{env}} ({{db_name}}); emails now route to {{dev_email}}."
 
 # Full pipeline: dump prod, restore to target env, anonymise. No prompt.
 # Defaults to preprod — the normal operator workflow.
-#   just anon-from-prod
-#   just anon-from-prod env=prod   (if you really mean it)
-anon-from-prod:
+#   just dev_email=dev@example.com anon-from-prod
+#   just dev_email=... env=prod anon-from-prod   (if you really mean it)
+anon-from-prod: _check-dev-email
     #!/usr/bin/env bash
     set -euo pipefail
     just backup
     latest=$(ls -t backups/opensauce_*.sql.gz | head -1)
     echo "Restoring ${latest} into {{env}} ({{db_name}})..."
-    just _restore "${latest}"
-    just anonymise
+    just env={{env}} _restore "${latest}"
+    just env={{env}} "dev_email={{dev_email}}" anonymise
 
 # ── Internals ─────────────────────────────────────────────────────────────────
 
 _restore file:
     gunzip -c {{file}} | {{podman}} exec -i {{db}} psql -q -v ON_ERROR_STOP=1 -U postgres {{db_name}}
+
+_check-dev-email:
+    @[ -n "{{dev_email}}" ] && [[ "{{dev_email}}" == *@* ]] || { \
+      echo ""; \
+      echo "  dev_email is required — anonymised emails route to it."; \
+      echo "  e.g. just dev_email=dev@example.com anon-from-prod"; \
+      echo ""; \
+      exit 1; \
+    }
 
 _check-env-file:
     @test -f {{env_file}} || { \

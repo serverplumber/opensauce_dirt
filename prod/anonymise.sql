@@ -1,6 +1,12 @@
 -- Anonymise all PII in place.
 -- Safe to run multiple times. Run after restoring a prod backup to preprod or dev.
 -- Does not touch org name — preserves context for developers.
+--
+-- Requires the psql variable dev_email (the developer's real address):
+--   psql -v dev_email=dev@example.com ... < anonymise.sql
+-- All user/customer emails become plus-addressed variants of it
+-- (dev+staff1@example.com, dev+customer1@example.com) so sign-in magic
+-- links and any stray outbound mail reach the developer.
 
 BEGIN;
 
@@ -12,7 +18,9 @@ SET
   company_name_nickname = CASE WHEN company_name_nickname IS NOT NULL
                                THEN 'Company ' || n.rn END,
   email                 = CASE WHEN email IS NOT NULL
-                               THEN 'customer' || n.rn || '@example.com' END,
+                               THEN split_part(:'dev_email', '@', 1)
+                                    || '+customer' || n.rn || '@'
+                                    || split_part(:'dev_email', '@', 2) END,
   phone                 = CASE WHEN phone IS NOT NULL
                                THEN '(555) 010-' || lpad(n.rn::text, 4, '0') END
 FROM (
@@ -42,7 +50,9 @@ UPDATE accounts_users
 SET
   first_name = 'Staff',
   last_name  = n.rn::text,
-  email      = 'staff' || n.rn || '@example.com'
+  email      = split_part(:'dev_email', '@', 1)
+               || '+staff' || n.rn || '@'
+               || split_part(:'dev_email', '@', 2)
 FROM (
   SELECT id, row_number() OVER (ORDER BY id) AS rn
   FROM accounts_users

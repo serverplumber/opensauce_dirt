@@ -14,6 +14,7 @@ nix_envs     := "NIX_USER_CONF_FILES=/workspace/.nix-config"
 version      := `cat VERSION`
 vps_host     := env_var_or_default("DIRT_VPS", "dirt.opensauce.sh")
 vps_dir      := "dirt"
+dev_email    := env_var_or_default("DEV_EMAIL", "")
 
 _default:
     @just --list
@@ -225,7 +226,7 @@ deploy: _not-in-container _need-nix-store
     rsync -a prod/justfile prod/anonymise.sql prod/.env.example {{vps_host}}:{{vps_dir}}/
     rsync -a prod/Caddyfile {{vps_host}}:{{vps_dir}}/caddy/
     @echo "Shipped {{project_name}}-prod:{{version}} to {{vps_host}}."
-    @echo "Roll out with: just vps restart && just vps logs   (then env=prod)"
+    @echo "Roll out with: just vps destroy && just vps start   (then just vps env=prod ...)"
 
 # Ship the digest-pinned postgres image to the VPS (first setup + after `just update-postgres`)
 deploy-db: _not-in-container _need-nix-store
@@ -249,7 +250,8 @@ deploy-caddy: _not-in-container _need-nix-store
       nix {{nix_flags}} run .#caddy-image | ssh -C {{vps_host}} podman load
     ssh {{vps_host}} podman tag caddy:2 {{project_name}}-caddy:2
 
-# Run a prod/justfile target on the VPS, e.g. `just vps start env=prod`
+# Run a prod/justfile target on the VPS, e.g. `just vps env=prod start`
+# (env=prod and other overrides go BEFORE the recipe name)
 vps +args:
     ssh -t {{vps_host}} "cd {{vps_dir}} && just {{args}}"
 
@@ -268,10 +270,13 @@ fetch-uploads:
     @ls -lh prod/backups/ | tail -1
 
 # Raw PII never leaves the box:
-# refresh preprod from prod, anonymise on the VPS, pull the clean dump down
+# refresh preprod from prod, anonymise on the VPS, pull the clean dump down.
+# Anonymised emails route to dev_email (or $DEV_EMAIL) so magic links reach you:
+#   just dev_email=you@example.com fetch-anon
 fetch-anon:
+    @[ -n "{{dev_email}}" ] || { echo "Set DEV_EMAIL or run: just dev_email=you@example.com fetch-anon"; exit 1; }
     mkdir -p prod/backups
-    just vps anon-from-prod
+    just vps "dev_email={{dev_email}}" anon-from-prod
     ssh {{vps_host}} "podman exec {{project_name}}-preprod-db pg_dump --clean --if-exists -U postgres opensauce_preprod | gzip" \
       > prod/backups/opensauce_anon_$(date +%Y%m%d_%H%M%S).sql.gz
     @ls -lh prod/backups/ | tail -1
@@ -279,7 +284,7 @@ fetch-anon:
 # Load an anonymised dump into the local dev database
 #   just load-anon prod/backups/opensauce_anon_20260703_120000.sql.gz
 load-anon file:
-    gunzip -c {{file}} | {{podman}} exec -i opensauce-postgres psql -q -v ON_ERROR_STOP=1 -U postgres opensauce_dev
+    gunzip -c {{file}} | {{podman}} exec -i opensauce-postgres psql -q -v ON_ERROR_STOP=1 -U postgres opensauce_dirt_dev
     @echo "Dev DB now holds anonymised prod data."
 
 # Build and load the docs image (run `just docs-lock` first if no package-lock.json)
