@@ -1,0 +1,7 @@
+dirt.opensauce.sh {
+	reverse_proxy localhost:4000
+}
+
+preprod.dirt.opensauce.sh {
+	reverse_proxy localhost:4001
+}

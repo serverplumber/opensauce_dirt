@@ -1,5 +1,9 @@
 set shell := ["bash", "-eo", "pipefail", "-c"]
 
+# This justfile runs ON THE VPS. It only needs podman and just.
+# Building and shipping the image happens on a dev machine — see the
+# deploy targets in the root justfile (`just deploy`, `just vps ...`).
+
 project  := "opensauce_dirt"
 podman   := "podman"
 
@@ -7,13 +11,24 @@ podman   := "podman"
 # Default is preprod. To target production, pass env=prod on the command line.
 #   just start            → preprod
 #   just start env=prod   → prod
-# Exception: backup always targets prod.
+# Exception: backup and backup-uploads always target prod.
 env      := "preprod"
+
+# Image tag to run. `just deploy` (dev machine) tags every shipped version
+# as both :<version> and :latest. For a rollback:
+#   just destroy env=prod && just start env=prod image_tag=0.4.0
+image_tag := "latest"
+
+# Digest-pinned postgres, shipped from the dev machine via `just deploy-db`.
+# Deliberately not a registry name — if the image is missing, start fails
+# loudly instead of pulling an unpinned postgres.
+pg_image := project + "-postgres:18"
 
 pod      := project + "-" + env
 app      := pod + "-app"
 db       := pod + "-db"
 pgdata   := pod + "-pgdata"
+uploads  := pod + "-uploads"
 db_name  := if env == "prod" { "opensauce_prod" } else { "opensauce_preprod" }
 app_port := if env == "prod" { "4000" } else { "4001" }
 env_file := ".env." + env
@@ -21,15 +36,13 @@ env_file := ".env." + env
 # Backup source — always prod
 _prod_db      := project + "-prod-db"
 _prod_db_name := "opensauce_prod"
+_prod_uploads := project + "-prod-uploads"
+
+# TLS edge — one caddy serves both environments (env= has no effect)
+caddy := project + "-caddy"
 
 _default:
     @just --list
-
-# ── Image ─────────────────────────────────────────────────────────────────────
-
-# Build and load the prod image (runs nix build via root justfile)
-build:
-    cd .. && just _load-image prod-image
 
 # ── Pod lifecycle ─────────────────────────────────────────────────────────────
 
@@ -43,15 +56,15 @@ stop:
 # Stop then start
 restart: stop start
 
-# Remove pod and containers (data volume is preserved)
+# Remove pod and containers (data + uploads volumes are preserved)
 destroy:
     {{podman}} pod rm -f {{pod}} 2>/dev/null || true
 
 # ── Database ──────────────────────────────────────────────────────────────────
 
-# Run pending migrations. Targets preprod by default.
+# Run migrations manually (they also run at app boot). Targets preprod by default.
 migrate:
-    {{podman}} exec {{app}} /app/bin/opensauce eval "OpenSauce.Release.migrate()"
+    {{podman}} exec {{app}} /bin/opensauce eval "OpenSauce.Release.migrate()"
 
 # ── Operations ────────────────────────────────────────────────────────────────
 
@@ -61,20 +74,58 @@ logs:
 
 # Open a remote IEx console. Targets preprod by default.
 console:
-    {{podman}} exec -it {{app}} /app/bin/opensauce remote
+    {{podman}} exec -it {{app}} /bin/opensauce remote
+
+# ── Caddy (TLS edge, host network — serves both environments) ────────────────
+
+# Start caddy. Binds 80/443 — needs the unprivileged-port sysctl (see README).
+caddy-start:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if {{podman}} container exists {{caddy}}; then
+      {{podman}} start {{caddy}}
+    else
+      {{podman}} run -d \
+        --name {{caddy}} \
+        --network host \
+        --restart always \
+        -v "$(pwd)/caddy:/etc/caddy:ro,z" \
+        -v {{caddy}}-data:/data \
+        -v {{caddy}}-config:/config \
+        {{caddy}}:2
+    fi
+
+# Stop caddy
+caddy-stop:
+    {{podman}} stop {{caddy}}
+
+# Apply Caddyfile changes without dropping connections
+caddy-reload:
+    {{podman}} exec {{caddy}} caddy reload --config /etc/caddy/Caddyfile
+
+# Tail caddy logs
+caddy-logs:
+    {{podman}} logs -f {{caddy}}
 
 # ── Backups ───────────────────────────────────────────────────────────────────
 
 # Dump the production database (always prod — env= has no effect here)
 backup:
     mkdir -p backups
-    {{podman}} exec {{_prod_db}} pg_dump -U postgres {{_prod_db_name}} \
+    {{podman}} exec {{_prod_db}} pg_dump --clean --if-exists -U postgres {{_prod_db_name}} \
       | gzip > backups/opensauce_$(date +%Y%m%d_%H%M%S).sql.gz
     @echo "Backup written to backups/"
 
+# Dump the production uploads volume (always prod — env= has no effect here)
+backup-uploads:
+    mkdir -p backups
+    {{podman}} volume export {{_prod_uploads}} \
+      | gzip > backups/uploads_$(date +%Y%m%d_%H%M%S).tar.gz
+    @echo "Uploads backup written to backups/"
+
 # List available backups
 backups:
-    @ls -lh backups/*.sql.gz 2>/dev/null || echo "No backups found."
+    @ls -lh backups/*.gz 2>/dev/null || echo "No backups found."
 
 # Restore a backup. Targets preprod by default.
 #   just restore backups/opensauce_20240101_120000.sql.gz
@@ -86,7 +137,7 @@ restore file:
 
 # Anonymise PII in the target env database. Targets preprod by default.
 anonymise:
-    {{podman}} exec -i {{db}} psql -U postgres {{db_name}} < anonymise.sql
+    {{podman}} exec -i {{db}} psql -v ON_ERROR_STOP=1 -U postgres {{db_name}} < anonymise.sql
     @echo "Anonymisation complete on {{env}} ({{db_name}})."
 
 # Full pipeline: dump prod, restore to target env, anonymise. No prompt.
@@ -97,7 +148,7 @@ anon-from-prod:
     #!/usr/bin/env bash
     set -euo pipefail
     just backup
-    latest=$(ls -t backups/*.sql.gz | head -1)
+    latest=$(ls -t backups/opensauce_*.sql.gz | head -1)
     echo "Restoring ${latest} into {{env}} ({{db_name}})..."
     just _restore "${latest}"
     just anonymise
@@ -105,7 +156,7 @@ anon-from-prod:
 # ── Internals ─────────────────────────────────────────────────────────────────
 
 _restore file:
-    gunzip -c {{file}} | {{podman}} exec -i {{db}} psql -U postgres {{db_name}}
+    gunzip -c {{file}} | {{podman}} exec -i {{db}} psql -q -v ON_ERROR_STOP=1 -U postgres {{db_name}}
 
 _check-env-file:
     @test -f {{env_file}} || { \
@@ -130,11 +181,13 @@ _start-db:
       {{podman}} run -d \
         --pod {{pod}} \
         --name {{db}} \
+        --restart always \
         -e POSTGRES_DB={{db_name}} \
         -e POSTGRES_USER=postgres \
         -e "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}" \
-        -v {{pgdata}}:/var/lib/postgresql/data \
-        postgres:16
+        -e PGDATA=/var/lib/postgresql/18/docker \
+        -v {{pgdata}}:/var/lib/postgresql \
+        {{pg_image}}
     fi
 
 _start-app:
@@ -146,6 +199,8 @@ _start-app:
       {{podman}} run -d \
         --pod {{pod}} \
         --name {{app}} \
+        --restart always \
         --env-file {{env_file}} \
-        {{project}}-prod:latest
+        -v {{uploads}}:/var/lib/opensauce/uploads \
+        {{project}}-prod:{{image_tag}}
     fi

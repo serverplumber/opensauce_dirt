@@ -63,4 +63,7 @@ SET
 -- ── Auth tokens (all invalid after a data move) ───────────────────────────────
 TRUNCATE accounts_tokens;
 
+-- ── API keys (hashes remain valid credentials — never carry into another env) ─
+TRUNCATE accounts_api_keys;
+
 COMMIT;

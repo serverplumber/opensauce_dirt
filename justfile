@@ -11,6 +11,9 @@ workspace    := "/workspace"
 project_root := justfile_directory()
 nix_flags    := "--extra-experimental-features nix-command --extra-experimental-features flakes"
 nix_envs     := "NIX_USER_CONF_FILES=/workspace/.nix-config"
+version      := `cat VERSION`
+vps_host     := env_var_or_default("DIRT_VPS", "dirt.opensauce.sh")
+vps_dir      := "dirt"
 
 _default:
     @just --list
@@ -30,7 +33,7 @@ _need-nix-store:
 # App — Elixir / Phoenix
 # ─────────────────────────────────────────
 
-# Start dev services (PostgreSQL 16)
+# Start dev services (PostgreSQL 18)
 up:
     mkdir -p {{postgres_dir}}
     {{podman}} run -d \
@@ -204,6 +207,81 @@ prod-deps-hash: _not-in-container _need-nix-store
 prod-build: _not-in-container
     just _load-image prod-image
 
+# ─────────────────────────────────────────
+# Deploy (VPS at dirt.opensauce.sh — override with DIRT_VPS env var)
+# ─────────────────────────────────────────
+
+# Build the prod image, stream it to the VPS, tag it :latest, sync prod/ tooling
+deploy: _not-in-container _need-nix-store
+    {{podman}} run --rm \
+      -v {{project_root}}:{{workspace}}:z \
+      -v nix-store:/nix \
+      --userns keep-id:uid=0,gid=0 \
+      -w {{workspace}} \
+      {{nix_image}} \
+      nix {{nix_flags}} run .#prod-image | ssh -C {{vps_host}} podman load
+    ssh {{vps_host}} podman tag {{project_name}}-prod:{{version}} {{project_name}}-prod:latest
+    ssh {{vps_host}} mkdir -p {{vps_dir}}/caddy
+    rsync -a prod/justfile prod/anonymise.sql prod/.env.example {{vps_host}}:{{vps_dir}}/
+    rsync -a prod/Caddyfile {{vps_host}}:{{vps_dir}}/caddy/
+    @echo "Shipped {{project_name}}-prod:{{version}} to {{vps_host}}."
+    @echo "Roll out with: just vps restart && just vps logs   (then env=prod)"
+
+# Ship the digest-pinned postgres image to the VPS (first setup + after `just update-postgres`)
+deploy-db: _not-in-container _need-nix-store
+    {{podman}} run --rm \
+      -v {{project_root}}:{{workspace}}:z \
+      -v nix-store:/nix \
+      --userns keep-id:uid=0,gid=0 \
+      -w {{workspace}} \
+      {{nix_image}} \
+      nix {{nix_flags}} run .#postgres-image | ssh -C {{vps_host}} podman load
+    ssh {{vps_host}} podman tag postgres:18 {{project_name}}-postgres:18
+
+# Ship the digest-pinned caddy image to the VPS (first setup + after `just update-caddy`)
+deploy-caddy: _not-in-container _need-nix-store
+    {{podman}} run --rm \
+      -v {{project_root}}:{{workspace}}:z \
+      -v nix-store:/nix \
+      --userns keep-id:uid=0,gid=0 \
+      -w {{workspace}} \
+      {{nix_image}} \
+      nix {{nix_flags}} run .#caddy-image | ssh -C {{vps_host}} podman load
+    ssh {{vps_host}} podman tag caddy:2 {{project_name}}-caddy:2
+
+# Run a prod/justfile target on the VPS, e.g. `just vps start env=prod`
+vps +args:
+    ssh -t {{vps_host}} "cd {{vps_dir}} && just {{args}}"
+
+# Pull a raw prod DB dump down from the VPS (off-host backup — cron this)
+fetch-backup:
+    mkdir -p prod/backups
+    ssh {{vps_host}} "podman exec {{project_name}}-prod-db pg_dump --clean --if-exists -U postgres opensauce_prod | gzip" \
+      > prod/backups/opensauce_prod_$(date +%Y%m%d_%H%M%S).sql.gz
+    @ls -lh prod/backups/ | tail -1
+
+# Pull a prod uploads volume dump down from the VPS
+fetch-uploads:
+    mkdir -p prod/backups
+    ssh {{vps_host}} "podman volume export {{project_name}}-prod-uploads | gzip" \
+      > prod/backups/uploads_$(date +%Y%m%d_%H%M%S).tar.gz
+    @ls -lh prod/backups/ | tail -1
+
+# Raw PII never leaves the box:
+# refresh preprod from prod, anonymise on the VPS, pull the clean dump down
+fetch-anon:
+    mkdir -p prod/backups
+    just vps anon-from-prod
+    ssh {{vps_host}} "podman exec {{project_name}}-preprod-db pg_dump --clean --if-exists -U postgres opensauce_preprod | gzip" \
+      > prod/backups/opensauce_anon_$(date +%Y%m%d_%H%M%S).sql.gz
+    @ls -lh prod/backups/ | tail -1
+
+# Load an anonymised dump into the local dev database
+#   just load-anon prod/backups/opensauce_anon_20260703_120000.sql.gz
+load-anon file:
+    gunzip -c {{file}} | {{podman}} exec -i opensauce-postgres psql -q -v ON_ERROR_STOP=1 -U postgres opensauce_dev
+    @echo "Dev DB now holds anonymised prod data."
+
 # Build and load the docs image (run `just docs-lock` first if no package-lock.json)
 docs: _not-in-container
     just _load-image docs-image
@@ -251,6 +329,14 @@ update-base-image image tag: _need-nix-store
 # Regenerate the busybox base image nix expression
 update-busybox:
     just update-base-image busybox latest
+
+# Re-pin the postgres image to the current postgres:18 digest
+update-postgres:
+    just update-base-image postgres 18
+
+# Re-pin the caddy image to the current caddy:2 digest
+update-caddy:
+    just update-base-image caddy 2
 
 # Show flake outputs
 flake-show:

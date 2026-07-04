@@ -15,10 +15,15 @@ mix dialyzer           # Static type analysis
 mix ash.setup          # Run migrations + Ash introspection
 mix ash.codegen <name> # Generate snapshots + migrations after resource changes
 mix ash.reset          # Drop, create, migrate, seed
-docker-compose up -d   # Start PostgreSQL 16 + MinIO (S3-compatible storage)
+docker-compose up -d   # Start PostgreSQL 18 + MinIO (S3-compatible storage)
 just nuke              # Wipe migrations, regenerate initial_schema, reset dev + test DBs
 just nuke-test         # Reset test DB only — run when test DB drifts from dev after a nuke
+just deploy            # Build prod image, stream to VPS over ssh, tag :<version> + :latest
+just vps <target>      # Run a prod/justfile target on the VPS (start, logs, migrate, ...)
+just fetch-anon        # Anonymise prod data on the VPS, pull the clean dump to prod/backups/
 ```
+
+The app version lives in the root `VERSION` file — `mix.exs` and the nix prod image both read it. Bump it when cutting a release. Production runs on a VPS at dirt.opensauce.sh; see `prod/README.md` for deploy and data-movement workflows.
 
 ## Architecture
 

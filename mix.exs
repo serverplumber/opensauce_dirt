@@ -7,7 +7,7 @@ defmodule OpenSauce.MixProject do
   def project do
     [
       app: :opensauce,
-      version: "0.4.0",
+      version: "VERSION" |> File.read!() |> String.trim(),
       elixir: "~> 1.19",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -76,7 +76,7 @@ defmodule OpenSauce.MixProject do
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-{:tz, "~> 0.28"},
+      {:tz, "~> 0.28"},
       {:nimble_csv, "~> 1.2"},
       {:gen_smtp, "~> 1.0"},
       {:imprintor, "~> 0.5"},
@@ -94,7 +94,14 @@ defmodule OpenSauce.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ash.setup", "ecto.migrate --migrations-path priv/repo/manual_migrations", "assets.setup", "assets.build", "run priv/repo/seeds.exs"],
+      setup: [
+        "deps.get",
+        "ash.setup",
+        "ecto.migrate --migrations-path priv/repo/manual_migrations",
+        "assets.setup",
+        "assets.build",
+        "run priv/repo/seeds.exs"
+      ],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ash.setup --quiet", "test"],

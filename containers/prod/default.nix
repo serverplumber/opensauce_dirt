@@ -5,10 +5,11 @@ let
 
   src = ../../.;
 
+  version = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ../../VERSION);
+
   mixDeps = beamPackages.fetchMixDeps {
     pname = "${projectName}-deps";
-    version = "0.1.0";
-    inherit src;
+    inherit src version;
     hash = "sha256-01ri6usMjR5CpXpsWbOFK2s0O8eAxc9u5derH67M+TM=";
   };
 
@@ -28,8 +29,7 @@ let
 
   release = beamPackages.mixRelease {
     pname = projectName;
-    version = "0.1.0";
-    inherit src;
+    inherit src version;
     mixFodDeps = mixDeps;
     elixir = beamPackages.elixir_1_19;
 
@@ -99,6 +99,9 @@ CARGO_EOF
 
     export PHX_SERVER=true
 
+    echo "Running migrations..."
+    ${release}/bin/opensauce eval "OpenSauce.Release.migrate()"
+
     exec ${release}/bin/opensauce start
   '';
 
@@ -106,7 +109,7 @@ in
 {
   image = pkgs.dockerTools.streamLayeredImage {
     name = "${projectName}-prod";
-    tag = "latest";
+    tag = version;
 
     contents = pkgs.buildEnv {
       name = "prod-root";
