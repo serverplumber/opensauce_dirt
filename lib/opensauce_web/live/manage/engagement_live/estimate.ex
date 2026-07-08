@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.BrandTheme
   alias OpenSauceWeb.HtmlHelpers
 
   @impl true
@@ -12,7 +13,13 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
   @impl true
   def handle_params(%{"reference" => reference, "engagement_id" => engagement_id} = params, _uri, socket) do
     member = socket.assigns.current_member
-    return_to = Map.get(params, "return_to", ~p"/manage/customers/#{reference}/engagements/#{engagement_id}")
+
+    return_to =
+      Map.get(
+        params,
+        "return_to",
+        ~p"/manage/customers/#{reference}/engagements/#{engagement_id}"
+      )
 
     engagement =
       Ash.get!(OpenSauce.CRM.Engagement, engagement_id,
@@ -36,98 +43,156 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:100px;">
-
+    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--s-text,#F4EFE2);-webkit-font-smoothing:antialiased;padding-bottom:100px;">
       <%!-- top bar --%>
       <div style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
         <.link navigate={@return_to}>
           <button
             type="button"
             ontouchstart=""
-            style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            style="color:var(--s-muted,#9A9384);background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
           </button>
         </.link>
-        <p style="flex:1;font-size:13px;font-weight:600;color:#9A9384;">Estimate</p>
+        <p style="flex:1;font-size:13px;font-weight:600;color:var(--s-muted,#9A9384);">Estimate</p>
         <span style={"#{status_badge_style(@engagement.status)}border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
           {Phoenix.Naming.humanize(@engagement.status)}
         </span>
       </div>
 
-      <%!-- estimate document --%>
+      <%!-- estimate document — --s-* vars render it in the org's chosen mode,
+           exactly as the customer sees it; staff chrome outside stays soil --%>
       <div style="padding:0 16px 16px;">
-        <div style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:20px;overflow:hidden;">
-
+        <% brand = BrandTheme.scheme(@organisation) %>
+        <div style={"background:#{brand.paper};border:1px solid #{BrandTheme.rgba(brand.border, 0.58)};border-radius:20px;overflow:hidden;color:#{brand.text};--s-bg:#{brand.bg};--s-paper:#{brand.paper};--s-border:#{BrandTheme.rgba(brand.border, 0.58)};--s-text:#{brand.text};--s-muted:#{brand.muted};--s-dim:#{brand.dim};"}>
           <%!-- org header --%>
-          <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="padding:20px 20px 16px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
             <div style="flex:1;min-width:0;">
-              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
+              <p style={"font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#{BrandTheme.scheme(@organisation).primary};"}>
                 {@organisation.name}
               </p>
-              <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">
+              <p
+                :if={@organisation.legal_name}
+                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
+              >
                 {@organisation.legal_name}
               </p>
               <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-                <span :if={@organisation.phone} style="font-size:12px;color:#6E675A;">{@organisation.phone}</span>
-                <span :if={@organisation.phone && @organisation.website} style="color:#6E675A;">·</span>
-                <span :if={@organisation.website} style="font-size:12px;color:#6E675A;">{@organisation.website}</span>
-                <span :if={@organisation.contact_email} style="color:#6E675A;">·</span>
-                <span :if={@organisation.contact_email} style="font-size:12px;color:#6E675A;">{@organisation.contact_email}</span>
+                <span :if={@organisation.phone} style="font-size:12px;color:var(--s-dim,#6E675A);">
+                  {@organisation.phone}
+                </span>
+                <span
+                  :if={@organisation.phone && @organisation.website}
+                  style="color:var(--s-dim,#6E675A);"
+                >
+                  ·
+                </span>
+                <span :if={@organisation.website} style="font-size:12px;color:var(--s-dim,#6E675A);">
+                  {@organisation.website}
+                </span>
+                <span :if={@organisation.contact_email} style="color:var(--s-dim,#6E675A);">·</span>
+                <span
+                  :if={@organisation.contact_email}
+                  style="font-size:12px;color:var(--s-dim,#6E675A);"
+                >
+                  {@organisation.contact_email}
+                </span>
               </div>
             </div>
-            <% logo_url = case @organisation.logo_colour_key do
-              nil -> nil
-              key -> case OpenSauce.Storage.url(key) do {:ok, u} -> u; _ -> nil end
-            end %>
-            <img :if={logo_url} src={logo_url} style="width:64px;height:64px;object-fit:contain;flex-shrink:0;" alt="" />
+            <% logo_url =
+              case @organisation.logo_colour_key do
+                nil ->
+                  nil
+
+                key ->
+                  case OpenSauce.Storage.url(key) do
+                    {:ok, u} -> u
+                    _ -> nil
+                  end
+              end %>
+            <img
+              :if={logo_url}
+              src={logo_url}
+              style="width:64px;height:64px;object-fit:contain;flex-shrink:0;"
+              alt=""
+            />
           </div>
 
           <%!-- estimate label + prepared for --%>
-          <div style="padding:16px 20px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;gap:20px;align-items:flex-start;">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;gap:20px;align-items:flex-start;">
             <%!-- left: document type + dates --%>
             <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Estimate</p>
-              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:#F4EFE2;margin-top:2px;letter-spacing:-0.02em;">
+              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
+                Estimate
+              </p>
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:var(--s-text,#F4EFE2);margin-top:2px;letter-spacing:-0.02em;">
                 {@engagement.scope_title || "Garden estimate"}
               </p>
-              <div :if={@engagement.term_start || @engagement.term_end} style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
+              <div
+                :if={@engagement.term_start || @engagement.term_end}
+                style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"
+              >
                 <div :if={@engagement.term_start} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:#6E675A;width:44px;">Start</span>
-                  <span style="font-size:11px;color:#F4EFE2;">{HtmlHelpers.format_date(@engagement.term_start)}</span>
+                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">Start</span>
+                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
+                    {HtmlHelpers.format_date(@engagement.term_start)}
+                  </span>
                 </div>
                 <div :if={@engagement.term_end} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:#6E675A;width:44px;">End</span>
-                  <span style="font-size:11px;color:#F4EFE2;">{HtmlHelpers.format_date(@engagement.term_end)}</span>
+                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">End</span>
+                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
+                    {HtmlHelpers.format_date(@engagement.term_end)}
+                  </span>
                 </div>
               </div>
             </div>
             <%!-- right: prepared for --%>
             <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Prepared For</p>
-              <p style="font-size:14px;font-weight:600;color:#F4EFE2;margin-top:4px;">{customer_name(@engagement.customer)}</p>
-              <p :if={@engagement.garden} style="font-size:12px;color:#9A9384;margin-top:2px;">{@engagement.garden.name}</p>
-              <p :if={@engagement.customer && @engagement.customer.email} style="font-size:12px;color:#6E675A;margin-top:4px;">
+              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
+                Prepared For
+              </p>
+              <p style="font-size:14px;font-weight:600;color:var(--s-text,#F4EFE2);margin-top:4px;">
+                {customer_name(@engagement.customer)}
+              </p>
+              <p
+                :if={@engagement.garden}
+                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
+              >
+                {@engagement.garden.name}
+              </p>
+              <p
+                :if={@engagement.customer && @engagement.customer.email}
+                style="font-size:12px;color:var(--s-dim,#6E675A);margin-top:4px;"
+              >
                 {@engagement.customer.email}
               </p>
             </div>
           </div>
 
           <%!-- scope description --%>
-          <div style="padding:16px 20px;border-bottom:1px solid rgba(52,48,37,0.58);">
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;margin-bottom:8px;">Scope</p>
-            <p style="font-size:13px;color:#F4EFE2;line-height:1.6;font-style:italic;">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));">
+            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:8px;">
+              Scope
+            </p>
+            <p style="font-size:13px;color:var(--s-text,#F4EFE2);line-height:1.6;font-style:italic;">
               {scope_statement(@engagement, @paintings != [])}
             </p>
-            <p :if={@engagement.scope_description} style="font-size:13px;color:#9A9384;line-height:1.6;margin-top:8px;">
+            <p
+              :if={@engagement.scope_description}
+              style="font-size:13px;color:var(--s-muted,#9A9384);line-height:1.6;margin-top:8px;"
+            >
               {@engagement.scope_description}
             </p>
           </div>
 
           <%!-- garden drawings — each painting is part of the contract document --%>
-          <div :if={@paintings != []} style="border-bottom:1px solid rgba(52,48,37,0.58);">
+          <div
+            :if={@paintings != []}
+            style="border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));"
+          >
             <div :for={painting <- @paintings}>
               <img
                 src={HtmlHelpers.storage_url(painting.storage_key)}
@@ -137,34 +202,50 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
           </div>
 
           <%!-- signature block --%>
-          <div style="padding:14px 20px;border-top:1px solid rgba(52,48,37,0.58);">
+          <div style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));">
             <div :if={@engagement.signature} style="display:flex;align-items:center;gap:10px;">
-              <div style="width:20px;height:20px;border-radius:50%;border:1.5px solid #54B57E;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="color:#54B57E;font-size:12px;line-height:1;">✓</span>
+              <div style={"width:20px;height:20px;border-radius:50%;border:1.5px solid #{BrandTheme.scheme(@organisation).primary};display:flex;align-items:center;justify-content:center;flex-shrink:0;"}>
+                <span style={"color:#{BrandTheme.scheme(@organisation).primary};font-size:12px;line-height:1;"}>
+                  ✓
+                </span>
               </div>
               <div>
-                <p style="font-size:12px;font-weight:600;color:#54B57E;">Signed by {@engagement.signature.signed_by_name}</p>
-                <p :if={@engagement.signature.signed_at} style="font-size:11px;color:#6E675A;">
+                <p style={"font-size:12px;font-weight:600;color:#{BrandTheme.scheme(@organisation).primary};"}>
+                  Signed by {@engagement.signature.signed_by_name}
+                </p>
+                <p
+                  :if={@engagement.signature.signed_at}
+                  style="font-size:11px;color:var(--s-dim,#6E675A);"
+                >
                   {HtmlHelpers.format_date(@engagement.signature.signed_at)}
                 </p>
               </div>
             </div>
-            <div :if={is_nil(@engagement.signature)} style="border:1px dashed rgba(52,48,37,0.58);border-radius:10px;padding:14px;text-align:center;">
-              <p style="font-size:12px;color:#6E675A;">Awaiting client signature</p>
+            <div
+              :if={is_nil(@engagement.signature)}
+              style="border:1px dashed var(--s-border,rgba(52,48,37,0.58));border-radius:10px;padding:14px;text-align:center;"
+            >
+              <p style="font-size:12px;color:var(--s-dim,#6E675A);">Awaiting client signature</p>
             </div>
           </div>
 
           <%!-- notes --%>
-          <div :if={@engagement.notes} style="padding:14px 20px;border-top:1px solid rgba(52,48,37,0.58);">
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;margin-bottom:6px;">Notes</p>
-            <p style="font-size:12px;color:#9A9384;white-space:pre-line;">{@engagement.notes}</p>
+          <div
+            :if={@engagement.notes}
+            style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));"
+          >
+            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:6px;">
+              Notes
+            </p>
+            <p style="font-size:12px;color:var(--s-muted,#9A9384);white-space:pre-line;">
+              {@engagement.notes}
+            </p>
           </div>
-
         </div>
       </div>
 
       <%!-- sticky send CTA --%>
-      <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;">
+      <div style="position:fixed;bottom:74px;left:0;right:0;background:var(--s-bg,#16140E);border-top:1px solid var(--s-border,rgba(52,48,37,0.58));padding:10px 16px;">
         <button
           type="button"
           phx-click="send_to_client"
@@ -189,7 +270,13 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
         tenant: member.organisation_id
       )
 
-    OpenSauce.Portal.send_resource_link(customer, socket.assigns.organisation, "estimate", engagement.id)
+    OpenSauce.Portal.send_resource_link(
+      customer,
+      socket.assigns.organisation,
+      "estimate",
+      engagement.id
+    )
+
     {:noreply, put_flash(socket, :info, "Estimate link sent to #{customer.email}.")}
   end
 
@@ -213,5 +300,6 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
   defp status_badge_style(:in_progress), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
   defp status_badge_style(:completed), do: "background:rgba(84,181,126,0.15);color:#54B57E;"
   defp status_badge_style(:cancelled), do: "background:rgba(232,126,126,0.15);color:#E87E7E;"
-  defp status_badge_style(_), do: "background:rgba(154,147,132,0.15);color:#9A9384;"
+
+  defp status_badge_style(_), do: "background:rgba(154,147,132,0.15);color:var(--s-muted,#9A9384);"
 end

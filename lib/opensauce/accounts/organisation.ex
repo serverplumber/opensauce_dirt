@@ -59,6 +59,33 @@ defmodule OpenSauce.Accounts.Organisation do
     update :update_logos do
       accept [:logo_colour_key, :logo_greyscale_key]
     end
+
+    update :update_brand_theme do
+      accept [:brand_theme]
+      require_atomic? false
+
+      change fn changeset, _context ->
+        case Ash.Changeset.fetch_change(changeset, :brand_theme) do
+          {:ok, nil} ->
+            changeset
+
+          {:ok, theme} ->
+            case OpenSauce.BrandTheme.sanitize(theme) do
+              {:ok, clean} ->
+                Ash.Changeset.force_change_attribute(changeset, :brand_theme, clean)
+
+              :error ->
+                Ash.Changeset.add_error(changeset,
+                  field: :brand_theme,
+                  message: "is not a valid brand theme"
+                )
+            end
+
+          :error ->
+            changeset
+        end
+      end
+    end
   end
 
   policies do
@@ -197,6 +224,12 @@ defmodule OpenSauce.Accounts.Organisation do
     end
 
     attribute :logo_greyscale_key, :string do
+      public? true
+      allow_nil? true
+    end
+
+    # Palette extracted from the colour logo — see OpenSauce.BrandTheme.
+    attribute :brand_theme, :map do
       public? true
       allow_nil? true
     end

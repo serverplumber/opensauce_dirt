@@ -2,6 +2,7 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.BrandTheme
   alias OpenSauce.CRM
   alias OpenSauceWeb.HtmlHelpers
 
@@ -31,6 +32,7 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
 
     paintings = Enum.filter(engagement.images, &(&1.type == :painting))
     sign_off_items = socket.assigns.organisation.estimate_sign_off_items || []
+    brand = BrandTheme.scheme(socket.assigns.organisation)
 
     {:noreply,
      socket
@@ -39,7 +41,10 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
      |> assign(:sign_off_items, sign_off_items)
      |> assign(:checked, MapSet.new())
      |> assign(:page_title, engagement.scope_title || "Estimate")
-     |> assign(:main_bg, "bg-[#16140E]")}
+     |> assign(:main_bg, "bg-[#16140E]")
+     |> assign(:brand, brand)
+     |> assign(:accent, brand.primary)
+     |> assign(:on_accent, brand.on_primary)}
   end
 
   @impl true
@@ -113,7 +118,10 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
 
     {:ok, signed} =
       engagement
-      |> Ash.Changeset.for_update(:sign, %{signature: signature}, authorize?: false, tenant: org_id)
+      |> Ash.Changeset.for_update(:sign, %{signature: signature},
+        authorize?: false,
+        tenant: org_id
+      )
       |> Ash.update()
 
     {:noreply,
@@ -125,127 +133,214 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:120px;">
-
+    <div style={"font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:120px;min-height:100dvh;color:#{@brand.text};background:#{@brand.bg};--s-bg:#{@brand.bg};--s-paper:#{@brand.paper};--s-border:#{BrandTheme.rgba(@brand.border, 0.58)};--s-text:#{@brand.text};--s-muted:#{@brand.muted};--s-dim:#{@brand.dim};"}>
       <%!-- minimal top bar --%>
       <div style="padding:16px 16px 10px;">
-        <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#54B57E;">
+        <p style={"font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#{@accent};"}>
           {@organisation.name}
         </p>
       </div>
 
       <%!-- document --%>
       <div style="padding:0 16px 16px;">
-        <div style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:20px;overflow:hidden;">
-
+        <div style="background:var(--s-paper,#211E16);border:1px solid var(--s-border,rgba(52,48,37,0.58));border-radius:20px;overflow:hidden;">
           <%!-- org header --%>
-          <div style="padding:20px 20px 16px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="padding:20px 20px 16px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
             <div style="flex:1;min-width:0;">
-              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#54B57E;">
+              <p style={"font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#{@accent};"}>
                 {@organisation.name}
               </p>
-              <p :if={@organisation.legal_name} style="font-size:12px;color:#9A9384;margin-top:2px;">{@organisation.legal_name}</p>
+              <p
+                :if={@organisation.legal_name}
+                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
+              >
+                {@organisation.legal_name}
+              </p>
               <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-                <span :if={@organisation.phone} style="font-size:12px;color:#6E675A;">{@organisation.phone}</span>
-                <span :if={@organisation.phone && @organisation.website} style="color:#6E675A;">·</span>
-                <span :if={@organisation.website} style="font-size:12px;color:#6E675A;">{@organisation.website}</span>
-                <span :if={@organisation.contact_email} style="color:#6E675A;">·</span>
-                <span :if={@organisation.contact_email} style="font-size:12px;color:#6E675A;">{@organisation.contact_email}</span>
+                <span :if={@organisation.phone} style="font-size:12px;color:var(--s-dim,#6E675A);">
+                  {@organisation.phone}
+                </span>
+                <span
+                  :if={@organisation.phone && @organisation.website}
+                  style="color:var(--s-dim,#6E675A);"
+                >
+                  ·
+                </span>
+                <span :if={@organisation.website} style="font-size:12px;color:var(--s-dim,#6E675A);">
+                  {@organisation.website}
+                </span>
+                <span :if={@organisation.contact_email} style="color:var(--s-dim,#6E675A);">·</span>
+                <span
+                  :if={@organisation.contact_email}
+                  style="font-size:12px;color:var(--s-dim,#6E675A);"
+                >
+                  {@organisation.contact_email}
+                </span>
               </div>
             </div>
-            <% logo_url = case @organisation.logo_colour_key do
-              nil -> nil
-              key -> case OpenSauce.Storage.url(key) do {:ok, u} -> u; _ -> nil end
-            end %>
-            <img :if={logo_url} src={logo_url} style="width:64px;height:64px;object-fit:contain;flex-shrink:0;" alt="" />
+            <% logo_url =
+              case @organisation.logo_colour_key do
+                nil ->
+                  nil
+
+                key ->
+                  case OpenSauce.Storage.url(key) do
+                    {:ok, u} -> u
+                    _ -> nil
+                  end
+              end %>
+            <img
+              :if={logo_url}
+              src={logo_url}
+              style="width:64px;height:64px;object-fit:contain;flex-shrink:0;"
+              alt=""
+            />
           </div>
 
           <%!-- estimate label + prepared for --%>
-          <div style="padding:16px 20px;border-bottom:1px solid rgba(52,48,37,0.58);display:flex;gap:20px;align-items:flex-start;">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;gap:20px;align-items:flex-start;">
             <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Estimate</p>
-              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:#F4EFE2;margin-top:2px;letter-spacing:-0.02em;">
+              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
+                Estimate
+              </p>
+              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:var(--s-text,#F4EFE2);margin-top:2px;letter-spacing:-0.02em;">
                 {@engagement.scope_title || "Garden estimate"}
               </p>
-              <div :if={@engagement.term_start || @engagement.term_end} style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
+              <div
+                :if={@engagement.term_start || @engagement.term_end}
+                style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"
+              >
                 <div :if={@engagement.term_start} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:#6E675A;width:44px;">Start</span>
-                  <span style="font-size:11px;color:#F4EFE2;">{HtmlHelpers.format_date(@engagement.term_start)}</span>
+                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">Start</span>
+                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
+                    {HtmlHelpers.format_date(@engagement.term_start)}
+                  </span>
                 </div>
                 <div :if={@engagement.term_end} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:#6E675A;width:44px;">End</span>
-                  <span style="font-size:11px;color:#F4EFE2;">{HtmlHelpers.format_date(@engagement.term_end)}</span>
+                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">End</span>
+                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
+                    {HtmlHelpers.format_date(@engagement.term_end)}
+                  </span>
                 </div>
               </div>
             </div>
             <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;">Prepared For</p>
-              <p style="font-size:14px;font-weight:600;color:#F4EFE2;margin-top:4px;">{portal_customer_name(@current_customer)}</p>
-              <p :if={@engagement.garden} style="font-size:12px;color:#9A9384;margin-top:2px;">{@engagement.garden.name}</p>
-              <p :if={@current_customer.email} style="font-size:12px;color:#6E675A;margin-top:4px;">{@current_customer.email}</p>
+              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
+                Prepared For
+              </p>
+              <p style="font-size:14px;font-weight:600;color:var(--s-text,#F4EFE2);margin-top:4px;">
+                {portal_customer_name(@current_customer)}
+              </p>
+              <p
+                :if={@engagement.garden}
+                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
+              >
+                {@engagement.garden.name}
+              </p>
+              <p
+                :if={@current_customer.email}
+                style="font-size:12px;color:var(--s-dim,#6E675A);margin-top:4px;"
+              >
+                {@current_customer.email}
+              </p>
             </div>
           </div>
 
           <%!-- scope statement --%>
-          <div style="padding:16px 20px;border-bottom:1px solid rgba(52,48,37,0.58);">
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;margin-bottom:8px;">Scope</p>
-            <p style="font-size:13px;color:#F4EFE2;line-height:1.6;font-style:italic;">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));">
+            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:8px;">
+              Scope
+            </p>
+            <p style="font-size:13px;color:var(--s-text,#F4EFE2);line-height:1.6;font-style:italic;">
               {scope_statement(@engagement, @paintings != [])}
             </p>
-            <p :if={@engagement.scope_description} style="font-size:13px;color:#9A9384;line-height:1.6;margin-top:8px;">
+            <p
+              :if={@engagement.scope_description}
+              style="font-size:13px;color:var(--s-muted,#9A9384);line-height:1.6;margin-top:8px;"
+            >
               {@engagement.scope_description}
             </p>
           </div>
 
           <%!-- paintings — contract scope images --%>
-          <div :if={@paintings != []} style="border-bottom:1px solid rgba(52,48,37,0.58);">
-            <div style="padding:12px 20px 10px;background:rgba(84,181,126,0.05);border-bottom:1px solid rgba(84,181,126,0.15);">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#54B57E;">Garden as digitally rendered</p>
-              <p style="font-size:11px;color:#9A9384;margin-top:3px;line-height:1.4;">The images below show the exact scope of this engagement. By signing, you confirm these renderings reflect the agreed design.</p>
+          <div
+            :if={@paintings != []}
+            style="border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));"
+          >
+            <div style={"padding:12px 20px 10px;background:#{BrandTheme.rgba(@accent, 0.05)};border-bottom:1px solid #{BrandTheme.rgba(@accent, 0.15)};"}>
+              <p style={"font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#{@accent};"}>
+                Garden as digitally rendered
+              </p>
+              <p style="font-size:11px;color:var(--s-muted,#9A9384);margin-top:3px;line-height:1.4;">
+                The images below show the exact scope of this engagement. By signing, you confirm these renderings reflect the agreed design.
+              </p>
             </div>
             <div :for={painting <- @paintings}>
-              <img src={HtmlHelpers.storage_url(painting.storage_key)} style="display:block;width:100%;height:auto;" />
+              <img
+                src={HtmlHelpers.storage_url(painting.storage_key)}
+                style="display:block;width:100%;height:auto;"
+              />
             </div>
           </div>
 
           <%!-- signature block --%>
-          <div style="padding:14px 20px;border-top:1px solid rgba(52,48,37,0.58);">
+          <div style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));">
             <div :if={@engagement.signature} style="display:flex;align-items:center;gap:10px;">
-              <div style="width:20px;height:20px;border-radius:50%;border:1.5px solid #54B57E;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="color:#54B57E;font-size:12px;line-height:1;">✓</span>
+              <div style={"width:20px;height:20px;border-radius:50%;border:1.5px solid #{@accent};display:flex;align-items:center;justify-content:center;flex-shrink:0;"}>
+                <span style={"color:#{@accent};font-size:12px;line-height:1;"}>✓</span>
               </div>
               <div>
-                <p style="font-size:12px;font-weight:600;color:#54B57E;">Signed by {@engagement.signature.signed_by_name}</p>
-                <p :if={@engagement.signature.signed_at} style="font-size:11px;color:#6E675A;">
+                <p style={"font-size:12px;font-weight:600;color:#{@accent};"}>
+                  Signed by {@engagement.signature.signed_by_name}
+                </p>
+                <p
+                  :if={@engagement.signature.signed_at}
+                  style="font-size:11px;color:var(--s-dim,#6E675A);"
+                >
                   {HtmlHelpers.format_date(@engagement.signature.signed_at)}
                 </p>
               </div>
             </div>
-            <div :if={is_nil(@engagement.signature)} style="border:1px dashed rgba(52,48,37,0.58);border-radius:10px;padding:14px;text-align:center;">
-              <p style="font-size:12px;color:#6E675A;">Awaiting signature</p>
+            <div
+              :if={is_nil(@engagement.signature)}
+              style="border:1px dashed var(--s-border,rgba(52,48,37,0.58));border-radius:10px;padding:14px;text-align:center;"
+            >
+              <p style="font-size:12px;color:var(--s-dim,#6E675A);">Awaiting signature</p>
             </div>
           </div>
 
           <%!-- notes --%>
-          <div :if={@engagement.notes} style="padding:14px 20px;border-top:1px solid rgba(52,48,37,0.58);">
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6E675A;margin-bottom:6px;">Notes</p>
-            <p style="font-size:12px;color:#9A9384;white-space:pre-line;">{@engagement.notes}</p>
+          <div
+            :if={@engagement.notes}
+            style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));"
+          >
+            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:6px;">
+              Notes
+            </p>
+            <p style="font-size:12px;color:var(--s-muted,#9A9384);white-space:pre-line;">
+              {@engagement.notes}
+            </p>
           </div>
-
         </div>
       </div>
 
       <%!-- sticky sign CTA --%>
-      <div :if={is_nil(@engagement.signature)} style="position:fixed;bottom:0;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);">
-
+      <div
+        :if={is_nil(@engagement.signature)}
+        style="position:fixed;bottom:0;left:0;right:0;background:var(--s-bg,#16140E);border-top:1px solid var(--s-border,rgba(52,48,37,0.58));"
+      >
         <%!-- normal mode: checkboxes + sign button --%>
         <div :if={!@signing}>
           <%!-- scrollable sign-off checklist --%>
-          <div :if={@sign_off_items != []}
-            style="max-height:40vh;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid rgba(52,48,37,0.4);">
+          <div
+            :if={@sign_off_items != []}
+            style="max-height:40vh;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.4));"
+          >
             <div :for={{item, idx} <- Enum.with_index(@sign_off_items)}>
-              <div :if={item["body"]}
-                style="font-size:11.5px;color:#9A9384;line-height:1.55;margin-bottom:6px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(52,48,37,0.58);white-space:pre-line;">
+              <div
+                :if={item["body"]}
+                style="font-size:11.5px;color:var(--s-muted,#9A9384);line-height:1.55;margin-bottom:6px;padding:10px 12px;background:var(--s-bg,#16140E);border-radius:10px;border:1px solid var(--s-border,rgba(52,48,37,0.58));white-space:pre-line;"
+              >
                 {item["body"]}
               </div>
               <button
@@ -255,10 +350,17 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
                 ontouchstart=""
                 style="width:100%;display:flex;align-items:flex-start;gap:10px;background:none;border:none;padding:0;cursor:pointer;text-align:left;"
               >
-                <div style={"width:22px;height:22px;border-radius:6px;flex-shrink:0;margin-top:1px;transition:all 0.1s;border:1.5px solid #{if MapSet.member?(@checked, to_string(idx)), do: "#54B57E", else: "rgba(110,103,90,0.6)"};background:#{if MapSet.member?(@checked, to_string(idx)), do: "#54B57E", else: "transparent"};display:flex;align-items:center;justify-content:center;"}>
-                  <span :if={MapSet.member?(@checked, to_string(idx))} style="color:#0C1F15;font-size:13px;font-weight:800;line-height:1;">✓</span>
+                <div style={"width:22px;height:22px;border-radius:6px;flex-shrink:0;margin-top:1px;transition:all 0.1s;border:1.5px solid #{if MapSet.member?(@checked, to_string(idx)), do: @accent, else: "rgba(110,103,90,0.6)"};background:#{if MapSet.member?(@checked, to_string(idx)), do: @accent, else: "transparent"};display:flex;align-items:center;justify-content:center;"}>
+                  <span
+                    :if={MapSet.member?(@checked, to_string(idx))}
+                    style={"color:#{@on_accent};font-size:13px;font-weight:800;line-height:1;"}
+                  >
+                    ✓
+                  </span>
                 </div>
-                <span style="font-size:13px;color:#F4EFE2;line-height:1.5;">{item["label"]}</span>
+                <span style="font-size:13px;color:var(--s-text,#F4EFE2);line-height:1.5;">
+                  {item["label"]}
+                </span>
               </button>
             </div>
           </div>
@@ -269,7 +371,7 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
               phx-click="start_sign"
               ontouchstart=""
               disabled={not all_checked?(@checked, @sign_off_items)}
-              style={"width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:#{if all_checked?(@checked, @sign_off_items), do: "pointer", else: "default"};transition:all 0.15s;#{if all_checked?(@checked, @sign_off_items), do: "background:#54B57E;color:#0C1F15;", else: "background:rgba(52,48,37,0.8);color:#6E675A;"}"}
+              style={"width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:#{if all_checked?(@checked, @sign_off_items), do: "pointer", else: "default"};transition:all 0.15s;#{if all_checked?(@checked, @sign_off_items), do: "background:#{@accent};color:#{@on_accent};", else: "background:rgba(52,48,37,0.8);color:var(--s-dim,#6E675A);"}"}
             >
               Sign this estimate
             </button>
@@ -277,8 +379,11 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
         </div>
 
         <%!-- confirmation mode --%>
-        <div :if={@signing} style="padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));">
-          <p style="font-size:12px;color:#9A9384;line-height:1.6;margin-bottom:12px;text-align:center;">
+        <div
+          :if={@signing}
+          style="padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));"
+        >
+          <p style="font-size:12px;color:var(--s-muted,#9A9384);line-height:1.6;margin-bottom:12px;text-align:center;">
             {consent_text(@engagement, @organisation)}
           </p>
           <div style="display:flex;gap:8px;">
@@ -286,7 +391,7 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
               type="button"
               phx-click="cancel_sign"
               ontouchstart=""
-              style="flex:1;background:rgba(154,147,132,0.1);border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#9A9384;cursor:pointer;"
+              style="flex:1;background:rgba(154,147,132,0.1);border:1px solid var(--s-border,rgba(52,48,37,0.58));border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:var(--s-muted,#9A9384);cursor:pointer;"
             >
               Cancel
             </button>
@@ -294,14 +399,13 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
               type="button"
               phx-click="confirm_sign"
               ontouchstart=""
-              style="flex:2;background:#54B57E;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:#0C1F15;cursor:pointer;"
+              style={"flex:2;background:#{@accent};border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:#{@on_accent};cursor:pointer;"}
             >
               I agree — sign
             </button>
           </div>
         </div>
       </div>
-
     </div>
     """
   end
@@ -318,6 +422,7 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
 
   defp consent_text(engagement, org) do
     title = engagement.scope_title || "this estimate"
+
     "By signing, I confirm I have reviewed the scope#{if engagement.images != [] and Enum.any?(engagement.images, &(&1.type == :painting)), do: " and digital renderings", else: ""} above and agree to the terms of #{title} as presented by #{org.name}."
   end
 
@@ -329,5 +434,4 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
   defp all_checked?(checked, items) do
     Enum.all?(0..(length(items) - 1)//1, &MapSet.member?(checked, to_string(&1)))
   end
-
 end

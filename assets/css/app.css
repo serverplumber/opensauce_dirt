@@ -106,28 +106,29 @@ button {
   color: #0C1F15;
 }
 
-/* Leaf green CTA button — shared base */
+/* Leaf green CTA button — shared base. Custom properties allow per-screen
+   brand theming (org screen sets them inline); defaults keep the leaf palette. */
 .leaf-btn,
 .btn-glow {
-  background: #54B57E;
-  box-shadow: 0 6px 20px rgba(84,181,126,0.30);
+  background: var(--btn-bg, #54B57E);
+  box-shadow: 0 6px 20px rgba(var(--btn-rgb, 84,181,126),0.30);
   transition: background .12s ease, transform .12s ease, box-shadow .12s ease;
 }
 @media (hover: hover) {
   .btn-glow:hover {
-    background: #6BCB93;
+    background: var(--btn-bg-hover, #6BCB93);
     transform: translateY(-1px);
-    box-shadow: 0 0 0 4px rgba(84,181,126,0.25), 0 8px 24px rgba(84,181,126,0.45);
+    box-shadow: 0 0 0 4px rgba(var(--btn-rgb, 84,181,126),0.25), 0 8px 24px rgba(var(--btn-rgb, 84,181,126),0.45);
     animation-play-state: paused;
   }
 }
 .btn-glow:active {
   transform: translateY(0);
-  box-shadow: 0 4px 14px rgba(84,181,126,0.30);
+  box-shadow: 0 4px 14px rgba(var(--btn-rgb, 84,181,126),0.30);
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 6px 20px rgba(84,181,126,0.30); }
-  50%       { box-shadow: 0 0 0 5px rgba(84,181,126,0.20), 0 6px 28px rgba(84,181,126,0.55); }
+  0%, 100% { box-shadow: 0 6px 20px rgba(var(--btn-rgb, 84,181,126),0.30); }
+  50%       { box-shadow: 0 0 0 5px rgba(var(--btn-rgb, 84,181,126),0.20), 0 6px 28px rgba(var(--btn-rgb, 84,181,126),0.55); }
 }
 .btn-glow--on {
   animation: glow-pulse 2s ease-in-out infinite;
@@ -135,14 +136,14 @@ button {
 
 @media (hover: hover) {
   .leaf-btn:hover {
-    background: #6BCB93;
+    background: var(--btn-bg-hover, #6BCB93);
     transform: translateY(-1px);
-    box-shadow: 0 0 0 4px rgba(84,181,126,0.25), 0 8px 24px rgba(84,181,126,0.45);
+    box-shadow: 0 0 0 4px rgba(var(--btn-rgb, 84,181,126),0.25), 0 8px 24px rgba(var(--btn-rgb, 84,181,126),0.45);
   }
 }
 .leaf-btn:active {
   transform: translateY(0);
-  box-shadow: 0 4px 14px rgba(84,181,126,0.30);
+  box-shadow: 0 4px 14px rgba(var(--btn-rgb, 84,181,126),0.30);
 }
 
 /* Day-group header row */
@@ -301,13 +302,15 @@ button {
 }
 
 /* Dark form inputs */
+/* --s-* custom properties allow per-screen brand surface theming (set on the
+   screen root, e.g. the org screen); defaults keep the soil palette. */
 .dark-label {
   display: block;
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #6E675A;
+  color: var(--s-dim, #6E675A);
   margin-bottom: 8px;
 }
 
@@ -315,10 +318,10 @@ button {
 .dark-input,
 .dark-textarea {
   width: 100%;
-  background: #16140E;
-  border: 1.5px solid rgba(52,48,37,0.58);
+  background: var(--s-bg, #16140E);
+  border: 1.5px solid var(--s-border, rgba(52,48,37,0.58));
   border-radius: 10px;
-  color: #F4EFE2;
+  color: var(--s-text, #F4EFE2);
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -340,8 +343,8 @@ button {
 }
 
 .dark-select option {
-  background: #211E16;
-  color: #F4EFE2;
+  background: var(--s-paper, #211E16);
+  color: var(--s-text, #F4EFE2);
 }
 
 .dark-select:focus,

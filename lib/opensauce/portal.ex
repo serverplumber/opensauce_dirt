@@ -4,6 +4,7 @@ defmodule OpenSauce.Portal do
   import Swoosh.Email
 
   alias Decimal, as: D
+  alias OpenSauce.BrandTheme
 
   @resource_salt "portal-resource"
   @access_salt "portal-access"
@@ -80,7 +81,7 @@ defmodule OpenSauce.Portal do
     |> from({from_name, from_addr})
     |> to({customer_name(customer), customer.email})
     |> subject("Your #{lbl} from #{org.name}")
-    |> html_body(resource_body(customer_name(customer), org.name, lbl, url))
+    |> html_body(resource_body(customer_name(customer), org, lbl, url))
     |> OpenSauce.Mailer.deliver!()
   end
 
@@ -97,7 +98,7 @@ defmodule OpenSauce.Portal do
     |> from({from_name, from_addr})
     |> to({customer_name(customer), customer.email})
     |> subject("Your access link — #{org.name}")
-    |> html_body(access_body(customer_name(customer), org.name, lbl, url))
+    |> html_body(access_body(customer_name(customer), org, lbl, url))
     |> OpenSauce.Mailer.deliver!()
   end
 
@@ -110,6 +111,7 @@ defmodule OpenSauce.Portal do
   defp label("estimate"), do: "estimate"
 
   defp sender(%{email_from_name: n, email_from_address: a}) when is_binary(n) and is_binary(a), do: {n, a}
+
   defp sender(%{name: n}), do: {n, Application.get_env(:opensauce, :email_from_address, "noreply@opensauce.app")}
 
   defp pad(n), do: String.pad_leading(Integer.to_string(n), 4, "0")
@@ -127,14 +129,25 @@ defmodule OpenSauce.Portal do
 
   defp invoice_email_body(name, org, invoice, tax_lines, grand_total, url) do
     num = pad(invoice.invoice_number)
+    accent = BrandTheme.light_primary(org)
+    on_accent = BrandTheme.light_on_primary(org)
     issued = format_date(invoice.issued_on)
-    due = if invoice.due_on, do: "<p style='margin:2px 0;font-size:13px;color:#555;'>Due: #{format_date(invoice.due_on)}</p>", else: ""
+
+    due =
+      if invoice.due_on,
+        do: "<p style='margin:2px 0;font-size:13px;color:#555;'>Due: #{format_date(invoice.due_on)}</p>",
+        else: ""
 
     line_items_html =
-      (invoice.line_items || [])
-      |> Enum.map(fn item ->
-        amount = if item["amount"] && item["amount"] != "0.00", do: format_currency(org.currency, item["amount"]), else: ""
-        indent = if item["type"] == "job", do: "padding-left:16px;color:#777;", else: "font-weight:600;"
+      Enum.map_join(invoice.line_items || [], fn item ->
+        amount =
+          if item["amount"] && item["amount"] != "0.00",
+            do: format_currency(org.currency, item["amount"]),
+            else: ""
+
+        indent =
+          if item["type"] == "job", do: "padding-left:16px;color:#777;", else: "font-weight:600;"
+
         """
         <tr>
           <td style="padding:6px 0;font-size:13px;border-bottom:1px solid #eee;#{indent}">#{item["label"]}</td>
@@ -142,35 +155,32 @@ defmodule OpenSauce.Portal do
         </tr>
         """
       end)
-      |> Enum.join()
 
     tax_rows =
-      tax_lines
-      |> Enum.map(fn t ->
+      Enum.map_join(tax_lines, fn t ->
         """
         <tr>
-          <td style="padding:4px 0;font-size:12px;color:#777;">#{t.name} (#{D.normalize(t.rate) |> D.to_string()}%)</td>
+          <td style="padding:4px 0;font-size:12px;color:#777;">#{t.name} (#{t.rate |> D.normalize() |> D.to_string()}%)</td>
           <td style="padding:4px 0;font-size:12px;color:#777;text-align:right;">#{format_currency(org.currency, t.amount)}</td>
         </tr>
         """
       end)
-      |> Enum.join()
 
     subtotal_row =
-      if tax_lines != [] do
+      if tax_lines == [] do
+        ""
+      else
         """
         <tr>
           <td style="padding:4px 0;font-size:12px;color:#777;">Subtotal</td>
           <td style="padding:4px 0;font-size:12px;color:#777;text-align:right;">#{format_currency(org.currency, invoice.amount)}</td>
         </tr>
         """
-      else
-        ""
       end
 
     """
     <html><body style="font-family:system-ui,sans-serif;color:#1a1a1a;max-width:560px;margin:32px auto;padding:0 24px;">
-      <p style="font-size:22px;font-weight:700;color:#54B57E;margin-bottom:4px;">#{org.name}</p>
+      <p style="font-size:22px;font-weight:700;color:#{accent};margin-bottom:4px;">#{org.name}</p>
       #{if org.legal_name, do: "<p style='font-size:12px;color:#999;margin:0 0 16px;'>#{org.legal_name}</p>", else: ""}
 
       <table width="100%" style="border-collapse:collapse;margin-bottom:24px;">
@@ -201,7 +211,7 @@ defmodule OpenSauce.Portal do
           #{tax_rows}
           <tr>
             <td style="padding-top:10px;font-size:15px;font-weight:700;border-top:2px solid #eee;">Total</td>
-            <td style="padding-top:10px;font-size:20px;font-weight:700;color:#54B57E;text-align:right;border-top:2px solid #eee;">#{format_currency(org.currency, grand_total)}</td>
+            <td style="padding-top:10px;font-size:20px;font-weight:700;color:#{accent};text-align:right;border-top:2px solid #eee;">#{format_currency(org.currency, grand_total)}</td>
           </tr>
         </tfoot>
       </table>
@@ -209,7 +219,7 @@ defmodule OpenSauce.Portal do
       #{if org.payment_info, do: "<p style='font-size:12px;color:#555;white-space:pre-line;border-top:1px solid #eee;padding-top:16px;'><strong>Payment:</strong><br>#{org.payment_info}</p>", else: ""}
 
       <p style="margin:28px 0 8px;">
-        <a href="#{url}" style="background:#54B57E;color:#0C1F15;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">
+        <a href="#{url}" style="background:#{accent};color:#{on_accent};padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">
           View invoice online
         </a>
       </p>
@@ -220,12 +230,13 @@ defmodule OpenSauce.Portal do
 
   defp receipt_email_body(name, org, invoice, tax_lines, grand_total) do
     num = pad(invoice.invoice_number)
+    accent = BrandTheme.light_primary(org)
     paid_on = format_date(Date.utc_today())
 
     """
     <html><body style="font-family:system-ui,sans-serif;color:#1a1a1a;max-width:560px;margin:32px auto;padding:0 24px;">
-      <p style="font-size:22px;font-weight:700;color:#54B57E;margin-bottom:4px;">#{org.name}</p>
-      <p style="font-size:15px;font-weight:700;color:#2d7a4f;margin:0 0 24px;">✓ Payment received</p>
+      <p style="font-size:22px;font-weight:700;color:#{accent};margin-bottom:4px;">#{org.name}</p>
+      <p style="font-size:15px;font-weight:700;color:#{accent};margin:0 0 24px;">✓ Payment received</p>
 
       <p style="font-size:13px;color:#555;">Hi #{name},</p>
       <p style="font-size:13px;color:#555;">Thank you — we've received your payment for Invoice ##{num}. This email is your receipt.</p>
@@ -241,24 +252,24 @@ defmodule OpenSauce.Portal do
         </tr>
         <tr>
           <td style="font-size:15px;font-weight:700;padding-top:10px;border-top:2px solid #eee;">Total paid</td>
-          <td style="font-size:20px;font-weight:700;color:#54B57E;text-align:right;padding-top:10px;border-top:2px solid #eee;">#{format_currency(org.currency, grand_total)}</td>
+          <td style="font-size:20px;font-weight:700;color:#{accent};text-align:right;padding-top:10px;border-top:2px solid #eee;">#{format_currency(org.currency, grand_total)}</td>
         </tr>
       </table>
 
-      #{if tax_lines != [], do: "<p style='font-size:11px;color:#999;'>Includes #{Enum.map_join(tax_lines, ", ", fn t -> "#{D.normalize(t.rate) |> D.to_string()}% #{t.name}" end)}</p>", else: ""}
+      #{if tax_lines == [], do: "", else: "<p style='font-size:11px;color:#999;'>Includes #{Enum.map_join(tax_lines, ", ", fn t -> "#{t.rate |> D.normalize() |> D.to_string()}% #{t.name}" end)}</p>"}
     </body></html>
     """
   end
 
-  defp resource_body(name, org_name, lbl, url) do
+  defp resource_body(name, org, lbl, url) do
     article = if lbl == "estimate", do: "an", else: "a"
 
     """
     <html><body style="font-family:system-ui,sans-serif;color:#1a1a1a;max-width:480px;margin:32px auto;padding:0 24px;">
       <p>Hi #{name},</p>
-      <p>#{org_name} has sent you #{article} #{lbl}.</p>
+      <p>#{org.name} has sent you #{article} #{lbl}.</p>
       <p style="margin:28px 0;">
-        <a href="#{url}" style="background:#54B57E;color:#0C1F15;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">
+        <a href="#{url}" style="background:#{BrandTheme.light_primary(org)};color:#{BrandTheme.light_on_primary(org)};padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">
           View #{lbl}
         </a>
       </p>
@@ -267,13 +278,13 @@ defmodule OpenSauce.Portal do
     """
   end
 
-  defp access_body(name, org_name, lbl, url) do
+  defp access_body(name, org, lbl, url) do
     """
     <html><body style="font-family:system-ui,sans-serif;color:#1a1a1a;max-width:480px;margin:32px auto;padding:0 24px;">
       <p>Hi #{name},</p>
-      <p>Click below to view your #{lbl} from #{org_name}. This link expires in 48 hours.</p>
+      <p>Click below to view your #{lbl} from #{org.name}. This link expires in 48 hours.</p>
       <p style="margin:28px 0;">
-        <a href="#{url}" style="background:#54B57E;color:#0C1F15;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">
+        <a href="#{url}" style="background:#{BrandTheme.light_primary(org)};color:#{BrandTheme.light_on_primary(org)};padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">
           Open #{lbl}
         </a>
       </p>

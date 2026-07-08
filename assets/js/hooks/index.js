@@ -1,4 +1,5 @@
 import { FormatPhone, FormatPostal, TitleCase } from "./formatters";
+import { LogoTheme } from "./logo_theme";
 
 const CooldownButton = {
   mounted() {
@@ -40,6 +41,7 @@ const Hooks = {
   CooldownButton,
   FormatPhone,
   FormatPostal,
+  LogoTheme,
   TitleCase,
 };
 
