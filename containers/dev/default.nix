@@ -74,7 +74,9 @@ in
         ++ (with pkgs; [
           bash
           coreutils
-          cacert
+          # cacert deliberately not in contents: buildEnv would link /etc/ssl
+          # into the store, and fakeRootCommands below needs a real directory.
+          # It stays in the image closure via the Env references.
           shadow
         ]);
     };
@@ -98,6 +100,10 @@ in
       cp ${pkgs.coreutils}/bin/* /usr/bin/
       cp --remove-destination ${pkgs.bash}/bin/bash /bin/sh
       chown -R 1000:1000 /home/vscode
+      # OTP's :pubkey_os_cacerts only scans fixed OS paths (it ignores
+      # SSL_CERT_FILE), so the CA bundle must exist at the Debian-style path.
+      mkdir -p /etc/ssl/certs
+      ln -sfn ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
     '';
     enableFakechroot = true;
 
@@ -109,7 +115,11 @@ in
         "NIXPKGS_ALLOW_UNFREE=1"
         "FONTCONFIG_PATH=${pkgs.nerd-fonts.jetbrains-mono}/share/fonts"
         "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu"
+        "ELIXIR_ERL_OPTIONS=+fnu"
+        "MIX_PATH=${krump.beam.hex}/lib/erlang/lib/hex/ebin"
+        "MIX_REBAR3=${krump.beam.rebar3}/bin/rebar3"
       ];
       WorkingDir = "/workspace";
     };

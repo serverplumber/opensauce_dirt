@@ -118,6 +118,7 @@ _load-image target: _not-in-container _need-nix-store
 # Run an image interactively
 _run-image image: _not-in-container _need-nix-store
     {{podman}} run --rm -it \
+      --network host \
       -v {{project_root}}:{{workspace}}:z \
       -v nix-store:/nix \
       --userns keep-id:uid=0,gid=0 \

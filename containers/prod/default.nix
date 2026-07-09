@@ -1,7 +1,8 @@
 { pkgs, projectName }:
 
 let
-  beamPackages = pkgs.beamPackages;
+  krump = import ../../krump { inherit pkgs; };
+  beamPackages = krump.beam.packages;
 
   src = ../../.;
 
@@ -31,7 +32,7 @@ let
     pname = projectName;
     inherit src version;
     mixFodDeps = mixDeps;
-    elixir = beamPackages.elixir_1_19;
+    elixir = krump.beam.elixir;
 
     nativeBuildInputs = [ pkgs.esbuild pkgs.tailwindcss_4 pkgs.nodejs_22 pkgs.rustc pkgs.cargo ];
 
@@ -120,6 +121,14 @@ in
         pkgs.coreutils
       ];
     };
+
+    # OTP's :pubkey_os_cacerts only scans fixed OS paths, so outbound TLS that
+    # relies on OS certs (e.g. SMTP mail) needs the bundle at the Debian path.
+    fakeRootCommands = ''
+      mkdir -p /etc/ssl/certs
+      ln -sfn ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
+    '';
+    enableFakechroot = true;
 
     config = {
       Entrypoint = [ "${entrypoint}/bin/entrypoint" ];
