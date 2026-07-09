@@ -64,7 +64,10 @@ defmodule OpenSauceWeb.InventoryLive.Show do
       <%!-- tab bar --%>
       <div style="padding:0 16px 14px;">
         <div style="display:flex;gap:4px;background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:13px;padding:4px;">
-          <.link patch={~p"/manage/inventory/#{@material.sku}/details"} style="flex:1;text-decoration:none;">
+          <.link
+            patch={~p"/manage/inventory/#{@material.sku}/details"}
+            style="flex:1;text-decoration:none;"
+          >
             <button
               type="button"
               ontouchstart=""
@@ -74,7 +77,10 @@ defmodule OpenSauceWeb.InventoryLive.Show do
               Details
             </button>
           </.link>
-          <.link patch={~p"/manage/inventory/#{@material.sku}/stock"} style="flex:1;text-decoration:none;">
+          <.link
+            patch={~p"/manage/inventory/#{@material.sku}/stock"}
+            style="flex:1;text-decoration:none;"
+          >
             <button
               type="button"
               ontouchstart=""
@@ -91,17 +97,47 @@ defmodule OpenSauceWeb.InventoryLive.Show do
       <div :if={details_active?(@live_action)} style="padding:0 16px;">
         <%!-- key stats row --%>
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <.stat_tile label="Current" value={format_amount(@material.unit, @material.current_stock)} accent />
-          <.stat_tile label={"Price/#{unit_abbr(@material.unit)}"} value={format_money(@organisation.currency, @material.price)} />
+          <.stat_tile
+            label="Current"
+            value={format_amount(@material.unit, @material.current_stock)}
+            accent
+          />
+          <.stat_tile
+            label={"Price/#{unit_abbr(@material.unit)}"}
+            value={format_money(@organisation.currency, @material.price)}
+          />
           <.stat_tile label="Min" value={format_amount(@material.unit, @material.minimum_stock)} />
           <.stat_tile label="Max" value={format_amount(@material.unit, @material.maximum_stock)} />
         </div>
 
         <%!-- default supplier --%>
-        <div :if={@material.default_supplier_catalog_item} style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:#54B57E;flex-shrink:0;">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <div
+          :if={@material.default_supplier_catalog_item}
+          style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            style="color:#54B57E;flex-shrink:0;"
+          >
+            <path
+              d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <line
+              x1="7"
+              y1="7"
+              x2="7.01"
+              y2="7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
           <div style="min-width:0;flex:1;">
             <p style="font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
@@ -114,7 +150,10 @@ defmodule OpenSauceWeb.InventoryLive.Show do
         </div>
 
         <%!-- open purchase orders --%>
-        <div :if={@open_po_items != []} style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:16px;overflow:hidden;margin-bottom:14px;">
+        <div
+          :if={@open_po_items != []}
+          style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:16px;overflow:hidden;margin-bottom:14px;"
+        >
           <div style="padding:12px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
             <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
               Open purchase orders
@@ -165,7 +204,10 @@ defmodule OpenSauceWeb.InventoryLive.Show do
               <p style="font-size:12px;color:#6E675A;">
                 {format_time(entry.occurred_at, format: "%-d %b %H:%M", timezone: @time_zone)}
               </p>
-              <p :if={entry.reason} style="font-size:13px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              <p
+                :if={entry.reason}
+                style="font-size:13px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+              >
                 {entry.reason}
               </p>
             </div>
@@ -260,7 +302,11 @@ defmodule OpenSauceWeb.InventoryLive.Show do
     sci_for_material =
       Inventory.SupplierCatalogItem
       |> filter(material_id == ^material.id)
-      |> Ash.read!(actor: member, tenant: member.organisation_id, load: [supplier_catalog: [:supplier]])
+      |> Ash.read!(
+        actor: member,
+        tenant: member.organisation_id,
+        load: [supplier_catalog: [:supplier]]
+      )
 
     {:noreply,
      socket
@@ -295,7 +341,11 @@ defmodule OpenSauceWeb.InventoryLive.Show do
     sci_for_material =
       Inventory.SupplierCatalogItem
       |> filter(material_id == ^material.id)
-      |> Ash.read!(actor: member, tenant: member.organisation_id, load: [supplier_catalog: [:supplier]])
+      |> Ash.read!(
+        actor: member,
+        tenant: member.organisation_id,
+        load: [supplier_catalog: [:supplier]]
+      )
 
     socket
     |> assign(:material, material)

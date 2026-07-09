@@ -14,7 +14,12 @@ defmodule OpenSauce.Accounts.OrganisationMember do
   end
 
   actions do
-    defaults [:read, :destroy, create: [:role, :display_title, :user_id, :organisation_id, :status], update: [:role, :display_title, :labor_hourly_rate]]
+    defaults [
+      :read,
+      :destroy,
+      create: [:role, :display_title, :user_id, :organisation_id, :status],
+      update: [:role, :display_title, :labor_hourly_rate]
+    ]
 
     update :suspend do
       accept []

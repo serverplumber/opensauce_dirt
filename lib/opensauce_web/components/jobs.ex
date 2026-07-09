@@ -64,7 +64,10 @@ defmodule OpenSauceWeb.Components.Jobs do
           </div>
         </div>
 
-        <.job_status_chip status={@job.status} scheduling_label={scheduling_chip_label(@show_start, @place_on_tap)} />
+        <.job_status_chip
+          status={@job.status}
+          scheduling_label={scheduling_chip_label(@show_start, @place_on_tap)}
+        />
       </div>
 
       <%!-- meta row: start time + category + due date --%>
@@ -139,8 +142,8 @@ defmodule OpenSauceWeb.Components.Jobs do
   defp card_navigate(job, return_to, _place_on_tap, _show_start),
     do: JS.navigate(~p"/manage/jobs/#{job.id}?return_to=#{return_to}")
 
-  defp member_ids(%{staff_assignments: assignments}) when is_list(assignments),
-    do: Enum.map(assignments, & &1.member_id)
+  defp member_ids(%{staff_assignments: assignments}) when is_list(assignments), do: Enum.map(assignments, & &1.member_id)
+
   defp member_ids(_), do: []
 
   defp live_strip_label(job, org_members) do
@@ -148,21 +151,24 @@ defmodule OpenSauceWeb.Components.Jobs do
       org_members
       |> Enum.filter(&(&1.id in member_ids(job)))
       |> Enum.take(3)
-      |> Enum.map(&member_display_name/1)
-      |> Enum.join(" + ")
+      |> Enum.map_join(" + ", &member_display_name/1)
 
     if names == "", do: "on the clock", else: "on the clock · #{names}"
   end
 
-  defp member_display_name(%{user: %{first_name: f, last_name: l}}) when not is_nil(f) and not is_nil(l),
-    do: "#{f} #{l}"
+  defp member_display_name(%{user: %{first_name: f, last_name: l}}) when not is_nil(f) and not is_nil(l), do: "#{f} #{l}"
+
   defp member_display_name(%{user: %{first_name: f}}) when not is_nil(f), do: f
   defp member_display_name(%{user: %{email: email}}), do: to_string(email)
   defp member_display_name(_), do: "—"
 
   defp job_title(job) do
     cl = customer_label(job)
-    base = if cl == "", do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job", else: cl
+
+    base =
+      if cl == "",
+        do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job",
+        else: cl
 
     case job do
       %{engagement: %{scope_title: t}} when is_binary(t) and t != "" -> "#{base} · #{t}"
@@ -181,7 +187,9 @@ defmodule OpenSauceWeb.Components.Jobs do
   defp customer_label(%{engagement: %{customer: nil}}), do: ""
 
   defp customer_label(%{engagement: %{customer: c}}) do
-    if c.company_name_nickname, do: c.company_name_nickname, else: "#{c.first_name} #{c.last_name}"
+    if c.company_name_nickname,
+      do: c.company_name_nickname,
+      else: "#{c.first_name} #{c.last_name}"
   end
 
   defp category_color(:installation), do: "#DB9258"
@@ -214,7 +222,9 @@ defmodule OpenSauceWeb.Components.Jobs do
     <span :if={@status == :in_progress} class="pill live" style="flex-shrink:0;">
       <span class="dot pulse"></span>On site
     </span>
-    <span :if={@status == :scheduling} class="pill cancel" style="flex-shrink:0;">{@scheduling_label}</span>
+    <span :if={@status == :scheduling} class="pill cancel" style="flex-shrink:0;">
+      {@scheduling_label}
+    </span>
     <span :if={@status == :completed} class="pill done" style="flex-shrink:0;">Done</span>
     <span :if={@status == :cancelled} class="pill cancel" style="flex-shrink:0;">Cancelled</span>
     """
@@ -241,22 +251,31 @@ defmodule OpenSauceWeb.Components.Jobs do
         <p style="font-size:14px;font-weight:600;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">
           {ref_full_title(@title, @job)}
         </p>
-        <span :if={@job.status != :scheduled} class={"pill #{ref_pill_class(@job.status)}"} style="flex-shrink:0;">
+        <span
+          :if={@job.status != :scheduled}
+          class={"#{ref_pill_class(@job.status)} pill"}
+          style="flex-shrink:0;"
+        >
           {ref_status_label(@job.status)}
         </span>
       </div>
       <div style="margin-top:4px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:11.5px;font-weight:600;color:#E87E7E;">{format_currency(@currency, cost)}</span>
-        <span style="font-size:11.5px;font-weight:600;color:#DB9258;">{format_currency(@currency, price)}</span>
-        <span style="font-size:11.5px;font-weight:700;color:#54B57E;">{format_currency(@currency, gp)}</span>
+        <span style="font-size:11.5px;font-weight:600;color:#E87E7E;">
+          {format_currency(@currency, cost)}
+        </span>
+        <span style="font-size:11.5px;font-weight:600;color:#DB9258;">
+          {format_currency(@currency, price)}
+        </span>
+        <span style="font-size:11.5px;font-weight:700;color:#54B57E;">
+          {format_currency(@currency, gp)}
+        </span>
       </div>
     </div>
     """
   end
 
-  defp ref_full_title(title, %{scheduled_for: date, start_time: time})
-       when not is_nil(date) and not is_nil(time),
-       do: "#{title} on #{Calendar.strftime(date, "%-d %b")} at #{Calendar.strftime(time, "%-H:%M")}"
+  defp ref_full_title(title, %{scheduled_for: date, start_time: time}) when not is_nil(date) and not is_nil(time),
+    do: "#{title} on #{Calendar.strftime(date, "%-d %b")} at #{Calendar.strftime(time, "%-H:%M")}"
 
   defp ref_full_title(title, %{scheduled_for: date}) when not is_nil(date),
     do: "#{title} on #{Calendar.strftime(date, "%-d %b")}"

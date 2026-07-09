@@ -2,7 +2,8 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
   @moduledoc false
 
   alias Decimal, as: D
-  alias OpenSauce.{Inventory, Work}
+  alias OpenSauce.Inventory
+  alias OpenSauce.Work
 
   # Delivery and installation jobs for the same garden list the same physical
   # plants — the delivery drops them, the installation puts them in the ground.
@@ -105,9 +106,11 @@ defmodule OpenSauce.Inventory.UpdatePurchaseOrders do
     |> Enum.filter(&(!is_nil(&1.sci_id) && D.gt?(&1.quantity, D.new(0))))
     |> Enum.group_by(&{&1.garden_id, &1.sci_id})
     |> Enum.map(fn {{_garden_id, sci_id}, group} ->
-      max_qty = Enum.reduce(group, D.new(0), fn item, acc ->
-        if D.gt?(item.quantity, acc), do: item.quantity, else: acc
-      end)
+      max_qty =
+        Enum.reduce(group, D.new(0), fn item, acc ->
+          if D.gt?(item.quantity, acc), do: item.quantity, else: acc
+        end)
+
       all_job_ids = MapSet.new(group, & &1.job_id)
       sci = hd(group).sci
 

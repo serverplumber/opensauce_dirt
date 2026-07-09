@@ -31,8 +31,11 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
           <div>
             <label class="dark-label" for="job_service_category">Category</label>
             <select class="dark-select" id="job_service_category" name="job[service_category]">
-              <option :for={{label, val} <- service_category_options()}
-                value={val} selected={@form["service_category"] == val}>
+              <option
+                :for={{label, val} <- service_category_options()}
+                value={val}
+                selected={@form["service_category"] == val}
+              >
                 {label}
               </option>
             </select>
@@ -40,8 +43,10 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
         </div>
 
         <%!-- materials preview --%>
-        <div :if={@to_date != nil}
-          style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px;">
+        <div
+          :if={@to_date != nil}
+          style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px;"
+        >
           <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
             <span style="font-size:12px;font-weight:700;color:#9A9384;">
               Materials ({length(@preview_materials)})
@@ -117,7 +122,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
           {nil, []}
       end
 
-    {:noreply, socket |> assign(form: form, to_date: to_date, preview_materials: preview)}
+    {:noreply, assign(socket, form: form, to_date: to_date, preview_materials: preview)}
   end
 
   def handle_event("save", %{"job" => params}, socket) do
@@ -139,13 +144,17 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
              tenant: member.organisation_id
            ) do
       {scheduled, unscheduled} =
-        Enum.split_with(engagement.materials, & &1.scheduled_date != nil)
+        Enum.split_with(engagement.materials, &(&1.scheduled_date != nil))
 
       date_materials = filter_by_date(scheduled, socket.assigns.from_date, to_date)
 
       for em <- date_materials do
         Work.create_job_material(
-          %{job_id: job.id, supplier_catalog_item_id: em.supplier_catalog_item_id, quantity: em.quantity},
+          %{
+            job_id: job.id,
+            supplier_catalog_item_id: em.supplier_catalog_item_id,
+            quantity: em.quantity
+          },
           actor: member,
           tenant: member.organisation_id
         )
@@ -154,7 +163,11 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
       if engagement.jobs == [] do
         for em <- unscheduled do
           Work.create_job_material(
-            %{job_id: job.id, supplier_catalog_item_id: em.supplier_catalog_item_id, quantity: em.quantity},
+            %{
+              job_id: job.id,
+              supplier_catalog_item_id: em.supplier_catalog_item_id,
+              quantity: em.quantity
+            },
             actor: member,
             tenant: member.organisation_id
           )
@@ -184,12 +197,12 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
       {nil, nil} -> nil
       {nil, ts} -> ts
       {lj, nil} -> lj
-      {lj, ts} -> if Date.compare(lj, ts) == :gt, do: lj, else: ts
+      {lj, ts} -> if Date.after?(lj, ts), do: lj, else: ts
     end
   end
 
   defp scheduled_materials(materials) do
-    Enum.filter(materials, & &1.scheduled_date != nil)
+    Enum.filter(materials, &(&1.scheduled_date != nil))
   end
 
   defp filter_by_date(materials, from_date, to_date) do

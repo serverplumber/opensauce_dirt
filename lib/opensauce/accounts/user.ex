@@ -97,7 +97,8 @@ defmodule OpenSauce.Accounts.User do
       Enum.map(records, fn user ->
         cond do
           user.first_name && user.last_name ->
-            (String.first(user.first_name) <> String.first(user.last_name)) |> String.upcase()
+            String.upcase(String.first(user.first_name) <> String.first(user.last_name))
+
           user.first_name ->
             user.first_name
             |> String.split(~r/[\s\-]+/, trim: true)
@@ -105,8 +106,14 @@ defmodule OpenSauce.Accounts.User do
             |> Enum.take(2)
             |> Enum.join()
             |> String.upcase()
+
           true ->
-            user.email |> to_string() |> String.split("@") |> hd() |> String.first() |> String.upcase()
+            user.email
+            |> to_string()
+            |> String.split("@")
+            |> hd()
+            |> String.first()
+            |> String.upcase()
         end
       end)
     end

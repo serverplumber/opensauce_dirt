@@ -120,7 +120,9 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
             >
               <div>
                 <p style="font-size:14.5px;font-weight:700;color:#F4EFE2;">{po_supplier_name(po)}</p>
-                <p style="font-size:12px;color:#9A9384;margin-top:2px;">{po_summary(po, @organisation.currency)}</p>
+                <p style="font-size:12px;color:#9A9384;margin-top:2px;">
+                  {po_summary(po, @organisation.currency)}
+                </p>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style={"background:#{transit_badge_bg(po.status)};color:#{transit_badge_fg(po.status)};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"}>
@@ -245,11 +247,13 @@ defmodule OpenSauceWeb.PurchasingLive.Index do
 
   defp po_summary(po, currency) do
     count = length(po.items)
-    total = Enum.reduce(po.items, D.new(0), fn item, acc ->
-      price = item.cost || D.new(0)
-      qty = item.quantity || D.new(0)
-      D.add(acc, D.mult(price, qty))
-    end)
+
+    total =
+      Enum.reduce(po.items, D.new(0), fn item, acc ->
+        price = item.cost || D.new(0)
+        qty = item.quantity || D.new(0)
+        D.add(acc, D.mult(price, qty))
+      end)
 
     item_str = if count == 1, do: "1 item", else: "#{count} items"
 

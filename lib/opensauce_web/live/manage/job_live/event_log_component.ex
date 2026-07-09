@@ -8,7 +8,10 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <div :if={@events != []} style="margin-bottom:16px;border-bottom:1px solid rgba(52,48,37,0.58);padding-bottom:4px;">
+      <div
+        :if={@events != []}
+        style="margin-bottom:16px;border-bottom:1px solid rgba(52,48,37,0.58);padding-bottom:4px;"
+      >
         <div
           :for={event <- @events}
           style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(52,48,37,0.18);"
@@ -145,7 +148,7 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
     member = assigns.current_member
     inferred_type = infer_type(events)
     max_odo = max_odometer(events)
-    odometer_km = if(max_odo != nil, do: to_string(max_odo), else: "")
+    odometer_km = if(max_odo == nil, do: "", else: to_string(max_odo))
 
     {show_arrive, show_depart, show_complete, show_cancel} =
       button_visibility(job.status, inferred_type)
@@ -157,7 +160,8 @@ defmodule OpenSauceWeb.JobLive.EventLogComponent do
       |> String.trim_trailing("Z")
 
     form =
-      AshPhoenix.Form.for_create(Work.JobEvent, :log,
+      Work.JobEvent
+      |> AshPhoenix.Form.for_create(:log,
         as: "event",
         actor: member,
         tenant: member.organisation_id

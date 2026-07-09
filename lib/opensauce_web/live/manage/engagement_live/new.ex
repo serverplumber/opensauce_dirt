@@ -3,6 +3,7 @@ defmodule OpenSauceWeb.EngagementLive.New do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.CRM
+  alias OpenSauceWeb.EngagementLive.FormComponent
 
   @impl true
   def mount(_params, _session, socket) do
@@ -53,13 +54,22 @@ defmodule OpenSauceWeb.EngagementLive.New do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;gap:8px;padding:12px 16px 0;">
         <.link navigate={@back_to}>
-          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+          <button
+            type="button"
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            ontouchstart=""
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M19 12H5M12 19l-7-7 7-7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </.link>
@@ -79,21 +89,16 @@ defmodule OpenSauceWeb.EngagementLive.New do
           navigate={@back_to}
         />
       </div>
-
     </div>
     """
   end
 
   @impl true
-  def handle_info(
-        {OpenSauceWeb.EngagementLive.FormComponent, {:saved_navigate, _engagement, dest}},
-        socket
-      ) do
+  def handle_info({FormComponent, {:saved_navigate, _engagement, dest}}, socket) do
     {:noreply, socket |> put_flash(:info, "Engagement saved.") |> push_navigate(to: dest)}
   end
 
-  def handle_info({OpenSauceWeb.EngagementLive.FormComponent, {:saved, _engagement}}, socket) do
+  def handle_info({FormComponent, {:saved, _engagement}}, socket) do
     {:noreply, socket}
   end
-
 end

@@ -2,6 +2,8 @@ defmodule OpenSauceWeb.CustomerLive.New do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  alias OpenSauce.CRM.Customer
+
   @empty_draft %{
     "name" => "",
     "street" => "",
@@ -18,7 +20,8 @@ defmodule OpenSauceWeb.CustomerLive.New do
     member = socket.assigns.current_member
 
     form =
-      AshPhoenix.Form.for_create(OpenSauce.CRM.Customer, :create,
+      Customer
+      |> AshPhoenix.Form.for_create(:create,
         as: "customer",
         actor: member,
         tenant: member.organisation_id
@@ -46,13 +49,22 @@ defmodule OpenSauceWeb.CustomerLive.New do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- header --%>
       <div style="padding:12px 16px 14px;display:flex;align-items:center;gap:12px;">
         <.link navigate={~p"/manage/customers"}>
-          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+          <button
+            type="button"
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            ontouchstart=""
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M19 12H5M12 19l-7-7 7-7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </.link>
@@ -63,7 +75,6 @@ defmodule OpenSauceWeb.CustomerLive.New do
 
       <.form for={@form} id="customer-form" phx-submit="save" phx-change="validate">
         <div style="padding:0 16px 140px;display:flex;flex-direction:column;gap:20px;">
-
           <%!-- type toggle --%>
           <div>
             <span class="dark-label">Type</span>
@@ -95,7 +106,9 @@ defmodule OpenSauceWeb.CustomerLive.New do
               value={@form[:company_name_nickname].value || ""}
               phx-debounce="300"
             />
-            <span :for={msg <- @form[:company_name_nickname].errors} class="dark-field-error">{elem(msg, 0)}</span>
+            <span :for={msg <- @form[:company_name_nickname].errors} class="dark-field-error">
+              {elem(msg, 0)}
+            </span>
           </div>
 
           <%!-- first / last name --%>
@@ -110,7 +123,9 @@ defmodule OpenSauceWeb.CustomerLive.New do
                 value={@form[:first_name].value || ""}
                 phx-debounce="300"
               />
-              <span :for={msg <- @form[:first_name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:first_name].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
             <div>
               <label class="dark-label" for={@form[:last_name].id}>Last name</label>
@@ -122,7 +137,9 @@ defmodule OpenSauceWeb.CustomerLive.New do
                 value={@form[:last_name].value || ""}
                 phx-debounce="300"
               />
-              <span :for={msg <- @form[:last_name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:last_name].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
           </div>
 
@@ -159,17 +176,32 @@ defmodule OpenSauceWeb.CustomerLive.New do
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span class="dark-label" style="margin-bottom:0;">Gardens</span>
-              <button type="button" phx-click="open_garden_sheet"
-                style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
+              <button
+                type="button"
+                phx-click="open_garden_sheet"
+                style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </button>
             </div>
 
-            <button :if={Enum.empty?(@gardens)} type="button" phx-click="open_garden_sheet" ontouchstart=""
-              style={"width:100%;border-radius:12px;border:1.5px dashed;padding:14px;text-align:center;background:transparent;cursor:pointer;#{if @garden_error, do: "border-color:#E87E7E;", else: "border-color:rgba(52,48,37,0.58);"}"}>
-              <p style={"font-size:13px;#{if @garden_error, do: "color:#E87E7E;", else: "color:#6E675A;"}"}>{@garden_error || "Add at least one garden"}</p>
+            <button
+              :if={Enum.empty?(@gardens)}
+              type="button"
+              phx-click="open_garden_sheet"
+              ontouchstart=""
+              style={"width:100%;border-radius:12px;border:1.5px dashed;padding:14px;text-align:center;background:transparent;cursor:pointer;#{if @garden_error, do: "border-color:#E87E7E;", else: "border-color:rgba(52,48,37,0.58);"}"}
+            >
+              <p style={"font-size:13px;#{if @garden_error, do: "color:#E87E7E;", else: "color:#6E675A;"}"}>
+                {@garden_error || "Add at least one garden"}
+              </p>
             </button>
 
             <div :if={not Enum.empty?(@gardens)} style="display:flex;flex-direction:column;gap:8px;">
@@ -179,33 +211,59 @@ defmodule OpenSauceWeb.CustomerLive.New do
                     <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                       {if garden["name"] != "", do: garden["name"], else: "Unnamed garden"}
                     </p>
-                    <p :if={short_address(garden) != ""} style="font-size:12px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <p
+                      :if={short_address(garden) != ""}
+                      style="font-size:12px;color:#9A9384;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                    >
                       {short_address(garden)}
                     </p>
                     <p style="font-size:11.5px;color:#6E675A;margin-top:3px;">
                       {if garden["is_garden"] == "true", do: "Outdoor", else: "Indoor"}
                     </p>
                   </div>
-                  <button type="button" phx-click="remove_garden" phx-value-index={i}
-                    style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;">
+                  <button
+                    type="button"
+                    phx-click="remove_garden"
+                    phx-value-index={i}
+                    style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;flex:0 0 auto;"
+                  >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
                     </svg>
                   </button>
                 </div>
                 <div style="margin-top:8px;">
-                  <span :if={length(@gardens) == 1 or @billing_index == i}
-                    style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#54B57E;">
+                  <span
+                    :if={length(@gardens) == 1 or @billing_index == i}
+                    style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#54B57E;"
+                  >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
                     Billing address
                   </span>
-                  <button :if={length(@gardens) > 1 and @billing_index != i}
-                    type="button" phx-click="set_billing" phx-value-index={i} ontouchstart=""
-                    style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  <button
+                    :if={length(@gardens) > 1 and @billing_index != i}
+                    type="button"
+                    phx-click="set_billing"
+                    phx-value-index={i}
+                    ontouchstart=""
+                    style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
                     Use as billing
                   </button>
@@ -213,42 +271,73 @@ defmodule OpenSauceWeb.CustomerLive.New do
               </div>
             </div>
           </div>
-
         </div>
 
         <%!-- sticky CTA --%>
         <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:12px 16px;">
-          <.glow_button valid={customer_can_submit?(@form, @customer_type)} type="submit" phx-disable-with="Saving…">
+          <.glow_button
+            valid={customer_can_submit?(@form, @customer_type)}
+            type="submit"
+            phx-disable-with="Saving…"
+          >
             Create customer
           </.glow_button>
         </div>
-
       </.form>
 
       <%!-- add garden sheet --%>
-      <div :if={@show_garden_sheet}
+      <div
+        :if={@show_garden_sheet}
         id="garden-sheet"
         style="position:fixed;inset:0;z-index:50;"
-        role="dialog" aria-modal="true" aria-label="Add garden">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add garden"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click="close_garden_sheet"
+        >
+        </div>
         <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
-
           <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
-            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">Add garden</h3>
-            <button type="button" phx-click="close_garden_sheet" ontouchstart=""
-              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">
+              Add garden
+            </h3>
+            <button
+              type="button"
+              phx-click="close_garden_sheet"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </div>
 
-          <.form for={:garden} id="garden-draft-form" phx-submit="add_garden" phx-change="update_draft"
-            style="flex:1;overflow-y:auto;padding:16px 16px calc(74px + 16px);display:flex;flex-direction:column;gap:16px;">
-
+          <.form
+            for={:garden}
+            id="garden-draft-form"
+            phx-submit="add_garden"
+            phx-change="update_draft"
+            style="flex:1;overflow-y:auto;padding:16px 16px calc(74px + 16px);display:flex;flex-direction:column;gap:16px;"
+          >
             <div>
               <label class="dark-label" for="draft-name">Garden name</label>
-              <input class="dark-input" type="text" name="garden[name]" id="draft-name" value={@draft["name"]} placeholder="e.g. North Field" />
+              <input
+                class="dark-input"
+                type="text"
+                name="garden[name]"
+                id="draft-name"
+                value={@draft["name"]}
+                placeholder="e.g. North Field"
+              />
               <div style="display:flex;gap:8px;margin-top:10px;">
                 <button
                   :for={{flag, label} <- [{"true", "Outdoor"}, {"false", "Indoor"}]}
@@ -265,53 +354,97 @@ defmodule OpenSauceWeb.CustomerLive.New do
             </div>
             <div>
               <label class="dark-label" for="draft-street">Street</label>
-              <input class="dark-input" type="text" name="garden[street]" id="draft-street" value={@draft["street"]} />
+              <input
+                class="dark-input"
+                type="text"
+                name="garden[street]"
+                id="draft-street"
+                value={@draft["street"]}
+              />
             </div>
-              <div>
-                <label class="dark-label" for="draft-city">City</label>
-                <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} phx-hook="TitleCase" />
-              </div>
+            <div>
+              <label class="dark-label" for="draft-city">City</label>
+              <input
+                class="dark-input"
+                type="text"
+                name="garden[city]"
+                id="draft-city"
+                value={@draft["city"]}
+                phx-hook="TitleCase"
+              />
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <label class="dark-label" for="draft-zip">Postal code</label>
-                <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} phx-hook="FormatPostal" />
+                <input
+                  class="dark-input"
+                  type="text"
+                  name="garden[zip]"
+                  id="draft-zip"
+                  value={@draft["zip"]}
+                  phx-hook="FormatPostal"
+                />
               </div>
               <div>
                 <label class="dark-label" for="draft-province">Province</label>
-                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} phx-hook="TitleCase" />
+                <input
+                  class="dark-input"
+                  type="text"
+                  name="garden[province]"
+                  id="draft-province"
+                  value={@draft["province"]}
+                  phx-hook="TitleCase"
+                />
               </div>
             </div>
             <div>
               <label class="dark-label" for="draft-notes">Notes</label>
-              <textarea class="dark-textarea" name="garden[notes]" id="draft-notes" rows="2" placeholder="Gate code, access info…"><%= @draft["notes"] %></textarea>
+              <textarea
+                class="dark-textarea"
+                name="garden[notes]"
+                id="draft-notes"
+                rows="2"
+                placeholder="Gate code, access info…"
+              ><%= @draft["notes"] %></textarea>
             </div>
 
             <%!-- billing toggle --%>
             <div style="display:flex;align-items:center;justify-content:space-between;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);padding:12px 14px;">
               <p style="font-size:14px;font-weight:600;color:#F4EFE2;">Billing address</p>
-              <button type="button" phx-click="toggle_draft_billing" ontouchstart=""
+              <button
+                type="button"
+                phx-click="toggle_draft_billing"
+                ontouchstart=""
                 style={"position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @draft["is_billing"] == "true", do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
-                role="switch" aria-checked={@draft["is_billing"] == "true"}>
-                <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}></span>
+                role="switch"
+                aria-checked={@draft["is_billing"] == "true"}
+              >
+                <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}>
+                </span>
               </button>
               <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
             </div>
 
             <div style="display:flex;gap:10px;padding-bottom:8px;">
-              <button type="button" phx-click="close_garden_sheet" ontouchstart=""
-                style="flex:1;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:transparent;padding:13px;font-size:13.5px;font-weight:700;color:#9A9384;cursor:pointer;">
+              <button
+                type="button"
+                phx-click="close_garden_sheet"
+                ontouchstart=""
+                style="flex:1;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:transparent;padding:13px;font-size:13.5px;font-weight:700;color:#9A9384;cursor:pointer;"
+              >
                 Cancel
               </button>
-              <button type="submit" ontouchstart=""
-                style="flex:1;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
+              <button
+                type="submit"
+                ontouchstart=""
+                style="flex:1;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;"
+              >
                 Add garden
               </button>
             </div>
-
           </.form>
         </div>
       </div>
-
     </div>
     """
   end
@@ -414,7 +547,7 @@ defmodule OpenSauceWeb.CustomerLive.New do
 
     full_params = Map.put(params, "garden_addresses", gardens_with_billing)
 
-    case OpenSauce.CRM.Customer
+    case Customer
          |> Ash.Changeset.for_create(:create, full_params,
            actor: member,
            tenant: member.organisation_id
@@ -428,7 +561,8 @@ defmodule OpenSauceWeb.CustomerLive.New do
 
       {:error, %Ash.Changeset{} = changeset} ->
         form =
-          AshPhoenix.Form.for_create(OpenSauce.CRM.Customer, :create,
+          Customer
+          |> AshPhoenix.Form.for_create(:create,
             as: "customer",
             actor: member,
             tenant: member.organisation_id
@@ -462,13 +596,11 @@ defmodule OpenSauceWeb.CustomerLive.New do
   end
 
   defp ash_error_summary(%Ash.Changeset{errors: errors}) do
-    errors
-    |> Enum.map(fn
+    Enum.map_join(errors, ", ", fn
       %{field: field, message: msg} when not is_nil(field) -> "#{field}: #{msg}"
       %{message: msg} -> msg
       e -> inspect(e)
     end)
-    |> Enum.join(", ")
   end
 
   defp ash_error_summary(_), do: "Could not save customer."

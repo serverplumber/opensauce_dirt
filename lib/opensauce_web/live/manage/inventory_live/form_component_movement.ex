@@ -6,8 +6,8 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
   use OpenSauceWeb, :live_component
 
   alias AshPhoenix.Form
-  alias OpenSauce.Inventory
   alias Decimal, as: D
+  alias OpenSauce.Inventory
 
   @impl true
   def update(assigns, socket) do
@@ -125,7 +125,10 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
     {:noreply,
      socket
      |> assign(:mode, mode)
-     |> assign(:calculated_new_total, new_total(socket.assigns.material.current_stock, mode, quantity))}
+     |> assign(
+       :calculated_new_total,
+       new_total(socket.assigns.material.current_stock, mode, quantity)
+     )}
   end
 
   @impl true
@@ -135,7 +138,10 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
     {:noreply,
      socket
      |> assign(:form, Form.validate(socket.assigns.form, params))
-     |> assign(:calculated_new_total, new_total(socket.assigns.material.current_stock, socket.assigns.mode, quantity))}
+     |> assign(
+       :calculated_new_total,
+       new_total(socket.assigns.material.current_stock, socket.assigns.mode, quantity)
+     )}
   end
 
   @impl true

@@ -1,4 +1,5 @@
 defmodule OpenSauce.Concerns.Multitenanted.SetOrganisationFromActor do
+  @moduledoc false
   use Ash.Resource.Change
 
   @impl true

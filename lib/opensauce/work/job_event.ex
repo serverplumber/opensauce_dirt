@@ -7,6 +7,9 @@ defmodule OpenSauce.Work.JobEvent do
     authorizers: [Ash.Policy.Authorizer],
     fragments: [OpenSauce.Concerns.Multitenanted]
 
+  alias OpenSauce.Work.JobEvent.OdometerData
+  alias OpenSauce.Work.JobEvent.TagOnly
+
   postgres do
     table "orders_job_events"
     repo OpenSauce.Repo
@@ -15,9 +18,6 @@ defmodule OpenSauce.Work.JobEvent do
       index [:job_id, :timestamp], name: "orders_job_events_job_timeline_index"
     end
   end
-
-  alias OpenSauce.Work.JobEvent.TagOnly
-  alias OpenSauce.Work.JobEvent.OdometerData
 
   actions do
     defaults [:read, :destroy]
@@ -53,12 +53,16 @@ defmodule OpenSauce.Work.JobEvent do
       public? true
 
       constraints types: [
-                    arrival:            [type: OdometerData, tag: :type, tag_value: :arrival],
-                    departure:          [type: OdometerData, tag: :type, tag_value: :departure],
-                    shift_start:        [type: OdometerData, tag: :type, tag_value: :shift_start],
-                    shift_end:          [type: OdometerData, tag: :type, tag_value: :shift_end],
-                    work_session_start: [type: TagOnly,   tag: :type, tag_value: :work_session_start],
-                    work_session_stop:  [type: TagOnly,   tag: :type, tag_value: :work_session_stop]
+                    arrival: [type: OdometerData, tag: :type, tag_value: :arrival],
+                    departure: [type: OdometerData, tag: :type, tag_value: :departure],
+                    shift_start: [type: OdometerData, tag: :type, tag_value: :shift_start],
+                    shift_end: [type: OdometerData, tag: :type, tag_value: :shift_end],
+                    work_session_start: [
+                      type: TagOnly,
+                      tag: :type,
+                      tag_value: :work_session_start
+                    ],
+                    work_session_stop: [type: TagOnly, tag: :type, tag_value: :work_session_stop]
                   ]
     end
 

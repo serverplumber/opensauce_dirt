@@ -59,13 +59,23 @@ defmodule OpenSauceWeb.EngagementLive.Show do
 
     engagement =
       if engagement.status == :draft do
-        {:ok, proposed} = CRM.update_engagement(engagement, %{status: :proposed}, actor: member, tenant: member.organisation_id)
+        {:ok, proposed} =
+          CRM.update_engagement(engagement, %{status: :proposed},
+            actor: member,
+            tenant: member.organisation_id
+          )
+
         proposed
       else
         engagement
       end
 
-    customer = Ash.get!(CRM.Customer, engagement.customer_id, actor: member, tenant: member.organisation_id)
+    customer =
+      Ash.get!(CRM.Customer, engagement.customer_id,
+        actor: member,
+        tenant: member.organisation_id
+      )
+
     Portal.send_resource_link(customer, socket.assigns.organisation, "estimate", engagement.id)
 
     {:noreply,
@@ -77,15 +87,18 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   @impl true
   def handle_event("set_status", %{"status" => status}, socket) do
     member = socket.assigns.current_member
-    {:ok, engagement} = CRM.update_engagement(socket.assigns.engagement, %{status: String.to_existing_atom(status)}, actor: member, tenant: member.organisation_id)
+
+    {:ok, engagement} =
+      CRM.update_engagement(socket.assigns.engagement, %{status: String.to_existing_atom(status)},
+        actor: member,
+        tenant: member.organisation_id
+      )
+
     {:noreply, assign(socket, :engagement, engagement)}
   end
 
   @impl true
-  def handle_info(
-        {OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}},
-        socket
-      ) do
+  def handle_info({OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}}, socket) do
     member = socket.assigns.current_member
     reference = socket.assigns.reference
     engagement_id = socket.assigns.engagement.id
@@ -94,7 +107,13 @@ defmodule OpenSauceWeb.EngagementLive.Show do
       Ash.get!(CRM.Engagement, engagement_id,
         actor: member,
         tenant: member.organisation_id,
-        load: [:customer, :garden, :images, materials: [:supplier_catalog_item], jobs: [:garden, :materials]]
+        load: [
+          :customer,
+          :garden,
+          :images,
+          materials: [:supplier_catalog_item],
+          jobs: [:garden, :materials]
+        ]
       )
 
     images = Enum.sort_by(engagement.images, &if(&1.type == :painting, do: 0, else: 1))
@@ -112,29 +131,60 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:100px;">
-
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
         <.link navigate={@return_to}>
-          <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+          <button
+            type="button"
+            ontouchstart=""
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M19 12H5M12 19l-7-7 7-7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </.link>
         <div style="display:flex;align-items:center;gap:4px;">
           <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/estimate"}>
-            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
             </button>
           </.link>
           <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/edit"}>
-            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
             </button>
           </.link>
@@ -142,23 +192,29 @@ defmodule OpenSauceWeb.EngagementLive.Show do
       </div>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:14px;">
-
         <%!-- header --%>
         <div>
           <p style="font-size:12px;color:#9A9384;margin-bottom:4px;">
-            {customer_short_name(@engagement.customer)} · {if @engagement.garden, do: @engagement.garden.name, else: "—"}
+            {customer_short_name(@engagement.customer)} · {if @engagement.garden,
+              do: @engagement.garden.name,
+              else: "—"}
           </p>
           <div style="display:flex;align-items:baseline;gap:8px;">
             <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;margin:0;line-height:1.2;">
               {@engagement.scope_title || "Engagement"}
             </h1>
-            <span :if={@engagement.signature} title={"signed " <> signature_label(@engagement.signature)}
-              style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid #54B57E;color:#54B57E;font-size:11px;line-height:1;">
+            <span
+              :if={@engagement.signature}
+              title={"signed " <> signature_label(@engagement.signature)}
+              style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid #54B57E;color:#54B57E;font-size:11px;line-height:1;"
+            >
               ✓
             </span>
           </div>
           <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;">
-            <span class={"pill #{engagement_pill_class(@engagement.status)}"}>{Phoenix.Naming.humanize(@engagement.status)}</span>
+            <span class={"#{engagement_pill_class(@engagement.status)} pill"}>
+              {Phoenix.Naming.humanize(@engagement.status)}
+            </span>
             <span style="font-size:11px;color:#9A9384;">{term_label(@engagement)}</span>
             <span :if={@engagement.signature} style="font-size:11px;color:#9A9384;">
               · signed {signature_label(@engagement.signature)}
@@ -172,16 +228,26 @@ defmodule OpenSauceWeb.EngagementLive.Show do
             <span class="dark-label" style="margin-bottom:0;">
               {gallery_heading(@images)}
             </span>
-            <.link :if={length(@images) > 3} navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/edit"}>
+            <.link
+              :if={length(@images) > 3}
+              navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/edit"}
+            >
               <span style="font-size:11px;color:#54B57E;">view all {length(@images)}</span>
             </.link>
           </div>
           <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">
-            <div :for={img <- Enum.take(@images, 6)}
-              style={"position:relative;border-radius:8px;overflow:hidden;background:#211E16;flex:0 0 auto;#{if img.type == :painting, do: "width:96px;height:96px;border:1.5px solid rgba(84,181,126,0.5);", else: "width:72px;height:96px;"}"}>
-              <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
-              <span :if={img.type == :painting}
-                style="position:absolute;left:0;bottom:0;right:0;background:rgba(84,181,126,0.85);padding:2px 5px;font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#0C1F15;text-align:center;">
+            <div
+              :for={img <- Enum.take(@images, 6)}
+              style={"position:relative;border-radius:8px;overflow:hidden;background:#211E16;flex:0 0 auto;#{if img.type == :painting, do: "width:96px;height:96px;border:1.5px solid rgba(84,181,126,0.5);", else: "width:72px;height:96px;"}"}
+            >
+              <img
+                src={HtmlHelpers.storage_url(img.storage_key)}
+                style="width:100%;height:100%;object-fit:cover;"
+              />
+              <span
+                :if={img.type == :painting}
+                style="position:absolute;left:0;bottom:0;right:0;background:rgba(84,181,126,0.85);padding:2px 5px;font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#0C1F15;text-align:center;"
+              >
                 contract
               </span>
             </div>
@@ -189,10 +255,18 @@ defmodule OpenSauceWeb.EngagementLive.Show do
             <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/edit"}>
               <div style="width:56px;height:96px;border-radius:8px;border:1.5px dashed rgba(52,48,37,0.58);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:0 0 auto;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="#6E675A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="13" r="4" stroke="#6E675A" stroke-width="2"/>
+                  <path
+                    d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
+                    stroke="#6E675A"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="12" cy="13" r="4" stroke="#6E675A" stroke-width="2" />
                 </svg>
-                <span style="font-size:9px;color:#6E675A;text-align:center;line-height:1.2;">+ photo</span>
+                <span style="font-size:9px;color:#6E675A;text-align:center;line-height:1.2;">
+                  + photo
+                </span>
               </div>
             </.link>
           </div>
@@ -200,7 +274,9 @@ defmodule OpenSauceWeb.EngagementLive.Show do
 
         <%!-- scope --%>
         <div style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;">
-          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:6px;">Scope</p>
+          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:6px;">
+            Scope
+          </p>
           <p style="font-size:13px;color:#F4EFE2;line-height:1.55;">
             {@engagement.scope_description || "—"}
           </p>
@@ -236,32 +312,62 @@ defmodule OpenSauceWeb.EngagementLive.Show do
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Planned materials</span>
-            <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/materials"}>
-              <button type="button" ontouchstart="" style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <.link navigate={
+              ~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/materials"
+            }>
+              <button
+                type="button"
+                ontouchstart=""
+                style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path
+                    d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </button>
             </.link>
           </div>
-          <div :if={@engagement.materials == []}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={@engagement.materials == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No materials yet
           </div>
-          <.link :if={@engagement.materials != []}
-            navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/materials"}>
+          <.link
+            :if={@engagement.materials != []}
+            navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}/materials"}
+          >
             <div class="jcard" style="display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <p style="font-size:14px;font-weight:600;color:#F4EFE2;">
-                  {length(@engagement.materials)} {if length(@engagement.materials) == 1, do: "line item", else: "line items"}
+                  {length(@engagement.materials)} {if length(@engagement.materials) == 1,
+                    do: "line item",
+                    else: "line items"}
                 </p>
                 <p style="font-size:12px;color:#9A9384;margin-top:2px;">
                   est {HtmlHelpers.format_currency(@organisation.currency, @materials_cost)}
                 </p>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="#6E675A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                  d="M9 18l6-6-6-6"
+                  stroke="#6E675A"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </div>
           </.link>
@@ -271,20 +377,33 @@ defmodule OpenSauceWeb.EngagementLive.Show do
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Jobs</span>
-            <button type="button" phx-click="open_job_sheet" ontouchstart=""
-              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              phx-click="open_job_sheet"
+              ontouchstart=""
+              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </div>
-          <div :if={@engagement.jobs == []}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={@engagement.jobs == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No jobs yet
           </div>
           <div :if={@engagement.jobs != []} style="display:flex;flex-direction:column;gap:8px;">
             <.job_ref_card
-              :for={job <- Enum.sort_by(@engagement.jobs, &{job_sort_order(&1.status), &1.scheduled_for})}
+              :for={
+                job <- Enum.sort_by(@engagement.jobs, &{job_sort_order(&1.status), &1.scheduled_for})
+              }
               job={job}
               title={job_local_title(job)}
               navigate={job_url(job.id, @reference, @engagement.id)}
@@ -292,12 +411,13 @@ defmodule OpenSauceWeb.EngagementLive.Show do
             />
           </div>
         </div>
-
       </div>
 
       <%!-- sticky CTA --%>
-      <div :if={@engagement.status not in [:completed, :cancelled]}
-        style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;flex-direction:column;gap:8px;">
+      <div
+        :if={@engagement.status not in [:completed, :cancelled]}
+        style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;display:flex;flex-direction:column;gap:8px;"
+      >
         <div style="display:flex;gap:8px;">
           <button
             :if={@engagement.status in [:draft, :proposed]}
@@ -392,7 +512,9 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   end
 
   defp job_local_title(%{service_category: cat}) when not is_nil(cat), do: cat_label(cat)
+
   defp job_local_title(%{type: :internal_work, account_code: c}) when not is_nil(c), do: Phoenix.Naming.humanize(c)
+
   defp job_local_title(_), do: "Job"
 
   defp cat_label(:installation), do: "Installation"

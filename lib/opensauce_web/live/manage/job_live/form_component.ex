@@ -12,14 +12,15 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
       <.form for={@form} id="job-form" phx-target={@myself} phx-change="validate" phx-submit="save">
         <div style="display:flex;flex-direction:column;gap:20px;padding:4px 0 0;">
-
           <%!-- type --%>
           <div>
             <label class="dark-label" for={@form[:type].id}>Type</label>
             <select class="dark-select" name={@form[:type].name} id={@form[:type].id}>
               <option value="client_work" selected={@job_type == :client_work}>Client work</option>
               <option value="shift" selected={@job_type == :shift}>Shift</option>
-              <option value="internal_work" selected={@job_type == :internal_work}>Internal work</option>
+              <option value="internal_work" selected={@job_type == :internal_work}>
+                Internal work
+              </option>
             </select>
           </div>
 
@@ -27,7 +28,11 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
           <div :if={@job_type == :client_work} style="display:flex;flex-direction:column;gap:20px;">
             <div>
               <label class="dark-label" for={@form[:engagement_id].id}>Engagement</label>
-              <select class="dark-select" name={@form[:engagement_id].name} id={@form[:engagement_id].id}>
+              <select
+                class="dark-select"
+                name={@form[:engagement_id].name}
+                id={@form[:engagement_id].id}
+              >
                 <option value="">— none —</option>
                 <option
                   :for={e <- @engagements}
@@ -41,7 +46,11 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
 
             <div>
               <label class="dark-label" for={@form[:service_category].id}>Service</label>
-              <select class="dark-select" name={@form[:service_category].name} id={@form[:service_category].id}>
+              <select
+                class="dark-select"
+                name={@form[:service_category].name}
+                id={@form[:service_category].id}
+              >
                 <option value="">Select category</option>
                 <option
                   :for={{label, val} <- service_category_options()}
@@ -51,7 +60,9 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
                   {label}
                 </option>
               </select>
-              <span :for={msg <- @form[:service_category].errors} class="dark-field-error">{elem(msg, 0)}</span>
+              <span :for={msg <- @form[:service_category].errors} class="dark-field-error">
+                {elem(msg, 0)}
+              </span>
             </div>
 
             <div :if={@gardens != []}>
@@ -82,10 +93,16 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
             <label class="dark-label" for={@form[:account_code].id}>Account code</label>
             <select class="dark-select" name={@form[:account_code].name} id={@form[:account_code].id}>
               <option value="">Select code</option>
-              <option value="production" selected={@form[:account_code].value == :production}>Production</option>
-              <option value="maintenance" selected={@form[:account_code].value == :maintenance}>Maintenance</option>
+              <option value="production" selected={@form[:account_code].value == :production}>
+                Production
+              </option>
+              <option value="maintenance" selected={@form[:account_code].value == :maintenance}>
+                Maintenance
+              </option>
             </select>
-            <span :for={msg <- @form[:account_code].errors} class="dark-field-error">{elem(msg, 0)}</span>
+            <span :for={msg <- @form[:account_code].errors} class="dark-field-error">
+              {elem(msg, 0)}
+            </span>
           </div>
 
           <%!-- staff member --%>
@@ -136,7 +153,6 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
               {if @job, do: "Save changes", else: "Schedule"}
             </.glow_button>
           </div>
-
         </div>
       </.form>
     </div>
@@ -203,10 +219,10 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
     garden_id = params["garden_id"]
 
     upstream_jobs =
-      if garden_id not in [nil, ""] do
-        load_upstream_jobs(garden_id, socket.assigns.current_member)
-      else
+      if garden_id in [nil, ""] do
         []
+      else
+        load_upstream_jobs(garden_id, socket.assigns.current_member)
       end
 
     {:noreply,
@@ -273,7 +289,8 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
   end
 
   defp load_upstream_jobs(garden_id, member) do
-    Work.list_jobs_at_garden!(garden_id,
+    garden_id
+    |> Work.list_jobs_at_garden!(
       actor: member,
       tenant: member.organisation_id,
       load: [:materials]
@@ -343,8 +360,7 @@ defmodule OpenSauceWeb.JobLive.FormComponent do
 
   defp upstream_job_label(%{service_category: nil, scheduled_for: nil}), do: "Job"
 
-  defp upstream_job_label(%{service_category: cat, scheduled_for: nil}),
-    do: Phoenix.Naming.humanize(cat)
+  defp upstream_job_label(%{service_category: cat, scheduled_for: nil}), do: Phoenix.Naming.humanize(cat)
 
   defp upstream_job_label(%{service_category: cat, scheduled_for: d}),
     do: "#{Phoenix.Naming.humanize(cat)} — #{Calendar.strftime(d, "%b %-d, %Y")}"

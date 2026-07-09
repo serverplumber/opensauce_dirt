@@ -67,8 +67,7 @@ defmodule OpenSauceWeb.VenueLive.FormComponent do
     end
   end
 
-  defp build_form(v),
-    do: to_form(%{"name" => v.name, "address" => v.address || ""}, as: "venue")
+  defp build_form(v), do: to_form(%{"name" => v.name, "address" => v.address || ""}, as: "venue")
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

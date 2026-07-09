@@ -60,6 +60,7 @@ defmodule OpenSauceWeb.StorageLocationLive.FormComponent do
 
       {:error, error} ->
         require Logger
+
         Logger.error("create_storage_location failed: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, "Could not save location.")}
     end
@@ -73,16 +74,15 @@ defmodule OpenSauceWeb.StorageLocationLive.FormComponent do
 
       {:error, error} ->
         require Logger
+
         Logger.error("update_storage_location failed: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, "Could not save location.")}
     end
   end
 
-  defp build_form(%{action: :new}),
-    do: to_form(%{"name" => ""}, as: "storage_location")
+  defp build_form(%{action: :new}), do: to_form(%{"name" => ""}, as: "storage_location")
 
-  defp build_form(%{action: :edit, location: loc}),
-    do: to_form(%{"name" => loc.name}, as: "storage_location")
+  defp build_form(%{action: :edit, location: loc}), do: to_form(%{"name" => loc.name}, as: "storage_location")
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

@@ -34,13 +34,20 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
         >
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
             <div style="min-width:0;flex:1;">
-              <p style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;color:#F4EFE2;">{s.name}</p>
-              <p :if={s.contact_name} style="font-size:13px;color:#9A9384;margin-top:3px;">{s.contact_name}</p>
+              <p style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;color:#F4EFE2;">
+                {s.name}
+              </p>
+              <p :if={s.contact_name} style="font-size:13px;color:#9A9384;margin-top:3px;">
+                {s.contact_name}
+              </p>
               <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">
                 <p :if={s.contact_email} style="font-size:12px;color:#6E675A;">{s.contact_email}</p>
                 <p :if={s.contact_phone} style="font-size:12px;color:#6E675A;">{s.contact_phone}</p>
               </div>
-              <div :if={s.addresses != []} style="margin-top:8px;display:flex;flex-direction:column;gap:3px;">
+              <div
+                :if={s.addresses != []}
+                style="margin-top:8px;display:flex;flex-direction:column;gap:3px;"
+              >
                 <p :for={addr <- s.addresses} style="font-size:12px;color:#6E675A;">
                   ↳ {addr_short(addr)}
                 </p>
@@ -99,17 +106,17 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
       <%!-- new / edit supplier bottom sheet --%>
       <div
         :if={@live_action in [:new, :edit]}
-        class="fixed inset-0 z-[60] flex flex-col justify-end"
+        class="z-[60] fixed inset-0 flex flex-col justify-end"
         role="dialog"
         aria-label={if @live_action == :new, do: "New supplier", else: "Edit supplier"}
       >
         <div
-          class="absolute inset-0 bg-black/65"
+          class="bg-black/65 absolute inset-0"
           phx-click={JS.patch(~p"/manage/purchasing/suppliers")}
           aria-hidden="true"
         />
         <div
-          class="relative w-full bg-[#211E16] mobile-scroll"
+          class="bg-[#211E16] mobile-scroll relative w-full"
           style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);max-height:88vh;overflow-y:auto;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
         >
           <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);position:sticky;top:0;background:#211E16;z-index:1;">
@@ -156,7 +163,11 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
     members = socket.assigns.current_member
 
     suppliers =
-      Inventory.list_suppliers!(actor: members, tenant: members.organisation_id, load: [:addresses])
+      Inventory.list_suppliers!(
+        actor: members,
+        tenant: members.organisation_id,
+        load: [:addresses]
+      )
 
     {:ok,
      socket
@@ -198,14 +209,20 @@ defmodule OpenSauceWeb.PurchasingLive.Suppliers do
 
     {:noreply,
      socket
-     |> assign(:suppliers, Inventory.list_suppliers!(actor: member, tenant: member.organisation_id, load: [:addresses]))
+     |> assign(
+       :suppliers,
+       Inventory.list_suppliers!(
+         actor: member,
+         tenant: member.organisation_id,
+         load: [:addresses]
+       )
+     )
      |> push_patch(to: ~p"/manage/purchasing/suppliers")}
   end
 
-  defp addr_short(%{name: name, street: street, city: city})
-       when not is_nil(name) and name != "" do
+  defp addr_short(%{name: name, street: street, city: city}) when not is_nil(name) and name != "" do
     location = [street, city] |> Enum.reject(&(is_nil(&1) or &1 == "")) |> Enum.join(", ")
-    if location != "", do: "#{name} · #{location}", else: name
+    if location == "", do: name, else: "#{name} · #{location}"
   end
 
   defp addr_short(%{street: street, city: city}) do

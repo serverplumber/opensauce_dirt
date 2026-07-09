@@ -4,8 +4,12 @@
 defmodule OpenSauce.Test.Factory do
   @moduledoc false
 
-  alias OpenSauce.CRM.{Customer, Engagement}
-  alias OpenSauce.Inventory.{Material, Supplier, SupplierCatalog, SupplierCatalogItem}
+  alias OpenSauce.CRM.Customer
+  alias OpenSauce.CRM.Engagement
+  alias OpenSauce.Inventory.Material
+  alias OpenSauce.Inventory.Supplier
+  alias OpenSauce.Inventory.SupplierCatalog
+  alias OpenSauce.Inventory.SupplierCatalogItem
   alias OpenSauce.Work.Job
 
   @doc """
@@ -42,7 +46,15 @@ defmodule OpenSauce.Test.Factory do
       first_name: "Test",
       last_name: "Customer#{System.unique_integer([:positive])}",
       email: "test+#{System.unique_integer([:positive])}@local",
-      garden_addresses: [%{is_garden: true, is_billing: false, is_indoor: false, city: "Springfield", country: "US"}]
+      garden_addresses: [
+        %{
+          is_garden: true,
+          is_billing: false,
+          is_indoor: false,
+          city: "Springfield",
+          country: "US"
+        }
+      ]
     }
 
     customer =
@@ -107,7 +119,12 @@ defmodule OpenSauce.Test.Factory do
               customer.garden_addresses |> List.first() |> Map.get(:id)
             end
 
-          %{type: :client_work, service_category: :installation, garden_id: garden_id, status: :scheduling}
+          %{
+            type: :client_work,
+            service_category: :installation,
+            garden_id: garden_id,
+            status: :scheduling
+          }
 
         :shift ->
           %{type: :shift, status: :scheduling}

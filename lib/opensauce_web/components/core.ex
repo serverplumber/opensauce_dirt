@@ -117,9 +117,9 @@ defmodule OpenSauceWeb.Components.Core do
               class={[
                 if(@fullscreen,
                   do:
-                    "relative hidden bg-[#16140E] transition print:m-0 print:border-0 print:shadow-none",
+                    "bg-[#16140E] relative hidden transition print:m-0 print:border-0 print:shadow-none",
                   else:
-                    "ring-[rgba(52,48,37,0.58)] relative hidden rounded-2xl bg-[#211E16] shadow-lg ring-1 transition"
+                    "ring-[rgba(52,48,37,0.58)] bg-[#211E16] relative hidden rounded-2xl shadow-lg ring-1 transition"
                 ),
                 "duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in",
                 "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -134,7 +134,7 @@ defmodule OpenSauceWeb.Components.Core do
               <button
                 type="button"
                 phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                class="absolute top-4 right-4 rounded-sm p-1 text-[#6E675A] opacity-70 transition-opacity hover:opacity-100 hover:text-[#9A9384] focus:outline-none focus:ring-2 focus:ring-[#54B57E] focus:ring-offset-2 focus:ring-offset-[#211E16] print:hidden"
+                class="text-[#6E675A] absolute top-4 right-4 rounded-sm p-1 opacity-70 transition-opacity hover:text-[#9A9384] hover:opacity-100 focus:ring-[#54B57E] focus:ring-offset-[#211E16] focus:outline-none focus:ring-2 focus:ring-offset-2 print:hidden"
                 aria-label={gettext("close")}
               >
                 <.icon name="hero-x-mark-solid" class="h-5 w-5" />
@@ -145,11 +145,11 @@ defmodule OpenSauceWeb.Components.Core do
                   <h2
                     :if={@title}
                     id={"#{@id}-title"}
-                    class="font-['Bricolage_Grotesque',sans-serif] text-lg font-bold leading-none tracking-tight text-[#F4EFE2]"
+                    class="font-['Bricolage_Grotesque',sans-serif] text-[#F4EFE2] text-lg font-bold leading-none tracking-tight"
                   >
                     {@title}
                   </h2>
-                  <p :if={@description} id={"#{@id}-description"} class="text-sm text-[#9A9384]">
+                  <p :if={@description} id={"#{@id}-description"} class="text-[#9A9384] text-sm">
                     {@description}
                   </p>
                 </div>
@@ -210,9 +210,19 @@ defmodule OpenSauceWeb.Components.Core do
       <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <span style="font-size:15px;font-weight:700;color:#F4EFE2;">{@title}</span>
-          <button type="button" phx-click={@on_cancel} style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+          <button
+            type="button"
+            phx-click={@on_cancel}
+            style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            ontouchstart=""
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path
+                d="M18 6L6 18M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -293,7 +303,12 @@ defmodule OpenSauceWeb.Components.Core do
         aria-label={gettext("close")}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path
+            d="M18 6L6 18M6 6l12 12"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
     </div>
@@ -872,7 +887,10 @@ defmodule OpenSauceWeb.Components.Core do
       :if={@href}
       href={@href}
       ontouchstart=""
-      class={["btn-glow h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 no-underline text-[#0C1F15] font-bold text-base", @valid && "btn-glow--on"]}
+      class={[
+        "btn-glow text-[#0C1F15] flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl text-base font-bold no-underline",
+        @valid && "btn-glow--on"
+      ]}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -880,7 +898,10 @@ defmodule OpenSauceWeb.Components.Core do
     <button
       :if={!@href}
       ontouchstart=""
-      class={["btn-glow h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 border-0 text-[#0C1F15] font-bold text-base cursor-pointer", @valid && "btn-glow--on"]}
+      class={[
+        "btn-glow text-[#0C1F15] flex h-14 w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border-0 text-base font-bold",
+        @valid && "btn-glow--on"
+      ]}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -901,7 +922,10 @@ defmodule OpenSauceWeb.Components.Core do
       :if={@href}
       href={@href}
       ontouchstart=""
-      class={["leaf-btn h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 no-underline text-[#0C1F15] font-bold text-base", @class]}
+      class={[
+        "leaf-btn text-[#0C1F15] flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl text-base font-bold no-underline",
+        @class
+      ]}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -910,7 +934,10 @@ defmodule OpenSauceWeb.Components.Core do
       :if={!@href}
       type={@type}
       ontouchstart=""
-      class={["leaf-btn h-14 w-full rounded-2xl flex items-center justify-center gap-2.5 border-0 text-[#0C1F15] font-bold text-base cursor-pointer", @class]}
+      class={[
+        "leaf-btn text-[#0C1F15] flex h-14 w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border-0 text-base font-bold",
+        @class
+      ]}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -976,7 +1003,7 @@ defmodule OpenSauceWeb.Components.Core do
   end
 
   defp member_initials(%{user: %{first_name: f, last_name: l}}) when is_binary(f) and is_binary(l),
-    do: (String.first(f) <> String.first(l)) |> String.upcase()
+    do: String.upcase(String.first(f) <> String.first(l))
 
   defp member_initials(%{user: %{first_name: f}}) when is_binary(f) and f != "",
     do: f |> String.first() |> String.upcase()
@@ -986,9 +1013,7 @@ defmodule OpenSauceWeb.Components.Core do
 
   defp member_initials(_), do: "?"
 
-  defp member_display_name(%{user: %{first_name: f, last_name: l}})
-       when is_binary(f) and is_binary(l),
-       do: "#{f} #{l}"
+  defp member_display_name(%{user: %{first_name: f, last_name: l}}) when is_binary(f) and is_binary(l), do: "#{f} #{l}"
 
   defp member_display_name(%{user: %{first_name: f}}) when is_binary(f) and f != "", do: f
   defp member_display_name(%{user: %{email: e}}), do: to_string(e)
@@ -1002,15 +1027,18 @@ defmodule OpenSauceWeb.Components.Core do
   def add_job_icon(assigns) do
     ~H"""
     <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-      <path stroke-linecap="round" stroke-width="1.75" d="M12 11v6M9 14h6"/>
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+      <path stroke-linecap="round" stroke-width="1.75" d="M12 11v6M9 14h6" />
     </svg>
     """
   end
 
-  defp member_gradient(role) when role in [:owner, :manager],
-    do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
+  defp member_gradient(role) when role in [:owner, :manager], do: "background:linear-gradient(135deg,#BE6E37,#8A4D24);"
 
   defp member_gradient(_), do: "background:linear-gradient(135deg,#54B57E,#173A2B);"
-
 end

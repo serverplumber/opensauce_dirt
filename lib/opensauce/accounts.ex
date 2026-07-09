@@ -19,8 +19,15 @@ defmodule OpenSauce.Accounts do
       define :create_organisation_member, action: :create
       define :list_organisation_members, action: :read
       define :list_memberships_for_user, action: :list_for_user, args: [:user_id]
-      define :list_members_for_organisation, action: :list_for_organisation, args: [:organisation_id]
-      define :get_member_by_user_and_organisation, action: :get_by_user_and_organisation, args: [:user_id, :organisation_id]
+
+      define :list_members_for_organisation,
+        action: :list_for_organisation,
+        args: [:organisation_id]
+
+      define :get_member_by_user_and_organisation,
+        action: :get_by_user_and_organisation,
+        args: [:user_id, :organisation_id]
+
       define :update_organisation_member, action: :update
       define :suspend_organisation_member, action: :suspend
       define :activate_organisation_member, action: :activate

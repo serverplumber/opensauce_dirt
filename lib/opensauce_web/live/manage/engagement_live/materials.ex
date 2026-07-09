@@ -178,27 +178,42 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:80px;">
-
       <.material_search_header
         search_query={@search_query}
         placeholder="Latin name, cultivar, or common name…"
       >
         <:nav>
           <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
-            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                  d="M19 12H5M12 19l-7-7 7-7"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
           </.link>
           <div style="text-align:center;">
-            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">Plan materials</p>
+            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">
+              Plan materials
+            </p>
             <p style="font-size:11px;color:#9A9384;margin-top:1px;">
               {customer_short_name(@engagement.customer)} · {@engagement.scope_title || "Engagement"}
             </p>
           </div>
           <.link navigate={~p"/manage/customers/#{@reference}/engagements/#{@engagement.id}"}>
-            <button type="button" ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;">
+            <button
+              type="button"
+              ontouchstart=""
+              style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;"
+            >
               Done
             </button>
           </.link>
@@ -206,23 +221,28 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
       </.material_search_header>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px;">
-
         <%!-- format filter chips --%>
-        <div :if={@search_results != [] and format_options(@search_results) != []}
-          style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button :for={fmt <- format_options(@search_results)}
+        <div
+          :if={@search_results != [] and format_options(@search_results) != []}
+          style="display:flex;gap:6px;flex-wrap:wrap;"
+        >
+          <button
+            :for={fmt <- format_options(@search_results)}
             type="button"
             phx-click="set_format_filter"
             phx-value-fmt={fmt}
             ontouchstart=""
-            style={"font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(52,48,37,0.58);cursor:pointer;#{if @format_filter == fmt, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#211E16;color:#9A9384;"}"}>
+            style={"font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(52,48,37,0.58);cursor:pointer;#{if @format_filter == fmt, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#211E16;color:#9A9384;"}"}
+          >
             {fmt}
           </button>
         </div>
 
         <%!-- search results --%>
-        <div :if={@search_query != "" and @search_results == []}
-          style="font-size:13px;color:#6E675A;text-align:center;padding:20px 0;">
+        <div
+          :if={@search_query != "" and @search_results == []}
+          style="font-size:13px;color:#6E675A;text-align:center;padding:20px 0;"
+        >
           No results for "{@search_query}"
         </div>
 
@@ -253,10 +273,19 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
                 </div>
                 <svg
                   :if={@selected_date == date}
-                  width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
                   style="flex-shrink:0;color:#54B57E;"
                 >
-                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path
+                    d="M20 6L9 17l-5-5"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </div>
               <div :if={items != []} style="display:flex;flex-direction:column;gap:6px;">
@@ -272,43 +301,69 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
             <p
               :if={@engagement.materials == []}
               style="font-size:13px;color:#6E675A;text-align:center;padding:2px 0 6px;"
-            >search above to add plants</p>
+            >
+              search above to add plants
+            </p>
           </div>
-          <form :if={@adding_date_line} phx-submit="confirm_date_line"
-            style="display:flex;align-items:center;gap:8px;">
+          <form
+            :if={@adding_date_line}
+            phx-submit="confirm_date_line"
+            style="display:flex;align-items:center;gap:8px;"
+          >
             <input
-              type="date" name="date" class="dark-input"
-              style="flex:1;color-scheme:dark;" autofocus
+              type="date"
+              name="date"
+              class="dark-input"
+              style="flex:1;color-scheme:dark;"
+              autofocus
             />
-            <button type="submit" ontouchstart=""
-              style="background:#54B57E;color:#0C1F15;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">
+            <button
+              type="submit"
+              ontouchstart=""
+              style="background:#54B57E;color:#0C1F15;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+            >
               Add
             </button>
-            <button type="button" phx-click="cancel_add_date_line" ontouchstart=""
-              style="background:none;border:none;color:#6E675A;font-size:16px;cursor:pointer;padding:4px 8px;line-height:1;">
+            <button
+              type="button"
+              phx-click="cancel_add_date_line"
+              ontouchstart=""
+              style="background:none;border:none;color:#6E675A;font-size:16px;cursor:pointer;padding:4px 8px;line-height:1;"
+            >
               ✕
             </button>
           </form>
-          <button :if={!@adding_date_line} type="button" phx-click="start_add_date_line"
+          <button
+            :if={!@adding_date_line}
+            type="button"
+            phx-click="start_add_date_line"
             ontouchstart=""
-            style="width:100%;border-radius:12px;border:1.5px dashed rgba(84,181,126,0.3);padding:10px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#54B57E;">
+            style="width:100%;border-radius:12px;border:1.5px dashed rgba(84,181,126,0.3);padding:10px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#54B57E;"
+          >
             <.add_job_icon />
           </button>
         </div>
-
       </div>
 
       <%!-- sticky summary bar --%>
       <div style="position:fixed;bottom:74px;left:0;right:0;background:#16140E;border-top:1px solid rgba(52,48,37,0.58);padding:10px 16px;z-index:10;">
         <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
           <span style="font-size:13px;color:#9A9384;">
-            {length(@engagement.materials)} {if length(@engagement.materials) == 1, do: "item", else: "items"}
+            {length(@engagement.materials)} {if length(@engagement.materials) == 1,
+              do: "item",
+              else: "items"}
           </span>
           <span style="font-size:13px;font-weight:700;color:#DB9258;">
-            {HtmlHelpers.format_currency(@organisation.currency, materials_cost_total(@engagement.materials))}
+            {HtmlHelpers.format_currency(
+              @organisation.currency,
+              materials_cost_total(@engagement.materials)
+            )}
           </span>
           <span style="font-size:13px;font-weight:700;color:#54B57E;">
-            {HtmlHelpers.format_currency(@organisation.currency, materials_price_total(@engagement.materials))}
+            {HtmlHelpers.format_currency(
+              @organisation.currency,
+              materials_price_total(@engagement.materials)
+            )}
           </span>
         </div>
       </div>
@@ -319,7 +374,6 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
         on_close={JS.push("close_material_sheet")}
         show_date={true}
       />
-
     </div>
     """
   end
@@ -346,49 +400,88 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
       </p>
 
       <%!-- stepper if on plan --%>
-      <div :if={@plan_entry} style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+      <div
+        :if={@plan_entry}
+        style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;"
+      >
         <div style="display:flex;align-items:center;gap:4px;">
-          <button :if={@item.min_order_qty && @item.min_order_qty > 1}
-            type="button" phx-click="sub_flat" phx-value-id={@item.id} ontouchstart=""
-            style={stepper_btn_style()}>
+          <button
+            :if={@item.min_order_qty && @item.min_order_qty > 1}
+            type="button"
+            phx-click="sub_flat"
+            phx-value-id={@item.id}
+            ontouchstart=""
+            style={stepper_btn_style()}
+          >
             −f
           </button>
-          <button type="button" phx-click="sub_one" phx-value-id={@item.id} ontouchstart=""
-            style={stepper_btn_style()}>
+          <button
+            type="button"
+            phx-click="sub_one"
+            phx-value-id={@item.id}
+            ontouchstart=""
+            style={stepper_btn_style()}
+          >
             −1
           </button>
           <div style="min-width:52px;text-align:center;">
-            <p style="font-size:17px;font-weight:700;color:#F4EFE2;line-height:1;">{@plan_entry.quantity}</p>
-            <p :if={@item.min_order_qty && @item.min_order_qty > 1}
-              style="font-size:10px;color:#9A9384;">
+            <p style="font-size:17px;font-weight:700;color:#F4EFE2;line-height:1;">
+              {@plan_entry.quantity}
+            </p>
+            <p
+              :if={@item.min_order_qty && @item.min_order_qty > 1}
+              style="font-size:10px;color:#9A9384;"
+            >
               {Decimal.mult(@plan_entry.quantity, @item.min_order_qty)} plants
             </p>
           </div>
-          <button type="button" phx-click="add_one" phx-value-id={@item.id} ontouchstart=""
-            style={stepper_btn_style()}>
+          <button
+            type="button"
+            phx-click="add_one"
+            phx-value-id={@item.id}
+            ontouchstart=""
+            style={stepper_btn_style()}
+          >
             +1
           </button>
-          <button :if={@item.min_order_qty && @item.min_order_qty > 1}
-            type="button" phx-click="add_flat" phx-value-id={@item.id} ontouchstart=""
-            style={stepper_btn_style()}>
+          <button
+            :if={@item.min_order_qty && @item.min_order_qty > 1}
+            type="button"
+            phx-click="add_flat"
+            phx-value-id={@item.id}
+            ontouchstart=""
+            style={stepper_btn_style()}
+          >
             +f
           </button>
         </div>
-        <span :if={@plan_entry.scheduled_date}
-          style="font-size:11px;color:#9A9384;background:rgba(52,48,37,0.58);padding:2px 8px;border-radius:10px;">
+        <span
+          :if={@plan_entry.scheduled_date}
+          style="font-size:11px;color:#9A9384;background:rgba(52,48,37,0.58);padding:2px 8px;border-radius:10px;"
+        >
           need {Calendar.strftime(@plan_entry.scheduled_date, "%a %d %b")}
         </span>
       </div>
 
       <%!-- add buttons if not on plan --%>
       <div :if={!@plan_entry} style="display:flex;gap:6px;margin-top:8px;">
-        <button :if={@item.min_order_qty && @item.min_order_qty > 1}
-          type="button" phx-click="add_flat" phx-value-id={@item.id} ontouchstart=""
-          style={add_btn_style()}>
+        <button
+          :if={@item.min_order_qty && @item.min_order_qty > 1}
+          type="button"
+          phx-click="add_flat"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={add_btn_style()}
+        >
           + flat
         </button>
-        <button type="button" phx-click="add_one" phx-value-id={@item.id} ontouchstart=""
-          style={add_btn_style()}>
+        <button
+          type="button"
+          phx-click="add_one"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={add_btn_style()}
+        >
           + 1
         </button>
       </div>
@@ -397,58 +490,64 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
   end
 
   defp stepper_btn_style,
-    do: "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
+    do:
+      "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
 
   defp add_btn_style,
-    do: "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
+    do:
+      "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
 
   defp adjust_quantity(socket, catalog_item_id, item, delta) do
     member = socket.assigns.current_member
     engagement = socket.assigns.engagement
 
-    case Map.get(socket.assigns.plan_map, catalog_item_id) do
-      nil ->
-        qty = max(delta, 1)
-        {cost_val, price_val} = catalog_price(item)
+    case_result =
+      case Map.get(socket.assigns.plan_map, catalog_item_id) do
+        nil ->
+          qty = max(delta, 1)
+          {cost_val, price_val} = catalog_price(item)
 
-        case CRM.create_engagement_material(
-               %{
-                 engagement_id: engagement.id,
-                 supplier_catalog_item_id: catalog_item_id,
-                 quantity: Decimal.new(qty),
-                 scheduled_date: socket.assigns.selected_date,
-                 cost: cost_val,
-                 price: price_val,
-                 organisation_id: member.organisation_id
-               },
-               actor: member,
-               tenant: member.organisation_id
-             ) do
-          {:ok, _} -> {:noreply, reload(socket)}
-          {:error, _} -> {:noreply, put_flash(socket, :error, "Could not add item.")}
-        end
-
-      em ->
-        new_qty = Decimal.add(em.quantity, Decimal.new(delta))
-
-        if Decimal.compare(new_qty, Decimal.new(0)) == :lt or
-             Decimal.compare(new_qty, Decimal.new(0)) == :eq do
-          case CRM.destroy_engagement_material(em, actor: member, tenant: member.organisation_id) do
-            :ok -> {:noreply, reload(socket)}
-            {:error, _} -> {:noreply, put_flash(socket, :error, "Could not remove item.")}
-          end
-        else
-          case CRM.update_engagement_material(em, %{quantity: new_qty},
+          case CRM.create_engagement_material(
+                 %{
+                   engagement_id: engagement.id,
+                   supplier_catalog_item_id: catalog_item_id,
+                   quantity: Decimal.new(qty),
+                   scheduled_date: socket.assigns.selected_date,
+                   cost: cost_val,
+                   price: price_val,
+                   organisation_id: member.organisation_id
+                 },
                  actor: member,
                  tenant: member.organisation_id
                ) do
             {:ok, _} -> {:noreply, reload(socket)}
-            {:error, _} -> {:noreply, put_flash(socket, :error, "Could not update quantity.")}
+            {:error, _} -> {:noreply, put_flash(socket, :error, "Could not add item.")}
           end
-        end
-    end
 
-    |> then(fn result ->
+        em ->
+          new_qty = Decimal.add(em.quantity, Decimal.new(delta))
+
+          if Decimal.compare(new_qty, Decimal.new(0)) == :lt or
+               Decimal.compare(new_qty, Decimal.new(0)) == :eq do
+            case CRM.destroy_engagement_material(em,
+                   actor: member,
+                   tenant: member.organisation_id
+                 ) do
+              :ok -> {:noreply, reload(socket)}
+              {:error, _} -> {:noreply, put_flash(socket, :error, "Could not remove item.")}
+            end
+          else
+            case CRM.update_engagement_material(em, %{quantity: new_qty},
+                   actor: member,
+                   tenant: member.organisation_id
+                 ) do
+              {:ok, _} -> {:noreply, reload(socket)}
+              {:error, _} -> {:noreply, put_flash(socket, :error, "Could not update quantity.")}
+            end
+          end
+      end
+
+    then(case_result, fn result ->
       case result do
         {:noreply, socket} -> {:noreply, socket}
         other -> other
@@ -521,6 +620,7 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
 
   defp parse_decimal(nil), do: Decimal.new(0)
   defp parse_decimal(""), do: Decimal.new(0)
+
   defp parse_decimal(s) do
     case Decimal.parse(s) do
       {d, ""} -> d
@@ -530,6 +630,7 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
 
   defp parse_optional_decimal(nil), do: nil
   defp parse_optional_decimal(""), do: nil
+
   defp parse_optional_decimal(s) do
     case Decimal.parse(s) do
       {d, ""} -> d
@@ -539,6 +640,7 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
 
   defp parse_optional_date(nil), do: nil
   defp parse_optional_date(""), do: nil
+
   defp parse_optional_date(s) do
     case Date.from_iso8601(s) do
       {:ok, d} -> d
@@ -550,6 +652,7 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
   # including empty ones — so a freshly-added date line is immediately selectable.
   defp display_groups(materials, date_lines) do
     grouped = Enum.group_by(materials, & &1.scheduled_date)
+
     all_dates =
       (date_lines ++ (materials |> Enum.map(& &1.scheduled_date) |> Enum.reject(&is_nil/1)))
       |> Enum.uniq()
@@ -586,8 +689,9 @@ defmodule OpenSauceWeb.EngagementLive.Materials do
 
   # Merges dates from existing materials with any locally-added (unpersisted) date lines.
   defp derive_date_lines(materials, existing_lines) do
-    from_materials = materials |> Enum.map(& &1.scheduled_date) |> Enum.reject(&is_nil/1) |> Enum.uniq()
+    from_materials =
+      materials |> Enum.map(& &1.scheduled_date) |> Enum.reject(&is_nil/1) |> Enum.uniq()
+
     (from_materials ++ existing_lines) |> Enum.uniq() |> Enum.sort()
   end
-
 end

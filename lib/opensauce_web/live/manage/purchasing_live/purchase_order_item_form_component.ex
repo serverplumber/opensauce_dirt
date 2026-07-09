@@ -33,7 +33,11 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent do
         phx-submit="save"
         style="display:flex;flex-direction:column;gap:12px;"
       >
-        <input type="hidden" name={@form[:purchase_order_id].name} value={@form[:purchase_order_id].value} />
+        <input
+          type="hidden"
+          name={@form[:purchase_order_id].name}
+          value={@form[:purchase_order_id].value}
+        />
         <input
           type="hidden"
           name="purchase_order_item[supplier_catalog_item_id]"
@@ -87,7 +91,11 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent do
             id={@form[:material_id].id}
             name={@form[:material_id].name}
             class="dark-select"
-            style={if is_nil(@form[:material_id].value) or @form[:material_id].value == "", do: "color:#6E675A;", else: "color:#F4EFE2;"}
+            style={
+              if is_nil(@form[:material_id].value) or @form[:material_id].value == "",
+                do: "color:#6E675A;",
+                else: "color:#F4EFE2;"
+            }
           >
             <option value="">— none —</option>
             <option
@@ -110,7 +118,8 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent do
         >
           <span style="font-size:13px;color:#9A9384;">Cherry-pick</span>
           <div style={"width:40px;height:24px;border-radius:999px;flex-shrink:0;transition:background 0.15s;position:relative;#{if @is_reservation, do: "background:#54B57E;", else: "background:#3A3528;"}"}>
-            <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @is_reservation, do: "left:19px;", else: "left:3px;"}"}></div>
+            <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @is_reservation, do: "left:19px;", else: "left:3px;"}"}>
+            </div>
           </div>
         </button>
 
@@ -181,6 +190,7 @@ defmodule OpenSauceWeb.PurchasingLive.PurchaseOrderItemFormComponent do
     case Form.submit(socket.assigns.form, params: params) do
       {:ok, item} ->
         send(self(), {:po_item_saved, item})
+
         {:noreply, socket |> put_flash(:info, "Item added") |> push_patch(to: socket.assigns.patch)}
 
       {:error, form} ->

@@ -103,7 +103,6 @@ defmodule OpenSauce.Accounts.ApiKey do
     timestamps()
   end
 
-
   identities do
     identity :key_hash, [:key_hash]
   end

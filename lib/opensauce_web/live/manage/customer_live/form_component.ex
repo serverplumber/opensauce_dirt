@@ -25,8 +25,7 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
               value="individual"
               checked={!company_type?(@form)}
               style="display:none;"
-            />
-            Individual
+            /> Individual
           </label>
           <label style={"flex:1;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;#{if company_type?(@form), do: "background:#54B57E;border:1.5px solid #54B57E;color:#0C1F15;", else: "background:rgba(84,181,126,0.12);border:1.5px solid rgba(84,181,126,0.4);color:#54B57E;"}"}>
             <input
@@ -35,8 +34,7 @@ defmodule OpenSauceWeb.CustomerLive.FormComponent do
               value="company"
               checked={company_type?(@form)}
               style="display:none;"
-            />
-            Company
+            /> Company
           </label>
         </div>
 

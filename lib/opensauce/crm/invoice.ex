@@ -23,6 +23,7 @@ defmodule OpenSauce.CRM.Invoice do
 
     create :create do
       primary? true
+
       accept [
         :customer_id,
         :engagement_id,

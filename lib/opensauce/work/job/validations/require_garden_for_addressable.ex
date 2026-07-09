@@ -2,7 +2,14 @@ defmodule OpenSauce.Work.Job.Validations.RequireGardenForAddressable do
   @moduledoc false
   use Ash.Resource.Validation
 
-  @addressable_categories [:installation, :pruning, :consultation, :design, :opening, :winterization]
+  @addressable_categories [
+    :installation,
+    :pruning,
+    :consultation,
+    :design,
+    :opening,
+    :winterization
+  ]
 
   @impl true
   def validate(changeset, _opts, _context) do

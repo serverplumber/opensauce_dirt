@@ -198,7 +198,13 @@ defmodule OpenSauceWeb.Components.Page do
     %{label: "Invoices", path: "/manage/invoices"}
   ]
 
-  @primary_prefixes ["/manage/today", "/manage/schedule", "/manage/shifts", "/manage/jobs", "/manage/customers"]
+  @primary_prefixes [
+    "/manage/today",
+    "/manage/schedule",
+    "/manage/shifts",
+    "/manage/jobs",
+    "/manage/customers"
+  ]
 
   attr :current_path, :string, default: ""
   attr :current_user, :any, default: nil
@@ -218,17 +224,17 @@ defmodule OpenSauceWeb.Components.Page do
       <%!-- User sheet --%>
       <div
         id="user-sheet"
-        class="hidden fixed inset-0 z-50 flex items-end justify-center"
+        class="fixed inset-0 z-50 flex hidden items-end justify-center"
         role="dialog"
         aria-label="Account"
       >
         <div
-          class="absolute inset-0 bg-black/50"
+          class="bg-black/50 absolute inset-0"
           phx-click={hide_user_sheet()}
           aria-hidden="true"
         />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl"
+          class="bg-[#211E16] relative w-full max-w-lg rounded-t-2xl"
           style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(1.5rem,env(safe-area-inset-bottom))"
         >
           <%!-- User header --%>
@@ -250,13 +256,21 @@ defmodule OpenSauceWeb.Components.Page do
               style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
             >
               <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
           <%!-- Org list --%>
-          <div :if={length(@memberships) > 1} style="border-top:1px solid rgba(52,48,37,0.58);padding:10px 8px 6px;">
+          <div
+            :if={length(@memberships) > 1}
+            style="border-top:1px solid rgba(52,48,37,0.58);padding:10px 8px 6px;"
+          >
             <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;padding:0 10px 6px;">
               Organisations
             </p>
@@ -264,7 +278,11 @@ defmodule OpenSauceWeb.Components.Page do
               <% current_org_id = @current_member && @current_member.organisation_id %>
               <a
                 :for={m <- @memberships}
-                href={if m.organisation_id != current_org_id, do: ~p"/org/pick/#{m.organisation_id}", else: nil}
+                href={
+                  if m.organisation_id != current_org_id,
+                    do: ~p"/org/pick/#{m.organisation_id}",
+                    else: nil
+                }
                 style={"display:flex;align-items:center;gap:10px;border-radius:10px;padding:9px 10px;text-decoration:none;#{if m.organisation_id == current_org_id, do: "background:rgba(84,181,126,0.10);", else: ""}"}
               >
                 <div style={"width:30px;height:30px;border-radius:8px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:13px;color:#fff;#{org_monogram_gradient(m.role)}"}>
@@ -273,11 +291,35 @@ defmodule OpenSauceWeb.Components.Page do
                 <span style={"flex:1;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;#{if m.organisation_id == current_org_id, do: "color:#54B57E;", else: "color:#F4EFE2;"}"}>
                   {m.organisation.name}
                 </span>
-                <svg :if={m.organisation_id == current_org_id} width="14" height="14" fill="none" stroke="#54B57E" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                <svg
+                  :if={m.organisation_id == current_org_id}
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="#54B57E"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-                <svg :if={m.organisation_id != current_org_id} width="14" height="14" fill="none" stroke="#6E675A" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                <svg
+                  :if={m.organisation_id != current_org_id}
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="#6E675A"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </a>
             </div>
@@ -292,7 +334,12 @@ defmodule OpenSauceWeb.Components.Page do
             >
               <span style="font-size:13.5px;font-weight:600;color:#F4EFE2;">Account & profile</span>
               <svg width="14" height="14" fill="none" stroke="#6E675A" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </.link>
             <button
@@ -303,7 +350,12 @@ defmodule OpenSauceWeb.Components.Page do
             >
               <span style="font-size:13.5px;font-weight:600;color:#E87E7E;">Sign out</span>
               <svg width="14" height="14" fill="none" stroke="#E87E7E" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
             </button>
           </div>
@@ -313,25 +365,25 @@ defmodule OpenSauceWeb.Components.Page do
       <%!-- Sign-out confirmation sheet --%>
       <div
         id="sign-out-sheet"
-        class="hidden fixed inset-0 z-50 flex items-end justify-center"
+        class="fixed inset-0 z-50 flex hidden items-end justify-center"
         role="dialog"
         aria-label="Sign out confirmation"
       >
         <div
-          class="absolute inset-0 bg-black/50"
+          class="bg-black/50 absolute inset-0"
           phx-click={hide_sign_out_sheet()}
           aria-hidden="true"
         />
         <div
-          class="relative w-full bg-[#211E16] rounded-t-2xl px-6 pt-6 space-y-4 max-w-lg"
+          class="bg-[#211E16] relative w-full max-w-lg space-y-4 rounded-t-2xl px-6 pt-6"
           style="border-top: 1.5px solid rgba(52,48,37,0.58); padding-bottom: max(2.5rem, env(safe-area-inset-bottom))"
         >
           <div class="space-y-1">
-            <p class="text-base font-semibold text-[#F4EFE2]">Sign out?</p>
-            <p class="text-sm text-[#9A9384]">You'll need a new magic link to sign back in.</p>
+            <p class="text-[#F4EFE2] text-base font-semibold">Sign out?</p>
+            <p class="text-[#9A9384] text-sm">You'll need a new magic link to sign back in.</p>
           </div>
           <div :if={@current_user}>
-            <p class="text-xs text-[#6E675A] truncate">{@current_user.email}</p>
+            <p class="text-[#6E675A] truncate text-xs">{@current_user.email}</p>
           </div>
           <div class="flex flex-col gap-3 pb-2">
             <.link
@@ -343,7 +395,7 @@ defmodule OpenSauceWeb.Components.Page do
             </.link>
             <button
               type="button"
-              class="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium text-[#9A9384] hover:bg-[#2B2820] hover:text-[#F4EFE2] transition"
+              class="text-[#9A9384] flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#2B2820] hover:text-[#F4EFE2]"
               style="border: 1.5px solid rgba(52,48,37,0.58)"
               phx-click={hide_sign_out_sheet()}
             >
@@ -356,19 +408,19 @@ defmodule OpenSauceWeb.Components.Page do
       <%!-- More overflow sheet --%>
       <div
         id="more-backdrop"
-        class="hidden fixed inset-0 z-30"
+        class="fixed inset-0 z-30 hidden"
         phx-click={hide_more_sheet()}
         aria-hidden="true"
       />
       <div
         id="more-sheet"
-        class="hidden fixed inset-x-0 bottom-14 z-40 bg-[#211E16] shadow-lg rounded-t-xl"
+        class="bg-[#211E16] fixed inset-x-0 bottom-14 z-40 hidden rounded-t-xl shadow-lg"
         style="border-top: 1.5px solid rgba(52,48,37,0.58)"
         role="dialog"
         aria-label="More navigation"
       >
         <div class="px-4 pt-4 pb-2">
-          <p class="text-xs font-semibold uppercase tracking-wide text-[#6E675A] mb-3">More</p>
+          <p class="text-[#6E675A] mb-3 text-xs font-semibold uppercase tracking-wide">More</p>
           <ul class="space-y-1">
             <li :for={s <- @more_sections}>
               <.link
@@ -417,7 +469,7 @@ defmodule OpenSauceWeb.Components.Page do
       <%!-- Bottom nav bar --%>
       <nav
         id="bottom-nav"
-        class="fixed bottom-0 inset-x-0 z-50 bg-[#211E16] print:hidden"
+        class="bg-[#211E16] fixed inset-x-0 bottom-0 z-50 print:hidden"
         aria-label="Primary navigation"
         style="border-top: 1.5px solid rgba(52,48,37,0.58); padding-bottom: env(safe-area-inset-bottom)"
       >
@@ -469,7 +521,7 @@ defmodule OpenSauceWeb.Components.Page do
             id="more-tab"
             type="button"
             class={[
-              "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem] text-[10px] leading-none font-medium transition",
+              "min-h-[3.5rem] text-[10px] flex flex-1 flex-col items-center justify-center gap-1 py-2 font-medium leading-none transition",
               @more_active && "text-[#54B57E]",
               not @more_active && "text-[#6E675A]"
             ]}
@@ -496,7 +548,7 @@ defmodule OpenSauceWeb.Components.Page do
     <.link
       navigate={@navigate}
       class={[
-        "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem] text-[10px] leading-none font-medium transition",
+        "min-h-[3.5rem] text-[10px] flex flex-1 flex-col items-center justify-center gap-1 py-2 font-medium leading-none transition",
         @active && "text-[#54B57E]",
         not @active && "text-[#6E675A] hover:text-[#9A9384]"
       ]}
@@ -505,7 +557,7 @@ defmodule OpenSauceWeb.Components.Page do
         {render_slot(@icon)}
         <span
           :if={@live}
-          class="absolute -top-0.5 -right-0.5 block h-2 w-2 rounded-full bg-[#54B57E]"
+          class="bg-[#54B57E] absolute -top-0.5 -right-0.5 block h-2 w-2 rounded-full"
           style="box-shadow: 0 0 0 1.5px #16140E;"
         />
       </div>

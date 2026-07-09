@@ -16,7 +16,7 @@ defmodule OpenSauce.Security.TenantIsolationTest do
 
     Factory.create_customer!(%{}, member_a)
 
-    visible = OpenSauce.CRM.Customer |> Ash.read!(actor: member_b, tenant: member_b.organisation_id)
+    visible = Ash.read!(OpenSauce.CRM.Customer, actor: member_b, tenant: member_b.organisation_id)
 
     assert visible == []
   end
@@ -27,7 +27,8 @@ defmodule OpenSauce.Security.TenantIsolationTest do
 
     Factory.create_material!(%{}, member_a)
 
-    visible = OpenSauce.Inventory.Material |> Ash.read!(actor: member_b, tenant: member_b.organisation_id)
+    visible =
+      Ash.read!(OpenSauce.Inventory.Material, actor: member_b, tenant: member_b.organisation_id)
 
     assert visible == []
   end
@@ -38,7 +39,7 @@ defmodule OpenSauce.Security.TenantIsolationTest do
 
     Factory.create_job!(%{}, member_a)
 
-    visible = OpenSauce.Work.Job |> Ash.read!(actor: member_b, tenant: member_b.organisation_id)
+    visible = Ash.read!(OpenSauce.Work.Job, actor: member_b, tenant: member_b.organisation_id)
 
     assert visible == []
   end

@@ -54,14 +54,18 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
           <option value="supply" selected={@form[:material_type].value == :supply}>Supply</option>
           <option value="plant" selected={@form[:material_type].value == :plant}>Plant</option>
         </select>
-        <span :for={msg <- @form[:material_type].errors} class="dark-field-error">{elem(msg, 0)}</span>
+        <span :for={msg <- @form[:material_type].errors} class="dark-field-error">
+          {elem(msg, 0)}
+        </span>
       </div>
 
       <div>
         <label class="dark-label" for={@form[:unit].id}>Unit</label>
         <select class="dark-select" id={@form[:unit].id} name={@form[:unit].name}>
           <option value="gram" selected={@form[:unit].value == :gram}>Gram (g)</option>
-          <option value="milliliter" selected={@form[:unit].value == :milliliter}>Milliliter (mL)</option>
+          <option value="milliliter" selected={@form[:unit].value == :milliliter}>
+            Milliliter (mL)
+          </option>
           <option value="piece" selected={@form[:unit].value == :piece}>Piece (pcs)</option>
         </select>
         <span :for={msg <- @form[:unit].errors} class="dark-field-error">{elem(msg, 0)}</span>
@@ -203,17 +207,14 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
   defp unit_abbr(:piece), do: "pcs"
   defp unit_abbr(_), do: ""
 
-  defp sci_label(%{latin_name: ln, cultivar: cv, supplier_catalog: %{supplier: %{name: sn}}})
-       when not is_nil(ln) do
+  defp sci_label(%{latin_name: ln, cultivar: cv, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(ln) do
     title = [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
     "#{sn} — #{title}"
   end
 
-  defp sci_label(%{name: name, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(name),
-    do: "#{sn} — #{name}"
+  defp sci_label(%{name: name, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(name), do: "#{sn} — #{name}"
 
-  defp sci_label(%{sku: sku, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(sku),
-    do: "#{sn} — #{sku}"
+  defp sci_label(%{sku: sku, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(sku), do: "#{sn} — #{sku}"
 
   defp sci_label(%{sku: sku}) when not is_nil(sku), do: sku
   defp sci_label(_), do: "—"

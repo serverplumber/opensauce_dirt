@@ -191,7 +191,9 @@ defmodule OpenSauceWeb.JobLive.New do
                 </div>
                 <button
                   type="button"
-                  phx-click={JS.push("open_engagement_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
+                  phx-click={
+                    JS.push("open_engagement_sheet") |> JS.add_class("hidden", to: "#bottom-nav")
+                  }
                   ontouchstart=""
                   style="font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;flex:0 0 auto;"
                 >
@@ -201,7 +203,9 @@ defmodule OpenSauceWeb.JobLive.New do
               <button
                 :if={is_nil(@engagement)}
                 type="button"
-                phx-click={JS.push("open_engagement_sheet") |> JS.add_class("hidden", to: "#bottom-nav")}
+                phx-click={
+                  JS.push("open_engagement_sheet") |> JS.add_class("hidden", to: "#bottom-nav")
+                }
                 ontouchstart=""
                 style="width:100%;border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);background:transparent;padding:9px 13px;font-size:13.5px;color:#6E675A;text-align:left;cursor:pointer;"
               >
@@ -517,7 +521,9 @@ defmodule OpenSauceWeb.JobLive.New do
       >
         <div
           style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
-          phx-click={JS.push("close_engagement_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
+          phx-click={
+            JS.push("close_engagement_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")
+          }
         >
         </div>
         <div style="position:relative;z-index:10;background:#211E16;border-radius:24px 24px 0 0;padding:20px 16px 32px;max-height:80dvh;display:flex;flex-direction:column;">
@@ -525,7 +531,9 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick engagement</span>
             <button
               type="button"
-              phx-click={JS.push("close_engagement_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
+              phx-click={
+                JS.push("close_engagement_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")
+              }
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -552,7 +560,10 @@ defmodule OpenSauceWeb.JobLive.New do
             <button
               :for={eng <- @filtered_engagements}
               type="button"
-              phx-click={JS.push("pick_engagement", value: %{"id" => eng.id}) |> JS.remove_class("hidden", to: "#bottom-nav")}
+              phx-click={
+                JS.push("pick_engagement", value: %{"id" => eng.id})
+                |> JS.remove_class("hidden", to: "#bottom-nav")
+              }
               ontouchstart=""
               style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;#{if @engagement && @engagement.id == eng.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
             >
@@ -591,7 +602,9 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Pick garden</span>
             <button
               type="button"
-              phx-click={JS.push("close_garden_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
+              phx-click={
+                JS.push("close_garden_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")
+              }
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -618,7 +631,10 @@ defmodule OpenSauceWeb.JobLive.New do
             <button
               :for={garden <- filtered_gardens(@all_gardens, @garden_search)}
               type="button"
-              phx-click={JS.push("pick_garden", value: %{"id" => garden.id}) |> JS.remove_class("hidden", to: "#bottom-nav")}
+              phx-click={
+                JS.push("pick_garden", value: %{"id" => garden.id})
+                |> JS.remove_class("hidden", to: "#bottom-nav")
+              }
               ontouchstart=""
               style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;cursor:pointer;#{if @garden && @garden.id == garden.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
             >
@@ -706,7 +722,9 @@ defmodule OpenSauceWeb.JobLive.New do
             <span style="font-size:15px;font-weight:700;color:#F4EFE2;">Add material or plant</span>
             <button
               type="button"
-              phx-click={JS.push("close_materials_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")}
+              phx-click={
+                JS.push("close_materials_sheet") |> JS.remove_class("hidden", to: "#bottom-nav")
+              }
               ontouchstart=""
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >

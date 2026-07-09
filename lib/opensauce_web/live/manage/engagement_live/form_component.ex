@@ -10,10 +10,8 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- SIGNED: read-only scope + photo management only --%>
       <div :if={@signed?} style="display:flex;flex-direction:column;gap:20px;padding:4px 0 0;">
-
         <%!-- locked notice --%>
         <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(84,181,126,0.07);border:1px solid rgba(84,181,126,0.2);border-radius:10px;">
           <span style="color:#54B57E;font-size:14px;line-height:1;">✓</span>
@@ -23,36 +21,67 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
         </div>
 
         <%!-- static scope --%>
-        <div :if={@engagement.scope_title} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;">
-          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:4px;">Title</p>
+        <div
+          :if={@engagement.scope_title}
+          style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;"
+        >
+          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:4px;">
+            Title
+          </p>
           <p style="font-size:14px;color:#F4EFE2;">{@engagement.scope_title}</p>
         </div>
 
-        <div :if={@engagement.scope_description} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;">
-          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:4px;">Scope</p>
-          <p style="font-size:13px;color:#F4EFE2;line-height:1.55;">{@engagement.scope_description}</p>
+        <div
+          :if={@engagement.scope_description}
+          style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:12px 14px;"
+        >
+          <p style="font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6E675A;margin-bottom:4px;">
+            Scope
+          </p>
+          <p style="font-size:13px;color:#F4EFE2;line-height:1.55;">
+            {@engagement.scope_description}
+          </p>
         </div>
 
         <%!-- pricing read-only --%>
-        <div :if={@engagement.install_price || @engagement.maintenance_price_annual}
-          style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div :if={@engagement.install_price} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;">
+        <div
+          :if={@engagement.install_price || @engagement.maintenance_price_annual}
+          style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"
+        >
+          <div
+            :if={@engagement.install_price}
+            style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;"
+          >
             <p style="font-size:10px;color:#6E675A;margin-bottom:3px;">Install</p>
-            <p style="font-size:16px;font-weight:700;color:#F4EFE2;">{HtmlHelpers.format_currency(@currency, @engagement.install_price)}</p>
+            <p style="font-size:16px;font-weight:700;color:#F4EFE2;">
+              {HtmlHelpers.format_currency(@currency, @engagement.install_price)}
+            </p>
           </div>
-          <div :if={@engagement.maintenance_price_annual} style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;">
+          <div
+            :if={@engagement.maintenance_price_annual}
+            style="background:#211E16;border-radius:12px;border:1px solid rgba(52,48,37,0.58);padding:10px 12px;"
+          >
             <p style="font-size:10px;color:#6E675A;margin-bottom:3px;">Maintenance / yr</p>
-            <p style="font-size:16px;font-weight:700;color:#F4EFE2;">{HtmlHelpers.format_currency(@currency, @engagement.maintenance_price_annual)}</p>
+            <p style="font-size:16px;font-weight:700;color:#F4EFE2;">
+              {HtmlHelpers.format_currency(@currency, @engagement.maintenance_price_annual)}
+            </p>
           </div>
         </div>
 
         <%!-- digital renderings: read-only --%>
         <div :if={@existing_paintings != []}>
-          <span class="dark-label" style="margin-bottom:6px;display:block;color:#54B57E;">Digital Renderings</span>
+          <span class="dark-label" style="margin-bottom:6px;display:block;color:#54B57E;">
+            Digital Renderings
+          </span>
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-            <div :for={img <- @existing_paintings}
-              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);">
-              <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+            <div
+              :for={img <- @existing_paintings}
+              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);"
+            >
+              <img
+                src={HtmlHelpers.storage_url(img.storage_key)}
+                style="width:100%;height:100%;object-fit:cover;"
+              />
             </div>
           </div>
         </div>
@@ -61,63 +90,111 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Photos</span>
-            <label for={@uploads.photos.ref} ontouchstart=""
-              style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;">
+            <label
+              for={@uploads.photos.ref}
+              ontouchstart=""
+              style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;"
+            >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+                <path
+                  d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2" />
               </svg>
               Add
             </label>
           </div>
           <.live_file_input upload={@uploads.photos} style="display:none;" />
-          <p :for={err <- upload_errors(@uploads.photos)} class="dark-field-error" style="margin-bottom:6px;">
+          <p
+            :for={err <- upload_errors(@uploads.photos)}
+            class="dark-field-error"
+            style="margin-bottom:6px;"
+          >
             {upload_error_to_string(err)}
           </p>
-          <div :if={@uploads.photos.entries != [] or @existing_photos != []}
-            style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-            <div :for={entry <- @uploads.photos.entries}
-              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
+          <div
+            :if={@uploads.photos.entries != [] or @existing_photos != []}
+            style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"
+          >
+            <div
+              :for={entry <- @uploads.photos.entries}
+              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;"
+            >
               <.live_img_preview entry={entry} style="width:100%;height:100%;object-fit:cover;" />
               <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="photos" phx-target={@myself}
-                  style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                <button
+                  type="button"
+                  phx-click="cancel_upload"
+                  phx-value-ref={entry.ref}
+                  phx-value-upload="photos"
+                  phx-target={@myself}
+                  style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;"
+                >
                   ✕
                 </button>
               </div>
-              <div :if={entry.progress > 0 and entry.progress < 100}
-                style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}>
+              <div
+                :if={entry.progress > 0 and entry.progress < 100}
+                style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}
+              >
               </div>
             </div>
-            <div :for={img <- @existing_photos}
-              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
-              <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+            <div
+              :for={img <- @existing_photos}
+              style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;"
+            >
+              <img
+                src={HtmlHelpers.storage_url(img.storage_key)}
+                style="width:100%;height:100%;object-fit:cover;"
+              />
               <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                <button type="button" phx-click="delete_image" phx-value-id={img.id} phx-target={@myself}
-                  style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                <button
+                  type="button"
+                  phx-click="delete_image"
+                  phx-value-id={img.id}
+                  phx-target={@myself}
+                  style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;"
+                >
                   ✕
                 </button>
               </div>
             </div>
           </div>
-          <div :if={@uploads.photos.entries == [] and @existing_photos == []}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={@uploads.photos.entries == [] and @existing_photos == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No photos yet
           </div>
         </div>
 
         <div :if={@uploads.photos.entries != []} style="padding-top:4px;">
-          <.glow_button valid={true} type="button" phx-click="save_photos" phx-target={@myself} phx-disable-with="Saving…">
+          <.glow_button
+            valid={true}
+            type="button"
+            phx-click="save_photos"
+            phx-target={@myself}
+            phx-disable-with="Saving…"
+          >
             Save photos
           </.glow_button>
         </div>
-
       </div>
 
       <%!-- UNSIGNED: full editable form --%>
-      <.form :if={not @signed?} for={@form} id="engagement-form" phx-target={@myself} phx-change="validate" phx-submit="save">
+      <.form
+        :if={not @signed?}
+        for={@form}
+        id="engagement-form"
+        phx-target={@myself}
+        phx-change="validate"
+        phx-submit="save"
+      >
         <div style="display:flex;flex-direction:column;gap:20px;padding:4px 0 0;">
-
           <%!-- customer — standalone only --%>
           <div :if={@standalone}>
             <label class="dark-label" for="engagement_customer_id">Customer</label>
@@ -172,52 +249,91 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
           <div>
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px;">
               <div style="flex:1;min-width:0;">
-                <span class="dark-label" style="margin-bottom:2px;color:#54B57E;">Digital Renderings</span>
+                <span class="dark-label" style="margin-bottom:2px;color:#54B57E;">
+                  Digital Renderings
+                </span>
                 <p style="font-size:11px;color:#6E675A;line-height:1.4;margin-top:2px;">
                   The visual scope the client signs off on. An engagement with a rendering uses "Garden as drawn" on invoices — without one it reads "Garden as described".
                 </p>
               </div>
-              <label for={@uploads.paintings.ref} ontouchstart=""
-                style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;flex-shrink:0;padding-top:1px;">
+              <label
+                for={@uploads.paintings.ref}
+                ontouchstart=""
+                style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;flex-shrink:0;padding-top:1px;"
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+                  <path
+                    d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2" />
                 </svg>
                 Add
               </label>
             </div>
             <.live_file_input upload={@uploads.paintings} style="display:none;" />
-            <p :for={err <- upload_errors(@uploads.paintings)} class="dark-field-error" style="margin-bottom:6px;">
+            <p
+              :for={err <- upload_errors(@uploads.paintings)}
+              class="dark-field-error"
+              style="margin-bottom:6px;"
+            >
               {upload_error_to_string(err)}
             </p>
-            <div :if={@uploads.paintings.entries != [] or @existing_paintings != []}
-              style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-              <div :for={entry <- @uploads.paintings.entries}
-                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);">
+            <div
+              :if={@uploads.paintings.entries != [] or @existing_paintings != []}
+              style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"
+            >
+              <div
+                :for={entry <- @uploads.paintings.entries}
+                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);"
+              >
                 <.live_img_preview entry={entry} style="width:100%;height:100%;object-fit:cover;" />
                 <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                  <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="paintings" phx-target={@myself}
-                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                  <button
+                    type="button"
+                    phx-click="cancel_upload"
+                    phx-value-ref={entry.ref}
+                    phx-value-upload="paintings"
+                    phx-target={@myself}
+                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;"
+                  >
                     ✕
                   </button>
                 </div>
-                <div :if={entry.progress > 0 and entry.progress < 100}
-                  style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}>
+                <div
+                  :if={entry.progress > 0 and entry.progress < 100}
+                  style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}
+                >
                 </div>
               </div>
-              <div :for={img <- @existing_paintings}
-                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);">
-                <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+              <div
+                :for={img <- @existing_paintings}
+                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:3/4;border:1.5px solid rgba(84,181,126,0.35);"
+              >
+                <img
+                  src={HtmlHelpers.storage_url(img.storage_key)}
+                  style="width:100%;height:100%;object-fit:cover;"
+                />
                 <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                  <button type="button" phx-click="delete_image" phx-value-id={img.id} phx-target={@myself}
-                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                  <button
+                    type="button"
+                    phx-click="delete_image"
+                    phx-value-id={img.id}
+                    phx-target={@myself}
+                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;"
+                  >
                     ✕
                   </button>
                 </div>
               </div>
             </div>
-            <div :if={@uploads.paintings.entries == [] and @existing_paintings == []}
-              style="border-radius:12px;border:1.5px dashed rgba(84,181,126,0.25);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+            <div
+              :if={@uploads.paintings.entries == [] and @existing_paintings == []}
+              style="border-radius:12px;border:1.5px dashed rgba(84,181,126,0.25);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+            >
               No renderings yet — add one to define visual scope
             </div>
           </div>
@@ -226,47 +342,84 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span class="dark-label" style="margin-bottom:0;">Photos</span>
-              <label for={@uploads.photos.ref} ontouchstart=""
-                style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;">
+              <label
+                for={@uploads.photos.ref}
+                ontouchstart=""
+                style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#54B57E;cursor:pointer;"
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+                  <path
+                    d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2" />
                 </svg>
                 Add
               </label>
             </div>
             <.live_file_input upload={@uploads.photos} style="display:none;" />
-            <p :for={err <- upload_errors(@uploads.photos)} class="dark-field-error" style="margin-bottom:6px;">
+            <p
+              :for={err <- upload_errors(@uploads.photos)}
+              class="dark-field-error"
+              style="margin-bottom:6px;"
+            >
               {upload_error_to_string(err)}
             </p>
-            <div :if={@uploads.photos.entries != [] or @existing_photos != []}
-              style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-              <div :for={entry <- @uploads.photos.entries}
-                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
+            <div
+              :if={@uploads.photos.entries != [] or @existing_photos != []}
+              style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"
+            >
+              <div
+                :for={entry <- @uploads.photos.entries}
+                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;"
+              >
                 <.live_img_preview entry={entry} style="width:100%;height:100%;object-fit:cover;" />
                 <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                  <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="photos" phx-target={@myself}
-                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                  <button
+                    type="button"
+                    phx-click="cancel_upload"
+                    phx-value-ref={entry.ref}
+                    phx-value-upload="photos"
+                    phx-target={@myself}
+                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;"
+                  >
                     ✕
                   </button>
                 </div>
-                <div :if={entry.progress > 0 and entry.progress < 100}
-                  style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}>
+                <div
+                  :if={entry.progress > 0 and entry.progress < 100}
+                  style={"position:absolute;bottom:0;left:0;height:3px;background:#54B57E;transition:width .1s;width:#{entry.progress}%;"}
+                >
                 </div>
               </div>
-              <div :for={img <- @existing_photos}
-                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;">
-                <img src={HtmlHelpers.storage_url(img.storage_key)} style="width:100%;height:100%;object-fit:cover;" />
+              <div
+                :for={img <- @existing_photos}
+                style="position:relative;border-radius:8px;overflow:hidden;background:#211E16;aspect-ratio:1;"
+              >
+                <img
+                  src={HtmlHelpers.storage_url(img.storage_key)}
+                  style="width:100%;height:100%;object-fit:cover;"
+                />
                 <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px;">
-                  <button type="button" phx-click="delete_image" phx-value-id={img.id} phx-target={@myself}
-                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;">
+                  <button
+                    type="button"
+                    phx-click="delete_image"
+                    phx-value-id={img.id}
+                    phx-target={@myself}
+                    style="background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F4EFE2;font-size:11px;line-height:0;padding:0;"
+                  >
                     ✕
                   </button>
                 </div>
               </div>
             </div>
-            <div :if={@uploads.photos.entries == [] and @existing_photos == []}
-              style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+            <div
+              :if={@uploads.photos.entries == [] and @existing_photos == []}
+              style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+            >
               No photos yet
             </div>
           </div>
@@ -345,10 +498,8 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
               {if @engagement, do: "Save changes", else: "Create engagement"}
             </.glow_button>
           </div>
-
         </div>
       </.form>
-
     </div>
     """
   end
@@ -526,17 +677,18 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
                  entry.client_type,
                  binary
                ) do
-          hash = :crypto.hash(:sha256, binary) |> Base.encode16(case: :lower)
+          hash = :sha256 |> :crypto.hash(binary) |> Base.encode16(case: :lower)
 
-          CRM.create_engagement_image!(%{
-            engagement_id: engagement.id,
-            type: image_type,
-            captured_on: Date.utc_today(),
-            storage_key: key,
-            content_type: entry.client_type,
-            original_filename: entry.client_name,
-            content_hash: hash
-          },
+          CRM.create_engagement_image!(
+            %{
+              engagement_id: engagement.id,
+              type: image_type,
+              captured_on: Date.utc_today(),
+              storage_key: key,
+              content_type: entry.client_type,
+              original_filename: entry.client_name,
+              content_hash: hash
+            },
             actor: member,
             tenant: member.organisation_id
           )
@@ -588,7 +740,8 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   defp load_existing_photos(nil, _member), do: []
 
   defp load_existing_photos(engagement, member) do
-    CRM.list_engagement_images!(engagement.id,
+    engagement.id
+    |> CRM.list_engagement_images!(
       actor: member,
       tenant: member.organisation_id
     )
@@ -630,6 +783,6 @@ defmodule OpenSauceWeb.EngagementLive.FormComponent do
   defp garden_label(addr) do
     name = addr.name || "Garden"
     short = [addr.street, addr.city] |> Enum.reject(&is_nil/1) |> Enum.join(", ")
-    if short != "", do: "#{name} — #{short}", else: name
+    if short == "", do: name, else: "#{name} — #{short}"
   end
 end

@@ -1,4 +1,5 @@
 defmodule OpenSauce.Concerns.Venued do
+  @moduledoc false
   use Spark.Dsl.Fragment, of: Ash.Resource
 
   attributes do

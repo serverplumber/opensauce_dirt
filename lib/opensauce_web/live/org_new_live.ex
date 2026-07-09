@@ -41,7 +41,7 @@ defmodule OpenSauceWeb.OrgNewLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-dvh bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
+    <div class="min-h-dvh flex flex-col items-center justify-center bg-stone-50 px-6 py-12">
       <div class="w-full max-w-sm space-y-8">
         <div>
           <h1 class="text-2xl font-bold text-stone-900">Create your organisation</h1>
@@ -75,7 +75,7 @@ defmodule OpenSauceWeb.OrgNewLive do
           <button
             id="create-org-btn"
             type="submit"
-            class="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2 transition"
+            class="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2"
           >
             Create organisation
           </button>
@@ -84,7 +84,7 @@ defmodule OpenSauceWeb.OrgNewLive do
         <div class="text-center">
           <.link
             navigate={~p"/org/pick"}
-            class="text-sm text-stone-400 hover:text-stone-700 transition"
+            class="text-sm text-stone-400 transition hover:text-stone-700"
           >
             ← Back to organisation list
           </.link>

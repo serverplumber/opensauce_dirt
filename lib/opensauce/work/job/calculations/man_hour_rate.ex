@@ -10,7 +10,7 @@ defmodule OpenSauce.Work.Job.Calculations.ManHourRate do
     {:ok,
      Enum.map(records, fn job ->
        Enum.reduce(job.staff_assignments || [], Decimal.new(0), fn assignment, acc ->
-         rate = assignment.member && assignment.member.labor_hourly_rate || Decimal.new(0)
+         rate = (assignment.member && assignment.member.labor_hourly_rate) || Decimal.new(0)
          Decimal.add(acc, rate)
        end)
      end)}

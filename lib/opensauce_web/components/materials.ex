@@ -5,8 +5,8 @@ defmodule OpenSauceWeb.Components.Materials do
   @moduledoc false
   use Phoenix.Component
 
-  import OpenSauceWeb.HtmlHelpers
   import OpenSauceWeb.Components.Core, only: [glow_button: 1]
+  import OpenSauceWeb.HtmlHelpers
 
   alias Phoenix.LiveView.JS
 
@@ -47,11 +47,14 @@ defmodule OpenSauceWeb.Components.Materials do
       </div>
       <form phx-change={@search_event} style="position:relative;">
         <svg
-          width="15" height="15" viewBox="0 0 24 24" fill="none"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
           style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6E675A;pointer-events:none;"
         >
-          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
         <input
           class="dark-input"
@@ -71,7 +74,12 @@ defmodule OpenSauceWeb.Components.Materials do
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#DB9258;cursor:pointer;padding:4px;line-height:0;"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <path
+              d="M18 6L6 18M6 6l12 12"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </form>
@@ -147,10 +155,24 @@ defmodule OpenSauceWeb.Components.Materials do
         </div>
       </div>
       <%!-- job/garden attribution --%>
-      <div :if={@job && @job.garden} style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(52,48,37,0.45);display:flex;align-items:center;gap:5px;">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex-shrink:0;">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+      <div
+        :if={@job && @job.garden}
+        style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(52,48,37,0.45);display:flex;align-items:center;gap:5px;"
+      >
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          style="color:#6E675A;flex-shrink:0;"
+        >
+          <path
+            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+          <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2" />
         </svg>
         <span style="font-size:11px;color:#6E675A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
           {job_location_label(@job)}
@@ -180,8 +202,7 @@ defmodule OpenSauceWeb.Components.Materials do
       :if={@material != nil}
       style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
     >
-      <div phx-click={@on_close} style="position:absolute;inset:0;background:rgba(0,0,0,0.65);">
-      </div>
+      <div phx-click={@on_close} style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"></div>
       <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
         <div style="padding:12px 16px 14px;border-bottom:1px solid rgba(52,48,37,0.58);">
           <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;">
@@ -282,12 +303,14 @@ defmodule OpenSauceWeb.Components.Materials do
 
   defp item_subtitle(%{supplier_catalog_item: sci}, show_supplier, from_plan) when not is_nil(sci) do
     parts =
-      [
-        if(show_supplier, do: sci.supplier_catalog.supplier.name),
-        sci.format_description,
-        if(from_plan, do: "plan")
-      ]
-      |> Enum.reject(&is_nil/1)
+      Enum.reject(
+        [
+          if(show_supplier, do: sci.supplier_catalog.supplier.name),
+          sci.format_description,
+          if(from_plan, do: "plan")
+        ],
+        &is_nil/1
+      )
 
     Enum.join(parts, " · ")
   end
@@ -300,8 +323,7 @@ defmodule OpenSauceWeb.Components.Materials do
     if from_plan, do: "plan", else: ""
   end
 
-  defp job_location_label(%{garden: %{customer: customer, name: garden_name}} = _job)
-       when not is_nil(customer) do
+  defp job_location_label(%{garden: %{customer: customer, name: garden_name}} = _job) when not is_nil(customer) do
     client = garden_customer_short(customer)
     if garden_name, do: "#{client} — #{garden_name}", else: client
   end
@@ -311,8 +333,9 @@ defmodule OpenSauceWeb.Components.Materials do
   defp job_location_label(_), do: "—"
 
   defp garden_customer_short(%{company_name_nickname: cn}) when not is_nil(cn), do: cn
-  defp garden_customer_short(%{first_name: fn_, last_name: ln}),
-    do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+
+  defp garden_customer_short(%{first_name: fn_, last_name: ln}), do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+
   defp garden_customer_short(_), do: "—"
 
   # latin_name + cultivar if present, falls back to name

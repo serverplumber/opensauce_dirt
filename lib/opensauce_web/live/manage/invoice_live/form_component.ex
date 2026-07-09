@@ -4,9 +4,9 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
   import Ash.Query
 
+  alias Decimal, as: D
   alias OpenSauce.CRM
   alias OpenSauce.Work
-  alias Decimal, as: D
 
   @impl true
   def update(assigns, socket) do
@@ -69,13 +69,21 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div style="padding:0 16px;">
-      <form id="invoice-form" phx-change="validate" phx-submit="save" phx-target={@myself} style="display:flex;flex-direction:column;gap:16px;padding-bottom:24px;">
-
+      <form
+        id="invoice-form"
+        phx-change="validate"
+        phx-submit="save"
+        phx-target={@myself}
+        style="display:flex;flex-direction:column;gap:16px;padding-bottom:24px;"
+      >
         <%!-- customer --%>
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
             <label class="dark-label">Customer</label>
-            <div :if={@invoice} style="font-size:15px;font-weight:600;color:#F4EFE2;padding:10px 0 2px;">
+            <div
+              :if={@invoice}
+              style="font-size:15px;font-weight:600;color:#F4EFE2;padding:10px 0 2px;"
+            >
               {@invoice.customer.first_name} {@invoice.customer.last_name}
               <input type="hidden" name="invoice[customer_id]" value={@customer_id} />
             </div>
@@ -89,10 +97,18 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
           <div style="display:flex;gap:10px;">
             <div style="flex:1;">
               <label class="dark-label">Issued</label>
-              <input type="date" name="invoice[issued_on]" value={@params["issued_on"]} class="dark-input" required />
+              <input
+                type="date"
+                name="invoice[issued_on]"
+                value={@params["issued_on"]}
+                class="dark-input"
+                required
+              />
             </div>
             <div style="flex:1;">
-              <label class="dark-label">Due <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label">
+                Due <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <input type="date" name="invoice[due_on]" value={@params["due_on"]} class="dark-input" />
             </div>
           </div>
@@ -120,13 +136,42 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   phx-target={@myself}
                   style="flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 >
-                  <svg :if={!group.engagement.hidden} width="15" height="15" fill="none" viewBox="0 0 24 24">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#54B57E" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2"/>
+                  <svg
+                    :if={!group.engagement.hidden}
+                    width="15"
+                    height="15"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                      stroke="#54B57E"
+                      stroke-width="2"
+                    />
+                    <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2" />
                   </svg>
-                  <svg :if={group.engagement.hidden} width="15" height="15" fill="none" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="1" y1="1" x2="23" y2="23" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                  <svg
+                    :if={group.engagement.hidden}
+                    width="15"
+                    height="15"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="1"
+                      y1="1"
+                      x2="23"
+                      y2="23"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
                 <button
@@ -137,8 +182,16 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   style="flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 >
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
-                    <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2" />
+                    <line
+                      x1="8"
+                      y1="12"
+                      x2="16"
+                      y2="12"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
                 <div style="flex:1;min-width:0;">
@@ -171,13 +224,42 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   phx-target={@myself}
                   style="flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 >
-                  <svg :if={!MapSet.member?(@hidden_job_ids, job.id)} width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#54B57E" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2"/>
+                  <svg
+                    :if={!MapSet.member?(@hidden_job_ids, job.id)}
+                    width="14"
+                    height="14"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                      stroke="#54B57E"
+                      stroke-width="2"
+                    />
+                    <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2" />
                   </svg>
-                  <svg :if={MapSet.member?(@hidden_job_ids, job.id)} width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="1" y1="1" x2="23" y2="23" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                  <svg
+                    :if={MapSet.member?(@hidden_job_ids, job.id)}
+                    width="14"
+                    height="14"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="1"
+                      y1="1"
+                      x2="23"
+                      y2="23"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
                 <button
@@ -188,15 +270,25 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   style="flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 >
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
-                    <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2" />
+                    <line
+                      x1="8"
+                      y1="12"
+                      x2="16"
+                      y2="12"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
                 <div style="flex:1;min-width:0;">
                   <p style="font-size:12.5px;font-weight:500;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {format_job_label(job)}
                   </p>
-                  <p :if={job.scheduled_at} style="font-size:11px;color:#6E675A;margin-top:1px;">{format_date(job.scheduled_at)}</p>
+                  <p :if={job.scheduled_at} style="font-size:11px;color:#6E675A;margin-top:1px;">
+                    {format_date(job.scheduled_at)}
+                  </p>
                 </div>
                 <input
                   type="number"
@@ -221,12 +313,29 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   style="flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 >
                   <svg :if={!item.hidden} width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#54B57E" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2"/>
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                      stroke="#54B57E"
+                      stroke-width="2"
+                    />
+                    <circle cx="12" cy="12" r="3" stroke="#54B57E" stroke-width="2" />
                   </svg>
                   <svg :if={item.hidden} width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="1" y1="1" x2="23" y2="23" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="1"
+                      y1="1"
+                      x2="23"
+                      y2="23"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
                 <button
@@ -238,8 +347,16 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   style="flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
                 >
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
-                    <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2" />
+                    <line
+                      x1="8"
+                      y1="12"
+                      x2="16"
+                      y2="12"
+                      stroke="#6E675A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
                 <input
@@ -272,7 +389,12 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                   style="font-size:12px;font-weight:600;color:#54B57E;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 5v14M5 12h14" stroke="#54B57E" stroke-width="2.5" stroke-linecap="round" />
+                    <path
+                      d="M12 5v14M5 12h14"
+                      stroke="#54B57E"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                    />
                   </svg>
                   Add line
                 </button>
@@ -316,8 +438,16 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
                 style="flex-shrink:0;color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
               >
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2"/>
-                  <line x1="8" y1="12" x2="16" y2="12" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="12" cy="12" r="10" stroke="#6E675A" stroke-width="2" />
+                  <line
+                    x1="8"
+                    y1="12"
+                    x2="16"
+                    y2="12"
+                    stroke="#6E675A"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </button>
               <input
@@ -345,14 +475,18 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
         <%!-- notes --%>
         <div>
-          <label class="dark-label">Notes <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+          <label class="dark-label">
+            Notes <span style="color:#6E675A;font-weight:400;">(optional)</span>
+          </label>
           <textarea name="invoice[notes]" rows="2" class="dark-textarea">{@params["notes"]}</textarea>
         </div>
 
         <%!-- total + save --%>
         <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;">
           <div>
-            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">Total</p>
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
+              Total
+            </p>
             <p style="font-size:20px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:#F4EFE2;margin-top:2px;">
               {format_total(@groups, @hidden_job_ids, @custom_line_items, @organisation.currency)}
             </p>
@@ -429,9 +563,10 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
   @impl true
   def handle_event("remove_group", %{"id" => engagement_id}, socket) do
-    updated = Enum.reject(socket.assigns.groups, fn g ->
-      g.engagement && g.engagement.id == engagement_id
-    end)
+    updated =
+      Enum.reject(socket.assigns.groups, fn g ->
+        g.engagement && g.engagement.id == engagement_id
+      end)
 
     {:noreply, assign(socket, :groups, updated)}
   end
@@ -449,7 +584,12 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
   @impl true
   def handle_event("add_group_line", %{"id" => eng_id}, socket) do
-    item = %{id: "gl_#{:erlang.unique_integer([:positive])}", label: "", amount: "", hidden: false}
+    item = %{
+      id: "gl_#{:erlang.unique_integer([:positive])}",
+      label: "",
+      amount: "",
+      hidden: false
+    }
 
     updated =
       Enum.map(socket.assigns.groups, fn g ->
@@ -466,9 +606,11 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     updated =
       Enum.map(socket.assigns.groups, fn g ->
         if g.engagement && g.engagement.id == eng_id do
-          items = Enum.map(g.custom_items, fn i ->
-            if i.id == item_id, do: %{i | hidden: !i.hidden}, else: i
-          end)
+          items =
+            Enum.map(g.custom_items, fn i ->
+              if i.id == item_id, do: %{i | hidden: !i.hidden}, else: i
+            end)
+
           %{g | custom_items: items}
         else
           g
@@ -505,14 +647,17 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
         eng_items =
           if g.engagement && !g.engagement.hidden do
-            amount = parse_decimal(Map.get(engagement_amounts, g.engagement.id, g.engagement.amount))
+            amount =
+              parse_decimal(Map.get(engagement_amounts, g.engagement.id, g.engagement.amount))
 
-            [%{
-              "label" => g.engagement.label,
-              "amount" => D.to_string(amount),
-              "type" => "engagement",
-              "group_id" => group_id
-            }]
+            [
+              %{
+                "label" => g.engagement.label,
+                "amount" => D.to_string(amount),
+                "type" => "engagement",
+                "group_id" => group_id
+              }
+            ]
           else
             []
           end
@@ -552,7 +697,11 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
 
     custom_line_items_saved =
       Enum.map(custom_items, fn i ->
-        %{"label" => i.label, "amount" => D.to_string(parse_decimal(i.amount)), "type" => "custom"}
+        %{
+          "label" => i.label,
+          "amount" => D.to_string(parse_decimal(i.amount)),
+          "type" => "custom"
+        }
       end)
 
     line_items_to_save = line_items_from_groups ++ custom_line_items_saved
@@ -560,7 +709,9 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     eng_total =
       Enum.reduce(groups, D.new(0), fn g, acc ->
         if g.engagement && !g.engagement.hidden do
-          amount = parse_decimal(Map.get(engagement_amounts, g.engagement.id, g.engagement.amount))
+          amount =
+            parse_decimal(Map.get(engagement_amounts, g.engagement.id, g.engagement.amount))
+
           D.add(acc, amount)
         else
           acc
@@ -666,13 +817,20 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
         current_ids = MapSet.new(all_visible_jobs, & &1.id)
 
         for removed_id <- MapSet.difference(original_ids, current_ids) do
-          with {:ok, job} <- Work.get_job_by_id(removed_id, actor: member, tenant: member.organisation_id) do
-            Work.assign_job_invoice(job, %{invoice_id: nil}, actor: member, tenant: member.organisation_id)
+          with {:ok, job} <-
+                 Work.get_job_by_id(removed_id, actor: member, tenant: member.organisation_id) do
+            Work.assign_job_invoice(job, %{invoice_id: nil},
+              actor: member,
+              tenant: member.organisation_id
+            )
           end
         end
 
         for job <- Enum.reject(all_visible_jobs, &MapSet.member?(original_ids, &1.id)) do
-          Work.assign_job_invoice(job.struct, %{invoice_id: invoice.id}, actor: member, tenant: member.organisation_id)
+          Work.assign_job_invoice(job.struct, %{invoice_id: invoice.id},
+            actor: member,
+            tenant: member.organisation_id
+          )
         end
 
         notify_parent({:saved, updated_invoice})
@@ -691,7 +849,8 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     member = socket.assigns.current_member
 
     customers =
-      CRM.list_customers_with_uninvoiced_jobs!(actor: member, tenant: member.organisation_id)
+      [actor: member, tenant: member.organisation_id]
+      |> CRM.list_customers_with_uninvoiced_jobs!()
       |> Enum.map(fn c -> {"#{c.first_name} #{c.last_name}", c.id} end)
 
     assign(socket, :customers, customers)
@@ -731,7 +890,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     |> Ash.Query.load([:materials_cost, :garden, engagement: [:garden]])
     |> Ash.read!(actor: member, tenant: member.organisation_id)
     |> Enum.map(fn job ->
-      eng_line = if job.engagement, do: engagement_to_line(job.engagement), else: nil
+      eng_line = if job.engagement, do: engagement_to_line(job.engagement)
 
       %{
         id: job.id,
@@ -754,7 +913,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     |> Ash.Query.load([:materials_cost, :garden, engagement: [:garden]])
     |> Ash.read!(actor: member, tenant: member.organisation_id)
     |> Enum.map(fn job ->
-      eng_line = if job.engagement, do: engagement_to_line(job.engagement), else: nil
+      eng_line = if job.engagement, do: engagement_to_line(job.engagement)
 
       %{
         id: job.id,
@@ -783,7 +942,12 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       |> Map.new(fn {gid, items} ->
         custom_items =
           Enum.map(items, fn i ->
-            %{id: "gl_#{:erlang.unique_integer([:positive])}", label: i["label"] || "", amount: i["amount"] || "", hidden: false}
+            %{
+              id: "gl_#{:erlang.unique_integer([:positive])}",
+              label: i["label"] || "",
+              amount: i["amount"] || "",
+              hidden: false
+            }
           end)
 
         {gid, custom_items}
@@ -806,7 +970,10 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       %{engagement: eng_line, jobs: group_jobs, custom_items: custom_items}
     end)
     |> Enum.sort_by(fn g ->
-      g.jobs |> Enum.map(& &1.scheduled_at) |> Enum.filter(& &1) |> case do
+      g.jobs
+      |> Enum.map(& &1.scheduled_at)
+      |> Enum.filter(& &1)
+      |> case do
         [] -> ~D[9999-12-31]
         dates -> Enum.min(dates)
       end
@@ -817,13 +984,21 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
     line_items
     |> Enum.filter(&(&1["type"] == "custom" and is_nil(&1["group_id"])))
     |> Enum.map(fn i ->
-      %{id: "li_#{:erlang.unique_integer([:positive])}", label: i["label"] || "", amount: i["amount"] || ""}
+      %{
+        id: "li_#{:erlang.unique_integer([:positive])}",
+        label: i["label"] || "",
+        amount: i["amount"] || ""
+      }
     end)
   end
 
   defp invoice_to_params(invoice) do
     %{
-      "issued_on" => if(invoice.issued_on, do: Date.to_iso8601(invoice.issued_on), else: Date.to_iso8601(Date.utc_today())),
+      "issued_on" =>
+        if(invoice.issued_on,
+          do: Date.to_iso8601(invoice.issued_on),
+          else: Date.to_iso8601(Date.utc_today())
+        ),
       "due_on" => if(invoice.due_on, do: Date.to_iso8601(invoice.due_on), else: ""),
       "notes" => invoice.notes || "",
       "status" => to_string(invoice.status)
@@ -837,10 +1012,13 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
       cond do
         e.scope_title && e.scope_title != "" && garden_name && garden_name != "" ->
           "#{e.scope_title} · #{garden_name}"
+
         e.scope_title && e.scope_title != "" ->
           e.scope_title
+
         garden_name && garden_name != "" ->
           garden_name
+
         true ->
           e.status |> Atom.to_string() |> String.replace("_", " ")
       end
@@ -864,7 +1042,7 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   defp default_engagement_amount(%{install_price: i, maintenance_price_annual: m}) do
     install = i || D.new(0)
     maint = m || D.new(0)
-    D.add(install, maint) |> D.round(2) |> D.to_string()
+    install |> D.add(maint) |> D.round(2) |> D.to_string()
   end
 
   defp default_engagement_amount(_), do: ""
@@ -872,12 +1050,16 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
   defp sync_job_amounts(socket, amounts_map) do
     updated =
       Enum.map(socket.assigns.groups, fn g ->
-        %{g | jobs: Enum.map(g.jobs, fn job ->
-          case Map.fetch(amounts_map, job.id) do
-            {:ok, amount} -> %{job | amount: amount}
-            :error -> job
-          end
-        end)}
+        %{
+          g
+          | jobs:
+              Enum.map(g.jobs, fn job ->
+                case Map.fetch(amounts_map, job.id) do
+                  {:ok, amount} -> %{job | amount: amount}
+                  :error -> job
+                end
+              end)
+        }
       end)
 
     assign(socket, :groups, updated)
@@ -909,7 +1091,11 @@ defmodule OpenSauceWeb.InvoiceLive.FormComponent do
             Enum.map(g.custom_items, fn item ->
               case Map.fetch(eng_data, item.id) do
                 {:ok, data} ->
-                  %{item | label: data["label"] || item.label, amount: data["amount"] || item.amount}
+                  %{
+                    item
+                    | label: data["label"] || item.label,
+                      amount: data["amount"] || item.amount
+                  }
 
                 :error ->
                   item

@@ -38,8 +38,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
       end
 
     {:ok,
-     socket
-     |> assign(
+     assign(socket,
        page_title: "Start shift",
        main_bg: "bg-[#16140E]",
        mode: :driving,
@@ -161,7 +160,12 @@ defmodule OpenSauceWeb.ShiftLive.Start do
             style="color:#6E675A;background:none;border:none;padding:6px;cursor:pointer;line-height:0;"
           >
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </.link>
@@ -196,7 +200,9 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               <div style={"font-size:17px;font-weight:700;letter-spacing:-0.01em;color:#{card_label_color(@mode, :driving)};"}>
                 Loading the jalopy
               </div>
-              <div style="font-size:12px;color:#9A9384;margin-top:2px;">loading up · driving to first job</div>
+              <div style="font-size:12px;color:#9A9384;margin-top:2px;">
+                loading up · driving to first job
+              </div>
             </div>
             <svg
               width="34"
@@ -206,7 +212,11 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               style={"flex-shrink:0;opacity:#{if @mode == :driving, do: "1", else: "0.35"};"}
             >
               <rect
-                x="1" y="8" width="15" height="9" rx="1.5"
+                x="1"
+                y="8"
+                width="15"
+                height="9"
+                rx="1.5"
                 stroke={card_label_color(@mode, :driving)}
                 stroke-width="1.5"
               />
@@ -221,7 +231,10 @@ defmodule OpenSauceWeb.ShiftLive.Start do
             </svg>
           </button>
 
-          <div :if={@mode == :driving} style="padding:0 14px 14px;border-top:1px dashed rgba(84,181,126,0.3);">
+          <div
+            :if={@mode == :driving}
+            style="padding:0 14px 14px;border-top:1px dashed rgba(84,181,126,0.3);"
+          >
             <div style="padding-top:12px;">
               <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin:0 0 7px;">
                 From
@@ -233,7 +246,11 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin:0 0 6px;">
                 Start odometer
               </p>
-              <form phx-change="update_odometer" phx-submit="start_shift" style="display:flex;align-items:baseline;gap:8px;">
+              <form
+                phx-change="update_odometer"
+                phx-submit="start_shift"
+                style="display:flex;align-items:baseline;gap:8px;"
+              >
                 <input
                   type="number"
                   name="odometer"
@@ -246,7 +263,9 @@ defmodule OpenSauceWeb.ShiftLive.Start do
                 />
                 <span style="font-size:14px;color:#9A9384;">km</span>
               </form>
-              <p style="font-size:11px;color:#6E675A;margin:4px 0 0;">required · needed for mileage tracking</p>
+              <p style="font-size:11px;color:#6E675A;margin:4px 0 0;">
+                required · needed for mileage tracking
+              </p>
             </div>
           </div>
         </div>
@@ -269,7 +288,9 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               <div style={"font-size:17px;font-weight:700;letter-spacing:-0.01em;color:#{card_label_color(@mode, :riding)};"}>
                 Riding along
               </div>
-              <div style="font-size:12px;color:#9A9384;margin-top:2px;">in the van · someone else is driving</div>
+              <div style="font-size:12px;color:#9A9384;margin-top:2px;">
+                in the van · someone else is driving
+              </div>
             </div>
             <svg
               width="34"
@@ -278,7 +299,13 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               fill="none"
               style={"flex-shrink:0;opacity:#{if @mode == :riding, do: "1", else: "0.35"};"}
             >
-              <circle cx="12" cy="7" r="3" stroke={card_label_color(@mode, :riding)} stroke-width="1.5" />
+              <circle
+                cx="12"
+                cy="7"
+                r="3"
+                stroke={card_label_color(@mode, :riding)}
+                stroke-width="1.5"
+              />
               <path
                 d="M5 21c0-4 3-7 7-7s7 3 7 7"
                 stroke={card_label_color(@mode, :riding)}
@@ -335,7 +362,9 @@ defmodule OpenSauceWeb.ShiftLive.Start do
               <div style={"font-size:17px;font-weight:700;letter-spacing:-0.01em;color:#{card_label_color(@mode, :checkin)};"}>
                 Already on site
               </div>
-              <div style="font-size:12px;color:#9A9384;margin-top:2px;">got here independently · no driving</div>
+              <div style="font-size:12px;color:#9A9384;margin-top:2px;">
+                got here independently · no driving
+              </div>
             </div>
             <svg
               width="34"
@@ -402,16 +431,17 @@ defmodule OpenSauceWeb.ShiftLive.Start do
       <%!-- Venue picker sheet --%>
       <div
         :if={@venue_sheet_open}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label="Choose depot"
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="close_venue_sheet" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="close_venue_sheet" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl px-5 pt-4"
+          class="bg-[#211E16] relative w-full max-w-lg rounded-t-2xl px-5 pt-4"
           style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(2rem,env(safe-area-inset-bottom));"
         >
-          <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto 16px;"></div>
+          <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto 16px;">
+          </div>
           <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;margin:0 0 14px;">
             Choose depot
           </p>
@@ -486,15 +516,13 @@ defmodule OpenSauceWeb.ShiftLive.Start do
     end
   end
 
-  defp can_start?(mode, _odometer, active_shift) when mode in [:checkin, :riding],
-    do: not is_nil(active_shift)
+  defp can_start?(mode, _odometer, active_shift) when mode in [:checkin, :riding], do: not is_nil(active_shift)
 
   defp cta_label(:driving), do: "start shift →"
   defp cta_label(:checkin), do: "join shift →"
   defp cta_label(:riding), do: "hop in →"
 
-  defp venue_active?(driving_venue, venue) when is_struct(driving_venue),
-    do: driving_venue.id == venue.id
+  defp venue_active?(driving_venue, venue) when is_struct(driving_venue), do: driving_venue.id == venue.id
 
   defp venue_active?(_, _), do: false
 
@@ -513,7 +541,10 @@ defmodule OpenSauceWeb.ShiftLive.Start do
     Enum.find(jobs, &(&1.status == :in_progress)) ||
       jobs
       |> Enum.filter(&(&1.status == :scheduled))
-      |> Enum.min_by(fn j -> {j.start_time && j.start_time.hour * 60 + j.start_time.minute, 0} end, fn -> nil end)
+      |> Enum.min_by(
+        fn j -> {j.start_time && j.start_time.hour * 60 + j.start_time.minute, 0} end,
+        fn -> nil end
+      )
   end
 
   defp today_subtitle do
@@ -532,33 +563,30 @@ defmodule OpenSauceWeb.ShiftLive.Start do
   end
 
   defp member_display_name(user) do
-    cond do
-      is_binary(user.first_name) and String.trim(user.first_name) != "" ->
-        String.trim(user.first_name)
-
-      true ->
-        user.email |> to_string() |> String.split("@") |> hd()
+    if is_binary(user.first_name) and String.trim(user.first_name) != "" do
+      String.trim(user.first_name)
+    else
+      user.email |> to_string() |> String.split("@") |> hd()
     end
   end
 
   defp job_location_name(%{garden: %{name: name}}) when is_binary(name) and name != "", do: name
 
-  defp job_location_name(%{engagement: %{customer: %{company_name_nickname: nick}}})
-       when is_binary(nick),
-       do: nick
+  defp job_location_name(%{engagement: %{customer: %{company_name_nickname: nick}}}) when is_binary(nick), do: nick
 
-  defp job_location_name(%{engagement: %{customer: %{first_name: f, last_name: l}}}),
-    do: "#{f} #{l}"
+  defp job_location_name(%{engagement: %{customer: %{first_name: f, last_name: l}}}), do: "#{f} #{l}"
 
   defp job_location_name(_), do: "Job site"
 
   defp job_subtitle(job) do
     parts =
-      [
-        job.service_category && service_category_label(job.service_category),
-        job.start_time && Calendar.strftime(job.start_time, "%H:%M")
-      ]
-      |> Enum.reject(&is_nil/1)
+      Enum.reject(
+        [
+          job.service_category && service_category_label(job.service_category),
+          job.start_time && Calendar.strftime(job.start_time, "%H:%M")
+        ],
+        &is_nil/1
+      )
 
     Enum.join(parts, " · ")
   end

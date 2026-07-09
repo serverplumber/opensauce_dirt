@@ -13,7 +13,9 @@ defmodule OpenSauceWeb.InventoryLive.Index do
         <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
           Inventory
         </h1>
-        <p style="font-size:13px;color:#9A9384;margin-top:3px;">Materials, stock levels, and pricing.</p>
+        <p style="font-size:13px;color:#9A9384;margin-top:3px;">
+          Materials, stock levels, and pricing.
+        </p>
       </div>
 
       <%!-- material list --%>
@@ -52,7 +54,6 @@ defmodule OpenSauceWeb.InventoryLive.Index do
             </div>
           </div>
         </div>
-
       </div>
 
       <p
@@ -77,21 +78,22 @@ defmodule OpenSauceWeb.InventoryLive.Index do
       <%!-- new material bottom sheet --%>
       <div
         :if={@live_action == :new}
-        class="fixed inset-0 z-[60] flex flex-col justify-end"
+        class="z-[60] fixed inset-0 flex flex-col justify-end"
         role="dialog"
         aria-label="New material"
       >
         <div
-          class="absolute inset-0 bg-black/65"
+          class="bg-black/65 absolute inset-0"
           phx-click={JS.patch(~p"/manage/inventory")}
           aria-hidden="true"
         />
         <div
-          class="relative w-full bg-[#211E16] mobile-scroll"
+          class="bg-[#211E16] mobile-scroll relative w-full"
           style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);max-height:82vh;overflow-y:auto;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
         >
           <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);position:sticky;top:0;background:#211E16;z-index:1;">
-            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;"></div>
+            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;">
+            </div>
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
                 New material

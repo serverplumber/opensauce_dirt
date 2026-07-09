@@ -21,7 +21,7 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
 
   def purchase_order_print(assigns) do
     ~H"""
-    <div class="hidden print:block p-8 text-sm text-stone-800">
+    <div class="hidden p-8 text-sm text-stone-800 print:block">
       <%!-- Rollup sheet: supplier totals --%>
       <div :if={@mode == :rollup}>
         <div class="mb-6 border-b border-stone-300 pb-4">
@@ -41,11 +41,13 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
 
           <div class="grid grid-cols-2 gap-8">
             <div>
-              <div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+              <div class="text-[10px] mb-1 font-semibold uppercase tracking-wider text-stone-400">
                 Purchasing party
               </div>
               <div class="text-base font-bold text-stone-900">{@organisation.name}</div>
-              <div :if={@organisation.legal_name} class="text-xs text-stone-500">{@organisation.legal_name}</div>
+              <div :if={@organisation.legal_name} class="text-xs text-stone-500">
+                {@organisation.legal_name}
+              </div>
               <div :if={@rep} class="mt-0.5 text-xs text-stone-500">
                 Rep: <span class="font-medium text-stone-700">{@rep}</span>
               </div>
@@ -55,7 +57,7 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
               </div>
             </div>
             <div>
-              <div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+              <div class="text-[10px] mb-1 font-semibold uppercase tracking-wider text-stone-400">
                 Supplier
               </div>
               <div class="text-base font-bold text-stone-900">
@@ -77,16 +79,16 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
         <table class="w-full border-collapse">
           <thead>
             <tr class="border-b border-stone-300 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
-              <th class="pb-2 pr-4">SKU</th>
-              <th class="pb-2 pr-4">Item</th>
-              <th class="pb-2 pr-4">Format</th>
-              <th class="pb-2 pr-4 text-right">Total qty</th>
+              <th class="pr-4 pb-2">SKU</th>
+              <th class="pr-4 pb-2">Item</th>
+              <th class="pr-4 pb-2">Format</th>
+              <th class="pr-4 pb-2 text-right">Total qty</th>
               <th class="pb-2 text-right">Unit price</th>
             </tr>
           </thead>
           <tbody>
             <tr :for={row <- rollup} class="border-b border-stone-100">
-              <td class="py-2 pr-4 font-mono">{row.supplier_sku}</td>
+              <td class="font-mono py-2 pr-4">{row.supplier_sku}</td>
               <td class="py-2 pr-4 italic">{item_label(row)}</td>
               <td class="py-2 pr-4 text-stone-500">
                 {(row.supplier_catalog_item && row.supplier_catalog_item.format_description) || ""}
@@ -129,7 +131,7 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
           </div>
           <div class="flex items-baseline justify-between">
             <div>
-              <div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+              <div class="text-[10px] mb-1 font-semibold uppercase tracking-wider text-stone-400">
                 Picking up from
               </div>
               <div class="text-xl font-bold text-stone-900">
@@ -153,11 +155,11 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
 
         <%!-- One section per garden, HR-style --%>
         <div :for={{garden, items} <- print_groups(@po.items)} class="mt-6">
-          <div class="border-t-2 border-stone-400 pt-3 mb-3">
+          <div class="mb-3 border-t-2 border-stone-400 pt-3">
             <div class="text-sm font-bold text-stone-900">
               {garden_section_label(garden, items)}
             </div>
-            <div :if={garden && garden.street} class="text-xs text-stone-400 mt-0.5">
+            <div :if={garden && garden.street} class="mt-0.5 text-xs text-stone-400">
               {garden.street}<span :if={addr_city_line(garden) != ""}>, {addr_city_line(garden)}</span>
             </div>
           </div>
@@ -165,16 +167,16 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
           <table class="w-full border-collapse">
             <thead>
               <tr class="border-b border-stone-300 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
-                <th class="pb-1 pr-4">SKU</th>
-                <th class="pb-1 pr-4">Plant</th>
-                <th class="pb-1 pr-4">Format</th>
-                <th class="pb-1 pr-4 text-right">Ordered</th>
+                <th class="pr-4 pb-1">SKU</th>
+                <th class="pr-4 pb-1">Plant</th>
+                <th class="pr-4 pb-1">Format</th>
+                <th class="pr-4 pb-1 text-right">Ordered</th>
                 <th class="pb-1 text-right">Confirmed</th>
               </tr>
             </thead>
             <tbody>
               <tr :for={item <- items} class="border-b border-stone-100">
-                <td class="py-1.5 pr-4 font-mono text-xs">{item.supplier_sku}</td>
+                <td class="font-mono py-1.5 pr-4 text-xs">{item.supplier_sku}</td>
                 <td class="py-1.5 pr-4 italic">{item_label(item)}</td>
                 <td class="py-1.5 pr-4 text-stone-500">
                   {(item.supplier_catalog_item && item.supplier_catalog_item.format_description) || ""}
@@ -182,7 +184,9 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
                 <td class="py-1.5 pr-4 text-right font-semibold">{fmt_qty(item.quantity)}</td>
                 <td class="py-1.5 text-right">
                   <span :if={item.confirmed_qty}>{fmt_qty(item.confirmed_qty)}</span>
-                  <span :if={!item.confirmed_qty} class="inline-block w-16 border-b border-stone-400">&nbsp;</span>
+                  <span :if={!item.confirmed_qty} class="inline-block w-16 border-b border-stone-400">
+                    &nbsp;
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -205,7 +209,9 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
       (item.supplier_catalog_item && item.supplier_catalog_item.id) || item.supplier_sku
     end)
     |> Enum.map(fn {_key, group} ->
-      total = Enum.reduce(group, D.new(0), fn item, acc -> D.add(acc, item.quantity || D.new(0)) end)
+      total =
+        Enum.reduce(group, D.new(0), fn item, acc -> D.add(acc, item.quantity || D.new(0)) end)
+
       %{List.first(group) | quantity: total}
     end)
     |> Enum.sort_by(&item_label/1)
@@ -232,7 +238,9 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
 
   defp garden_sort_key(nil), do: ""
   defp garden_sort_key(%{name: name}) when not is_nil(name), do: name
+
   defp garden_sort_key(%{city: city, street: street}) when not is_nil(city), do: "#{city}#{street}"
+
   defp garden_sort_key(_), do: ""
 
   defp addr_city_line(address) do
@@ -251,9 +259,8 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
     end)
   end
 
-  defp item_label(%{supplier_catalog_item: %{latin_name: ln, cultivar: cv}})
-       when not is_nil(ln),
-       do: [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+  defp item_label(%{supplier_catalog_item: %{latin_name: ln, cultivar: cv}}) when not is_nil(ln),
+    do: [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
 
   defp item_label(%{material: %{name: name}}) when not is_nil(name), do: name
   defp item_label(_), do: "—"
@@ -283,6 +290,7 @@ defmodule OpenSauceWeb.PurchaseOrderPrint do
   end
 
   defp customer_short(%{company_name_nickname: cn}) when not is_nil(cn), do: cn
+
   defp customer_short(%{first_name: fn_, last_name: ln}) do
     [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
   end

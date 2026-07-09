@@ -3,6 +3,8 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   use OpenSauceWeb, :live_view
 
   import Ash.Query
+  import OpenSauceWeb.Components.Materials
+  import OpenSauceWeb.PurchaseOrderPrint
 
   alias Decimal, as: D
   alias OpenSauce.Accounts
@@ -10,16 +12,21 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   alias OpenSauce.Inventory
   alias OpenSauce.Inventory.Receiving
 
-  import OpenSauceWeb.PurchaseOrderPrint
-  import OpenSauceWeb.Components.Materials
-
   @impl true
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
       <%!-- print-only sheet (hidden on mobile) --%>
       <div class="hidden print:block">
-        <.purchase_order_print :if={@print_mode != nil} po={@po} currency={@organisation.currency} organisation={@organisation} org_address={@org_address} rep={member_name(@current_user)} mode={@print_mode} />
+        <.purchase_order_print
+          :if={@print_mode != nil}
+          po={@po}
+          currency={@organisation.currency}
+          organisation={@organisation}
+          org_address={@org_address}
+          rep={member_name(@current_user)}
+          mode={@print_mode}
+        />
       </div>
 
       <div class="print:hidden">
@@ -40,7 +47,10 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
           screen where items are added from a catalogue or lookup.
         --%>
         <%!-- top bar: normal header --%>
-        <div :if={!@search_open} style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
+        <div
+          :if={!@search_open}
+          style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;"
+        >
           <.link navigate={~p"/manage/purchasing"}>
             <button
               type="button"
@@ -48,7 +58,12 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
               style="color:#9A9384;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M15 18l-6-6 6-6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </.link>
@@ -68,8 +83,13 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
             style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+              <path
+                d="M21 21l-4.35-4.35"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
             </svg>
           </button>
           <button
@@ -94,11 +114,19 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
         <div :if={@search_open} style="padding:12px 16px 10px;">
           <form phx-change="search" style="position:relative;">
             <svg
-              width="15" height="15" viewBox="0 0 24 24" fill="none"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
               style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6E675A;pointer-events:none;"
             >
-              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+              <path
+                d="M21 21l-4.35-4.35"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
             </svg>
             <input
               class="dark-input"
@@ -118,7 +146,12 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
               style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#DB9258;cursor:pointer;padding:4px;line-height:0;"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </form>
@@ -126,17 +159,21 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
         <%!-- PO detail view: show / items / add_item --%>
         <div :if={@live_action in [:show, :items, :add_item]}>
-
           <%!-- catalog search results --%>
-          <div :if={@search_query != ""} style="padding:0 16px;display:flex;flex-direction:column;gap:6px;padding-bottom:100px;">
+          <div
+            :if={@search_query != ""}
+            style="padding:0 16px;display:flex;flex-direction:column;gap:6px;padding-bottom:100px;"
+          >
             <div
               :if={@search_results == []}
               style="font-size:13px;color:#6E675A;text-align:center;padding:20px 0;"
             >
               No results for "{@search_query}"
             </div>
-            <div :for={sci <- @search_results}
-              style="background:#211E16;border-radius:12px;padding:12px;border:1px solid rgba(52,48,37,0.58);">
+            <div
+              :for={sci <- @search_results}
+              style="background:#211E16;border-radius:12px;padding:12px;border:1px solid rgba(52,48,37,0.58);"
+            >
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
                 <div style="min-width:0;flex:1;">
                   <p style="font-size:13px;font-weight:600;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
@@ -169,10 +206,16 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
             :if={(@po.ordered_at || @po.received_at) && @search_query == ""}
             style="padding:0 16px 12px;display:flex;gap:8px;"
           >
-            <span :if={@po.ordered_at} style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;">
+            <span
+              :if={@po.ordered_at}
+              style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;"
+            >
               sent {fmt_date(@po.ordered_at)}
             </span>
-            <span :if={@po.received_at} style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;">
+            <span
+              :if={@po.received_at}
+              style="background:rgba(52,48,37,0.5);border-radius:20px;padding:3px 10px;font-size:11px;color:#9A9384;"
+            >
               received {fmt_date(@po.received_at)}
             </span>
           </div>
@@ -182,22 +225,36 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
             <p style="font-size:13px;color:#9A9384;margin-bottom:12px;">
               Enter the quantity the supplier confirmed they have set aside.
             </p>
-            <form phx-submit="confirm_items" id="confirm-form" style="display:flex;flex-direction:column;gap:8px;">
+            <form
+              phx-submit="confirm_items"
+              id="confirm-form"
+              style="display:flex;flex-direction:column;gap:8px;"
+            >
               <div
                 :for={item <- @po.items}
                 style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;"
               >
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
                   <div style="min-width:0;flex:1;">
-                    <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">{plant_label(item)}</p>
-                    <p style="font-size:11.5px;font-family:monospace;color:#6E675A;margin-top:2px;">{item.supplier_sku}</p>
+                    <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;">
+                      {plant_label(item)}
+                    </p>
+                    <p style="font-size:11.5px;font-family:monospace;color:#6E675A;margin-top:2px;">
+                      {item.supplier_sku}
+                    </p>
                   </div>
-                  <span :if={item.is_reservation} style="flex-shrink:0;background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">
+                  <span
+                    :if={item.is_reservation}
+                    style="flex-shrink:0;background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;"
+                  >
                     cherry-pick
                   </span>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-                  <span style="font-size:12px;color:#9A9384;">ordered: <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.quantity)}</span></span>
+                  <span style="font-size:12px;color:#9A9384;">
+                    ordered:
+                    <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.quantity)}</span>
+                  </span>
                   <div style="display:flex;align-items:center;gap:8px;">
                     <label style="font-size:12px;color:#9A9384;">confirmed:</label>
                     <input
@@ -239,7 +296,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   phx-click="set_garden_context"
                   phx-value-garden_id={garden.id}
                   ontouchstart=""
-                  style={"display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;"}
+                  style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;"
                 >
                   <span style={"font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;#{if @selected_garden_id == garden.id, do: "color:#54B57E;", else: "color:#6E675A;"}"}>
                     {garden_group_label(garden)}
@@ -248,10 +305,19 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   </div>
                   <svg
                     :if={@selected_garden_id == garden.id}
-                    width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
                     style="flex-shrink:0;color:#54B57E;"
                   >
-                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path
+                      d="M20 6L9 17l-5-5"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </div>
                 <%!-- items in this group --%>
@@ -284,7 +350,12 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
               style="width:100%;border-radius:12px;border:1.5px dashed rgba(84,181,126,0.3);padding:10px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#54B57E;"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -306,7 +377,10 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
             >
               Send order →
             </button>
-            <.link :if={@po.status == :confirmed} navigate={~p"/manage/purchasing/#{@po.reference}/lineup"}>
+            <.link
+              :if={@po.status == :confirmed}
+              navigate={~p"/manage/purchasing/#{@po.reference}/lineup"}
+            >
               <button
                 type="button"
                 ontouchstart=""
@@ -320,7 +394,10 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
         <%!-- F3 lineup / pickup screen --%>
         <div :if={@live_action == :lineup}>
-          <div :if={@po.status == :confirmed} style="padding:0 16px;display:flex;flex-direction:column;gap:10px;">
+          <div
+            :if={@po.status == :confirmed}
+            style="padding:0 16px;display:flex;flex-direction:column;gap:10px;"
+          >
             <%!-- supplier hero --%>
             <div style="background:#211E16;border:2px solid #54B57E;border-radius:16px;padding:14px;">
               <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#54B57E;margin-bottom:4px;">
@@ -345,7 +422,11 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
               collect — confirm qty and cost
             </p>
 
-            <form phx-submit="finalize_pickup" id="lineup-form" style="display:flex;flex-direction:column;gap:8px;">
+            <form
+              phx-submit="finalize_pickup"
+              id="lineup-form"
+              style="display:flex;flex-direction:column;gap:8px;"
+            >
               <div
                 :for={item <- @po.items}
                 style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 14px;"
@@ -355,15 +436,32 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {plant_label(item)}
                   </p>
-                  <span :if={item.is_reservation} style="background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:1px 7px;font-size:10px;font-weight:700;flex-shrink:0;">
+                  <span
+                    :if={item.is_reservation}
+                    style="background:rgba(90,180,216,0.15);color:#5AB4D8;border-radius:12px;padding:1px 7px;font-size:10px;font-weight:700;flex-shrink:0;"
+                  >
                     cherry-pick
                   </span>
                 </div>
                 <%!-- job/garden attribution --%>
-                <div :if={item.job && item.job.garden} style="display:flex;align-items:center;gap:5px;margin-bottom:8px;">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex-shrink:0;">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                    <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+                <div
+                  :if={item.job && item.job.garden}
+                  style="display:flex;align-items:center;gap:5px;margin-bottom:8px;"
+                >
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    style="color:#6E675A;flex-shrink:0;"
+                  >
+                    <path
+                      d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linejoin="round"
+                    />
+                    <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2" />
                   </svg>
                   <span style="font-size:11px;color:#6E675A;">{job_location_label(item.job)}</span>
                 </div>
@@ -418,7 +516,10 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
           </div>
 
           <%!-- received summary --%>
-          <div :if={@po.status == :received} style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
+          <div
+            :if={@po.status == :received}
+            style="padding:0 16px;display:flex;flex-direction:column;gap:8px;"
+          >
             <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">
               received
             </p>
@@ -434,33 +535,64 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   <p style="font-size:14px;font-weight:700;font-style:italic;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {plant_label(item)}
                   </p>
-                  <div :if={item.job && item.job.garden} style="display:flex;align-items:center;gap:5px;margin-top:3px;">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex-shrink:0;">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                      <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+                  <div
+                    :if={item.job && item.job.garden}
+                    style="display:flex;align-items:center;gap:5px;margin-top:3px;"
+                  >
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style="color:#6E675A;flex-shrink:0;"
+                    >
+                      <path
+                        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linejoin="round"
+                      />
+                      <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2" />
                     </svg>
                     <span style="font-size:11px;color:#6E675A;">{job_location_label(item.job)}</span>
                   </div>
                   <div style="display:flex;gap:10px;margin-top:5px;">
                     <span style="font-size:12px;color:#9A9384;">
-                      ordered <span style="color:#F4EFE2;font-weight:600;">{fmt_qty(item.confirmed_qty || item.quantity)}</span>
+                      ordered
+                      <span style="color:#F4EFE2;font-weight:600;">
+                        {fmt_qty(item.confirmed_qty || item.quantity)}
+                      </span>
                     </span>
                     <span style="font-size:12px;color:#9A9384;">
-                      received <span style="color:#54B57E;font-weight:600;">{fmt_qty(item.received_qty)}</span>
+                      received
+                      <span style="color:#54B57E;font-weight:600;">{fmt_qty(item.received_qty)}</span>
                     </span>
                   </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
                   <div :if={item.cost} style="text-align:right;">
                     <p style="font-size:13px;font-weight:700;color:#DB9258;">
-                      {format_money(@organisation.currency, item.cost)} <span style="font-size:10px;font-weight:400;color:#9A7344;">/ unit</span>
+                      {format_money(@organisation.currency, item.cost)}
+                      <span style="font-size:10px;font-weight:400;color:#9A7344;">/ unit</span>
                     </p>
                     <p :if={item.received_qty} style="font-size:11px;color:#6E675A;margin-top:2px;">
                       = {format_money(@organisation.currency, D.mult(item.received_qty, item.cost))}
                     </p>
                   </div>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#6E675A;flex-shrink:0;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  <svg
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style="color:#6E675A;flex-shrink:0;"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -510,12 +642,20 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
-            <form phx-submit="save_manual_item" style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+            <form
+              phx-submit="save_manual_item"
+              style="padding:16px;display:flex;flex-direction:column;gap:12px;"
+            >
               <div>
                 <label class="dark-label">Description</label>
                 <input
@@ -563,7 +703,8 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
               >
                 <span style="font-size:13px;color:#9A9384;">Cherry-pick</span>
                 <div style={"width:40px;height:24px;border-radius:999px;flex-shrink:0;transition:background 0.15s;position:relative;#{if @manual_is_reservation, do: "background:#54B57E;", else: "background:#3A3528;"}"}>
-                  <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @manual_is_reservation, do: "left:19px;", else: "left:3px;"}"}></div>
+                  <div style={"width:18px;height:18px;border-radius:999px;background:#fff;position:absolute;top:3px;transition:left 0.15s;#{if @manual_is_reservation, do: "left:19px;", else: "left:3px;"}"}>
+                  </div>
                 </div>
               </button>
 
@@ -579,7 +720,10 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
           :if={@editing_received_item != nil}
           style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
         >
-          <div phx-click="close_received_sheet" style="position:absolute;inset:0;background:rgba(0,0,0,0.65);" />
+          <div
+            phx-click="close_received_sheet"
+            style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
+          />
           <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
             <div style="padding:12px 16px 14px;border-bottom:1px solid rgba(52,48,37,0.58);">
               <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;" />
@@ -588,7 +732,9 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   <p style="font-size:15px;font-weight:700;font-style:italic;color:#F4EFE2;line-height:1.2;">
                     {plant_label(@editing_received_item)}
                   </p>
-                  <p style="font-size:11px;color:#6E675A;margin-top:3px;">Correct received qty or cost</p>
+                  <p style="font-size:11px;color:#6E675A;margin-top:3px;">
+                    Correct received qty or cost
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -597,7 +743,12 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                   style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;flex-shrink:0;"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -644,7 +795,10 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
           :if={@print_modal}
           style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;"
         >
-          <div phx-click="close_print_modal" style="position:absolute;inset:0;background:rgba(0,0,0,0.65);" />
+          <div
+            phx-click="close_print_modal"
+            style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
+          />
           <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 40px;">
             <div style="padding:12px 16px 16px;border-bottom:1px solid rgba(52,48,37,0.58);">
               <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 14px;" />
@@ -661,7 +815,9 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                 style="width:100%;background:#211E16;border:1.5px solid rgba(52,48,37,0.8);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;"
               >
                 <p style="font-size:14px;font-weight:700;color:#F4EFE2;">Supply run totals</p>
-                <p style="font-size:12px;color:#6E675A;margin-top:2px;">One page — quantities rolled up for the supplier</p>
+                <p style="font-size:12px;color:#6E675A;margin-top:2px;">
+                  One page — quantities rolled up for the supplier
+                </p>
               </button>
               <button
                 type="button"
@@ -671,7 +827,9 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
                 style="width:100%;background:#211E16;border:1.5px solid rgba(52,48,37,0.8);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;"
               >
                 <p style="font-size:14px;font-weight:700;color:#F4EFE2;">Site sheets</p>
-                <p style="font-size:12px;color:#6E675A;margin-top:2px;">One sheet per delivery address for the crew</p>
+                <p style="font-size:12px;color:#6E675A;margin-top:2px;">
+                  One sheet per delivery address for the crew
+                </p>
               </button>
             </div>
           </div>
@@ -688,17 +846,17 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
         <%!-- add item bottom sheet --%>
         <div
           :if={@live_action == :add_item}
-          class="fixed inset-0 z-[60] flex flex-col justify-end"
+          class="z-[60] fixed inset-0 flex flex-col justify-end"
           role="dialog"
           aria-label="Add item"
         >
           <div
-            class="absolute inset-0 bg-black/65"
+            class="bg-black/65 absolute inset-0"
             phx-click={JS.patch(~p"/manage/purchasing/#{@po.reference}")}
             aria-hidden="true"
           />
           <div
-            class="relative w-full bg-[#211E16] mobile-scroll"
+            class="bg-[#211E16] mobile-scroll relative w-full"
             style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);max-height:82vh;overflow-y:auto;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
           >
             <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);position:sticky;top:0;background:#211E16;z-index:1;">
@@ -851,7 +1009,9 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
              manual_cost: nil
            )
            |> reload_po()}
-        {:error, _} -> {:noreply, put_flash(socket, :error, "Could not add item.")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Could not add item.")}
       end
     end
   end
@@ -1088,25 +1248,30 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   defp po_load do
     [
       supplier: [:addresses],
-      items: [:material, supplier_catalog_item: [supplier_catalog: [:supplier]], job: [garden: [:customer], engagement: []]]
+      items: [
+        :material,
+        supplier_catalog_item: [supplier_catalog: [:supplier]],
+        job: [garden: [:customer], engagement: []]
+      ]
     ]
   end
 
   # Pass the most relevant quantity for the PO state to material_line.
   defp display_item(item, :confirmed), do: %{item | quantity: item.confirmed_qty || item.quantity}
+
   defp display_item(item, :received), do: %{item | quantity: item.received_qty || item.confirmed_qty || item.quantity}
+
   defp display_item(item, _), do: item
 
   defp parse_optional_decimal(nil), do: nil
   defp parse_optional_decimal(""), do: nil
-  defp parse_optional_decimal(s), do: Decimal.new(s)
+  defp parse_optional_decimal(s), do: D.new(s)
 
   defp po_supplier_name(%{supplier: %{name: name}}), do: name
   defp po_supplier_name(_), do: "Unassigned"
 
-  defp member_name(%{first_name: fn_, last_name: ln})
-       when not is_nil(fn_) or not is_nil(ln),
-       do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+  defp member_name(%{first_name: fn_, last_name: ln}) when not is_nil(fn_) or not is_nil(ln),
+    do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
 
   defp member_name(_), do: nil
 
@@ -1148,10 +1313,9 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   defp status_label(:received), do: "received"
   defp status_label(s), do: to_string(s)
 
-  defp addr_short(%{name: name, street: street, city: city})
-       when not is_nil(name) and name != "" do
+  defp addr_short(%{name: name, street: street, city: city}) when not is_nil(name) and name != "" do
     location = [street, city] |> Enum.reject(&(is_nil(&1) or &1 == "")) |> Enum.join(", ")
-    if location != "", do: "#{name} · #{location}", else: name
+    if location == "", do: name, else: "#{name} · #{location}"
   end
 
   defp addr_short(%{street: street, city: city}) do
@@ -1187,7 +1351,9 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
   defp garden_sort_key(nil), do: ""
   defp garden_sort_key(%{name: name}) when not is_nil(name), do: name
+
   defp garden_sort_key(%{city: city, street: street}) when not is_nil(city), do: "#{city}#{street}"
+
   defp garden_sort_key(_), do: ""
 
   defp garden_group_label(%{customer: customer, name: garden_name}) when not is_nil(customer) do
@@ -1199,8 +1365,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
   defp garden_group_label(%{street: street}) when not is_nil(street), do: street
   defp garden_group_label(_), do: "—"
 
-  defp job_location_label(%{garden: %{customer: customer, name: garden_name}})
-       when not is_nil(customer) do
+  defp job_location_label(%{garden: %{customer: customer, name: garden_name}}) when not is_nil(customer) do
     client = garden_customer_short(customer)
     if garden_name, do: "#{client} — #{garden_name}", else: client
   end
@@ -1211,8 +1376,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
 
   defp garden_customer_short(%{company_name_nickname: cn}) when not is_nil(cn), do: cn
 
-  defp garden_customer_short(%{first_name: fn_, last_name: ln}),
-    do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
+  defp garden_customer_short(%{first_name: fn_, last_name: ln}), do: [fn_, ln] |> Enum.reject(&is_nil/1) |> Enum.join(" ")
 
   defp garden_customer_short(_), do: "—"
 

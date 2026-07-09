@@ -12,16 +12,16 @@ defmodule OpenSauce.CRM.Changes.AssignInvoiceNumber do
       org_id = Ash.Changeset.get_attribute(changeset, :organisation_id)
 
       {1, [new_next]} =
-        from(o in OpenSauce.Accounts.Organisation,
-          where: o.id == ^org_id,
-          update: [inc: [next_invoice_number: 1]],
-          select: o.next_invoice_number
+        OpenSauce.Repo.update_all(
+          from(o in OpenSauce.Accounts.Organisation,
+            where: o.id == ^org_id,
+            update: [inc: [next_invoice_number: 1]],
+            select: o.next_invoice_number
+          ),
+          []
         )
-        |> OpenSauce.Repo.update_all([])
 
       Ash.Changeset.force_change_attribute(changeset, :invoice_number, new_next - 1)
     end)
   end
-
-
 end

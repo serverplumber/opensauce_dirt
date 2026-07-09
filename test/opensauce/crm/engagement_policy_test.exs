@@ -8,18 +8,20 @@ defmodule OpenSauce.CRM.EngagementPolicyTest do
   # These tests use Ash.can?/3 to check the policy directly without model fields,
   # so they only need to change if the intended authorization rule changes.
 
+  alias OpenSauce.CRM.Engagement
+
   test "staff cannot create engagements" do
     member = OpenSauce.DataCase.staff_actor()
-    refute Ash.can?({OpenSauce.CRM.Engagement, :create}, member, tenant: member.organisation_id)
+    refute Ash.can?({Engagement, :create}, member, tenant: member.organisation_id)
   end
 
   test "manager can create engagements" do
     member = OpenSauce.DataCase.admin_actor()
-    assert Ash.can?({OpenSauce.CRM.Engagement, :create}, member, tenant: member.organisation_id)
+    assert Ash.can?({Engagement, :create}, member, tenant: member.organisation_id)
   end
 
   test "staff can read engagements" do
     member = OpenSauce.DataCase.staff_actor()
-    assert Ash.can?({OpenSauce.CRM.Engagement, :read}, member, tenant: member.organisation_id)
+    assert Ash.can?({Engagement, :read}, member, tenant: member.organisation_id)
   end
 end

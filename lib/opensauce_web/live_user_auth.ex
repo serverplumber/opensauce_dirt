@@ -36,10 +36,20 @@ defmodule OpenSauceWeb.LiveUserAuth do
   def on_mount(:live_member_required, _params, session, socket) do
     case load_member(socket, session) do
       {:ok, member, user, memberships} ->
-        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user) |> assign(:memberships, memberships)}
-      :suspended -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
-      :no_org -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/org/pick")}
-      :error -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
+        {:cont,
+         socket
+         |> assign(:current_member, member)
+         |> assign(:current_user, user)
+         |> assign(:memberships, memberships)}
+
+      :suspended ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
+
+      :no_org ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/org/pick")}
+
+      :error ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
     end
   end
 
@@ -47,7 +57,11 @@ defmodule OpenSauceWeb.LiveUserAuth do
   def on_mount(:live_staff_required, _params, session, socket) do
     case load_member(socket, session) do
       {:ok, %{role: role} = member, user, memberships} when role in [:staff, :manager, :owner] ->
-        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user) |> assign(:memberships, memberships)}
+        {:cont,
+         socket
+         |> assign(:current_member, member)
+         |> assign(:current_user, user)
+         |> assign(:memberships, memberships)}
 
       {:ok, _, _, _} ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
@@ -67,7 +81,11 @@ defmodule OpenSauceWeb.LiveUserAuth do
   def on_mount(:live_manager_required, _params, session, socket) do
     case load_member(socket, session) do
       {:ok, %{role: role} = member, user, memberships} when role in [:manager, :owner] ->
-        {:cont, socket |> assign(:current_member, member) |> assign(:current_user, user) |> assign(:memberships, memberships)}
+        {:cont,
+         socket
+         |> assign(:current_member, member)
+         |> assign(:current_user, user)
+         |> assign(:memberships, memberships)}
 
       {:ok, _, _, _} ->
         {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}

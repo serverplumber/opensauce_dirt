@@ -76,23 +76,10 @@ if config_env() == :prod do
       methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
   end
 
-  config :opensauce,
-    token_signing_secret:
-      System.get_env("TOKEN_SIGNING_SECRET") ||
-        raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
-
-  config :opensauce,
-    storage_adapter: OpenSauce.Storage.Local,
-    upload_dir: System.get_env("UPLOAD_DIR") || "/var/lib/opensauce/uploads"
-
   # Cloak encryption vault
   cloak_key =
     System.get_env("CLOAK_KEY") ||
       raise "Missing environment variable CLOAK_KEY (32-byte key, base64-encoded)"
-
-  config :opensauce,
-    email_from_name: System.get_env("EMAIL_FROM_NAME") || "OpenSauce",
-    email_from_address: System.get_env("EMAIL_FROM_ADDRESS") || "noreply@opensauce.app"
 
   email_provider = System.get_env("EMAIL_PROVIDER")
 
@@ -100,6 +87,19 @@ if config_env() == :prod do
     ciphers: [
       default: {Cloak.Ciphers.AES.GCM, tag: "AES.GCM.V1", key: Base.decode64!(cloak_key)}
     ]
+
+  config :opensauce,
+    email_from_name: System.get_env("EMAIL_FROM_NAME") || "OpenSauce",
+    email_from_address: System.get_env("EMAIL_FROM_ADDRESS") || "noreply@opensauce.app"
+
+  config :opensauce,
+    storage_adapter: OpenSauce.Storage.Local,
+    upload_dir: System.get_env("UPLOAD_DIR") || "/var/lib/opensauce/uploads"
+
+  config :opensauce,
+    token_signing_secret:
+      System.get_env("TOKEN_SIGNING_SECRET") ||
+        raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
   cond do
     email_provider in ~w(sendgrid postmark brevo) ->

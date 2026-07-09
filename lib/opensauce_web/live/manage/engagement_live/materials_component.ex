@@ -22,13 +22,10 @@ defmodule OpenSauceWeb.EngagementLive.MaterialsComponent do
               {catalog_item_title(em.supplier_catalog_item)}
             </p>
             <p style="font-size:12px;color:#9A9384;margin-top:2px;">
-              {em.supplier_catalog_item.format_description || "—"} ·
-              {em.supplier_catalog_item.supplier_catalog.supplier.name}
+              {em.supplier_catalog_item.format_description || "—"} · {em.supplier_catalog_item.supplier_catalog.supplier.name}
             </p>
             <p style="font-size:12px;color:#9A9384;margin-top:1px;">
-              qty {em.quantity} · {format_date(em.scheduled_date) || "no date"}<span
-                :if={em.note}
-              > · {em.note}</span>
+              qty {em.quantity} · {format_date(em.scheduled_date) || "no date"}<span :if={em.note}> · {em.note}</span>
             </p>
           </div>
           <button
@@ -49,7 +46,9 @@ defmodule OpenSauceWeb.EngagementLive.MaterialsComponent do
 
       <div style="display:flex;justify-content:flex-end;">
         <span style="font-size:12px;color:#9A9384;margin-right:8px;">Material cost</span>
-        <span style="font-size:12px;font-weight:600;color:#F4EFE2;">{format_money(@currency, @total_cost)}</span>
+        <span style="font-size:12px;font-weight:600;color:#F4EFE2;">
+          {format_money(@currency, @total_cost)}
+        </span>
       </div>
 
       <div style="border-top:1px solid rgba(52,48,37,0.58);padding-top:16px;display:flex;flex-direction:column;gap:12px;">
@@ -174,7 +173,7 @@ defmodule OpenSauceWeb.EngagementLive.MaterialsComponent do
          |> assign(:form, blank_form())}
 
       {:error, %Ash.Error.Invalid{} = err} ->
-        msg = err.errors |> Enum.map(& &1.message) |> Enum.join(", ")
+        msg = Enum.map_join(err.errors, ", ", & &1.message)
         {:noreply, put_flash(socket, :error, "Could not add material: #{msg}")}
 
       {:error, _} ->
@@ -211,8 +210,7 @@ defmodule OpenSauceWeb.EngagementLive.MaterialsComponent do
 
   defp blank_form,
     do:
-      to_form(
-        %{"supplier_catalog_item_id" => "", "quantity" => "", "scheduled_date" => "", "note" => ""},
+      to_form(%{"supplier_catalog_item_id" => "", "quantity" => "", "scheduled_date" => "", "note" => ""},
         as: "engagement_material"
       )
 

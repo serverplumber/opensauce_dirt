@@ -110,7 +110,11 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
               + New catalog
             </button>
 
-            <form :if={@show_new_catalog} phx-submit="create_catalog" style="display:flex;gap:8px;align-items:flex-end;">
+            <form
+              :if={@show_new_catalog}
+              phx-submit="create_catalog"
+              style="display:flex;gap:8px;align-items:flex-end;"
+            >
               <div style="flex:1;">
                 <label class="dark-label">Name</label>
                 <input
@@ -151,16 +155,28 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
             style="border:2px dashed rgba(52,48,37,0.8);border-radius:12px;padding:28px 16px;text-align:center;"
             phx-drop-target={@uploads.pdf.ref}
           >
-            <.live_file_input upload={@uploads.pdf} style="display:block;margin:0 auto 8px;font-size:13px;color:#9A9384;" />
+            <.live_file_input
+              upload={@uploads.pdf}
+              style="display:block;margin:0 auto 8px;font-size:13px;color:#9A9384;"
+            />
             <p style="font-size:11px;color:#6E675A;">Max 20 MB · PDF only</p>
 
             <div :for={entry <- @uploads.pdf.entries} style="margin-top:12px;">
               <div style="display:flex;align-items:center;gap:10px;background:rgba(52,48,37,0.4);border-radius:10px;padding:8px 12px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#9A9384" stroke-width="1.8" stroke-linecap="round" />
+                  <path
+                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                    stroke="#9A9384"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
                 </svg>
-                <span style="flex:1;font-size:13px;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{entry.client_name}</span>
-                <span style="font-size:12px;color:#6E675A;flex-shrink:0;">{Float.round(entry.client_size / 1_000_000, 1)} MB</span>
+                <span style="flex:1;font-size:13px;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  {entry.client_name}
+                </span>
+                <span style="font-size:12px;color:#6E675A;flex-shrink:0;">
+                  {Float.round(entry.client_size / 1_000_000, 1)} MB
+                </span>
                 <button
                   type="button"
                   phx-click="cancel_upload"
@@ -169,11 +185,19 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
                   style="color:#6E675A;background:none;border:none;padding:2px;cursor:pointer;line-height:0;"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
-              <p :for={err <- upload_errors(@uploads.pdf, entry)} style="font-size:12px;color:#E87E7E;margin-top:4px;">
+              <p
+                :for={err <- upload_errors(@uploads.pdf, entry)}
+                style="font-size:12px;color:#E87E7E;margin-top:4px;"
+              >
                 {upload_error_label(err)}
               </p>
             </div>
@@ -191,18 +215,27 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
             </button>
           </div>
 
-          <div :if={@error} style="margin-top:10px;background:rgba(232,126,126,0.12);border-radius:10px;padding:10px 12px;">
+          <div
+            :if={@error}
+            style="margin-top:10px;background:rgba(232,126,126,0.12);border-radius:10px;padding:10px 12px;"
+          >
             <p style="font-size:13px;color:#E87E7E;">{@error}</p>
           </div>
         </div>
 
         <%!-- JSON dev loader --%>
-        <div :if={@json_files != []} style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:16px;padding:14px;">
+        <div
+          :if={@json_files != []}
+          style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:16px;padding:14px;"
+        >
           <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-bottom:10px;">
             Load from JSON
           </p>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div :for={path <- @json_files} style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div
+              :for={path <- @json_files}
+              style="display:flex;align-items:center;justify-content:space-between;gap:10px;"
+            >
               <span style="font-size:12px;font-family:monospace;color:#9A9384;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                 {Path.basename(path)}
               </span>
@@ -224,9 +257,14 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
         </div>
 
         <%!-- preview table --%>
-        <div :if={@preview} style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:16px;overflow:hidden;">
+        <div
+          :if={@preview}
+          style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:16px;overflow:hidden;"
+        >
           <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(52,48,37,0.58);">
-            <p style="font-size:14px;font-weight:700;color:#F4EFE2;">{length(@preview)} items extracted</p>
+            <p style="font-size:14px;font-weight:700;color:#F4EFE2;">
+              {length(@preview)} items extracted
+            </p>
             <button
               type="button"
               phx-click="commit"
@@ -240,13 +278,27 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
             <table style="width:100%;border-collapse:collapse;font-size:12px;">
               <thead>
                 <tr style="border-bottom:1px solid rgba(52,48,37,0.58);">
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">SKU</th>
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">Name</th>
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">Latin name</th>
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">Cultivar</th>
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">Format</th>
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">Cat.</th>
-                  <th style="padding:8px 10px;text-align:right;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">Price</th>
+                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    SKU
+                  </th>
+                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    Name
+                  </th>
+                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    Latin name
+                  </th>
+                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    Cultivar
+                  </th>
+                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    Format
+                  </th>
+                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    Cat.
+                  </th>
+                  <th style="padding:8px 10px;text-align:right;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;white-space:nowrap;">
+                    Price
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -254,11 +306,19 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
                   :for={item <- @preview}
                   style="border-bottom:1px solid rgba(52,48,37,0.3);"
                 >
-                  <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:#9A9384;white-space:nowrap;">{item["sku"]}</td>
+                  <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:#9A9384;white-space:nowrap;">
+                    {item["sku"]}
+                  </td>
                   <td style="padding:7px 10px;color:#F4EFE2;white-space:nowrap;">{item["name"]}</td>
-                  <td style="padding:7px 10px;font-style:italic;color:#9A9384;white-space:nowrap;">{item["latin_name"]}</td>
-                  <td style="padding:7px 10px;color:#9A9384;white-space:nowrap;">{item["cultivar"]}</td>
-                  <td style="padding:7px 10px;color:#6E675A;white-space:nowrap;">{item["format_description"]}</td>
+                  <td style="padding:7px 10px;font-style:italic;color:#9A9384;white-space:nowrap;">
+                    {item["latin_name"]}
+                  </td>
+                  <td style="padding:7px 10px;color:#9A9384;white-space:nowrap;">
+                    {item["cultivar"]}
+                  </td>
+                  <td style="padding:7px 10px;color:#6E675A;white-space:nowrap;">
+                    {item["format_description"]}
+                  </td>
                   <td style="padding:7px 10px;white-space:nowrap;">
                     <span style={"#{category_style(item["category"])}border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;"}>
                       {item["category"]}
@@ -274,7 +334,10 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
         </div>
 
         <%!-- result --%>
-        <div :if={@result} style="background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:14px;padding:14px;">
+        <div
+          :if={@result}
+          style="background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:14px;padding:14px;"
+        >
           <p style="font-size:14px;font-weight:700;color:#54B57E;">
             Imported {@result.created} items.
           </p>
@@ -389,7 +452,8 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
     member = socket.assigns.current_member
     opts = [actor: member, tenant: member.organisation_id]
 
-    {:ok, result} = CatalogImporter.commit(socket.assigns.preview, socket.assigns.catalog_id, opts)
+    {:ok, result} =
+      CatalogImporter.commit(socket.assigns.preview, socket.assigns.catalog_id, opts)
 
     {:noreply, socket |> assign(:result, result) |> assign(:preview, nil)}
   end

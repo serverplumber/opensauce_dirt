@@ -9,7 +9,9 @@ defmodule OpenSauce.Test.AuthHelpers do
   `current_user` on the socket is a User; `current_member` is an OrganisationMember.
   """
 
-  alias OpenSauce.Accounts.{Organisation, OrganisationMember, User}
+  alias OpenSauce.Accounts.Organisation
+  alias OpenSauce.Accounts.OrganisationMember
+  alias OpenSauce.Accounts.User
 
   @doc """
   Creates a User, Organisation, and OrganisationMember for the given role.

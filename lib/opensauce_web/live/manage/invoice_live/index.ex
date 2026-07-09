@@ -12,13 +12,25 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       <div style="padding:12px 16px 14px;">
         <div :if={@customer_filter} style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <.link navigate={~p"/manage/invoices"}>
-            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:0;cursor:pointer;line-height:0;"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                  d="M19 12H5M12 19l-7-7 7-7"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
           </.link>
-          <span style="font-size:12px;color:#9A9384;">{@customer_filter.first_name} {@customer_filter.last_name}</span>
+          <span style="font-size:12px;color:#9A9384;">
+            {@customer_filter.first_name} {@customer_filter.last_name}
+          </span>
         </div>
         <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
           Invoices
@@ -80,7 +92,10 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       </div>
 
       <%!-- FAB --%>
-      <.link :if={is_nil(@customer_filter) || @has_invoiceable_work} navigate={~p"/manage/invoices/new"}>
+      <.link
+        :if={is_nil(@customer_filter) || @has_invoiceable_work}
+        navigate={~p"/manage/invoices/new"}
+      >
         <button
           type="button"
           ontouchstart=""
@@ -110,7 +125,9 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
             {customer_name(@invoice)}
           </p>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
-            <span style="font-family:monospace;font-size:11px;color:#6E675A;">#{format_invoice_number(@invoice.invoice_number)}</span>
+            <span style="font-family:monospace;font-size:11px;color:#6E675A;">
+              #{format_invoice_number(@invoice.invoice_number)}
+            </span>
             <span style="color:#6E675A;">·</span>
             <span style="font-size:12px;color:#9A9384;">{format_date(@invoice.issued_on)}</span>
           </div>
@@ -130,7 +147,15 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, drafts: [], sent: [], paid: [], voided: [], customer_filter: nil, has_invoiceable_work: true)}
+    {:ok,
+     assign(socket,
+       drafts: [],
+       sent: [],
+       paid: [],
+       voided: [],
+       customer_filter: nil,
+       has_invoiceable_work: true
+     )}
   end
 
   @impl true
@@ -144,7 +169,8 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       end
 
     uninvoiced_ids =
-      CRM.list_customers_with_uninvoiced_jobs!(actor: member, tenant: member.organisation_id)
+      [actor: member, tenant: member.organisation_id]
+      |> CRM.list_customers_with_uninvoiced_jobs!()
       |> MapSet.new(& &1.id)
 
     has_invoiceable_work =
@@ -168,7 +194,8 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
     query =
       if customer_id do
         import Ash.Query
-        CRM.Invoice |> filter(customer_id == ^customer_id)
+
+        filter(CRM.Invoice, customer_id == ^customer_id)
       else
         CRM.Invoice
       end

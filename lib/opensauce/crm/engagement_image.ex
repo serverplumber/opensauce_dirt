@@ -77,7 +77,18 @@ defmodule OpenSauce.CRM.EngagementImage do
 
     create :create do
       primary? true
-      accept [:engagement_id, :type, :captured_on, :storage_key, :content_type, :original_filename, :content_hash, :notes, :organisation_id]
+
+      accept [
+        :engagement_id,
+        :type,
+        :captured_on,
+        :storage_key,
+        :content_type,
+        :original_filename,
+        :content_hash,
+        :notes,
+        :organisation_id
+      ]
     end
 
     # Allows updating the date and notes after upload. The storage_key and

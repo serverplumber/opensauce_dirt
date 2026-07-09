@@ -3,6 +3,7 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
   use OpenSauceWeb, :live_component
 
   alias AshPhoenix.Form
+  alias OpenSauce.CRM.Address
   alias OpenSauce.Inventory
 
   @impl true
@@ -30,7 +31,9 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
       <div style="height:1px;background:rgba(52,48,37,0.58);" />
 
       <div>
-        <label class="dark-label">Contact name <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+        <label class="dark-label">
+          Contact name <span style="color:#6E675A;font-weight:400;">(optional)</span>
+        </label>
         <input
           id="supplier-contact-name"
           class="dark-input"
@@ -52,7 +55,9 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
             value={@form[:contact_email].value || ""}
             placeholder="jane@nursery.com"
           />
-          <span :for={msg <- @form[:contact_email].errors} class="dark-field-error">{elem(msg, 0)}</span>
+          <span :for={msg <- @form[:contact_email].errors} class="dark-field-error">
+            {elem(msg, 0)}
+          </span>
         </div>
         <div>
           <label class="dark-label">Phone</label>
@@ -83,7 +88,12 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </div>
@@ -92,7 +102,9 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
         <div style="background:rgba(52,48,37,0.3);border:1px solid rgba(52,48,37,0.58);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="flex:1;">
-              <label class="dark-label">Label <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+              <label class="dark-label">
+                Label <span style="color:#6E675A;font-weight:400;">(optional)</span>
+              </label>
               <input
                 id={f_addr[:name].id}
                 class="dark-input"
@@ -112,7 +124,12 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
               style="flex-shrink:0;margin-top:18px;color:#E87E7E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -128,18 +145,18 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
             />
           </div>
 
-            <div>
-              <label class="dark-label">City</label>
-              <input
-                class="dark-input"
-                type="text"
-                id={f_addr[:city].id}
-                name={f_addr[:city].name}
-                value={f_addr[:city].value || ""}
-                placeholder="Hadlow"
-                phx-hook="TitleCase"
-              />
-            </div>
+          <div>
+            <label class="dark-label">City</label>
+            <input
+              class="dark-input"
+              type="text"
+              id={f_addr[:city].id}
+              name={f_addr[:city].name}
+              value={f_addr[:city].value || ""}
+              placeholder="Hadlow"
+              phx-hook="TitleCase"
+            />
+          </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
             <div>
@@ -182,14 +199,19 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
         </div>
       </.inputs_for>
 
-      <p :if={(@form.source.forms[:addresses] || []) == []} style="font-size:13px;color:#6E675A;text-align:center;padding:8px 0;">
+      <p
+        :if={(@form.source.forms[:addresses] || []) == []}
+        style="font-size:13px;color:#6E675A;text-align:center;padding:8px 0;"
+      >
         No addresses yet
       </p>
 
       <div style="height:1px;background:rgba(52,48,37,0.58);" />
 
       <div>
-        <label class="dark-label">Notes <span style="color:#6E675A;font-weight:400;">(optional)</span></label>
+        <label class="dark-label">
+          Notes <span style="color:#6E675A;font-weight:400;">(optional)</span>
+        </label>
         <textarea
           class="dark-textarea"
           name="supplier[notes]"
@@ -256,7 +278,7 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           forms: [
             addresses: [
               data: supplier.addresses,
-              resource: OpenSauce.CRM.Address,
+              resource: Address,
               create_action: :create,
               update_action: :update,
               type: :list
@@ -270,7 +292,7 @@ defmodule OpenSauceWeb.PurchasingLive.SupplierFormComponent do
           tenant: member.organisation_id,
           forms: [
             addresses: [
-              resource: OpenSauce.CRM.Address,
+              resource: Address,
               create_action: :create,
               update_action: :update,
               type: :list

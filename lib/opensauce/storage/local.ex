@@ -42,7 +42,10 @@ defmodule OpenSauce.Storage.Local do
   @impl true
   def put(scope, filename, _content_type, data) do
     safe_name = filename |> Path.basename() |> String.replace(~r/[^\w.\-]/, "_")
-    unique_name = "#{:crypto.strong_rand_bytes(6) |> Base.url_encode64(padding: false)}-#{safe_name}"
+
+    unique_name =
+      "#{6 |> :crypto.strong_rand_bytes() |> Base.url_encode64(padding: false)}-#{safe_name}"
+
     key = Path.join([scope, unique_name])
     abs_path = Path.join(upload_dir(), key)
 

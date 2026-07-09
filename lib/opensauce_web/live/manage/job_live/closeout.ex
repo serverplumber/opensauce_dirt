@@ -438,9 +438,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
         </div>
 
         <%!-- sheet --%>
-        <div
-          style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 100px;max-height:85vh;display:flex;flex-direction:column;"
-        >
+        <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 100px;max-height:85vh;display:flex;flex-direction:column;">
           <%!-- sheet handle + header --%>
           <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);flex-shrink:0;">
             <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;">
@@ -557,7 +555,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
           </p>
           <p style="font-size:11px;color:#6E675A;margin-top:2px;">
             {supplier_label(@item)}
-            <span :if={@from_plan} style="color:#54B57E;"> · plan:       {@planned_qty}</span>
+            <span :if={@from_plan} style="color:#54B57E;"> · plan:           {@planned_qty}</span>
           </p>
         </div>
         <button

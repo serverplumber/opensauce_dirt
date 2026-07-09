@@ -15,7 +15,15 @@ defmodule OpenSauce.CRM.CustomerNameValidationTest do
       first_name: first_name,
       last_name: last_name,
       email: "test+#{System.unique_integer([:positive])}@local",
-      garden_addresses: [%{is_garden: true, is_billing: false, is_indoor: false, city: "Springfield", country: "US"}]
+      garden_addresses: [
+        %{
+          is_garden: true,
+          is_billing: false,
+          is_indoor: false,
+          city: "Springfield",
+          country: "US"
+        }
+      ]
     })
     |> Ash.create(actor: member, tenant: member.organisation_id)
   end

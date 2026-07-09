@@ -8,6 +8,8 @@ defmodule OpenSauce.Work.Job do
     fragments: [OpenSauce.Concerns.Multitenanted],
     primary_read_warning?: false
 
+  alias OpenSauce.Work.Job
+
   postgres do
     table "orders_jobs"
     repo OpenSauce.Repo
@@ -26,10 +28,13 @@ defmodule OpenSauce.Work.Job do
 
     destroy :destroy do
       primary? true
+
       validate attribute_does_not_equal(:status, :in_progress),
         message: "cannot delete a job that is in progress"
+
       validate attribute_does_not_equal(:status, :completed),
         message: "cannot delete a completed job"
+
       validate attribute_does_not_equal(:status, :cancelled),
         message: "cannot delete a cancelled job"
     end
@@ -56,12 +61,15 @@ defmodule OpenSauce.Work.Job do
 
     read :at_garden do
       argument :garden_id, :uuid, allow_nil?: false
+
       filter expr(garden_id == ^arg(:garden_id) and status in [:scheduling, :scheduled, :in_progress])
+
       prepare build(sort: [scheduled_for: :asc])
     end
 
     create :create do
       primary? true
+
       accept [
         :type,
         :service_category,
@@ -81,6 +89,7 @@ defmodule OpenSauce.Work.Job do
 
     update :update do
       require_atomic? false
+
       accept [
         :type,
         :service_category,
@@ -128,6 +137,16 @@ defmodule OpenSauce.Work.Job do
     end
   end
 
+  policies do
+    policy action_type(:read) do
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
+    end
+  end
+
   validations do
     validate present(:service_category),
       where: [attribute_equals(:type, :client_work)],
@@ -148,16 +167,6 @@ defmodule OpenSauce.Work.Job do
     validate {OpenSauce.Work.Job.Validations.RequireGardenForAddressable, []}
   end
 
-  policies do
-    policy action_type(:read) do
-      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
-    end
-
-    policy action_type([:create, :update, :destroy]) do
-      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
-    end
-  end
-
   attributes do
     uuid_primary_key :id
 
@@ -171,7 +180,17 @@ defmodule OpenSauce.Work.Job do
     attribute :service_category, :atom do
       allow_nil? true
       public? true
-      constraints one_of: [:installation, :delivery, :pruning, :consultation, :design, :opening, :winterization, :maintenance]
+
+      constraints one_of: [
+                    :installation,
+                    :delivery,
+                    :pruning,
+                    :consultation,
+                    :design,
+                    :opening,
+                    :winterization,
+                    :maintenance
+                  ]
     end
 
     attribute :account_code, :atom do
@@ -227,25 +246,6 @@ defmodule OpenSauce.Work.Job do
     timestamps()
   end
 
-  calculations do
-    # Pair-walks arrival/departure (or shift_start/shift_end) events to sum elapsed time.
-    calculate :duration, :integer, OpenSauce.Work.Job.Calculations.Duration
-
-    # Odometer diff: shift_start → shift_end for :shift, arrival → departure for others.
-    calculate :mileage_km, :decimal, OpenSauce.Work.Job.Calculations.MileageKm
-
-    calculate :materials_cost, :decimal, OpenSauce.Work.Job.Calculations.MaterialsCost
-
-    # Sum of tentative staff hourly rates — used for calendar scheduling and cost estimation.
-    calculate :man_hour_rate, :decimal, OpenSauce.Work.Job.Calculations.ManHourRate
-
-    # duration_estimate (minutes) expressed as hours.
-    calculate :estimated_man_hours, :decimal, OpenSauce.Work.Job.Calculations.EstimatedManHours
-
-    # Rough estimate: estimated_man_hours × man_hour_rate × overhead + materials.
-    calculate :estimated_cost, :decimal, OpenSauce.Work.Job.Calculations.EstimatedCost
-  end
-
   relationships do
     # The garden (outdoor site) this job is at. All :client_work jobs require one.
     belongs_to :garden, OpenSauce.CRM.Address do
@@ -270,14 +270,14 @@ defmodule OpenSauce.Work.Job do
     end
 
     # :client_work and :internal_work jobs reference the :shift job that contains them.
-    belongs_to :containing_shift, OpenSauce.Work.Job do
+    belongs_to :containing_shift, Job do
       allow_nil? true
       public? true
       attribute_writable? true
     end
 
     # Child jobs belonging to this shift (meaningful when type == :shift).
-    has_many :jobs, OpenSauce.Work.Job do
+    has_many :jobs, Job do
       public? true
       destination_attribute :containing_shift_id
     end
@@ -302,5 +302,24 @@ defmodule OpenSauce.Work.Job do
     has_many :materials, OpenSauce.Work.JobMaterial do
       public? true
     end
+  end
+
+  calculations do
+    # Pair-walks arrival/departure (or shift_start/shift_end) events to sum elapsed time.
+    calculate :duration, :integer, OpenSauce.Work.Job.Calculations.Duration
+
+    # Odometer diff: shift_start → shift_end for :shift, arrival → departure for others.
+    calculate :mileage_km, :decimal, OpenSauce.Work.Job.Calculations.MileageKm
+
+    calculate :materials_cost, :decimal, OpenSauce.Work.Job.Calculations.MaterialsCost
+
+    # Sum of tentative staff hourly rates — used for calendar scheduling and cost estimation.
+    calculate :man_hour_rate, :decimal, OpenSauce.Work.Job.Calculations.ManHourRate
+
+    # duration_estimate (minutes) expressed as hours.
+    calculate :estimated_man_hours, :decimal, OpenSauce.Work.Job.Calculations.EstimatedManHours
+
+    # Rough estimate: estimated_man_hours × man_hour_rate × overhead + materials.
+    calculate :estimated_cost, :decimal, OpenSauce.Work.Job.Calculations.EstimatedCost
   end
 end

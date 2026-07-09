@@ -27,13 +27,13 @@ defmodule OpenSauce.Work.Job.Calculations.Duration do
           {acc, e}
 
         %{data: %Ash.Union{type: ^close_tag}} = e, {acc, open} when open != nil ->
-          minutes = DateTime.diff(e.timestamp, open.timestamp, :second) |> div(60)
+          minutes = e.timestamp |> DateTime.diff(open.timestamp, :second) |> div(60)
           {acc + minutes, nil}
 
         _other, state ->
           state
       end)
 
-    if total > 0, do: total, else: nil
+    if total > 0, do: total
   end
 end

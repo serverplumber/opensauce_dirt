@@ -72,8 +72,10 @@ defmodule OpenSauce.Calendar.FeedGenerator do
         ]
       end)
 
-    (["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//OpenSauce//EN"] ++ lines ++ ["END:VCALENDAR"])
-    |> Enum.join("\r\n")
+    Enum.join(
+      ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//OpenSauce//EN"] ++ lines ++ ["END:VCALENDAR"],
+      "\r\n"
+    )
   end
 
   defp format_dt(nil), do: ""

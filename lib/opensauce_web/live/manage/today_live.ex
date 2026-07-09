@@ -80,7 +80,14 @@ defmodule OpenSauceWeb.TodayLive do
       end
 
     duration = job.duration_estimate || 120
-    {:noreply, assign(socket, place_job: job, place_day: place_day, place_minutes: place_minutes, place_duration: duration)}
+
+    {:noreply,
+     assign(socket,
+       place_job: job,
+       place_day: place_day,
+       place_minutes: place_minutes,
+       place_duration: duration
+     )}
   end
 
   @impl true
@@ -132,7 +139,12 @@ defmodule OpenSauceWeb.TodayLive do
 
     Work.update_job(
       job,
-      %{scheduled_for: date, start_time: start_time, status: new_status, duration_estimate: duration},
+      %{
+        scheduled_for: date,
+        start_time: start_time,
+        status: new_status,
+        duration_estimate: duration
+      },
       actor: member,
       tenant: member.organisation_id
     )
@@ -148,7 +160,12 @@ defmodule OpenSauceWeb.TodayLive do
     opts = [actor: member, tenant: member.organisation_id]
 
     Work.log_job_event!(
-      %{job_id: shift.id, timestamp: now, data: %{type: :shift_end, odometer_km: nil}, organisation_id: member.organisation_id},
+      %{
+        job_id: shift.id,
+        timestamp: now,
+        data: %{type: :shift_end, odometer_km: nil},
+        organisation_id: member.organisation_id
+      },
       opts
     )
 
@@ -203,7 +220,12 @@ defmodule OpenSauceWeb.TodayLive do
             style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(52,48,37,0.58);border-radius:8px;background:#211E16;color:#9A9384;cursor:pointer;flex-shrink:0;"
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.2"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div style="flex:1;text-align:center;font-size:13.5px;font-weight:600;color:#9A9384;letter-spacing:-0.01em;">
@@ -217,7 +239,12 @@ defmodule OpenSauceWeb.TodayLive do
             style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(52,48,37,0.58);border-radius:8px;background:#211E16;color:#9A9384;cursor:pointer;flex-shrink:0;"
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
@@ -232,7 +259,13 @@ defmodule OpenSauceWeb.TodayLive do
         >
           Nothing scheduled
         </div>
-        <.job_card :for={job <- day_jobs} job={job} return_to="/manage/today" place_on_tap show_start={not is_nil(@active_shift)} />
+        <.job_card
+          :for={job <- day_jobs}
+          job={job}
+          return_to="/manage/today"
+          place_on_tap
+          show_start={not is_nil(@active_shift)}
+        />
 
         <%!-- Unscheduled --%>
         <% unsched = unscheduled_jobs(@jobs) %>
@@ -249,7 +282,14 @@ defmodule OpenSauceWeb.TodayLive do
           >
             None
           </div>
-          <.job_card :for={job <- unsched} job={job} return_to="/manage/today" place_on_tap show_start={not is_nil(@active_shift)} show_due />
+          <.job_card
+            :for={job <- unsched}
+            job={job}
+            return_to="/manage/today"
+            place_on_tap
+            show_start={not is_nil(@active_shift)}
+            show_due
+          />
         </div>
 
         <%!-- Engagements --%>
@@ -313,16 +353,17 @@ defmodule OpenSauceWeb.TodayLive do
       <%!-- Place sheet --%>
       <div
         :if={@place_job}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label="Schedule"
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="place_close" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="place_close" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl px-5 pt-4 space-y-5"
+          class="bg-[#211E16] relative w-full max-w-lg space-y-5 rounded-t-2xl px-5 pt-4"
           style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(2rem,env(safe-area-inset-bottom))"
         >
-          <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto;"></div>
+          <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto;">
+          </div>
 
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;margin:0;">
@@ -334,7 +375,12 @@ defmodule OpenSauceWeb.TodayLive do
               style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -447,11 +493,8 @@ defmodule OpenSauceWeb.TodayLive do
     member = socket.assigns.current_member
 
     engagements =
-      CRM.list_engagements!(
-        actor: member,
-        tenant: member.organisation_id,
-        load: [:customer, :garden]
-      )
+      [actor: member, tenant: member.organisation_id, load: [:customer, :garden]]
+      |> CRM.list_engagements!()
       |> Enum.reject(&(&1.status in [:completed, :cancelled]))
       |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
 
@@ -530,7 +573,9 @@ defmodule OpenSauceWeb.TodayLive do
   defp eng_card(assigns) do
     ~H"""
     <.link
-      navigate={~p"/manage/customers/#{@engagement.customer.reference}/engagements/#{@engagement.id}?return_to=/manage/today"}
+      navigate={
+        ~p"/manage/customers/#{@engagement.customer.reference}/engagements/#{@engagement.id}?return_to=/manage/today"
+      }
       style="display:block;text-decoration:none;"
     >
       <div class="jcard">
@@ -576,6 +621,7 @@ defmodule OpenSauceWeb.TodayLive do
   end
 
   defp eng_customer_name(%{customer: %{company_name_nickname: nick}}) when not is_nil(nick), do: nick
+
   defp eng_customer_name(%{customer: %{first_name: f, last_name: l}}), do: "#{f} #{l}"
   defp eng_customer_name(_), do: "Unknown client"
 
@@ -598,5 +644,4 @@ defmodule OpenSauceWeb.TodayLive do
   defp eng_status_bg(:signed), do: "rgba(90,180,216,0.12)"
   defp eng_status_bg(:in_progress), do: "rgba(84,181,126,0.12)"
   defp eng_status_bg(_), do: "rgba(110,103,90,0.12)"
-
 end

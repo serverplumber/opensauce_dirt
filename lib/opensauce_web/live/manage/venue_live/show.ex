@@ -11,7 +11,6 @@ defmodule OpenSauceWeb.VenueLive.Show do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
         <.link navigate={~p"/manage/venues"}>
@@ -54,11 +53,12 @@ defmodule OpenSauceWeb.VenueLive.Show do
             HQ
           </span>
         </div>
-        <p :if={@venue.address} style="font-size:13px;color:#9A9384;margin-top:6px;">{@venue.address}</p>
+        <p :if={@venue.address} style="font-size:13px;color:#9A9384;margin-top:6px;">
+          {@venue.address}
+        </p>
       </div>
 
       <div style="padding:0 16px 100px;display:flex;flex-direction:column;gap:12px;">
-
         <%!-- set head office (owners only, when not already HQ) --%>
         <button
           :if={Roles.owner?(@current_member) and @venue.id != @organisation.head_office_venue_id}
@@ -83,7 +83,12 @@ defmodule OpenSauceWeb.VenueLive.Show do
               style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
               </svg>
               Add
             </button>
@@ -198,15 +203,17 @@ defmodule OpenSauceWeb.VenueLive.Show do
   end
 
   @impl true
-  def handle_event("edit_venue", _, socket),
-    do: {:noreply, assign(socket, :active_modal, :venue)}
+  def handle_event("edit_venue", _, socket), do: {:noreply, assign(socket, :active_modal, :venue)}
 
   @impl true
   def handle_event("set_head_office", _, socket) do
     org = socket.assigns.organisation
     actor = socket.assigns.current_member
 
-    case Ash.update(org, %{head_office_venue_id: socket.assigns.venue.id}, action: :update, actor: actor) do
+    case Ash.update(org, %{head_office_venue_id: socket.assigns.venue.id},
+           action: :update,
+           actor: actor
+         ) do
       {:ok, updated_org} ->
         {:noreply, socket |> assign(:organisation, updated_org) |> put_flash(:info, "Head office updated.")}
 
@@ -218,6 +225,7 @@ defmodule OpenSauceWeb.VenueLive.Show do
   @impl true
   def handle_event("delete_venue", _, socket) do
     Operations.delete_venue!(socket.assigns.venue, socket.assigns.opts)
+
     {:noreply, socket |> push_navigate(to: ~p"/manage/venues") |> put_flash(:info, "Venue deleted.")}
   end
 
@@ -291,7 +299,9 @@ defmodule OpenSauceWeb.VenueLive.Show do
   end
 
   defp reload_locations(socket) do
-    locations = Operations.list_storage_locations_for_venue!(socket.assigns.venue.id, socket.assigns.opts)
+    locations =
+      Operations.list_storage_locations_for_venue!(socket.assigns.venue.id, socket.assigns.opts)
+
     assign(socket, :storage_locations, locations)
   end
 

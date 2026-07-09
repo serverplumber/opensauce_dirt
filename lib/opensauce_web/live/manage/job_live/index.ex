@@ -79,7 +79,11 @@ defmodule OpenSauceWeb.JobLive.Index do
         <%!-- unscheduled tab: flat list --%>
         <div :if={@tab == :unscheduled}>
           <div :if={@counts.unscheduled > 0}>
-            <.job_card :for={job <- jobs_for_tab(@jobs, :unscheduled, today)} job={job} org_members={@org_members} />
+            <.job_card
+              :for={job <- jobs_for_tab(@jobs, :unscheduled, today)}
+              job={job}
+              org_members={@org_members}
+            />
           </div>
           <div
             :if={@counts.unscheduled == 0}
@@ -389,7 +393,8 @@ defmodule OpenSauceWeb.JobLive.Index do
   defp load_jobs(socket) do
     member = socket.assigns.current_member
 
-    org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+    org_members =
+      Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
 
     all_jobs =
       Work.list_jobs!(
@@ -446,6 +451,8 @@ defmodule OpenSauceWeb.JobLive.Index do
   defp customer_label(%{engagement: %{customer: nil}}), do: ""
 
   defp customer_label(%{engagement: %{customer: c}}) do
-    if c.company_name_nickname, do: c.company_name_nickname, else: "#{c.first_name} #{c.last_name}"
+    if c.company_name_nickname,
+      do: c.company_name_nickname,
+      else: "#{c.first_name} #{c.last_name}"
   end
 end

@@ -22,7 +22,9 @@ defmodule OpenSauceWeb.JobLive.Show do
     member = socket.assigns.current_member
     return_to = Map.get(params, "return_to", ~p"/manage/jobs")
 
-    org_members = Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+    org_members =
+      Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+
     active_shift = Work.find_active_shift!(actor: member, tenant: member.organisation_id)
 
     job =
@@ -187,12 +189,18 @@ defmodule OpenSauceWeb.JobLive.Show do
             <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.2;margin:0;min-width:0;flex:1;">
               {hero_title(@job)}
             </h1>
-            <.job_status_chip status={@job.status} scheduling_label={if @active_shift, do: "Start", else: "Place"} />
+            <.job_status_chip
+              status={@job.status}
+              scheduling_label={if @active_shift, do: "Start", else: "Place"}
+            />
           </div>
 
           <%!-- customer nickname · scope title --%>
           <% subtitle = hero_subtitle(@job) %>
-          <div :if={subtitle != ""} style="margin-top:5px;font-size:13px;color:#9A9384;font-weight:500;">
+          <div
+            :if={subtitle != ""}
+            style="margin-top:5px;font-size:13px;color:#9A9384;font-weight:500;"
+          >
             {subtitle}
           </div>
 
@@ -398,9 +406,7 @@ defmodule OpenSauceWeb.JobLive.Show do
         style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"
       >
       </div>
-      <div
-        style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 100px;max-height:80vh;display:flex;flex-direction:column;"
-      >
+      <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:0 0 100px;max-height:80vh;display:flex;flex-direction:column;">
         <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);flex-shrink:0;">
           <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;">
           </div>
@@ -457,8 +463,11 @@ defmodule OpenSauceWeb.JobLive.Show do
       >
       </div>
       <div style="position:relative;background:#211E16;border-radius:20px 20px 0 0;padding:20px 16px 40px;">
-        <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 20px;"></div>
-        <p style="font-size:17px;font-weight:700;color:#F4EFE2;margin-bottom:6px;">Delete this job?</p>
+        <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 20px;">
+        </div>
+        <p style="font-size:17px;font-weight:700;color:#F4EFE2;margin-bottom:6px;">
+          Delete this job?
+        </p>
         <p style="font-size:13px;color:#9A9384;margin-bottom:24px;line-height:1.5;">
           This permanently removes the job and cannot be undone.
         </p>
@@ -545,12 +554,10 @@ defmodule OpenSauceWeb.JobLive.Show do
   defp page_title(%{type: :shift}), do: "Shift"
   defp page_title(_), do: "Job"
 
-  defp hero_title(%{service_category: cat, garden: %{name: n}})
-       when not is_nil(cat) and is_binary(n) and n != "",
-       do: "#{service_category_label(cat)} at #{n}"
+  defp hero_title(%{service_category: cat, garden: %{name: n}}) when not is_nil(cat) and is_binary(n) and n != "",
+    do: "#{service_category_label(cat)} at #{n}"
 
-  defp hero_title(%{service_category: cat}) when not is_nil(cat),
-    do: service_category_label(cat)
+  defp hero_title(%{service_category: cat}) when not is_nil(cat), do: service_category_label(cat)
 
   defp hero_title(_), do: "Job"
 

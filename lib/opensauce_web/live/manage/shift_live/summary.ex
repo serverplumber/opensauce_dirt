@@ -21,15 +21,13 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
         )
 
       org_members =
-        Accounts.list_members_for_organisation!(member.organisation_id, authorize?: false)
+        member.organisation_id
+        |> Accounts.list_members_for_organisation!(authorize?: false)
         |> Enum.reject(&(&1.status == :suspended))
 
       today_jobs =
-        Work.list_jobs!(
-          actor: member,
-          tenant: member.organisation_id,
-          load: [:garden, engagement: [:customer]]
-        )
+        [actor: member, tenant: member.organisation_id, load: [:garden, engagement: [:customer]]]
+        |> Work.list_jobs!()
         |> Enum.filter(fn j ->
           j.type == :client_work &&
             j.status in [:scheduled, :in_progress, :completed] &&
@@ -45,8 +43,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
       started_at = shift_started_at(shift)
 
       {:ok,
-       socket
-       |> assign(
+       assign(socket,
          page_title: "Shift",
          main_bg: "bg-[#16140E]",
          shift: shift,
@@ -198,7 +195,10 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
       <div style="padding:0 16px 14px;display:flex;gap:10px;">
         <.shift_stat value={to_string(length(@today_jobs))} label="jobs today" />
         <.shift_stat value={jobs_done_count(@today_jobs)} label="done" />
-        <.shift_stat value={if @started_at, do: shift_duration(@started_at), else: "—"} label="on shift" />
+        <.shift_stat
+          value={if @started_at, do: shift_duration(@started_at), else: "—"}
+          label="on shift"
+        />
       </div>
 
       <%!-- Today's stops --%>
@@ -268,13 +268,13 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
       <%!-- Confirmation sheet --%>
       <div
         :if={@pending_action}
-        class="fixed inset-0 z-[70] flex flex-col justify-end"
+        class="z-[70] fixed inset-0 flex flex-col justify-end"
         role="dialog"
         aria-label="Confirm"
       >
-        <div class="absolute inset-0 bg-black/65" phx-click="cancel_confirm" aria-hidden="true" />
+        <div class="bg-black/65 absolute inset-0" phx-click="cancel_confirm" aria-hidden="true" />
         <div
-          class="relative w-full bg-[#211E16]"
+          class="bg-[#211E16] relative w-full"
           style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);padding:20px 16px;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
         >
           <% {action_type, cm} =
@@ -283,7 +283,8 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
               {:remove, m, _} -> {:remove, m}
               {:end_shift} -> {:end_shift, nil}
             end %>
-          <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 20px;"></div>
+          <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 20px;">
+          </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:24px;">
             <div
               :if={cm}
@@ -291,7 +292,10 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
             >
               {if cm, do: member_initial(cm)}
             </div>
-            <div :if={action_type == :end_shift} style="width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DB9258,#7A4A1E);">
+            <div
+              :if={action_type == :end_shift}
+              style="width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DB9258,#7A4A1E);"
+            >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="#1A0F05">
                 <rect x="5" y="5" width="14" height="14" rx="2" />
               </svg>
@@ -344,22 +348,23 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
       <%!-- Crew bottom sheet --%>
       <div
         :if={@staff_sheet_open}
-        class="fixed inset-0 z-[60] flex flex-col justify-end"
+        class="z-[60] fixed inset-0 flex flex-col justify-end"
         role="dialog"
         aria-label="Crew"
       >
         <div
-          class="absolute inset-0 bg-black/65"
+          class="bg-black/65 absolute inset-0"
           phx-click="close_staff_sheet"
           aria-hidden="true"
         />
         <div
-          class="relative w-full bg-[#211E16] mobile-scroll"
+          class="bg-[#211E16] mobile-scroll relative w-full"
           style="border-radius:20px 20px 0 0;border-top:1.5px solid rgba(52,48,37,0.58);max-height:82vh;overflow-y:auto;padding-bottom:max(2rem,env(safe-area-inset-bottom));"
         >
           <%!-- Handle + header --%>
           <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(52,48,37,0.58);position:sticky;top:0;background:#211E16;z-index:1;">
-            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;"></div>
+            <div style="width:36px;height:4px;border-radius:2px;background:rgba(52,48,37,0.8);margin:0 auto 12px;">
+            </div>
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;">
                 Crew
@@ -386,7 +391,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
           <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px;">
             <div
               :for={m <- @org_members}
-              style={"background:#2B2820;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;"}
+              style="background:#2B2820;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;"
             >
               <%!-- Avatar --%>
               <div style={"width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:14px;color:#fff;#{member_gradient(m.role)}"}>
@@ -518,8 +523,7 @@ defmodule OpenSauceWeb.ShiftLive.Summary do
   defp member_display_name(%{user: %{email: email}}), do: to_string(email)
   defp member_display_name(_), do: "—"
 
-  defp member_initial(%{user: %{first_name: f}}) when is_binary(f) and f != "",
-    do: f |> String.first() |> String.upcase()
+  defp member_initial(%{user: %{first_name: f}}) when is_binary(f) and f != "", do: f |> String.first() |> String.upcase()
 
   defp member_initial(%{user: %{email: email}}),
     do: email |> to_string() |> String.split("@") |> hd() |> String.first() |> String.upcase()

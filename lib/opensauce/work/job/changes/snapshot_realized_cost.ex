@@ -15,8 +15,8 @@ defmodule OpenSauce.Work.Job.Changes.SnapshotRealizedCost do
 
       with {:ok, events} <- load_events(job.id, tenant),
            {:ok, org} <- Ash.get(OpenSauce.Accounts.Organisation, tenant, authorize?: false),
-           {:ok, loaded_job} <- Ash.load(job, [:mileage_km, :materials_cost],
-                                  authorize?: false, tenant: tenant) do
+           {:ok, loaded_job} <-
+             Ash.load(job, [:mileage_km, :materials_cost], authorize?: false, tenant: tenant) do
         overhead = org.labor_overhead_percent || Decimal.new(0)
         mileage_rate = org.mileage_cost_per_km || Decimal.new(0)
 
@@ -57,7 +57,7 @@ defmodule OpenSauce.Work.Job.Changes.SnapshotRealizedCost do
           {acc, e}
 
         %{data: %Ash.Union{type: ^close_tag}} = e, {acc, open} when open != nil ->
-          minutes = DateTime.diff(e.timestamp, open.timestamp, :second) |> div(60)
+          minutes = e.timestamp |> DateTime.diff(open.timestamp, :second) |> div(60)
           hours = Decimal.div(Decimal.new(minutes), Decimal.new(60))
           rate = sum_staff_rates(open.event_staff)
           multiplier = Decimal.add(Decimal.new(1), overhead)

@@ -1,5 +1,7 @@
 import Config
 
+config :logger, :console, format: "[$level] $message\n"
+
 config :opensauce, OpenSauce.Repo,
   # For development, we disable any cache and enable
   # debugging and code reloading.
@@ -78,7 +80,9 @@ config :opensauce, OpenSauceWeb.Endpoint,
 # different ports.
 config :opensauce, dev_routes: true, token_signing_secret: "1Y4H7uJJNzu5KtTktCIrtiyGZ+A0eBS9"
 
-config :logger, :console, format: "[$level] $message\n"
+config :opensauce,
+  storage_adapter: OpenSauce.Storage.Local,
+  upload_dir: Path.join([File.cwd!(), "priv", "static", "uploads"])
 
 config :phoenix, :plug_init_mode, :runtime
 # If desired, both `http:` and `https:` keys can be
@@ -90,10 +94,6 @@ config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
 config :swoosh, :api_client, false
-
-config :opensauce,
-  storage_adapter: OpenSauce.Storage.Local,
-  upload_dir: Path.join([File.cwd!(), "priv", "static", "uploads"])
 
 # Set a higher stacktrace during development. Avoid configuring such
 # Disable swoosh api client as it is only required for production adapters.

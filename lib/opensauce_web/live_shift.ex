@@ -9,7 +9,8 @@ defmodule OpenSauceWeb.LiveShift do
 
     active_shift =
       if member do
-        Work.find_active_shift!(actor: member, tenant: member.organisation_id)
+        [actor: member, tenant: member.organisation_id]
+        |> Work.find_active_shift!()
         |> List.first()
       end
 

@@ -2,6 +2,8 @@ import Config
 
 config :ash, disable_async?: true
 
+config :logger, level: :warning
+
 # In test we don't send emails
 # to provide built-in test partitioning in CI environment.
 config :opensauce, OpenSauce.Mailer, adapter: Swoosh.Adapters.Test
@@ -35,8 +37,6 @@ config :opensauce, OpenSauceWeb.Endpoint,
   server: false
 
 config :opensauce, token_signing_secret: "/7GrJHgmCNYkIsiOKCsK28JJckAxvMLD"
-
-config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

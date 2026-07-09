@@ -78,7 +78,14 @@ defmodule OpenSauceWeb.ScheduleLive do
       end
 
     duration = job.duration_estimate || 120
-    {:noreply, assign(socket, place_job: job, place_day: place_day, place_minutes: place_minutes, place_duration: duration)}
+
+    {:noreply,
+     assign(socket,
+       place_job: job,
+       place_day: place_day,
+       place_minutes: place_minutes,
+       place_duration: duration
+     )}
   end
 
   @impl true
@@ -131,7 +138,12 @@ defmodule OpenSauceWeb.ScheduleLive do
 
     Work.update_job(
       job,
-      %{scheduled_for: date, start_time: start_time, status: new_status, duration_estimate: duration},
+      %{
+        scheduled_for: date,
+        start_time: start_time,
+        status: new_status,
+        duration_estimate: duration
+      },
       actor: member,
       tenant: member.organisation_id
     )
@@ -264,8 +276,7 @@ defmodule OpenSauceWeb.ScheduleLive do
             <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;">
               Unscheduled{if unsched != [], do: " · #{length(unsched)}", else: ""}
             </span>
-            <div style="flex:1;height:1px;background:rgba(52,48,37,0.58);">
-            </div>
+            <div style="flex:1;height:1px;background:rgba(52,48,37,0.58);"></div>
           </div>
           <div
             :if={unsched == []}
@@ -280,17 +291,18 @@ defmodule OpenSauceWeb.ScheduleLive do
       <%!-- Place sheet --%>
       <div
         :if={@place_job}
-        class="fixed inset-0 z-[60] flex items-end justify-center"
+        class="z-[60] fixed inset-0 flex items-end justify-center"
         role="dialog"
         aria-label="Place job"
       >
-        <div class="absolute inset-0 bg-black/50" phx-click="place_close" aria-hidden="true" />
+        <div class="bg-black/50 absolute inset-0" phx-click="place_close" aria-hidden="true" />
         <div
-          class="relative w-full max-w-lg bg-[#211E16] rounded-t-2xl px-5 pt-4 space-y-5"
+          class="bg-[#211E16] relative w-full max-w-lg space-y-5 rounded-t-2xl px-5 pt-4"
           style="border-top:1.5px solid rgba(52,48,37,0.58);padding-bottom:max(2rem,env(safe-area-inset-bottom))"
         >
           <%!-- handle --%>
-          <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto;"></div>
+          <div style="width:36px;height:4px;background:rgba(52,48,37,0.7);border-radius:2px;margin:0 auto;">
+          </div>
 
           <%!-- title + close --%>
           <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -544,11 +556,9 @@ defmodule OpenSauceWeb.ScheduleLive do
   defp day_label(0, today), do: "Today · #{Calendar.strftime(today, "%-d %b")}"
   defp day_label(1, today), do: "Tomorrow · #{Calendar.strftime(Date.add(today, 1), "%-d %b")}"
 
-  defp day_label(-1, today),
-    do: "Yesterday · #{Calendar.strftime(Date.add(today, -1), "%-d %b")}"
+  defp day_label(-1, today), do: "Yesterday · #{Calendar.strftime(Date.add(today, -1), "%-d %b")}"
 
-  defp day_label(offset, today),
-    do: Calendar.strftime(Date.add(today, offset), "%A · %-d %b")
+  defp day_label(offset, today), do: Calendar.strftime(Date.add(today, offset), "%A · %-d %b")
 
   defp jobs_for_date(jobs, date, today) do
     jobs
@@ -619,12 +629,17 @@ defmodule OpenSauceWeb.ScheduleLive do
 
   defp chip_where(job) do
     cl = customer_label(job)
-    if cl != "" && job.garden && job.garden.name, do: job.garden.name, else: nil
+    if cl != "" && job.garden && job.garden.name, do: job.garden.name
   end
 
   defp job_who(job) do
     cl = customer_label(job)
-    base = if cl == "", do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job", else: cl
+
+    base =
+      if cl == "",
+        do: (job.garden && (job.garden.name || "Unnamed site")) || "Unnamed job",
+        else: cl
+
     case job do
       %{engagement: %{scope_title: t}} when is_binary(t) and t != "" -> "#{base} · #{t}"
       _ -> base

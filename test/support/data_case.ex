@@ -19,15 +19,17 @@ defmodule OpenSauce.DataCase do
 
   use ExUnit.CaseTemplate
 
-  alias OpenSauce.Accounts.{Organisation, OrganisationMember, User}
   alias Ecto.Adapters.SQL.Sandbox
+  alias OpenSauce.Accounts.Organisation
+  alias OpenSauce.Accounts.OrganisationMember
+  alias OpenSauce.Accounts.User
 
   using do
     quote do
-      import OpenSauce.DataCase
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
+      import OpenSauce.DataCase
 
       alias OpenSauce.Repo
     end

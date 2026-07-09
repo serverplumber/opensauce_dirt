@@ -90,7 +90,10 @@ defmodule OpenSauce.CRM.Engagement do
       change fn changeset, _ ->
         changeset
         |> Ash.Changeset.change_attribute(:status, :signed)
-        |> Ash.Changeset.change_attribute(:signature, Ash.Changeset.get_argument(changeset, :signature))
+        |> Ash.Changeset.change_attribute(
+          :signature,
+          Ash.Changeset.get_argument(changeset, :signature)
+        )
       end
     end
   end

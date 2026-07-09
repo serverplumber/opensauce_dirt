@@ -106,8 +106,12 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
             ontouchstart=""
             style="width:100%;border-radius:14px;border:1.5px solid #54B57E;background:rgba(84,181,126,0.10);padding:11px 13px;text-align:left;cursor:pointer;"
           >
-            <p style="font-size:14px;font-weight:700;color:#F4EFE2;">{@garden.name || "Unnamed site"}</p>
-            <p :if={@garden.street} style="font-size:12px;color:#9A9384;margin-top:2px;">{@garden.street}</p>
+            <p style="font-size:14px;font-weight:700;color:#F4EFE2;">
+              {@garden.name || "Unnamed site"}
+            </p>
+            <p :if={@garden.street} style="font-size:12px;color:#9A9384;margin-top:2px;">
+              {@garden.street}
+            </p>
           </button>
         </div>
 
@@ -146,7 +150,10 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
         </div>
 
         <%!-- done sliders --%>
-        <div :if={@timing == :done} style="display:flex;flex-direction:column;gap:16px;margin-bottom:20px;">
+        <div
+          :if={@timing == :done}
+          style="display:flex;flex-direction:column;gap:16px;margin-bottom:20px;"
+        >
           <div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
               <span class="dark-label" style="margin-bottom:0;">Start time</span>
@@ -199,7 +206,12 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
               style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
               </svg>
               Add
             </button>
@@ -302,7 +314,9 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
               ontouchstart=""
               style={"width:100%;border-radius:14px;border:1.5px solid;background:#16140E;padding:11px 13px;text-align:left;cursor:pointer;#{if @garden && @garden.id == g.id, do: "border-color:#54B57E;", else: "border-color:rgba(52,48,37,0.58);"}"}
             >
-              <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;">{g.name || "Unnamed site"}</p>
+              <p style="font-size:13.5px;font-weight:700;color:#F4EFE2;">
+                {g.name || "Unnamed site"}
+              </p>
               <p :if={g.street} style="font-size:12px;color:#9A9384;margin-top:1px;">{g.street}</p>
             </button>
             <div
@@ -583,8 +597,18 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
         write_job_materials(job, socket.assigns.draft_map, opts)
 
         case socket.assigns.timing do
-          :now -> log_adhoc_now(job, shift, member, opts)
-          :done -> log_adhoc_done(job, shift, member, socket.assigns.start_minutes, socket.assigns.duration_minutes, opts)
+          :now ->
+            log_adhoc_now(job, shift, member, opts)
+
+          :done ->
+            log_adhoc_done(
+              job,
+              shift,
+              member,
+              socket.assigns.start_minutes,
+              socket.assigns.duration_minutes,
+              opts
+            )
         end
 
         {:noreply,

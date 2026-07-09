@@ -17,6 +17,22 @@ config :ash,
     unit: OpenSauce.Types.Unit
   ]
 
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+# Configure esbuild (the version is required)
+config :esbuild,
+  version: "0.25.0",
+  opensauce: [
+    args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
+  ]
+
+# Configures Elixir's Logger
+config :logger, :console,
+  format: "$time $metadata[$level] $message\n",
+  metadata: [:request_id]
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
@@ -47,22 +63,6 @@ config :opensauce,
     OpenSauce.Accounts,
     OpenSauce.Operations
   ]
-
-config :elixir, :time_zone_database, Tz.TimeZoneDatabase
-
-# Configure esbuild (the version is required)
-config :esbuild,
-  version: "0.25.0",
-  opensauce: [
-    args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
-    cd: Path.expand("../assets", __DIR__),
-    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
-  ]
-
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason

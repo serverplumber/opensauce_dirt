@@ -8,18 +8,22 @@ defmodule OpenSauceWeb.VenueLive.Index do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- header --%>
       <div style="padding:12px 16px 14px;">
         <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#F4EFE2;">
           Venues
         </h1>
-        <p style="font-size:13px;color:#9A9384;margin-top:3px;">Production sites and storage spaces.</p>
+        <p style="font-size:13px;color:#9A9384;margin-top:3px;">
+          Production sites and storage spaces.
+        </p>
       </div>
 
       <%!-- list --%>
       <div style="padding:0 16px 100px;">
-        <p :if={@venues == []} style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;">
+        <p
+          :if={@venues == []}
+          style="font-size:13.5px;color:#6E675A;text-align:center;padding:40px 0;"
+        >
           No venues yet
         </p>
 
@@ -50,7 +54,13 @@ defmodule OpenSauceWeb.VenueLive.Index do
                 {location_count_label(venue.storage_locations)}
               </p>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#6E675A;flex:0 0 auto;">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              style="color:#6E675A;flex:0 0 auto;"
+            >
               <path
                 d="M9 18l6-6-6-6"
                 stroke="currentColor"

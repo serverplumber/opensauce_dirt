@@ -19,20 +19,38 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;">
-
       <%!-- nav row --%>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
         <.link navigate={~p"/manage/customers"}>
-          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+          <button
+            type="button"
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            ontouchstart=""
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M19 12H5M12 19l-7-7 7-7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </.link>
         <.link patch={~p"/manage/customers/#{@customer.reference}/edit"}>
-          <button type="button" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;" ontouchstart="">
+          <button
+            type="button"
+            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            ontouchstart=""
+          >
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
           </button>
         </.link>
@@ -50,23 +68,51 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
       <%!-- contact buttons --%>
       <div style="display:flex;gap:10px;padding:0 16px 20px;">
-        <a :if={@customer.phone} href={"tel:#{@customer.phone}"} ontouchstart=""
-          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:11px;font-size:13.5px;font-weight:700;color:#F4EFE2;text-decoration:none;">
+        <a
+          :if={@customer.phone}
+          href={"tel:#{@customer.phone}"}
+          ontouchstart=""
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:11px;font-size:13.5px;font-weight:700;color:#F4EFE2;text-decoration:none;"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#54B57E;">
-            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .94h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .94h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           Call
         </a>
-        <a :if={@customer.email} href={"mailto:#{@customer.email}"} ontouchstart=""
-          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:11px;font-size:13.5px;font-weight:700;color:#F4EFE2;text-decoration:none;">
+        <a
+          :if={@customer.email}
+          href={"mailto:#{@customer.email}"}
+          ontouchstart=""
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1.5px solid rgba(52,48,37,0.58);background:#211E16;padding:11px;font-size:13.5px;font-weight:700;color:#F4EFE2;text-decoration:none;"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="color:#54B57E;">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <polyline
+              points="22,6 12,13 2,6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           Email
         </a>
-        <div :if={is_nil(@customer.phone) and is_nil(@customer.email)}
-          style="flex:1;text-align:center;font-size:13px;color:#6E675A;padding:11px;">
+        <div
+          :if={is_nil(@customer.phone) and is_nil(@customer.email)}
+          style="flex:1;text-align:center;font-size:13px;color:#6E675A;padding:11px;"
+        >
           No contact info
         </div>
       </div>
@@ -77,65 +123,134 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;color:#54B57E;line-height:1;">
             {length(@customer.garden_addresses)}
           </p>
-          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Gardens</p>
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">
+            Gardens
+          </p>
         </div>
         <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;">
           <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;color:#54B57E;line-height:1;">
             {length(@customer.engagements)}<span style="font-size:14px;color:#54B57E;">/{length(@all_jobs)}</span>
           </p>
-          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Eng · Jobs</p>
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">
+            Eng · Jobs
+          </p>
         </div>
         <.link navigate={~p"/manage/invoices?customer_id=#{@customer.id}"}>
-          <div style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;" ontouchstart="">
+          <div
+            style="background:#211E16;border:1.5px solid rgba(52,48,37,0.58);border-radius:14px;padding:12px 8px;text-align:center;"
+            ontouchstart=""
+          >
             <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:#54B57E;line-height:1.2;">
               {format_due_billed(@customer.invoices)}
             </p>
-            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">Due · Billed</p>
+            <p style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6E675A;margin-top:4px;">
+              Due · Billed
+            </p>
           </div>
         </.link>
       </div>
 
       <div style="padding:0 16px 100px;display:flex;flex-direction:column;gap:24px;">
-
         <%!-- gardens --%>
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Gardens</span>
-            <button type="button" phx-click="open_garden_sheet" ontouchstart=""
-              style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <button
+              type="button"
+              phx-click="open_garden_sheet"
+              ontouchstart=""
+              style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
+              </svg>
             </button>
           </div>
-          <div :if={Enum.empty?(@customer.garden_addresses)}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={Enum.empty?(@customer.garden_addresses)}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No gardens yet
           </div>
-          <div :if={not Enum.empty?(@customer.garden_addresses)} style="display:flex;flex-direction:column;gap:8px;">
+          <div
+            :if={not Enum.empty?(@customer.garden_addresses)}
+            style="display:flex;flex-direction:column;gap:8px;"
+          >
             <div :for={addr <- @customer.garden_addresses} class="jcard">
               <div style="display:flex;align-items:flex-start;gap:10px;">
-                <button type="button" phx-click="open_edit_garden_sheet" phx-value-id={addr.id} ontouchstart=""
-                  style="flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;text-align:left;">
+                <button
+                  type="button"
+                  phx-click="open_edit_garden_sheet"
+                  phx-value-id={addr.id}
+                  ontouchstart=""
+                  style="flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;text-align:left;"
+                >
                   <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {addr.name || "Unnamed garden"}
                   </p>
                   <p style="font-size:11.5px;color:#6E675A;margin-top:2px;">
                     {if addr.is_indoor, do: "Indoor", else: "Outdoor"}
                   </p>
-                  <p :if={addr.full_address} style="font-size:12px;color:#9A9384;margin-top:2px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                    <svg :if={addr.is_billing} width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;color:#54B57E;">
-                      <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-                      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/>
+                  <p
+                    :if={addr.full_address}
+                    style="font-size:12px;color:#9A9384;margin-top:2px;display:flex;align-items:center;gap:4px;overflow:hidden;"
+                  >
+                    <svg
+                      :if={addr.is_billing}
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style="flex:0 0 auto;color:#54B57E;"
+                    >
+                      <rect
+                        x="1"
+                        y="4"
+                        width="22"
+                        height="16"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{addr.full_address}</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      {addr.full_address}
+                    </span>
                   </p>
-                  <p :if={addr.is_billing and is_nil(addr.full_address)} style="font-size:12px;color:#9A9384;margin-top:2px;display:flex;align-items:center;gap:4px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;color:#54B57E;">
-                      <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-                      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/>
+                  <p
+                    :if={addr.is_billing and is_nil(addr.full_address)}
+                    style="font-size:12px;color:#9A9384;margin-top:2px;display:flex;align-items:center;gap:4px;"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style="flex:0 0 auto;color:#54B57E;"
+                    >
+                      <rect
+                        x="1"
+                        y="4"
+                        width="22"
+                        height="16"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2" />
                     </svg>
                     Billing address
                   </p>
-                  <p :if={addr.notes} style="font-size:12px;color:#6E675A;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;">
+                  <p
+                    :if={addr.notes}
+                    style="font-size:12px;color:#6E675A;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;"
+                  >
                     {addr.notes}
                   </p>
                 </button>
@@ -143,7 +258,13 @@ defmodule OpenSauceWeb.CustomerLive.Show do
                   <span :if={Map.get(@open_jobs_by_garden, addr.id, 0) > 0} class="pill sched">
                     {Map.get(@open_jobs_by_garden, addr.id)} open
                   </span>
-                  <.link navigate={~p"/manage/jobs/new?garden_id=#{addr.id}&customer_ref=#{@customer.reference}"} ontouchstart="" style="text-decoration:none;">
+                  <.link
+                    navigate={
+                      ~p"/manage/jobs/new?garden_id=#{addr.id}&customer_ref=#{@customer.reference}"
+                    }
+                    ontouchstart=""
+                    style="text-decoration:none;"
+                  >
                     <div style="width:40px;height:40px;border-radius:10px;background:#54B57E;display:flex;align-items:center;justify-content:center;color:#0C1F15;">
                       <.add_job_icon />
                     </div>
@@ -159,34 +280,61 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Engagements</span>
             <.link navigate={~p"/manage/customers/#{@customer.reference}/engagements/new"}>
-              <button type="button" ontouchstart=""
-                style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+              <button
+                type="button"
+                ontouchstart=""
+                style="display:flex;align-items:center;color:#54B57E;background:none;border:none;cursor:pointer;padding:0;"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                  />
+                </svg>
               </button>
             </.link>
           </div>
-          <div :if={Enum.empty?(@customer.engagements)}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={Enum.empty?(@customer.engagements)}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No engagements yet
           </div>
-          <div :if={not Enum.empty?(@customer.engagements)} style="display:flex;flex-direction:column;gap:8px;">
-            <.link :for={e <- @customer.engagements}
+          <div
+            :if={not Enum.empty?(@customer.engagements)}
+            style="display:flex;flex-direction:column;gap:8px;"
+          >
+            <.link
+              :for={e <- @customer.engagements}
               navigate={~p"/manage/customers/#{@customer.reference}/engagements/#{e.id}"}
-              style="text-decoration:none;">
-              <div class="jcard" ontouchstart="" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              style="text-decoration:none;"
+            >
+              <div
+                class="jcard"
+                ontouchstart=""
+                style="display:flex;align-items:center;justify-content:space-between;gap:10px;"
+              >
                 <div style="min-width:0;flex:1;">
                   <p style="font-size:14px;font-weight:700;color:#F4EFE2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {e.scope_title || (if e.garden, do: e.garden.name || "Unnamed site", else: "No site")}
+                    {e.scope_title ||
+                      if e.garden, do: e.garden.name || "Unnamed site", else: "No site"}
                   </p>
                   <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">
-                    <span class={"pill #{engagement_pill_class(e.status)}"}>{Phoenix.Naming.humanize(e.status)}</span>
-                    <span :if={format_term(e.term_start, e.term_end) != "—"} style="font-size:11px;color:#9A9384;">
+                    <span class={"#{engagement_pill_class(e.status)} pill"}>
+                      {Phoenix.Naming.humanize(e.status)}
+                    </span>
+                    <span
+                      :if={format_term(e.term_start, e.term_end) != "—"}
+                      style="font-size:11px;color:#9A9384;"
+                    >
                       {format_term(e.term_start, e.term_end)}
                     </span>
                   </div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
-                  <path d="M9 6l6 6-6 6" stroke="#6E675A" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M9 6l6 6-6 6" stroke="#6E675A" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </div>
             </.link>
@@ -198,8 +346,10 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           <div style="margin-bottom:10px;">
             <span class="dark-label" style="margin-bottom:0;">Jobs</span>
           </div>
-          <div :if={Enum.empty?(@all_jobs)}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={Enum.empty?(@all_jobs)}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No jobs yet
           </div>
           <div :if={not Enum.empty?(@all_jobs)} style="display:flex;flex-direction:column;gap:8px;">
@@ -212,136 +362,223 @@ defmodule OpenSauceWeb.CustomerLive.Show do
             />
           </div>
         </div>
-
       </div>
 
       <%!-- add garden sheet --%>
-      <div :if={@show_garden_sheet}
+      <div
+        :if={@show_garden_sheet}
         id="garden-sheet"
         style="position:fixed;inset:0;z-index:60;"
-        role="dialog" aria-modal="true" aria-label="Add garden">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" phx-click="close_garden_sheet"></div>
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add garden"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click="close_garden_sheet"
+        >
+        </div>
         <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
             <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">
               {if @editing_garden, do: "Edit garden", else: "Add garden"}
             </h3>
-            <button type="button" phx-click="close_garden_sheet" ontouchstart=""
-              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              phx-click="close_garden_sheet"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </div>
-          <.form for={:garden} id="garden-draft-form" phx-submit="save_garden"
-            style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;">
+          <.form
+            for={:garden}
+            id="garden-draft-form"
+            phx-submit="save_garden"
+            style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;"
+          >
             <div>
               <label class="dark-label" for="draft-name">Garden name</label>
-              <input class="dark-input" type="text" name="garden[name]" id="draft-name" value={@draft["name"]} placeholder="e.g. North Field" />
+              <input
+                class="dark-input"
+                type="text"
+                name="garden[name]"
+                id="draft-name"
+                value={@draft["name"]}
+                placeholder="e.g. North Field"
+              />
             </div>
             <div>
               <label class="dark-label" for="draft-street">Street</label>
-              <input class="dark-input" type="text" name="garden[street]" id="draft-street" value={@draft["street"]} />
+              <input
+                class="dark-input"
+                type="text"
+                name="garden[street]"
+                id="draft-street"
+                value={@draft["street"]}
+              />
             </div>
             <div>
               <label class="dark-label" for="draft-city">City</label>
-              <input class="dark-input" type="text" name="garden[city]" id="draft-city" value={@draft["city"]} phx-hook="TitleCase" />
+              <input
+                class="dark-input"
+                type="text"
+                name="garden[city]"
+                id="draft-city"
+                value={@draft["city"]}
+                phx-hook="TitleCase"
+              />
             </div>
             <div style="display:grid;grid-template-columns:7rem 1fr auto;gap:12px;align-items:end;">
               <div>
                 <label class="dark-label" for="draft-zip">Postal code</label>
-                <input class="dark-input" type="text" name="garden[zip]" id="draft-zip" value={@draft["zip"]} phx-hook="FormatPostal" placeholder="K1A 0A0" />
+                <input
+                  class="dark-input"
+                  type="text"
+                  name="garden[zip]"
+                  id="draft-zip"
+                  value={@draft["zip"]}
+                  phx-hook="FormatPostal"
+                  placeholder="K1A 0A0"
+                />
               </div>
               <div>
                 <label class="dark-label" for="draft-province">Province</label>
-                <input class="dark-input" type="text" name="garden[province]" id="draft-province" value={@draft["province"]} phx-hook="TitleCase" />
+                <input
+                  class="dark-input"
+                  type="text"
+                  name="garden[province]"
+                  id="draft-province"
+                  value={@draft["province"]}
+                  phx-hook="TitleCase"
+                />
               </div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:2px;">
                 <span class="dark-label" style="margin:0;">Billing</span>
-                <button type="button" phx-click="toggle_draft_billing" ontouchstart=""
+                <button
+                  type="button"
+                  phx-click="toggle_draft_billing"
+                  ontouchstart=""
                   style={"position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:999px;border:none;cursor:pointer;transition:background .12s ease;#{if @draft["is_billing"] == "true", do: "background:#54B57E;", else: "background:rgba(52,48,37,0.8);"}"}
-                  role="switch" aria-checked={@draft["is_billing"] == "true"}>
-                  <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}></span>
+                  role="switch"
+                  aria-checked={@draft["is_billing"] == "true"}
+                >
+                  <span style={"position:absolute;height:18px;width:18px;border-radius:50%;background:#F4EFE2;transition:transform .12s ease;#{if @draft["is_billing"] == "true", do: "transform:translateX(22px);", else: "transform:translateX(3px);"}"}>
+                  </span>
                 </button>
                 <input type="hidden" name="garden[is_billing]" value={@draft["is_billing"]} />
               </div>
             </div>
             <div>
               <label class="dark-label" for="draft-notes">Notes</label>
-              <textarea class="dark-textarea" name="garden[notes]" id="draft-notes" rows="2" placeholder="Gate code, access info…"><%= @draft["notes"] %></textarea>
+              <textarea
+                class="dark-textarea"
+                name="garden[notes]"
+                id="draft-notes"
+                rows="2"
+                placeholder="Gate code, access info…"
+              ><%= @draft["notes"] %></textarea>
             </div>
-            <button type="submit" ontouchstart=""
-              style="width:100%;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;">
+            <button
+              type="submit"
+              ontouchstart=""
+              style="width:100%;border-radius:12px;border:none;background:#54B57E;padding:13px;font-size:13.5px;font-weight:700;color:#0C1F15;cursor:pointer;"
+            >
               {if @editing_garden, do: "Save changes", else: "Add garden"}
             </button>
           </.form>
         </div>
       </div>
 
-    <%!-- Edit customer sheet --%>
-    <div :if={@live_action == :edit}
-      style="position:fixed;inset:0;z-index:60;"
-      role="dialog" aria-modal="true" aria-label="Edit customer">
-      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
-        phx-click={JS.patch(~p"/manage/customers/#{@customer.reference}")}></div>
-      <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
-          <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">Edit Customer</h3>
-          <button type="button" phx-click={JS.patch(~p"/manage/customers/#{@customer.reference}")} ontouchstart=""
-            style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
+      <%!-- Edit customer sheet --%>
+      <div
+        :if={@live_action == :edit}
+        style="position:fixed;inset:0;z-index:60;"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Edit customer"
+      >
+        <div
+          style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"
+          phx-click={JS.patch(~p"/manage/customers/#{@customer.reference}")}
+        >
         </div>
-        <div style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));">
-          <.live_component
-            module={OpenSauceWeb.CustomerLive.FormComponent}
-            id={@customer.id}
-            current_member={@current_member}
-            action={@live_action}
-            customer={@customer}
-            patch={~p"/manage/customers/#{@customer.reference}"}
-          />
+        <div style="position:absolute;bottom:0;left:0;right:0;background:#211E16;border-radius:20px 20px 0 0;max-height:90dvh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(52,48,37,0.58);flex:0 0 auto;">
+            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:#F4EFE2;margin:0;">
+              Edit Customer
+            </h3>
+            <button
+              type="button"
+              phx-click={JS.patch(~p"/manage/customers/#{@customer.reference}")}
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:16px 16px max(24px,env(safe-area-inset-bottom));">
+            <.live_component
+              module={OpenSauceWeb.CustomerLive.FormComponent}
+              id={@customer.id}
+              current_member={@current_member}
+              action={@live_action}
+              customer={@customer}
+              patch={~p"/manage/customers/#{@customer.reference}"}
+            />
+          </div>
         </div>
       </div>
-    </div>
 
-    <%!-- Engagement materials modal --%>
-    <.modal
-      :if={@live_action == :engagement_materials}
-      id="engagement-materials-modal"
-      title="Materials"
-      max_width="max-w-3xl"
-      show
-      on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
-    >
-      <.live_component
-        module={OpenSauceWeb.EngagementLive.MaterialsComponent}
-        id={"materials-#{@engagement_id}"}
-        engagement_id={@engagement_id}
-        current_member={@current_member}
-        currency={@organisation.currency}
-      />
-    </.modal>
+      <%!-- Engagement materials modal --%>
+      <.modal
+        :if={@live_action == :engagement_materials}
+        id="engagement-materials-modal"
+        title="Materials"
+        max_width="max-w-3xl"
+        show
+        on_cancel={JS.patch(~p"/manage/customers/#{@customer.reference}")}
+      >
+        <.live_component
+          module={OpenSauceWeb.EngagementLive.MaterialsComponent}
+          id={"materials-#{@engagement_id}"}
+          engagement_id={@engagement_id}
+          current_member={@current_member}
+          currency={@organisation.currency}
+        />
+      </.modal>
 
-    <%!-- Schedule job modal --%>
-    <.modal
-      :if={@schedule_job_engagement != nil}
-      id="schedule-job-modal"
-      title={"New job — #{schedule_job_title(@schedule_job_engagement)}"}
-      max_width="max-w-xl"
-      show
-      on_cancel={JS.push("close_schedule_job")}
-    >
-      <.live_component
-        module={OpenSauceWeb.EngagementLive.ScheduleJobComponent}
-        id={"schedule-job-#{@schedule_job_engagement.id}"}
-        engagement={@schedule_job_engagement}
-        current_member={@current_member}
-      />
-    </.modal>
-
+      <%!-- Schedule job modal --%>
+      <.modal
+        :if={@schedule_job_engagement != nil}
+        id="schedule-job-modal"
+        title={"New job — #{schedule_job_title(@schedule_job_engagement)}"}
+        max_width="max-w-xl"
+        show
+        on_cancel={JS.push("close_schedule_job")}
+      >
+        <.live_component
+          module={OpenSauceWeb.EngagementLive.ScheduleJobComponent}
+          id={"schedule-job-#{@schedule_job_engagement.id}"}
+          engagement={@schedule_job_engagement}
+          current_member={@current_member}
+        />
+      </.modal>
     </div>
     """
   end
@@ -369,7 +606,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         nil, nil -> false
         nil, _ -> false
         _, nil -> true
-        a, b -> Date.compare(a, b) == :gt
+        a, b -> Date.after?(a, b)
       end)
 
     socket =
@@ -406,9 +643,10 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     member = socket.assigns.current_member
     org = Accounts.get_organisation!(member.organisation_id, authorize?: false, load: [:address])
 
-    draft = %{@empty_draft |
-      "city" => (org.address && org.address.city) || "",
-      "province" => (org.address && org.address.province) || ""
+    draft = %{
+      @empty_draft
+      | "city" => (org.address && org.address.city) || "",
+        "province" => (org.address && org.address.province) || ""
     }
 
     {:noreply, assign(socket, show_garden_sheet: true, editing_garden: nil, draft: draft)}
@@ -542,10 +780,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     {:noreply, assign(socket, :customer, load_customer(customer.reference, socket))}
   end
 
-  def handle_info(
-        {OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}},
-        socket
-      ) do
+  def handle_info({OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}}, socket) do
     {:noreply,
      socket
      |> assign(:customer, load_customer(socket.assigns.customer.reference, socket))
@@ -562,7 +797,12 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         :full_name,
         garden_addresses: [:name, :full_address, :is_billing, :notes, :is_indoor],
         invoices: [:amount, :status],
-        engagements: [:total_quoted_value, :materials, garden: [:name], jobs: [:materials, garden: [:name]]]
+        engagements: [
+          :total_quoted_value,
+          :materials,
+          garden: [:name],
+          jobs: [:materials, garden: [:name]]
+        ]
       ]
     )
   end
@@ -595,14 +835,27 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   defp format_due_billed(invoices) do
     zero = Decimal.new(0)
-    billed = invoices |> Enum.map(& &1.amount) |> Enum.reject(&is_nil/1) |> Enum.reduce(zero, &Decimal.add/2)
-    due = invoices |> Enum.filter(&(&1.status == :sent)) |> Enum.map(& &1.amount) |> Enum.reject(&is_nil/1) |> Enum.reduce(zero, &Decimal.add/2)
+
+    billed =
+      invoices
+      |> Enum.map(& &1.amount)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reduce(zero, &Decimal.add/2)
+
+    due =
+      invoices
+      |> Enum.filter(&(&1.status == :sent))
+      |> Enum.map(& &1.amount)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reduce(zero, &Decimal.add/2)
+
     "#{Decimal.to_string(due, :normal)} / #{Decimal.to_string(billed, :normal)}"
   end
 
   defp format_term(nil, nil), do: "—"
   defp format_term(start, nil), do: "From #{Date.to_iso8601(start)}"
   defp format_term(nil, end_date), do: "Until #{Date.to_iso8601(end_date)}"
+
   defp format_term(start, end_date), do: "#{Date.to_iso8601(start)} → #{Date.to_iso8601(end_date)}"
 
   defp engagement_pill_class(:signed), do: "live"
@@ -612,8 +865,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   defp engagement_pill_class(_), do: "sched"
 
   defp job_local_title(%{service_category: cat, garden: %{name: name}})
-       when not is_nil(cat) and is_binary(name) and name != "",
-       do: "#{cat_label(cat)} at #{name}"
+       when not is_nil(cat) and is_binary(name) and name != "", do: "#{cat_label(cat)} at #{name}"
 
   defp job_local_title(%{service_category: cat}) when not is_nil(cat), do: cat_label(cat)
   defp job_local_title(_), do: "Job"

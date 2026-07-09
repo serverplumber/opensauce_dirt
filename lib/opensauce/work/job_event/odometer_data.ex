@@ -1,4 +1,5 @@
 defmodule OpenSauce.Work.JobEvent.OdometerData do
+  @moduledoc false
   use Ash.Resource, data_layer: :embedded
 
   attributes do

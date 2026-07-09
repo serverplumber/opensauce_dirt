@@ -5,9 +5,12 @@ defmodule OpenSauceWeb.PortalAuth do
 
   def on_mount(:require_customer, _params, session, socket) do
     with customer_id when is_binary(customer_id) <- session["portal_customer_id"],
-         org_id when is_binary(org_id) <- session["portal_org_id"],
-         customer <- Ash.get!(OpenSauce.CRM.Customer, customer_id, authorize?: false, tenant: org_id),
-         org <- OpenSauce.Accounts.get_organisation!(org_id, authorize?: false) do
+         org_id when is_binary(org_id) <- session["portal_org_id"] do
+      customer =
+        Ash.get!(OpenSauce.CRM.Customer, customer_id, authorize?: false, tenant: org_id)
+
+      org = OpenSauce.Accounts.get_organisation!(org_id, authorize?: false)
+
       socket =
         socket
         |> assign(:current_customer, customer)

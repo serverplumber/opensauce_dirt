@@ -39,7 +39,12 @@ defmodule OpenSauce.Storage do
                    set response headers (S3 `Content-Type`).
   `data`     — raw binary content.
   """
-  @callback put(scope :: String.t(), filename :: String.t(), content_type :: String.t(), data :: binary()) ::
+  @callback put(
+              scope :: String.t(),
+              filename :: String.t(),
+              content_type :: String.t(),
+              data :: binary()
+            ) ::
               {:ok, storage_key()} | {:error, term()}
 
   @doc """
@@ -60,6 +65,7 @@ defmodule OpenSauce.Storage do
   # ---------------------------------------------------------------------------
 
   def put(scope, filename, content_type, data), do: adapter().put(scope, filename, content_type, data)
+
   def url(storage_key), do: adapter().url(storage_key)
   def delete(storage_key), do: adapter().delete(storage_key)
 

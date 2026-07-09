@@ -22,8 +22,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
               {catalog_item_title(jm.supplier_catalog_item)}
             </p>
             <p style="font-size:12px;color:#9A9384;margin-top:2px;">
-              {jm.supplier_catalog_item.format_description || "—"} ·
-              {jm.supplier_catalog_item.supplier_catalog.supplier.name} · qty {jm.quantity}
+              {jm.supplier_catalog_item.format_description || "—"} · {jm.supplier_catalog_item.supplier_catalog.supplier.name} · qty {jm.quantity}
             </p>
           </div>
           <button
@@ -44,7 +43,9 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
 
       <div style="display:flex;justify-content:flex-end;">
         <span style="font-size:12px;color:#9A9384;margin-right:8px;">Total cost</span>
-        <span style="font-size:12px;font-weight:600;color:#F4EFE2;">{format_money(@currency, @total_cost)}</span>
+        <span style="font-size:12px;font-weight:600;color:#F4EFE2;">
+          {format_money(@currency, @total_cost)}
+        </span>
       </div>
 
       <div style="border-top:1px solid rgba(52,48,37,0.58);padding-top:16px;display:flex;flex-direction:column;gap:12px;">
@@ -143,7 +144,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
          |> assign(:form, blank_form())}
 
       {:error, %Ash.Error.Invalid{} = err} ->
-        msg = err.errors |> Enum.map(& &1.message) |> Enum.join(", ")
+        msg = Enum.map_join(err.errors, ", ", & &1.message)
         {:noreply, put_flash(socket, :error, "Could not add material: #{msg}")}
 
       {:error, _} ->
@@ -178,8 +179,7 @@ defmodule OpenSauceWeb.JobLive.MaterialsComponent do
     ).materials
   end
 
-  defp blank_form,
-    do: to_form(%{"supplier_catalog_item_id" => "", "quantity" => ""}, as: "job_material")
+  defp blank_form, do: to_form(%{"supplier_catalog_item_id" => "", "quantity" => ""}, as: "job_material")
 
   defp parse_decimal(""), do: nil
 

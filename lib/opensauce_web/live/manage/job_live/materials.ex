@@ -167,25 +167,40 @@ defmodule OpenSauceWeb.JobLive.Materials do
   def render(assigns) do
     ~H"""
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:#F4EFE2;-webkit-font-smoothing:antialiased;padding-bottom:80px;">
-
       <.material_search_header
         search_query={@search_query}
         placeholder="Latin name, cultivar, or common name…"
       >
         <:nav>
           <.link navigate={@back_to}>
-            <button type="button" ontouchstart="" style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;">
+            <button
+              type="button"
+              ontouchstart=""
+              style="color:#6E675A;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                  d="M19 12H5M12 19l-7-7 7-7"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
           </.link>
           <div style="text-align:center;">
-            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">Job materials</p>
+            <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;color:#F4EFE2;line-height:1.1;">
+              Job materials
+            </p>
             <p style="font-size:11px;color:#9A9384;margin-top:1px;">{job_subtitle(@job)}</p>
           </div>
           <.link navigate={@back_to}>
-            <button type="button" ontouchstart="" style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;">
+            <button
+              type="button"
+              ontouchstart=""
+              style="font-size:13px;font-weight:700;color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;"
+            >
               Done
             </button>
           </.link>
@@ -193,10 +208,11 @@ defmodule OpenSauceWeb.JobLive.Materials do
       </.material_search_header>
 
       <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:12px;">
-
         <%!-- engagement plan context --%>
-        <div :if={@job.engagement}
-          style="background:#211E16;border-radius:10px;border:1px solid rgba(52,48,37,0.58);padding:9px 12px;">
+        <div
+          :if={@job.engagement}
+          style="background:#211E16;border-radius:10px;border:1px solid rgba(52,48,37,0.58);padding:9px 12px;"
+        >
           <p style="font-size:11px;color:#6E675A;">↑ from engagement plan</p>
           <p style="font-size:11px;color:#9A9384;margin-top:2px;">
             {engagement_context(@job)} · {length(@job.engagement.materials)} planned
@@ -204,21 +220,27 @@ defmodule OpenSauceWeb.JobLive.Materials do
         </div>
 
         <%!-- format filter chips --%>
-        <div :if={@search_results != [] and format_options(@search_results) != []}
-          style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button :for={fmt <- format_options(@search_results)}
+        <div
+          :if={@search_results != [] and format_options(@search_results) != []}
+          style="display:flex;gap:6px;flex-wrap:wrap;"
+        >
+          <button
+            :for={fmt <- format_options(@search_results)}
             type="button"
             phx-click="set_format_filter"
             phx-value-fmt={fmt}
             ontouchstart=""
-            style={"font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(52,48,37,0.58);cursor:pointer;#{if @format_filter == fmt, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#211E16;color:#9A9384;"}"}>
+            style={"font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(52,48,37,0.58);cursor:pointer;#{if @format_filter == fmt, do: "background:#54B57E;color:#0C1F15;border-color:#54B57E;", else: "background:#211E16;color:#9A9384;"}"}
+          >
             {fmt}
           </button>
         </div>
 
         <%!-- search results --%>
-        <div :if={@search_query != "" and @search_results == []}
-          style="font-size:13px;color:#6E675A;text-align:center;padding:20px 0;">
+        <div
+          :if={@search_query != "" and @search_results == []}
+          style="font-size:13px;color:#6E675A;text-align:center;padding:20px 0;"
+        >
           No results for "{@search_query}"
         </div>
 
@@ -240,8 +262,10 @@ defmodule OpenSauceWeb.JobLive.Materials do
               On this job
             </span>
           </div>
-          <div :if={@job.materials == []}
-            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;">
+          <div
+            :if={@job.materials == []}
+            style="border-radius:12px;border:1.5px dashed rgba(52,48,37,0.58);padding:14px;font-size:13px;color:#6E675A;text-align:center;"
+          >
             No materials yet — search to add
           </div>
           <div :if={@job.materials != []} style="display:flex;flex-direction:column;gap:6px;">
@@ -266,8 +290,10 @@ defmodule OpenSauceWeb.JobLive.Materials do
               From plan — not added yet
             </p>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <div :for={em <- unplanned_items(@job)}
-                style="background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;">
+              <div
+                :for={em <- unplanned_items(@job)}
+                style="background:#211E16;border-radius:12px;padding:10px 12px;border:1px solid rgba(52,48,37,0.58);display:flex;align-items:center;gap:10px;"
+              >
                 <div style="flex:1;min-width:0;">
                   <p style="font-size:13px;font-weight:600;font-style:italic;color:#9A9384;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {catalog_item_title(em.supplier_catalog_item)}
@@ -276,20 +302,26 @@ defmodule OpenSauceWeb.JobLive.Materials do
                     plan qty: {em.quantity}
                   </p>
                 </div>
-                <button type="button"
+                <button
+                  type="button"
                   phx-click="add_from_plan"
                   phx-value-id={em.supplier_catalog_item_id}
                   ontouchstart=""
-                  style="background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:8px;padding:6px 10px;cursor:pointer;color:#54B57E;line-height:0;">
+                  style="background:rgba(84,181,126,0.12);border:1px solid rgba(84,181,126,0.3);border-radius:8px;padding:6px 10px;cursor:pointer;color:#54B57E;line-height:0;"
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                    <path
+                      d="M12 5v14M5 12h14"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
         </div>
-
       </div>
 
       <.material_line_sheet
@@ -310,7 +342,6 @@ defmodule OpenSauceWeb.JobLive.Materials do
           {HtmlHelpers.format_currency(@organisation.currency, materials_price_total(@job.materials))}
         </span>
       </div>
-
     </div>
     """
   end
@@ -340,41 +371,76 @@ defmodule OpenSauceWeb.JobLive.Materials do
 
       <%!-- stepper if on job --%>
       <div :if={@job_entry} style="display:flex;align-items:center;gap:4px;margin-top:8px;">
-        <button :if={@item.min_order_qty && @item.min_order_qty > 1}
-          type="button" phx-click="sub_flat" phx-value-id={@item.id} ontouchstart=""
-          style={stepper_btn_style()}>
+        <button
+          :if={@item.min_order_qty && @item.min_order_qty > 1}
+          type="button"
+          phx-click="sub_flat"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={stepper_btn_style()}
+        >
           −f
         </button>
-        <button type="button" phx-click="sub_one" phx-value-id={@item.id} ontouchstart=""
-          style={stepper_btn_style()}>
+        <button
+          type="button"
+          phx-click="sub_one"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={stepper_btn_style()}
+        >
           −1
         </button>
         <div style="min-width:48px;text-align:center;">
-          <p style="font-size:17px;font-weight:700;color:#F4EFE2;line-height:1;">{@job_entry.quantity}</p>
-          <p :if={@item.min_order_qty && @item.min_order_qty > 1} style="font-size:10px;color:#9A9384;">
+          <p style="font-size:17px;font-weight:700;color:#F4EFE2;line-height:1;">
+            {@job_entry.quantity}
+          </p>
+          <p
+            :if={@item.min_order_qty && @item.min_order_qty > 1}
+            style="font-size:10px;color:#9A9384;"
+          >
             {Decimal.mult(@job_entry.quantity, @item.min_order_qty)} plants
           </p>
         </div>
-        <button type="button" phx-click="add_one" phx-value-id={@item.id} ontouchstart=""
-          style={stepper_btn_style()}>
+        <button
+          type="button"
+          phx-click="add_one"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={stepper_btn_style()}
+        >
           +1
         </button>
-        <button :if={@item.min_order_qty && @item.min_order_qty > 1}
-          type="button" phx-click="add_flat" phx-value-id={@item.id} ontouchstart=""
-          style={stepper_btn_style()}>
+        <button
+          :if={@item.min_order_qty && @item.min_order_qty > 1}
+          type="button"
+          phx-click="add_flat"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={stepper_btn_style()}
+        >
           +f
         </button>
       </div>
 
       <%!-- add buttons if not on job --%>
       <div :if={!@job_entry} style="display:flex;gap:6px;margin-top:8px;">
-        <button :if={@item.min_order_qty && @item.min_order_qty > 1}
-          type="button" phx-click="add_flat" phx-value-id={@item.id} ontouchstart=""
-          style={add_btn_style()}>
+        <button
+          :if={@item.min_order_qty && @item.min_order_qty > 1}
+          type="button"
+          phx-click="add_flat"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={add_btn_style()}
+        >
           + flat
         </button>
-        <button type="button" phx-click="add_one" phx-value-id={@item.id} ontouchstart=""
-          style={add_btn_style()}>
+        <button
+          type="button"
+          phx-click="add_one"
+          phx-value-id={@item.id}
+          ontouchstart=""
+          style={add_btn_style()}
+        >
           + 1
         </button>
       </div>
@@ -383,10 +449,12 @@ defmodule OpenSauceWeb.JobLive.Materials do
   end
 
   defp stepper_btn_style,
-    do: "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
+    do:
+      "background:#2B2820;border:1px solid rgba(52,48,37,0.58);border-radius:8px;color:#F4EFE2;font-size:12px;font-weight:600;padding:5px 9px;cursor:pointer;min-width:32px;"
 
   defp add_btn_style,
-    do: "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
+    do:
+      "background:#2B2820;border:1px solid rgba(84,181,126,0.4);border-radius:8px;color:#54B57E;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;"
 
   defp adjust(socket, catalog_item_id, item, delta) do
     member = socket.assigns.current_member
@@ -413,18 +481,18 @@ defmodule OpenSauceWeb.JobLive.Materials do
       jm ->
         new_qty = Decimal.add(jm.quantity, Decimal.new(delta))
 
-        if Decimal.compare(new_qty, Decimal.new(0)) != :gt do
-          case Work.destroy_job_material(jm, actor: member, tenant: member.organisation_id) do
-            :ok -> {:noreply, reload(socket)}
-            {:error, _} -> {:noreply, put_flash(socket, :error, "Could not remove item.")}
-          end
-        else
+        if Decimal.compare(new_qty, Decimal.new(0)) == :gt do
           case Work.update_job_material(jm, %{quantity: new_qty},
                  actor: member,
                  tenant: member.organisation_id
                ) do
             {:ok, _} -> {:noreply, reload(socket)}
             {:error, _} -> {:noreply, put_flash(socket, :error, "Could not update quantity.")}
+          end
+        else
+          case Work.destroy_job_material(jm, actor: member, tenant: member.organisation_id) do
+            :ok -> {:noreply, reload(socket)}
+            {:error, _} -> {:noreply, put_flash(socket, :error, "Could not remove item.")}
           end
         end
     end
@@ -532,7 +600,12 @@ defmodule OpenSauceWeb.JobLive.Materials do
 
   defp engagement_context(%{engagement: eng}) when not is_nil(eng) do
     customer = eng.customer
-    name = if customer, do: customer.company_name_nickname || "#{customer.first_name} #{customer.last_name}", else: "—"
+
+    name =
+      if customer,
+        do: customer.company_name_nickname || "#{customer.first_name} #{customer.last_name}",
+        else: "—"
+
     "#{name} · #{eng.scope_title || "Engagement"}"
   end
 

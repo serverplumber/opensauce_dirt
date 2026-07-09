@@ -16,18 +16,22 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
     )
 
   {:ok, demo_org} =
-    Accounts.update_organisation(demo_org, %{
-      name: "Plants Plan Designs",
-      legal_name: "1175829034 Québec Inc.",
-      currency: :CAD,
-      tax_mode: :exclusive,
-      phone: "(514) 555-0192",
-      website: "plantsplan.design",
-      email_from_name: "Plants Plan Designs",
-      payment_info: "Virement Interac : comptabilite@plantsplan.design\nChèque à l'ordre de Plants Plan Designs",
-      invoice_terms:
-        "Tout solde impayé porte intérêt à compter du 31e jour suivant la date de facturation, au taux annuel de 24 %, composé quotidiennement."
-    }, authorize?: false)
+    Accounts.update_organisation(
+      demo_org,
+      %{
+        name: "Plants Plan Designs",
+        legal_name: "1175829034 Québec Inc.",
+        currency: :CAD,
+        tax_mode: :exclusive,
+        phone: "(514) 555-0192",
+        website: "plantsplan.design",
+        email_from_name: "Plants Plan Designs",
+        payment_info: "Virement Interac : comptabilite@plantsplan.design\nChèque à l'ordre de Plants Plan Designs",
+        invoice_terms:
+          "Tout solde impayé porte intérêt à compter du 31e jour suivant la date de facturation, au taux annuel de 24 %, composé quotidiennement."
+      },
+      authorize?: false
+    )
 
   # ── Staff accounts ───────────────────────────────────────────────────────────
 
@@ -196,8 +200,7 @@ if System.get_env("SEED_DATA") == "true" or (Code.ensure_loaded?(Mix) and Mix.en
         customer_id: marc.id,
         garden_id: marc_front.id,
         scope_title: "Front Yard Planting",
-        scope_description:
-          "Low-maintenance ornamental planting with seasonal colour and hedging along the fence line.",
+        scope_description: "Low-maintenance ornamental planting with seasonal colour and hedging along the fence line.",
         status: :draft,
         install_price: Decimal.new("4200.00")
       },

@@ -13,6 +13,8 @@ defmodule OpenSauce.CRM.Customer do
     extensions: [AshJsonApi.Resource, AshGraphql.Resource],
     fragments: [OpenSauce.Concerns.Multitenanted]
 
+  alias OpenSauce.CRM.Address
+
   require Ash.Resource.Preparation.Builtins
 
   json_api do
@@ -138,7 +140,7 @@ defmodule OpenSauce.CRM.Customer do
         gardens = Ash.Changeset.get_argument(changeset, :garden_addresses)
 
         billing_count =
-          if is_list(gardens), do: Enum.count(gardens, &billing_flagged?/1), else: nil
+          if is_list(gardens), do: Enum.count(gardens, &billing_flagged?/1)
 
         cond do
           gardens == [] ->
@@ -181,6 +183,7 @@ defmodule OpenSauce.CRM.Customer do
 
     read :with_uninvoiced_jobs do
       prepare build(sort: :first_name)
+
       filter expr(exists(engagements, exists(jobs, is_nil(invoice_id) or invoice.status == :void)))
     end
   end
@@ -279,25 +282,25 @@ defmodule OpenSauce.CRM.Customer do
   end
 
   relationships do
-    has_many :addresses, OpenSauce.CRM.Address do
+    has_many :addresses, Address do
       public? true
     end
 
-    has_one :billing_address, OpenSauce.CRM.Address do
+    has_one :billing_address, Address do
       filter expr(is_billing == true)
       public? true
     end
 
-    has_many :garden_addresses, OpenSauce.CRM.Address do
+    has_many :garden_addresses, Address do
       filter expr(is_garden == true)
       public? true
     end
 
-    has_many :indoor_addresses, OpenSauce.CRM.Address do
+    has_many :indoor_addresses, Address do
       filter expr(is_indoor == true)
       public? true
     end
-    
+
     has_many :invoices, OpenSauce.CRM.Invoice do
       public? true
     end
@@ -309,7 +312,10 @@ defmodule OpenSauce.CRM.Customer do
 
   calculations do
     calculate :full_name, :string, expr(first_name <> " " <> last_name)
-    calculate :has_uninvoiced_jobs, :boolean, expr(exists(engagements, exists(jobs, is_nil(invoice_id) or invoice.status == :void)))
+
+    calculate :has_uninvoiced_jobs,
+              :boolean,
+              expr(exists(engagements, exists(jobs, is_nil(invoice_id) or invoice.status == :void)))
   end
 
   aggregates do

@@ -10,7 +10,7 @@ defmodule OpenSauce.Operations.StorageLocation do
     authorizers: [Ash.Policy.Authorizer],
     fragments: [
       OpenSauce.Concerns.Multitenanted,
-      OpenSauce.Concerns.Venued,
+      OpenSauce.Concerns.Venued
     ]
 
   postgres do

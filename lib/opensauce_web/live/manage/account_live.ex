@@ -53,7 +53,6 @@ defmodule OpenSauceWeb.AccountLive do
   def render(assigns) do
     ~H"""
     <div style="padding:16px;display:flex;flex-direction:column;gap:20px;font-family:'Hanken Grotesk',system-ui,sans-serif;">
-
       <%!-- Hero: avatar + name + email + role --%>
       <div style="display:flex;align-items:center;gap:14px;padding:4px 0;">
         <.member_avatar member={@current_member} initials={@current_user.initials} size={56} />
@@ -94,7 +93,9 @@ defmodule OpenSauceWeb.AccountLive do
                   placeholder="First name"
                   phx-debounce="blur"
                 />
-                <span :for={msg <- @form[:first_name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+                <span :for={msg <- @form[:first_name].errors} class="dark-field-error">
+                  {elem(msg, 0)}
+                </span>
               </div>
               <div>
                 <label class="dark-label" for={@form[:last_name].id}>Last name</label>
@@ -107,7 +108,9 @@ defmodule OpenSauceWeb.AccountLive do
                   placeholder="Last name"
                   phx-debounce="blur"
                 />
-                <span :for={msg <- @form[:last_name].errors} class="dark-field-error">{elem(msg, 0)}</span>
+                <span :for={msg <- @form[:last_name].errors} class="dark-field-error">
+                  {elem(msg, 0)}
+                </span>
               </div>
               <div :if={@current_member.display_title}>
                 <label class="dark-label">Display title</label>
@@ -135,9 +138,18 @@ defmodule OpenSauceWeb.AccountLive do
             <div style="font-size:16px;font-weight:700;color:#F4EFE2;letter-spacing:-0.01em;">
               {@org.name}
             </div>
-            <.link :if={@current_member.role == :owner} navigate={~p"/manage/org"} style="color:#6E675A;line-height:0;padding:4px;flex-shrink:0;">
+            <.link
+              :if={@current_member.role == :owner}
+              navigate={~p"/manage/org"}
+              style="color:#6E675A;line-height:0;padding:4px;flex-shrink:0;"
+            >
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
             </.link>
           </div>
@@ -157,7 +169,13 @@ defmodule OpenSauceWeb.AccountLive do
         >
           <span style="font-size:14px;font-weight:600;color:#F4EFE2;">Switch organisation</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M9 6l6 6-6 6" stroke="#6E675A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path
+              d="M9 6l6 6-6 6"
+              stroke="#6E675A"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </.link>
       </div>
@@ -196,13 +214,13 @@ defmodule OpenSauceWeb.AccountLive do
 
   defp tax_mode_label(:inclusive), do: "Inclusive"
   defp tax_mode_label(:exclusive), do: "Exclusive"
-  defp tax_mode_label(other), do: to_string(other) |> String.capitalize()
+  defp tax_mode_label(other), do: other |> to_string() |> String.capitalize()
 
   defp name_changed?(form, user) do
     first = (form[:first_name].value || "") |> to_string() |> String.trim()
     last = (form[:last_name].value || "") |> to_string() |> String.trim()
-    current_first = (user.first_name || "") |> String.trim()
-    current_last = (user.last_name || "") |> String.trim()
+    current_first = String.trim(user.first_name || "")
+    current_last = String.trim(user.last_name || "")
     first != current_first or last != current_last
   end
 end
