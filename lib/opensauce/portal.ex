@@ -119,9 +119,9 @@ defmodule OpenSauce.Portal do
   defp console_log(label, url) do
     IO.puts("""
 
-    ┌─ #{label} #{String.duplicate("─", max(0, 60 - String.length(label)))}
-    │  #{url}
-    └#{String.duplicate("─", 65)}
+    -- #{label} #{String.duplicate("-", max(0, 60 - String.length(label)))}
+       #{url}
+    #{String.duplicate("-", 65)}
     """)
   end
 
