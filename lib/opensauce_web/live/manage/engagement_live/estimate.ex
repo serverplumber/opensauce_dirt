@@ -2,8 +2,7 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
-  alias OpenSauce.BrandTheme
-  alias OpenSauceWeb.HtmlHelpers
+  import OpenSauceWeb.EstimateDocument
 
   @impl true
   def mount(_params, _session, socket) do
@@ -65,184 +64,12 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
 
       <%!-- estimate document — --s-* vars render it in the org's chosen mode,
            exactly as the customer sees it; staff chrome outside stays soil --%>
-      <div style="padding:0 16px 16px;">
-        <% brand = BrandTheme.scheme(@organisation) %>
-        <div style={"background:#{brand.paper};border:1px solid #{BrandTheme.rgba(brand.border, 0.58)};border-radius:20px;overflow:hidden;color:#{brand.text};--s-bg:#{brand.bg};--s-paper:#{brand.paper};--s-border:#{BrandTheme.rgba(brand.border, 0.58)};--s-text:#{brand.text};--s-muted:#{brand.muted};--s-dim:#{brand.dim};"}>
-          <%!-- org header --%>
-          <div style="padding:20px 20px 16px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-            <div style="flex:1;min-width:0;">
-              <p style={"font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#{BrandTheme.scheme(@organisation).primary};"}>
-                {@organisation.name}
-              </p>
-              <p
-                :if={@organisation.legal_name}
-                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
-              >
-                {@organisation.legal_name}
-              </p>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-                <span :if={@organisation.phone} style="font-size:12px;color:var(--s-dim,#6E675A);">
-                  {@organisation.phone}
-                </span>
-                <span
-                  :if={@organisation.phone && @organisation.website}
-                  style="color:var(--s-dim,#6E675A);"
-                >
-                  ·
-                </span>
-                <span :if={@organisation.website} style="font-size:12px;color:var(--s-dim,#6E675A);">
-                  {@organisation.website}
-                </span>
-                <span :if={@organisation.contact_email} style="color:var(--s-dim,#6E675A);">·</span>
-                <span
-                  :if={@organisation.contact_email}
-                  style="font-size:12px;color:var(--s-dim,#6E675A);"
-                >
-                  {@organisation.contact_email}
-                </span>
-              </div>
-            </div>
-            <% logo_url =
-              case @organisation.logo_colour_key do
-                nil ->
-                  nil
-
-                key ->
-                  case OpenSauce.Storage.url(key) do
-                    {:ok, u} -> u
-                    _ -> nil
-                  end
-              end %>
-            <img
-              :if={logo_url}
-              src={logo_url}
-              style="width:64px;height:64px;object-fit:contain;flex-shrink:0;"
-              alt=""
-            />
-          </div>
-
-          <%!-- estimate label + prepared for --%>
-          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;gap:20px;align-items:flex-start;">
-            <%!-- left: document type + dates --%>
-            <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
-                Estimate
-              </p>
-              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:var(--s-text,#F4EFE2);margin-top:2px;letter-spacing:-0.02em;">
-                {@engagement.scope_title || "Garden estimate"}
-              </p>
-              <div
-                :if={@engagement.term_start || @engagement.term_end}
-                style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"
-              >
-                <div :if={@engagement.term_start} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">Start</span>
-                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
-                    {HtmlHelpers.format_date(@engagement.term_start)}
-                  </span>
-                </div>
-                <div :if={@engagement.term_end} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">End</span>
-                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
-                    {HtmlHelpers.format_date(@engagement.term_end)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <%!-- right: prepared for --%>
-            <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
-                Prepared For
-              </p>
-              <p style="font-size:14px;font-weight:600;color:var(--s-text,#F4EFE2);margin-top:4px;">
-                {customer_name(@engagement.customer)}
-              </p>
-              <p
-                :if={@engagement.garden}
-                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
-              >
-                {@engagement.garden.name}
-              </p>
-              <p
-                :if={@engagement.customer && @engagement.customer.email}
-                style="font-size:12px;color:var(--s-dim,#6E675A);margin-top:4px;"
-              >
-                {@engagement.customer.email}
-              </p>
-            </div>
-          </div>
-
-          <%!-- scope description --%>
-          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));">
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:8px;">
-              Scope
-            </p>
-            <p style="font-size:13px;color:var(--s-text,#F4EFE2);line-height:1.6;font-style:italic;">
-              {scope_statement(@engagement, @paintings != [])}
-            </p>
-            <p
-              :if={@engagement.scope_description}
-              style="font-size:13px;color:var(--s-muted,#9A9384);line-height:1.6;margin-top:8px;"
-            >
-              {@engagement.scope_description}
-            </p>
-          </div>
-
-          <%!-- garden drawings — each painting is part of the contract document --%>
-          <div
-            :if={@paintings != []}
-            style="border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));"
-          >
-            <div :for={painting <- @paintings}>
-              <img
-                src={HtmlHelpers.storage_url(painting.storage_key)}
-                style="display:block;width:100%;height:auto;"
-              />
-            </div>
-          </div>
-
-          <%!-- signature block --%>
-          <div style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));">
-            <div :if={@engagement.signature} style="display:flex;align-items:center;gap:10px;">
-              <div style={"width:20px;height:20px;border-radius:50%;border:1.5px solid #{BrandTheme.scheme(@organisation).primary};display:flex;align-items:center;justify-content:center;flex-shrink:0;"}>
-                <span style={"color:#{BrandTheme.scheme(@organisation).primary};font-size:12px;line-height:1;"}>
-                  ✓
-                </span>
-              </div>
-              <div>
-                <p style={"font-size:12px;font-weight:600;color:#{BrandTheme.scheme(@organisation).primary};"}>
-                  Signed by {@engagement.signature.signed_by_name}
-                </p>
-                <p
-                  :if={@engagement.signature.signed_at}
-                  style="font-size:11px;color:var(--s-dim,#6E675A);"
-                >
-                  {HtmlHelpers.format_date(@engagement.signature.signed_at)}
-                </p>
-              </div>
-            </div>
-            <div
-              :if={is_nil(@engagement.signature)}
-              style="border:1px dashed var(--s-border,rgba(52,48,37,0.58));border-radius:10px;padding:14px;text-align:center;"
-            >
-              <p style="font-size:12px;color:var(--s-dim,#6E675A);">Awaiting client signature</p>
-            </div>
-          </div>
-
-          <%!-- notes --%>
-          <div
-            :if={@engagement.notes}
-            style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));"
-          >
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:6px;">
-              Notes
-            </p>
-            <p style="font-size:12px;color:var(--s-muted,#9A9384);white-space:pre-line;">
-              {@engagement.notes}
-            </p>
-          </div>
-        </div>
-      </div>
+      <.estimate_document
+        engagement={@engagement}
+        organisation={@organisation}
+        customer={@engagement.customer}
+        paintings={@paintings}
+      />
 
       <%!-- sticky send CTA --%>
       <div style="position:fixed;bottom:74px;left:0;right:0;background:var(--s-bg,#16140E);border-top:1px solid var(--s-border,rgba(52,48,37,0.58));padding:10px 16px;">
@@ -279,20 +106,6 @@ defmodule OpenSauceWeb.EngagementLive.Estimate do
 
     {:noreply, put_flash(socket, :info, "Estimate link sent to #{customer.email}.")}
   end
-
-  defp scope_statement(%{status: status}, has_painting) do
-    drawn_or_described = if has_painting, do: "as digitally rendered", else: "as described"
-
-    case status do
-      :in_progress -> "Garden #{drawn_or_described}, installed and maintained."
-      :completed -> "Garden #{drawn_or_described}, installed and maintained."
-      _ -> "Garden #{drawn_or_described}, proposed for installation and maintenance."
-    end
-  end
-
-  defp customer_name(%{company_name_nickname: n}) when is_binary(n) and n != "", do: n
-  defp customer_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
-  defp customer_name(_), do: "Client"
 
   defp status_badge_style(:draft), do: "background:rgba(219,146,88,0.15);color:#DB9258;"
   defp status_badge_style(:proposed), do: "background:rgba(90,180,216,0.15);color:#5AB4D8;"

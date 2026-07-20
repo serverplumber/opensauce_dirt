@@ -2,9 +2,10 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
   @moduledoc false
   use OpenSauceWeb, :live_view
 
+  import OpenSauceWeb.EstimateDocument
+
   alias OpenSauce.BrandTheme
   alias OpenSauce.CRM
-  alias OpenSauceWeb.HtmlHelpers
 
   @impl true
   def mount(_params, _session, socket) do
@@ -142,187 +143,13 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
       </div>
 
       <%!-- document --%>
-      <div style="padding:0 16px 16px;">
-        <div style="background:var(--s-paper,#211E16);border:1px solid var(--s-border,rgba(52,48,37,0.58));border-radius:20px;overflow:hidden;">
-          <%!-- org header --%>
-          <div style="padding:20px 20px 16px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-            <div style="flex:1;min-width:0;">
-              <p style={"font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.03em;color:#{@accent};"}>
-                {@organisation.name}
-              </p>
-              <p
-                :if={@organisation.legal_name}
-                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
-              >
-                {@organisation.legal_name}
-              </p>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-                <span :if={@organisation.phone} style="font-size:12px;color:var(--s-dim,#6E675A);">
-                  {@organisation.phone}
-                </span>
-                <span
-                  :if={@organisation.phone && @organisation.website}
-                  style="color:var(--s-dim,#6E675A);"
-                >
-                  ·
-                </span>
-                <span :if={@organisation.website} style="font-size:12px;color:var(--s-dim,#6E675A);">
-                  {@organisation.website}
-                </span>
-                <span :if={@organisation.contact_email} style="color:var(--s-dim,#6E675A);">·</span>
-                <span
-                  :if={@organisation.contact_email}
-                  style="font-size:12px;color:var(--s-dim,#6E675A);"
-                >
-                  {@organisation.contact_email}
-                </span>
-              </div>
-            </div>
-            <% logo_url =
-              case @organisation.logo_colour_key do
-                nil ->
-                  nil
-
-                key ->
-                  case OpenSauce.Storage.url(key) do
-                    {:ok, u} -> u
-                    _ -> nil
-                  end
-              end %>
-            <img
-              :if={logo_url}
-              src={logo_url}
-              style="width:64px;height:64px;object-fit:contain;flex-shrink:0;"
-              alt=""
-            />
-          </div>
-
-          <%!-- estimate label + prepared for --%>
-          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));display:flex;gap:20px;align-items:flex-start;">
-            <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
-                Estimate
-              </p>
-              <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:var(--s-text,#F4EFE2);margin-top:2px;letter-spacing:-0.02em;">
-                {@engagement.scope_title || "Garden estimate"}
-              </p>
-              <div
-                :if={@engagement.term_start || @engagement.term_end}
-                style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"
-              >
-                <div :if={@engagement.term_start} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">Start</span>
-                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
-                    {HtmlHelpers.format_date(@engagement.term_start)}
-                  </span>
-                </div>
-                <div :if={@engagement.term_end} style="display:flex;gap:8px;">
-                  <span style="font-size:11px;color:var(--s-dim,#6E675A);width:44px;">End</span>
-                  <span style="font-size:11px;color:var(--s-text,#F4EFE2);">
-                    {HtmlHelpers.format_date(@engagement.term_end)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);">
-                Prepared For
-              </p>
-              <p style="font-size:14px;font-weight:600;color:var(--s-text,#F4EFE2);margin-top:4px;">
-                {portal_customer_name(@current_customer)}
-              </p>
-              <p
-                :if={@engagement.garden}
-                style="font-size:12px;color:var(--s-muted,#9A9384);margin-top:2px;"
-              >
-                {@engagement.garden.name}
-              </p>
-              <p
-                :if={@current_customer.email}
-                style="font-size:12px;color:var(--s-dim,#6E675A);margin-top:4px;"
-              >
-                {@current_customer.email}
-              </p>
-            </div>
-          </div>
-
-          <%!-- scope statement --%>
-          <div style="padding:16px 20px;border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));">
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:8px;">
-              Scope
-            </p>
-            <p style="font-size:13px;color:var(--s-text,#F4EFE2);line-height:1.6;font-style:italic;">
-              {scope_statement(@engagement, @paintings != [])}
-            </p>
-            <p
-              :if={@engagement.scope_description}
-              style="font-size:13px;color:var(--s-muted,#9A9384);line-height:1.6;margin-top:8px;"
-            >
-              {@engagement.scope_description}
-            </p>
-          </div>
-
-          <%!-- paintings — contract scope images --%>
-          <div
-            :if={@paintings != []}
-            style="border-bottom:1px solid var(--s-border,rgba(52,48,37,0.58));"
-          >
-            <div style={"padding:12px 20px 10px;background:#{BrandTheme.rgba(@accent, 0.05)};border-bottom:1px solid #{BrandTheme.rgba(@accent, 0.15)};"}>
-              <p style={"font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#{@accent};"}>
-                Garden as digitally rendered
-              </p>
-              <p style="font-size:11px;color:var(--s-muted,#9A9384);margin-top:3px;line-height:1.4;">
-                The images below show the exact scope of this engagement. By signing, you confirm these renderings reflect the agreed design.
-              </p>
-            </div>
-            <div :for={painting <- @paintings}>
-              <img
-                src={HtmlHelpers.storage_url(painting.storage_key)}
-                style="display:block;width:100%;height:auto;"
-              />
-            </div>
-          </div>
-
-          <%!-- signature block --%>
-          <div style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));">
-            <div :if={@engagement.signature} style="display:flex;align-items:center;gap:10px;">
-              <div style={"width:20px;height:20px;border-radius:50%;border:1.5px solid #{@accent};display:flex;align-items:center;justify-content:center;flex-shrink:0;"}>
-                <span style={"color:#{@accent};font-size:12px;line-height:1;"}>✓</span>
-              </div>
-              <div>
-                <p style={"font-size:12px;font-weight:600;color:#{@accent};"}>
-                  Signed by {@engagement.signature.signed_by_name}
-                </p>
-                <p
-                  :if={@engagement.signature.signed_at}
-                  style="font-size:11px;color:var(--s-dim,#6E675A);"
-                >
-                  {HtmlHelpers.format_date(@engagement.signature.signed_at)}
-                </p>
-              </div>
-            </div>
-            <div
-              :if={is_nil(@engagement.signature)}
-              style="border:1px dashed var(--s-border,rgba(52,48,37,0.58));border-radius:10px;padding:14px;text-align:center;"
-            >
-              <p style="font-size:12px;color:var(--s-dim,#6E675A);">Awaiting signature</p>
-            </div>
-          </div>
-
-          <%!-- notes --%>
-          <div
-            :if={@engagement.notes}
-            style="padding:14px 20px;border-top:1px solid var(--s-border,rgba(52,48,37,0.58));"
-          >
-            <p style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--s-dim,#6E675A);margin-bottom:6px;">
-              Notes
-            </p>
-            <p style="font-size:12px;color:var(--s-muted,#9A9384);white-space:pre-line;">
-              {@engagement.notes}
-            </p>
-          </div>
-        </div>
-      </div>
+      <.estimate_document
+        engagement={@engagement}
+        organisation={@organisation}
+        customer={@current_customer}
+        paintings={@paintings}
+        signable
+      />
 
       <%!-- sticky sign CTA --%>
       <div
@@ -410,24 +237,11 @@ defmodule OpenSauceWeb.PortalLive.Estimate do
     """
   end
 
-  defp scope_statement(%{status: status}, has_painting) do
-    drawn_or_described = if has_painting, do: "as digitally rendered", else: "as described"
-
-    case status do
-      :in_progress -> "Garden #{drawn_or_described}, installed and maintained."
-      :completed -> "Garden #{drawn_or_described}, installed and maintained."
-      _ -> "Garden #{drawn_or_described}, proposed for installation and maintenance."
-    end
-  end
-
   defp consent_text(engagement, org) do
     title = engagement.scope_title || "this estimate"
 
     "By signing, I confirm I have reviewed the scope#{if engagement.images != [] and Enum.any?(engagement.images, &(&1.type == :painting)), do: " and digital renderings", else: ""} above and agree to the terms of #{title} as presented by #{org.name}."
   end
-
-  defp portal_customer_name(%{company_name_nickname: n}) when is_binary(n) and n != "", do: n
-  defp portal_customer_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
 
   defp all_checked?(_checked, []), do: true
 
