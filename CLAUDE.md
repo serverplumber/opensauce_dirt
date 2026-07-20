@@ -15,7 +15,7 @@ mix dialyzer           # Static type analysis
 mix ash.setup          # Run migrations + Ash introspection
 mix ash.codegen <name> # Generate snapshots + migrations after resource changes
 mix ash.reset          # Drop, create, migrate, seed
-docker-compose up -d   # Start PostgreSQL 18 + MinIO (S3-compatible storage)
+just up                # Start dev PostgreSQL 18 (podman)
 just nuke              # Wipe migrations, regenerate initial_schema, reset dev + test DBs
 just nuke-test         # Reset test DB only — run when test DB drifts from dev after a nuke
 just deploy            # Build prod image, stream to VPS over ssh, tag :<version> + :latest

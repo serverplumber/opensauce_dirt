@@ -6,7 +6,7 @@ defmodule OpenSauce.Test.Mailpit do
   Helper for interacting with Mailpit's REST API during e2e tests.
 
   Mailpit runs on localhost:8025 (API) and localhost:1025 (SMTP).
-  Start it via `docker-compose up -d mailpit`.
+  Start it via `podman run -d --name opensauce-mailpit -p 1025:1025 -p 8025:8025 axllent/mailpit`.
   """
 
   @base_url "http://localhost:8025/api/v1"

@@ -18,7 +18,7 @@
 - Reset data: `mix ash.reset` for extension-aware rebuilds.
 - After any resource change: `mix ash.codegen <migration_name>` generates both the migration and updated snapshots; commit both.
 - Assets: run `npm install --prefix assets` once; `mix assets.deploy` creates production bundles.
-- Environment: `config/runtime.exs` holds runtime secrets (TOKEN_SIGNING_SECRET, CLOAK_KEY, UPLOAD_DIR, etc.); mirror updates in `docker-compose.yml` when containerizing.
+- Environment: `config/runtime.exs` holds runtime secrets (TOKEN_SIGNING_SECRET, CLOAK_KEY, UPLOAD_DIR, etc.); mirror updates in `prod/.env.example` when changing what the prod image expects.
 
 ## Ash Patterns & Expectations
 - Express business rules in `Ash.Resource` (attributes, relationships, `changes`, `validations`) and avoid imperative LiveView logic.
