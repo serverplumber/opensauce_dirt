@@ -25,7 +25,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
               type="date"
               id="job_date"
               name="job[date]"
-              value={@form["date"]}
+              value={@form[:date].value}
             />
           </div>
           <div>
@@ -34,7 +34,7 @@ defmodule OpenSauceWeb.EngagementLive.ScheduleJobComponent do
               <option
                 :for={{label, val} <- service_category_options()}
                 value={val}
-                selected={@form["service_category"] == val}
+                selected={@form[:service_category].value == val}
               >
                 {label}
               </option>
