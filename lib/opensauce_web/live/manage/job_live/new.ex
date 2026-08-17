@@ -64,9 +64,10 @@ defmodule OpenSauceWeb.JobLive.New do
     engagement_id = Map.get(params, "engagement_id")
 
     back_to =
-      if customer_ref,
-        do: ~p"/manage/customers/#{customer_ref}",
-        else: ~p"/manage/jobs"
+      case Map.get(params, "return_to") do
+        nil -> if customer_ref, do: ~p"/manage/customers/#{customer_ref}", else: ~p"/manage/jobs"
+        return_to -> return_to
+      end
 
     socket =
       if customer_ref do
@@ -108,11 +109,26 @@ defmodule OpenSauceWeb.JobLive.New do
           socket
       end
 
+    step =
+      if Map.get(params, "step") == "2" and
+           step1_can_proceed?(
+             socket.assigns.job_type,
+             socket.assigns.service_category,
+             socket.assigns.account_code,
+             socket.assigns.garden
+           ) do
+        2
+      else
+        1
+      end
+
     {:noreply,
      socket
      |> assign(:page_title, "New Job")
      |> assign(:main_bg, "bg-[#16140E]")
-     |> assign(:back_to, back_to)}
+     |> assign(:back_to, back_to)
+     |> assign(:step, step)
+     |> assign(:step_params, Map.delete(params, "step"))}
   end
 
   @impl true
@@ -1057,14 +1073,17 @@ defmodule OpenSauceWeb.JobLive.New do
     {service_error, garden_error} = step1_errors(socket.assigns)
 
     if is_nil(service_error) and is_nil(garden_error) do
-      {:noreply, assign(socket, step: 2, service_error: nil, garden_error: nil, save_error: nil)}
+      {:noreply,
+       socket
+       |> assign(service_error: nil, garden_error: nil, save_error: nil)
+       |> push_patch(to: step_url(socket, 2))}
     else
       {:noreply, assign(socket, service_error: service_error, garden_error: garden_error)}
     end
   end
 
   def handle_event("back", _params, socket) do
-    {:noreply, assign(socket, step: 1)}
+    {:noreply, push_patch(socket, to: step_url(socket, 1), replace: true)}
   end
 
   def handle_event("update_step2", params, socket) do
@@ -1097,6 +1116,11 @@ defmodule OpenSauceWeb.JobLive.New do
       {:error, _} ->
         {:noreply, assign(socket, :save_error, "Could not create job.")}
     end
+  end
+
+  defp step_url(socket, step) do
+    query = Map.put(socket.assigns.step_params, "step", Integer.to_string(step))
+    ~p"/manage/jobs/new?#{query}"
   end
 
   defp step1_can_proceed?(:shift, _cat, _code, _garden), do: true

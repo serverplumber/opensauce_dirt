@@ -38,18 +38,8 @@ defmodule OpenSauceWeb.EngagementLive.Show do
      |> assign(:engagement, engagement)
      |> assign(:images, images)
      |> assign(:materials_cost, materials_cost(engagement.materials))
-     |> assign(:show_job_sheet, false)
      |> assign(:page_title, engagement.scope_title || "Engagement")
      |> assign(:main_bg, "bg-[#16140E]")}
-  end
-
-  @impl true
-  def handle_event("open_job_sheet", _params, socket) do
-    {:noreply, assign(socket, :show_job_sheet, true)}
-  end
-
-  def handle_event("close_job_sheet", _params, socket) do
-    {:noreply, assign(socket, :show_job_sheet, false)}
   end
 
   @impl true
@@ -95,36 +85,6 @@ defmodule OpenSauceWeb.EngagementLive.Show do
       )
 
     {:noreply, assign(socket, :engagement, engagement)}
-  end
-
-  @impl true
-  def handle_info({OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}}, socket) do
-    member = socket.assigns.current_member
-    reference = socket.assigns.reference
-    engagement_id = socket.assigns.engagement.id
-
-    engagement =
-      Ash.get!(CRM.Engagement, engagement_id,
-        actor: member,
-        tenant: member.organisation_id,
-        load: [
-          :customer,
-          :garden,
-          :images,
-          materials: [:supplier_catalog_item],
-          jobs: [:garden, :materials]
-        ]
-      )
-
-    images = Enum.sort_by(engagement.images, &if(&1.type == :painting, do: 0, else: 1))
-
-    {:noreply,
-     socket
-     |> assign(:engagement, engagement)
-     |> assign(:images, images)
-     |> assign(:materials_cost, materials_cost(engagement.materials))
-     |> assign(:show_job_sheet, false)
-     |> put_flash(:info, "Job created with #{count} plant#{if count == 1, do: "", else: "s"}.")}
   end
 
   @impl true
@@ -377,21 +337,22 @@ defmodule OpenSauceWeb.EngagementLive.Show do
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <span class="dark-label" style="margin-bottom:0;">Jobs</span>
-            <button
-              type="button"
-              phx-click="open_job_sheet"
-              ontouchstart=""
-              style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  stroke-width="2.2"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </button>
+            <.link navigate={new_job_url(@reference, @engagement.id)}>
+              <button
+                type="button"
+                ontouchstart=""
+                style="color:#54B57E;background:none;border:none;padding:4px;cursor:pointer;line-height:0;"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+            </.link>
           </div>
           <div
             :if={@engagement.jobs == []}
@@ -450,21 +411,6 @@ defmodule OpenSauceWeb.EngagementLive.Show do
           </button>
         </div>
       </div>
-
-      <.modal
-        :if={@show_job_sheet}
-        id="new-job-modal"
-        title="New Job"
-        show
-        on_cancel={JS.push("close_job_sheet")}
-      >
-        <.live_component
-          module={OpenSauceWeb.EngagementLive.ScheduleJobComponent}
-          id={"schedule-job-#{@engagement.id}"}
-          engagement={@engagement}
-          current_member={@current_member}
-        />
-      </.modal>
     </div>
     """
   end
@@ -537,5 +483,11 @@ defmodule OpenSauceWeb.EngagementLive.Show do
   defp job_url(job_id, reference, engagement_id) do
     return = URI.encode_www_form("/manage/customers/#{reference}/engagements/#{engagement_id}")
     "/manage/jobs/#{job_id}?return_to=#{return}"
+  end
+
+  defp new_job_url(reference, engagement_id) do
+    return = URI.encode_www_form("/manage/customers/#{reference}/engagements/#{engagement_id}")
+
+    "/manage/jobs/new?engagement_id=#{engagement_id}&customer_ref=#{reference}&return_to=#{return}"
   end
 end

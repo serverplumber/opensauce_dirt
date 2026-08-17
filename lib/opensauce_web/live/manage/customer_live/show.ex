@@ -562,23 +562,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
           currency={@organisation.currency}
         />
       </.modal>
-
-      <%!-- Schedule job modal --%>
-      <.modal
-        :if={@schedule_job_engagement != nil}
-        id="schedule-job-modal"
-        title={"New job — #{schedule_job_title(@schedule_job_engagement)}"}
-        max_width="max-w-xl"
-        show
-        on_cancel={JS.push("close_schedule_job")}
-      >
-        <.live_component
-          module={OpenSauceWeb.EngagementLive.ScheduleJobComponent}
-          id={"schedule-job-#{@schedule_job_engagement.id}"}
-          engagement={@schedule_job_engagement}
-          current_member={@current_member}
-        />
-      </.modal>
     </div>
     """
   end
@@ -588,7 +571,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
     {:ok,
      socket
      |> assign(:engagement_id, nil)
-     |> assign(:schedule_job_engagement, nil)
      |> assign(:show_garden_sheet, false)
      |> assign(:editing_garden, nil)
      |> assign(:draft, @empty_draft)
@@ -631,7 +613,7 @@ defmodule OpenSauceWeb.CustomerLive.Show do
         {:noreply,
          socket
          |> put_flash(:info, "Customer deleted.")
-         |> push_navigate(to: ~p"/manage/customers")}
+         |> push_navigate(to: ~p"/manage/customers", replace: true)}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not delete customer.")}
@@ -766,26 +748,8 @@ defmodule OpenSauceWeb.CustomerLive.Show do
   end
 
   @impl true
-  def handle_event("open_schedule_job", %{"id" => id}, socket) do
-    engagement = Enum.find(socket.assigns.customer.engagements, &(&1.id == id))
-    {:noreply, assign(socket, :schedule_job_engagement, engagement)}
-  end
-
-  def handle_event("close_schedule_job", _params, socket) do
-    {:noreply, assign(socket, :schedule_job_engagement, nil)}
-  end
-
-  @impl true
   def handle_info({OpenSauceWeb.CustomerLive.FormComponent, {:saved, customer}}, socket) do
     {:noreply, assign(socket, :customer, load_customer(customer.reference, socket))}
-  end
-
-  def handle_info({OpenSauceWeb.EngagementLive.ScheduleJobComponent, {:job_created, _job, count}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:customer, load_customer(socket.assigns.customer.reference, socket))
-     |> assign(:schedule_job_engagement, nil)
-     |> put_flash(:info, "Job scheduled with #{count} plant#{if count == 1, do: "", else: "s"}.")}
   end
 
   defp load_customer(reference, socket) do
@@ -827,10 +791,6 @@ defmodule OpenSauceWeb.CustomerLive.Show do
 
   defp short_name(customer) do
     customer.company_name_nickname || customer.first_name
-  end
-
-  defp schedule_job_title(engagement) do
-    if engagement.garden, do: engagement.garden.name || "garden", else: "engagement"
   end
 
   defp format_due_billed(invoices) do
