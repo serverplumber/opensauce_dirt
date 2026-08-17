@@ -14,7 +14,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     <div style="font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--s-text,#F4EFE2);-webkit-font-smoothing:antialiased;padding-bottom:120px;">
       <%!-- top bar --%>
       <div style="padding:12px 16px 10px;display:flex;align-items:center;gap:10px;">
-        <.link navigate={~p"/manage/invoices"}>
+        <.link navigate={@return_to}>
           <button
             type="button"
             ontouchstart=""
@@ -397,8 +397,9 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _url, socket) do
+  def handle_params(%{"id" => id} = params, _url, socket) do
     member = socket.assigns.current_member
+    return_to = Map.get(params, "return_to", ~p"/manage/invoices")
     invoice = load_invoice(id, member)
     live_org = socket.assigns.organisation
 
@@ -418,6 +419,7 @@ defmodule OpenSauceWeb.InvoiceLive.Show do
     socket =
       socket
       |> assign(:invoice, invoice)
+      |> assign(:return_to, return_to)
       |> assign(:display_org, display_org)
       |> assign(:display_customer, display_customer)
       |> assign(:tax_lines, tax_lines)

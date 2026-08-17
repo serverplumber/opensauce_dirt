@@ -46,7 +46,12 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
           draft
         </p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <.invoice_card :for={inv <- @drafts} invoice={inv} currency={@organisation.currency} />
+          <.invoice_card
+            :for={inv <- @drafts}
+            invoice={inv}
+            currency={@organisation.currency}
+            return_to={@return_to}
+          />
         </div>
       </div>
 
@@ -56,7 +61,12 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
           sent
         </p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <.invoice_card :for={inv <- @sent} invoice={inv} currency={@organisation.currency} />
+          <.invoice_card
+            :for={inv <- @sent}
+            invoice={inv}
+            currency={@organisation.currency}
+            return_to={@return_to}
+          />
         </div>
       </div>
 
@@ -66,7 +76,12 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
           paid
         </p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <.invoice_card :for={inv <- @paid} invoice={inv} currency={@organisation.currency} />
+          <.invoice_card
+            :for={inv <- @paid}
+            invoice={inv}
+            currency={@organisation.currency}
+            return_to={@return_to}
+          />
         </div>
       </div>
 
@@ -76,7 +91,12 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
           void
         </p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <.invoice_card :for={inv <- @voided} invoice={inv} currency={@organisation.currency} />
+          <.invoice_card
+            :for={inv <- @voided}
+            invoice={inv}
+            currency={@organisation.currency}
+            return_to={@return_to}
+          />
         </div>
       </div>
 
@@ -112,10 +132,11 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
 
   attr :invoice, :map, required: true
   attr :currency, :string, required: true
+  attr :return_to, :string, required: true
 
   defp invoice_card(assigns) do
     ~H"""
-    <.link navigate={~p"/manage/invoices/#{@invoice.id}"}>
+    <.link navigate={~p"/manage/invoices/#{@invoice.id}?return_to=#{@return_to}"}>
       <div
         style="background:#211E16;border:1px solid rgba(52,48,37,0.58);border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;"
         ontouchstart=""
@@ -168,6 +189,11 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
         Ash.get!(CRM.Customer, customer_id, actor: member, tenant: member.organisation_id)
       end
 
+    return_to =
+      if customer_id,
+        do: ~p"/manage/invoices?customer_id=#{customer_id}",
+        else: ~p"/manage/invoices"
+
     uninvoiced_ids =
       [actor: member, tenant: member.organisation_id]
       |> CRM.list_customers_with_uninvoiced_jobs!()
@@ -183,6 +209,7 @@ defmodule OpenSauceWeb.InvoiceLive.Index do
       |> assign(:main_bg, "bg-[#16140E]")
       |> assign(:customer_filter, customer_filter)
       |> assign(:has_invoiceable_work, has_invoiceable_work)
+      |> assign(:return_to, return_to)
       |> load_invoices(customer_id)
 
     {:noreply, socket}
