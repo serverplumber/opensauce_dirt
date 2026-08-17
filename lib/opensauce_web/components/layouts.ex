@@ -56,7 +56,6 @@ defmodule OpenSauceWeb.Layouts do
   attr :page_title, :string, default: nil
   attr :nav_sub_links, :list, default: []
   attr :nav_sub_label, :string, default: nil
-  attr :breadcrumbs, :list, default: []
   slot :inner_block, required: true
 
   def sidebar_layout(assigns) do
@@ -93,7 +92,6 @@ defmodule OpenSauceWeb.Layouts do
       |> assign(:shop_links, shop_links)
       |> assign(:nav_sub_links, nav_sub_links)
       |> assign(:nav_sub_label, nav_sub_label)
-      |> assign(:breadcrumbs, Map.get(assigns, :breadcrumbs, []))
 
     ~H"""
     <div>
@@ -167,9 +165,8 @@ defmodule OpenSauceWeb.Layouts do
 
             <div class="flex flex-1 items-center justify-between gap-4">
               <div class="min-w-0">
-                <.layout_breadcrumbs :if={!Enum.empty?(@breadcrumbs)} breadcrumbs={@breadcrumbs} />
                 <h1
-                  :if={Enum.empty?(@breadcrumbs) and @page_title}
+                  :if={@page_title}
                   class="truncate text-base font-semibold text-stone-800 sm:text-lg"
                 >
                   {@page_title}
@@ -633,38 +630,6 @@ defmodule OpenSauceWeb.Layouts do
   end
 
   defp nav_active?(_, _, _), do: false
-
-  attr :breadcrumbs, :list, required: true
-
-  defp layout_breadcrumbs(assigns) do
-    assigns = assign(assigns, :count, Enum.count(assigns.breadcrumbs))
-
-    ~H"""
-    <nav class="flex min-w-0 items-center text-sm text-stone-500" aria-label="Breadcrumb">
-      <ol class="flex min-w-0 items-center gap-2 whitespace-nowrap">
-        <li
-          :for={{crumb, index} <- Enum.with_index(@breadcrumbs)}
-          class="flex min-w-0 items-center gap-2"
-        >
-          <.link
-            :if={!Map.get(crumb, :current?, index == @count - 1)}
-            navigate={Map.get(crumb, :path) || Map.get(crumb, :navigate)}
-            class="truncate transition hover:text-stone-900 hover:underline"
-          >
-            {crumb.label}
-          </.link>
-          <span
-            :if={Map.get(crumb, :current?, index == @count - 1)}
-            class="truncate text-stone-900"
-          >
-            {crumb.label}
-          </span>
-          <span :if={index < @count - 1} class="text-stone-300">/</span>
-        </li>
-      </ol>
-    </nav>
-    """
-  end
 
   defp compute_sub_links(_current_path, links, _nav_section) when not is_list(links), do: []
 

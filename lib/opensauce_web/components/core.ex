@@ -592,68 +592,6 @@ defmodule OpenSauceWeb.Components.Core do
   end
 
   @doc """
-  Renders a navigation breadcrumb trail.
-
-  ## Example
-
-      <.breadcrumb>
-        <:crumb label="Home" path="/" />
-        <:crumb label="Projects" path="/projects" />
-        <:crumb label="Current Project" path="/projects/123" current?={true} />
-      </.breadcrumb>
-
-  ## Slots
-
-    * `:crumb` - Required. Multiple crumb items that make up the breadcrumb trail.
-      * `:label` - Required. The text to display for this breadcrumb item.
-      * `:path` - Required. The navigation path for this breadcrumb item.
-      * `:current?` - Optional. Boolean indicating if this is the current page (default: false).
-
-  ## Attributes
-
-    * `:class` - Optional. Additional CSS classes to apply to the nav element.
-    * `:separator` - Optional. The separator between breadcrumb items (default: "/").
-
-
-  """
-  # Slot for individual crumb items
-  slot :crumb, required: true do
-    attr :label, :string, required: true
-    attr :path, :string, required: true
-    attr :current?, :boolean
-  end
-
-  # Main component attributes
-  attr :class, :string, default: nil
-  attr :separator, :string, default: "/"
-
-  def breadcrumb(assigns) do
-    ~H"""
-    <nav class={["flex justify-between print:hidden", @class]}>
-      <ol class="inline-flex items-center space-x-1 text-base font-semibold">
-        <li :for={{crumb, index} <- Enum.with_index(@crumb)} class="flex items-center">
-          <.link
-            :if={!crumb.current?}
-            navigate={crumb.path}
-            class="py-1 text-neutral-500 hover:text-neutral-900"
-          >
-            {crumb.label}
-          </.link>
-
-          <span :if={crumb.current?} class="py-1 text-neutral-900">
-            {crumb.label}
-          </span>
-
-          <span :if={index < length(@crumb) - 1} class="mx-2 text-neutral-400">
-            {@separator}
-          </span>
-        </li>
-      </ol>
-    </nav>
-    """
-  end
-
-  @doc """
   Renders a label.
   """
   attr :for, :string, default: nil
