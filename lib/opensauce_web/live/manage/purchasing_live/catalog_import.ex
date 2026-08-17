@@ -216,6 +216,31 @@ defmodule OpenSauceWeb.PurchasingLive.CatalogImport do
           </div>
 
           <div
+            :if={@extracting}
+            style="margin-top:12px;display:flex;align-items:center;gap:12px;background:rgba(84,181,126,0.08);border:1px solid rgba(84,181,126,0.25);border-radius:10px;padding:12px 14px;"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+              <circle cx="12" cy="12" r="9" stroke="rgba(84,181,126,0.25)" stroke-width="3" />
+              <path d="M21 12a9 9 0 00-9-9" stroke="#54B57E" stroke-width="3" stroke-linecap="round">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 12 12"
+                  to="360 12 12"
+                  dur="0.7s"
+                  repeatCount="indefinite"
+                />
+              </path>
+            </svg>
+            <div>
+              <p style="font-size:13px;font-weight:700;color:#F4EFE2;">Extracting items…</p>
+              <p style="font-size:12px;color:#9A9384;margin-top:2px;">
+                This can take a minute. Stay on this screen — leaving now will cancel the import.
+              </p>
+            </div>
+          </div>
+
+          <div
             :if={@error}
             style="margin-top:10px;background:rgba(232,126,126,0.12);border-radius:10px;padding:10px 12px;"
           >
