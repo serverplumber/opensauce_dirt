@@ -141,7 +141,7 @@ defmodule OpenSauceWeb.ShiftLive.Start do
           end
       end
 
-      {:noreply, push_navigate(socket, to: ~p"/manage/today")}
+      {:noreply, push_navigate(socket, to: ~p"/manage/today", replace: true)}
     else
       {:noreply, socket}
     end
@@ -509,11 +509,12 @@ defmodule OpenSauceWeb.ShiftLive.Start do
     """
   end
 
-  defp can_start?(:driving, odometer, _active_shift) do
-    case Integer.parse(odometer) do
-      {n, _} when n >= 0 -> true
-      _ -> false
-    end
+  defp can_start?(:driving, odometer, active_shift) do
+    is_nil(active_shift) and
+      case Integer.parse(odometer) do
+        {n, _} when n >= 0 -> true
+        _ -> false
+      end
   end
 
   defp can_start?(mode, _odometer, active_shift) when mode in [:checkin, :riding], do: not is_nil(active_shift)
