@@ -66,7 +66,7 @@ defmodule OpenSauceWeb.InvoiceLive.Edit do
 
   @impl true
   def handle_info({OpenSauceWeb.InvoiceLive.FormComponent, {:saved, invoice}}, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/manage/invoices/#{invoice.id}")}
+    {:noreply, push_navigate(socket, to: ~p"/manage/invoices/#{invoice.id}", replace: true)}
   end
 
   defp format_invoice_number(n), do: String.pad_leading(Integer.to_string(n), 4, "0")

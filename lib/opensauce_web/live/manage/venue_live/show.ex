@@ -226,7 +226,10 @@ defmodule OpenSauceWeb.VenueLive.Show do
   def handle_event("delete_venue", _, socket) do
     Operations.delete_venue!(socket.assigns.venue, socket.assigns.opts)
 
-    {:noreply, socket |> push_navigate(to: ~p"/manage/venues") |> put_flash(:info, "Venue deleted.")}
+    {:noreply,
+     socket
+     |> push_navigate(to: ~p"/manage/venues", replace: true)
+     |> put_flash(:info, "Venue deleted.")}
   end
 
   @impl true

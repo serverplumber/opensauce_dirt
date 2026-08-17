@@ -190,7 +190,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
 
     Work.complete_job(job, opts)
 
-    {:noreply, push_navigate(socket, to: ~p"/manage/jobs")}
+    {:noreply, push_navigate(socket, to: ~p"/manage/jobs", replace: true)}
   end
 
   @impl true
@@ -555,7 +555,7 @@ defmodule OpenSauceWeb.JobLive.Closeout do
           </p>
           <p style="font-size:11px;color:#6E675A;margin-top:2px;">
             {supplier_label(@item)}
-            <span :if={@from_plan} style="color:#54B57E;"> · plan:           {@planned_qty}</span>
+            <span :if={@from_plan} style="color:#54B57E;"> · plan:             {@planned_qty}</span>
           </p>
         </div>
         <button

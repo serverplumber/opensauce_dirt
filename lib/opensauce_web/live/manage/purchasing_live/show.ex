@@ -1150,7 +1150,7 @@ defmodule OpenSauceWeb.PurchasingLive.Show do
         {:noreply,
          socket
          |> put_flash(:info, "Pickup done. Stock updated.")
-         |> push_navigate(to: ~p"/manage/purchasing")}
+         |> push_navigate(to: ~p"/manage/purchasing", replace: true)}
 
       {:error, _} ->
         {:noreply, socket}

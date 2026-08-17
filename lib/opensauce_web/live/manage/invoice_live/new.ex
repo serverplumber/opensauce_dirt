@@ -48,6 +48,6 @@ defmodule OpenSauceWeb.InvoiceLive.New do
 
   @impl true
   def handle_info({OpenSauceWeb.InvoiceLive.FormComponent, {:saved, invoice}}, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/manage/invoices/#{invoice.id}")}
+    {:noreply, push_navigate(socket, to: ~p"/manage/invoices/#{invoice.id}", replace: true)}
   end
 end

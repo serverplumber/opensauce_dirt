@@ -103,7 +103,7 @@ defmodule OpenSauceWeb.JobLive.Show do
 
     Work.destroy_job(job, actor: member, tenant: member.organisation_id)
 
-    {:noreply, push_navigate(socket, to: return_to)}
+    {:noreply, push_navigate(socket, to: return_to, replace: true)}
   end
 
   @impl true

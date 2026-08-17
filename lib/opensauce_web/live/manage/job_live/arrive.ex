@@ -87,7 +87,7 @@ defmodule OpenSauceWeb.JobLive.Arrive do
       CRM.update_address!(job.garden, %{notes: note}, opts)
     end
 
-    {:noreply, push_navigate(socket, to: ~p"/manage/jobs/#{job.id}")}
+    {:noreply, push_navigate(socket, to: ~p"/manage/jobs/#{job.id}", replace: true)}
   end
 
   @impl true

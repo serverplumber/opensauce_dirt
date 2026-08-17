@@ -614,7 +614,7 @@ defmodule OpenSauceWeb.JobLive.Adhoc do
         {:noreply,
          socket
          |> put_flash(:info, "Job added.")
-         |> push_navigate(to: ~p"/manage/today")}
+         |> push_navigate(to: ~p"/manage/today", replace: true)}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Could not create job.")}
