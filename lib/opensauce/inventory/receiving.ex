@@ -3,19 +3,24 @@
 
 defmodule OpenSauce.Inventory.Receiving do
   @moduledoc """
-  Service for receiving purchase orders into stock.
+  Turns a confirmed purchase order into stock, once the crew has picked it
+  up and logged what actually came back.
   """
 
   alias Decimal, as: D
   alias OpenSauce.Inventory
 
   @doc """
-  Finalizes a purchase order by creating stock movements for each item's
-  received_qty (falling back to confirmed_qty, then quantity) and marking
-  the PO as received.
+  Marks a purchase order received and moves each line item into stock.
 
-  Items with zero effective qty or no linked material are skipped.
-  Idempotent: if `received_at` is set, returns `{:ok, :already_received}`.
+  Per item, the quantity actually recorded wins: `received_qty` if it was
+  set at pickup, otherwise the supplier's `confirmed_qty`, otherwise the
+  original `quantity` on the line. Lines with no linked material yet, or a
+  non-positive effective quantity, don't touch stock — they stay as PO
+  lines only.
+
+  Safe to call twice: once `received_at` is set, this is a no-op that
+  returns `{:ok, :already_received}` instead of double-booking stock.
   """
   def receive_po(po_id, opts \\ []) do
     actor = Keyword.get(opts, :actor)
@@ -31,23 +36,21 @@ defmodule OpenSauce.Inventory.Receiving do
     if po.received_at do
       {:ok, :already_received}
     else
-      Enum.each(po.items, fn item ->
-        effective_qty = item.received_qty || item.confirmed_qty || item.quantity
-
-        if not is_nil(item.material_id) and D.compare(effective_qty, D.new(0)) == :gt do
-          Inventory.adjust_stock(
-            %{
-              material_id: item.material_id,
-              quantity: effective_qty,
-              reason: "PO #{po.reference} received"
-            },
-            actor: actor,
-            tenant: tenant
-          )
-        end
-      end)
+      for item <- po.items, do: receive_item(item, po, actor, tenant)
 
       Inventory.update_purchase_order(po, %{status: :received, received_at: DateTime.utc_now()},
+        actor: actor,
+        tenant: tenant
+      )
+    end
+  end
+
+  defp receive_item(item, po, actor, tenant) do
+    qty = item.received_qty || item.confirmed_qty || item.quantity
+
+    if item.material_id && D.compare(qty, D.new(0)) == :gt do
+      Inventory.adjust_stock(
+        %{material_id: item.material_id, quantity: qty, reason: "PO #{po.reference} received"},
         actor: actor,
         tenant: tenant
       )

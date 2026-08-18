@@ -21,11 +21,23 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "lot_code",
+      "source": "quantity",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reason",
       "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,19 +45,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "expiry_date",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "received_at",
+      "source": "occurred_at",
       "type": "utc_datetime"
     },
     {
@@ -91,7 +91,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "inventory_lots_organisation_id_fkey",
+        "name": "inventory_movements_organisation_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -122,38 +122,7 @@
           "global": false,
           "strategy": "attribute"
         },
-        "name": "inventory_lots_venue_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "operations_venues"
-      },
-      "scale": null,
-      "size": null,
-      "source": "venue_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_lots_material_id_fkey",
+        "name": "inventory_movements_material_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -164,113 +133,15 @@
       "size": null,
       "source": "material_id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": "organisation_id",
-          "global": false,
-          "strategy": "attribute"
-        },
-        "name": "inventory_lots_supplier_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "inventory_suppliers"
-      },
-      "scale": null,
-      "size": null,
-      "source": "supplier_id",
-      "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "lot_code"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "lot_code"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "inventory_lots_lot_code_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": true,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "material_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "material_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "inventory_lots_material_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "supplier_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "supplier_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": "inventory_lots_supplier_id_index",
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "AAFEF09E209559E98C61834AFF5634E595930686AE3F3387E5D44A84B1F4D474",
+  "hash": "A260FF5B889352F537A983E012D1BE18C99BE331CCF4A6FCEE0DFE305B5C4C24",
   "identities": [],
   "multitenancy": {
     "attribute": "organisation_id",
@@ -279,5 +150,5 @@
   },
   "repo": "Elixir.OpenSauce.Repo",
   "schema": null,
-  "table": "inventory_lots"
+  "table": "inventory_movements"
 }

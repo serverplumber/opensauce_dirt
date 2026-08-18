@@ -218,6 +218,13 @@ defmodule OpenSauce.Accounts.Organisation do
       constraints min: 1
     end
 
+    attribute :next_po_number, :integer do
+      public? true
+      allow_nil? false
+      default 1
+      constraints min: 1
+    end
+
     attribute :logo_colour_key, :string do
       public? true
       allow_nil? true

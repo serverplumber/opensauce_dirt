@@ -33,10 +33,10 @@ OpenSauce Dirt is an ERP for small landscaping and gardening businesses, built o
 
 Each domain is an `Ash.Domain` containing related `Ash.Resource` modules:
 
-- **OpenSauce.Accounts** — Users, Organisations, OrganisationMembers (with `labor_hourly_rate`), ApiKeys, TaxRates; org-level config includes `labor_overhead_percent` and `mileage_cost_per_km`
+- **OpenSauce.Accounts** — Users, Organisations, OrganisationMembers (with `labor_hourly_rate`), TaxRates; org-level config includes `labor_overhead_percent` and `mileage_cost_per_km`
 - **OpenSauce.CRM** — Customers, Addresses (garden sites), Engagements (contract lifecycle with signature capture), EngagementImages (photos and paintings — paintings determine invoice description style), EngagementMaterials, Invoices
 - **OpenSauce.Orders** — Jobs (`:client_work`, `:shift`, `:internal_work`), JobEvents (arrival/departure log with `event_staff` attendance + rate snapshots), JobStaff (tentative crew for calendar + estimation), JobMaterials, JobEventMaterials
-- **OpenSauce.Inventory** — Materials, Lots, Movements (consume/receive/adjust), PurchaseOrders, PurchaseOrderItems, Suppliers, SupplierCatalogs, Receivings
+- **OpenSauce.Inventory** — Materials, Movements (consume/receive/adjust), PurchaseOrders, PurchaseOrderItems, Suppliers, SupplierCatalogs, Receivings
 - **OpenSauce.Operations** — Venues, StorageLocations (nursery/warehouse locations)
 
 ### Resource Pattern
@@ -62,7 +62,7 @@ After any resource change, run `mix ash.codegen <migration_name>` to update both
 - **Job scheduling**: Jobs are `:client_work`, `:shift` (container), or `:internal_work`. Shifts hold child jobs. Tentative crew is set via `JobStaff`. Jobs carry `duration_estimate` and calculate `estimated_cost` from tentative staff rates × overhead.
 - **Job costing**: `JobEvent` logs arrival/departure with an `event_staff` list (actual crew present, rates snapshotted at log time). `realized_cost` is computed from all JobEvents and stored when the job is marked `:complete` — supports multi-visit jobs where a job is rescheduled but events accumulate.
 - **Engagement → invoice**: Engagements track install/maintenance pricing, client signatures, and attached images. Paintings (`:painting` type EngagementImage) make the invoice read "Garden as drawn, installed|maintained"; without them it reads "Garden as described, installed|maintained".
-- **Inventory**: Materials tracked in Lots via Movements (receive/consume/adjust). Purchase orders flow through supplier catalogues with lot venue awareness.
+- **Inventory**: Materials tracked via Movements (receive/consume/adjust). Purchase orders flow through supplier catalogues.
 - **Material cost and price — two-stage lifecycle**: Both `EngagementMaterial` and `JobMaterial` carry optional `cost` and `price` fields, but they represent different moments in the lifecycle. On `EngagementMaterial`, `cost` is the estimated supplier price at quoting time and `price` is the planned billable rate to the client — both are used to verify margin before the engagement is signed. On `JobMaterial`, `cost` is what the org actually paid on the supplier invoice for that job, and `price` is the final rate billed. The two sets of values are independent: prices often shift between quoting and execution, and the divergence is intentional data. Neither set replaces `SupplierCatalogItem.unit_price`, which is the catalogue list price and is frequently absent for plants. On the job materials screen, tapping a card opens a bottom sheet to edit qty, cost, and price together. **Setting qty to 0 does not remove the item** — a zero-qty line records a plant being presented or gifted to a client. The × button is the only way to actually remove a material line.
 
 ## Testing

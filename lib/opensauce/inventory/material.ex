@@ -43,35 +43,23 @@ defmodule OpenSauce.Inventory.Material do
   end
 
   actions do
-    defaults [
-      :read,
-      :destroy,
-      create: [
-        :name,
-        :sku,
-        :unit,
-        :material_type,
-        :price,
-        :minimum_stock,
-        :maximum_stock,
-        :default_supplier_catalog_item_id
-      ]
+    @writable_fields [
+      :name,
+      :sku,
+      :unit,
+      :material_type,
+      :price,
+      :minimum_stock,
+      :maximum_stock,
+      :default_supplier_catalog_item_id
     ]
+
+    defaults [:read, :destroy, create: @writable_fields]
 
     update :update do
       primary? true
       require_atomic? false
-
-      accept [
-        :name,
-        :sku,
-        :unit,
-        :material_type,
-        :price,
-        :minimum_stock,
-        :maximum_stock,
-        :default_supplier_catalog_item_id
-      ]
+      accept @writable_fields
     end
 
     read :list do
@@ -93,11 +81,6 @@ defmodule OpenSauce.Inventory.Material do
 
   policies do
     # Public reads (used for planner math, printouts, and exports); restrict writes
-    # API key scope check
-    policy always() do
-      authorize_if {OpenSauce.Accounts.Checks.ApiScopeCheck, []}
-    end
-
     policy action_type(:read) do
       authorize_if always()
     end
@@ -116,7 +99,7 @@ defmodule OpenSauce.Inventory.Material do
 
       constraints min_length: 2,
                   max_length: 255,
-                  match: ~r/^[\p{L}\p{N}\w\s\-\.・（）「」]+$/u
+                  match: ~r/^[\p{L}\p{N}\w\s\-\.]+$/u
     end
 
     attribute :sku, :string do

@@ -47,12 +47,6 @@ defmodule OpenSauceWeb.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug :load_from_bearer
-    plug OpenSauceWeb.Plugs.ApiKeyAuth
-  end
-
-  pipeline :calendar_api do
-    plug :fetch_query_params
-    plug OpenSauceWeb.Plugs.CalendarApiKeyAuth
   end
 
   #
@@ -238,11 +232,6 @@ defmodule OpenSauceWeb.Router do
   scope "/api/graphql" do
     pipe_through :api
     forward "/", Absinthe.Plug, schema: OpenSauceWeb.Schema
-  end
-
-  scope "/api/calendar" do
-    pipe_through :calendar_api
-    get "/feed.ics", OpenSauceWeb.CalendarController, :feed
   end
 
   #

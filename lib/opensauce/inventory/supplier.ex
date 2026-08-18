@@ -79,11 +79,6 @@ defmodule OpenSauce.Inventory.Supplier do
   end
 
   policies do
-    # API key scope check
-    policy always() do
-      authorize_if {OpenSauce.Accounts.Checks.ApiScopeCheck, []}
-    end
-
     policy action_type(:read) do
       authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
@@ -98,12 +93,12 @@ defmodule OpenSauce.Inventory.Supplier do
 
     attribute :name, :string do
       allow_nil? false
-      constraints min_length: 1, match: ~r/^[\p{L}\p{N}\w\s\-\.・（）「」]+$/u
+      constraints min_length: 1, match: ~r/^[\p{L}\p{N}\w\s\-\.]+$/u
     end
 
     attribute :contact_name, :string do
       allow_nil? true
-      constraints match: ~r/^[\p{L}\p{N}\w\s\-\.・（）「」]+$/u
+      constraints match: ~r/^[\p{L}\p{N}\w\s\-\.]+$/u
     end
 
     attribute :contact_email, :string do

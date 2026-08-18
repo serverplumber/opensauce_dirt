@@ -15,7 +15,7 @@ defmodule OpenSauce.Inventory.MaterialNameValidationTest do
     |> Ash.Changeset.for_create(:create, %{
       name: name,
       sku: "MAT-#{System.unique_integer([:positive])}",
-      unit: :gram,
+      unit: :piece,
       price: Decimal.new("1.00"),
       minimum_stock: Decimal.new(0),
       maximum_stock: Decimal.new(0)
@@ -40,8 +40,9 @@ defmodule OpenSauce.Inventory.MaterialNameValidationTest do
       assert {:ok, _} = create_material("きなこ")
     end
 
-    test "accepts Japanese middle dot (・)" do
-      assert {:ok, _} = create_material("薄力粉・強力粉")
+    test "rejects Japanese middle dot (・)" do
+      assert {:error, changeset} = create_material("薄力粉・強力粉")
+      assert inspect(changeset.errors) =~ "must match"
     end
 
     test "rejects @ character" do

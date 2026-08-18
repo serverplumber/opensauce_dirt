@@ -14,12 +14,6 @@ defmodule OpenSauce.Inventory do
   end
 
   resources do
-    resource OpenSauce.Inventory.Lot do
-      define :get_lot_by_id, action: :read, get_by: [:id]
-      define :list_lots, action: :read
-      define :list_available_lots_for_material, action: :available_for_material
-    end
-
     resource OpenSauce.Inventory.Material do
       define :get_material_by_id, action: :read, get_by: [:id]
       define :get_material_by_sku, action: :read, get_by: [:sku]
@@ -66,7 +60,6 @@ defmodule OpenSauce.Inventory do
       define :update_purchase_order, action: :update
       define :mark_purchase_order_ordered, action: :mark_ordered
       define :confirm_purchase_order, action: :confirm
-      define :receive_purchase_order, action: :receive
     end
 
     resource OpenSauce.Inventory.PurchaseOrderItem do

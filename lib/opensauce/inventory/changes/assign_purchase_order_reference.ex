@@ -1,0 +1,28 @@
+# Copyright (c) 2026 serverplumber. Licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
+
+defmodule OpenSauce.Inventory.Changes.AssignPurchaseOrderReference do
+  @moduledoc false
+  use Ash.Resource.Change
+
+  import Ecto.Query
+
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      org_id = Ash.Changeset.get_attribute(changeset, :organisation_id)
+
+      {1, [new_next]} =
+        OpenSauce.Repo.update_all(
+          from(o in OpenSauce.Accounts.Organisation,
+            where: o.id == ^org_id,
+            update: [inc: [next_po_number: 1]],
+            select: o.next_po_number
+          ),
+          []
+        )
+
+      reference = "PO-" <> String.pad_leading(Integer.to_string(new_next - 1), 4, "0")
+      Ash.Changeset.force_change_attribute(changeset, :reference, reference)
+    end)
+  end
+end

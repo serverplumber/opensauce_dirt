@@ -42,15 +42,6 @@ defmodule OpenSauce.Accounts do
       define :update_user, action: :update
     end
 
-    resource OpenSauce.Accounts.ApiKey do
-      define :create_api_key, action: :create
-      define :list_api_keys_for_organisation, action: :list_for_organisation
-      define :revoke_api_key, action: :revoke
-      define :authenticate_api_key, action: :authenticate
-      define :touch_api_key_last_used, action: :touch_last_used
-      define :get_api_key_by_id, action: :read, get_by: [:id]
-    end
-
     resource OpenSauce.Accounts.TaxRate do
       define :list_tax_rates, action: :list
       define :create_tax_rate, action: :create

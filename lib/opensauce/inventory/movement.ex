@@ -39,18 +39,12 @@ defmodule OpenSauce.Inventory.Movement do
     defaults [:read, :destroy]
 
     create :adjust_stock do
-      accept [:quantity, :reason, :material_id, :lot_id]
-
+      accept [:material_id, :quantity, :reason]
       change set_attribute(:occurred_at, &DateTime.utc_now/0)
     end
   end
 
   policies do
-    # API key scope check
-    policy always() do
-      authorize_if {OpenSauce.Accounts.Checks.ApiScopeCheck, []}
-    end
-
     policy action_type(:read) do
       authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
@@ -82,10 +76,6 @@ defmodule OpenSauce.Inventory.Movement do
   relationships do
     belongs_to :material, OpenSauce.Inventory.Material do
       allow_nil? false
-    end
-
-    belongs_to :lot, OpenSauce.Inventory.Lot do
-      allow_nil? true
     end
   end
 end
