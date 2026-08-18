@@ -3,6 +3,8 @@
  * topbar 2.0.0, 2023-02-04
  * https://buunguyen.github.io/topbar
  * Copyright (c) 2021 Buu Nguyen
+ * SPDX-License-Identifier: MIT
+ * See THIRD-PARTY-NOTICES.md at the repo root for full attribution.
  */
 (function (window, document) {
   "use strict";

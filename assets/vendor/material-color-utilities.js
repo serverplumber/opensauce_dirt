@@ -1,4 +1,14 @@
 /**
+ * @license Apache-2.0
+ * Vendored from @material/material-color-utilities 0.3.0
+ * https://github.com/material-foundation/material-color-utilities
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ * Licensed under the Apache License, Version 2.0; see
+ * https://www.apache.org/licenses/LICENSE-2.0 for the full text.
+ * See THIRD-PARTY-NOTICES.md at the repo root for full attribution.
+ */
+/**
  * Bundled by jsDelivr using Rollup v4.62.2 and esbuild v0.28.1.
  * Original file: /npm/@material/material-color-utilities@0.3.0/index.js
  *
