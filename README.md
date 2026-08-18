@@ -11,11 +11,11 @@ Built around the operational loop of a landscaping outfit: **engagement → jobs
 - **Engagements** — contract lifecycle, install/maintenance pricing, signature capture, attached photos and garden paintings
 - **Jobs and shifts** — client work, internal work, and shift containers holding child jobs; tentative crew assignment drives calendar and estimate
 - **Crew costing** — job events log arrival/departure with the crew actually present and their rates snapshotted at log time; realised cost accumulates across multiple visits and is frozen at completion
-- **Inventory** — materials tracked as lots through receive/consume/adjust movements, across venues and storage locations
+- **Inventory** — materials tracked through receive/consume/adjust movements, across venues and storage locations
 - **Purchasing** — suppliers, purchase orders, and supplier catalogue import
 - **Invoicing** — Typst-rendered invoices and batch sheets
 - **Multi-tenant** — attribute multitenancy on `organisation_id` across every resource, with Ash policies and tenant-isolation tests
-- **Integration surface** — GraphQL, JSON:API with an OpenAPI spec, scoped API keys, an iCal feed for job schedules, CSV export
+- **Integration surface** — GraphQL, JSON:API with an OpenAPI spec
 
 The UI is a dark-first **mobile field app**. There is no desktop product; screens are built for a phone held in a garden, not a laptop in an office.
 
@@ -34,7 +34,20 @@ Most reports of AI-assisted development come from people working in a stack they
 - **No hand rescue.** The output was not quietly refactored into something I liked afterwards. Doing that would have destroyed the measurement.
 - **Ship it anyway, and operate it.** An experiment you never have to live with teaches you nothing.
 
-The repository was spun from a template. Every line of the original author's code has since been replaced — verified rather than assumed, with `scripts/copyright_audit.py`, which walks `git blame` with full rename and copy tracing (`-C -C -C`) against the baseline commit and reports per-file what fraction still traces to pre-baseline commits. It was driven to zero before the pre-baseline history was truncated.
+The repository was spun from a template. Every line of business logic — validations,
+policies, calculations, actions, the field workflow — has been replaced. Provenance is
+verified rather than asserted: `scripts/copyright_audit.py` walks `git blame` with full
+rename and copy tracing (`-C -C -C`) against the baseline commit and reports, per file,
+what fraction still traces to pre-baseline commits. Pre-baseline history is intact, so it
+re-runs.
+
+It does not report zero, and it shouldn't. Declarative resource definitions have almost no
+expressive variance — a resource header, an attribute block, a JSON:API route exposure have
+one correct spelling, so an independent rewrite converges on the same text and gets flagged
+as inherited. Line provenance cannot distinguish identical-because-copied from
+identical-because-there-was-one-way-to-write-it. The residue is 16.2% across 153 files, reviewed
+individually rather than inferred from the number: framework scaffolding, generator output
+(`mix.exs`, `config/*.exs`), and vendored JS. Full report: `docs/provenance.md`.
 
 ## What it produced
 

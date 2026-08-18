@@ -19,7 +19,8 @@ evidence of independent authorship (see below).
 
 ## Why this doesn't read zero, and why that's not a gap
 
-Ash is a declarative, boilerplate-driven CRUD framework. A resource's `use Ash.Resource` header,
+Ash's declarative resource definitions have almost no
+expressive variance. A resource's `use Ash.Resource` header,
 a bare `postgres do table "..." end` block, an `attribute :x, :string do allow_nil? false end`
 skeleton, a `json_api do routes do get(:read) end end` exposure block — these have close to one
 correct spelling. Two people independently building "a Supplier with a name and contact fields"
