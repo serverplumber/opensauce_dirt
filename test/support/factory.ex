@@ -22,7 +22,7 @@ defmodule OpenSauce.Test.Factory do
     defaults = %{
       name: "Material #{System.unique_integer([:positive])}",
       sku: "MAT-#{System.unique_integer([:positive])}",
-      unit: :gram,
+      unit: :piece,
       price: Decimal.new("1.00"),
       minimum_stock: Decimal.new(0),
       maximum_stock: Decimal.new(0)
@@ -37,9 +37,10 @@ defmodule OpenSauce.Test.Factory do
   Creates a Customer. Accepts optional attribute overrides and an optional actor.
   Includes a default garden address (required by the create action).
   Returns the customer with :garden_addresses loaded so callers can extract garden IDs.
+  Customer create requires manager+ role, so defaults to admin_actor when none is provided.
   """
   def create_customer!(attrs \\ %{}, actor \\ nil) do
-    member = actor || OpenSauce.DataCase.staff_actor()
+    member = actor || OpenSauce.DataCase.admin_actor()
 
     defaults = %{
       type: :individual,

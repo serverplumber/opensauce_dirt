@@ -11,7 +11,7 @@ defmodule OpenSauce.Security.TenantIsolationTest do
   # of whether the multitenancy fragment is misconfigured or a filter is removed.
 
   test "customers are not visible across organisations" do
-    member_a = OpenSauce.DataCase.staff_actor()
+    member_a = OpenSauce.DataCase.admin_actor()
     member_b = OpenSauce.DataCase.staff_actor()
 
     Factory.create_customer!(%{}, member_a)
@@ -34,7 +34,7 @@ defmodule OpenSauce.Security.TenantIsolationTest do
   end
 
   test "jobs are not visible across organisations" do
-    member_a = OpenSauce.DataCase.staff_actor()
+    member_a = OpenSauce.DataCase.admin_actor()
     member_b = OpenSauce.DataCase.staff_actor()
 
     Factory.create_job!(%{}, member_a)

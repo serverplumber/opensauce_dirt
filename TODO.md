@@ -39,6 +39,7 @@ New modules register in `components.ex`; all callers get them through
 
 ## Housekeeping
 
+- [ ] Customer create/edit routes (`/manage/customers/new`, `/manage/customers/:reference/edit`) still sit under `:manage_routes` (staff-accessible) in `router.ex`, but the `Customer` resource's create/update/destroy policy was tightened to manager/owner only — staff can currently reach those screens and will hit an authorization error on save. Either move the routes to `:admin_routes` or gate the UI, and confirm which behavior is actually wanted.
 - [ ] Command palette doesn't index Engagements
 - [ ] No tests for anything added in recent sessions (incl. UpdatePurchaseOrders, MovePoItem, print component)
 - [ ] `catalog/` directory (PDF + JSON data files) sitting untracked — move or gitignore

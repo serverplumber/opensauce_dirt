@@ -7,7 +7,7 @@ defmodule OpenSauce.CRM.CustomerNameValidationTest do
   alias OpenSauce.CRM.Customer
 
   defp create_customer(first_name, last_name) do
-    member = OpenSauce.DataCase.staff_actor()
+    member = OpenSauce.DataCase.admin_actor()
 
     Customer
     |> Ash.Changeset.for_create(:create, %{

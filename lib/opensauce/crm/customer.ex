@@ -158,13 +158,6 @@ defmodule OpenSauce.CRM.Customer do
       end
     end
 
-    # Narrow read used by checkout
-    read :get_by_email do
-      get? true
-      argument :email, :string, allow_nil?: false
-      filter expr(email == ^arg(:email))
-    end
-
     read :list do
       prepare build(sort: :first_name)
 
@@ -189,33 +182,12 @@ defmodule OpenSauce.CRM.Customer do
   end
 
   policies do
-    # API key scope check
-    policy always() do
-      authorize_if {OpenSauce.Accounts.Checks.ApiScopeCheck, []}
-    end
-
-    # Admin can do anything
-    bypass expr(^actor(:role) == :owner) do
-      authorize_if always()
-    end
-
-    # Allow only targeted email lookup publicly
-    policy action(:get_by_email) do
-      authorize_if always()
-    end
-
-    # Allow public create/update (checkout address upsert). Consider narrowing in future.
-    policy action_type([:create, :update]) do
-      authorize_if always()
-    end
-
-    # Other reads/destroys restricted to staff/admin
     policy action_type(:read) do
       authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
     end
 
-    policy action_type(:destroy) do
-      authorize_if expr(^actor(:role) in [:staff, :manager, :owner])
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if expr(^actor(:role) in [:manager, :owner])
     end
   end
 
@@ -257,13 +229,13 @@ defmodule OpenSauce.CRM.Customer do
     attribute :first_name, :string do
       allow_nil? false
       public? true
-      constraints min_length: 1, match: ~r/^[\p{L}\p{N}\w\s\-\.・（）「」]+$/u
+      constraints min_length: 1, match: ~r/^[\p{L}\p{N}\w\s\-\.]+$/u
     end
 
     attribute :last_name, :string do
       allow_nil? false
       public? true
-      constraints min_length: 1, match: ~r/^[\p{L}\p{N}\w\s\-\.・（）「」]+$/u
+      constraints min_length: 1, match: ~r/^[\p{L}\p{N}\w\s\-\.]+$/u
     end
 
     attribute :email, :string do
