@@ -8,6 +8,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
   alias AshPhoenix.Form
   alias Decimal, as: D
   alias OpenSauce.Inventory
+  alias OpenSauce.Types.Unit
 
   @impl true
   def update(assigns, socket) do
@@ -186,10 +187,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMovement do
 
   defp negative?(value), do: D.compare(value, D.new(0)) == :lt
 
-  defp unit_abbr(:gram), do: "g"
-  defp unit_abbr(:milliliter), do: "mL"
-  defp unit_abbr(:piece), do: "pcs"
-  defp unit_abbr(_), do: ""
+  defp unit_abbr(unit), do: Unit.abbreviation(unit)
 
   defp build_form(current_member) do
     Inventory.Movement

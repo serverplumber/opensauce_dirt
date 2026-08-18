@@ -3,199 +3,52 @@
 
 defmodule OpenSauce.Types.Unit do
   @moduledoc """
-  Represents measurement units with conversion and formatting capabilities.
-  Supports gram, milliliter, piece, kcal, milligram, and percent units with appropriate abbreviations.
+  Measurement units for inventory materials. Countable plants (seeds, bulbs,
+  cuttings, divisions, specimens — anything you either have or don't) are
+  `:piece`. Bulk goods are `:kilogram` (ground cover, weighed amendments) or
+  `:liter` / `:cubic_meter` (soil, mulch, compost sold by volume).
   """
-  use Ash.Type.Enum,
-    values: [
-      :gram,
-      :milliliter,
-      :piece,
-      :kcal,
-      :milligram,
-      :percent,
-      :bulb,
-      :seed,
-      :cutting,
-      :division,
-      :specimen,
-      :liter,
-      :kilogram,
-      :tonne,
-      :cubic_meter
-    ]
-
-  @unit_abbreviations %{
-    kilogram: "kg",
-    gram: "g",
-    liter: "L",
-    milliliter: "ml",
-    piece: "pc",
-    kcal: "kcal",
-    milligram: "mg",
-    percent: "%",
-    bulb: "bulb",
-    seed: "seed",
-    cutting: "cutting",
-    division: "division",
-    specimen: "specimen",
-    tonne: "t",
-    cubic_meter: "m³"
-  }
+  use Ash.Type.Enum, values: [:piece, :kilogram, :liter, :cubic_meter]
 
   @singular_names %{
-    gram: "gram",
-    milliliter: "milliliter",
     piece: "piece",
-    kcal: "kcal",
-    milligram: "mg",
-    percent: "%",
-    bulb: "bulb",
-    seed: "seed",
-    cutting: "cutting",
-    division: "division",
-    specimen: "specimen",
-    liter: "liter",
     kilogram: "kilogram",
-    tonne: "tonne",
+    liter: "liter",
     cubic_meter: "cubic meter"
   }
 
   @plural_names %{
-    gram: "grams",
-    milliliter: "milliliters",
     piece: "pieces",
-    kcal: "kcal",
-    milligram: "mg",
-    percent: "%",
-    bulb: "bulbs",
-    seed: "seeds",
-    cutting: "cuttings",
-    division: "divisions",
-    specimen: "specimens",
-    liter: "liters",
     kilogram: "kilograms",
-    tonne: "tonnes",
+    liter: "liters",
     cubic_meter: "cubic meters"
   }
 
+  @abbreviations %{
+    piece: "pc",
+    kilogram: "kg",
+    liter: "L",
+    cubic_meter: "m³"
+  }
+
   @doc """
-  Returns the formatted string for a unit with its value.
-  Handles unit conversions where appropriate (e.g., g to kg when value >= 1000).
-  Also provides more readable formats for small and large quantities.
+  Formats a unit and a quantity for display, e.g. `"3 kilograms"`, `"1 piece"`,
+  `"no pieces"`.
   """
-  # Gram special cases
-  def abbreviation(:gram, value) when value >= 1000 do
-    kg_value = value / 1000
-    formatted = format_number(kg_value)
-    "#{formatted} #{if kg_value == 1, do: "kg", else: "kg"}"
-  end
-
-  def abbreviation(:gram, value) when value <= -1000 do
-    kg_value = value / 1000
-    formatted = format_number(kg_value)
-    "#{formatted} #{if kg_value == -1, do: "kg", else: "kg"}"
-  end
-
-  def abbreviation(:gram, value) when value < 1 and value > 0 do
-    mg_value = value * 1000
-    formatted = format_number(mg_value)
-    "#{formatted} #{if mg_value == 1, do: "milligram", else: "milligrams"}"
-  end
-
-  def abbreviation(:gram, value) when value > -1 and value < 0 do
-    mg_value = value * 1000
-    formatted = format_number(mg_value)
-    "#{formatted} #{if mg_value == -1, do: "milligram", else: "milligrams"}"
-  end
-
-  def abbreviation(:gram, 1), do: "1 #{@singular_names.gram}"
-  def abbreviation(:gram, -1), do: "-1 #{@singular_names.gram}"
-  def abbreviation(:gram, value) when is_integer(value), do: "#{value} #{@plural_names.gram}"
-  def abbreviation(:gram, value), do: "#{format_number(value)}#{@unit_abbreviations.gram}"
-
-  # Milliliter special cases
-  def abbreviation(:milliliter, value) when value >= 1000 do
-    l_value = value / 1000
-    formatted = format_number(l_value)
-    "#{formatted} #{if l_value == 1, do: "liter", else: "liters"}"
-  end
-
-  def abbreviation(:milliliter, value) when value <= -1000 do
-    l_value = value / 1000
-    formatted = format_number(l_value)
-    "#{formatted} #{if l_value == -1, do: "liter", else: "liters"}"
-  end
-
-  def abbreviation(:milliliter, value) when value < 1 and value > 0 do
-    "#{format_number(value * 1000)} microliters"
-  end
-
-  def abbreviation(:milliliter, value) when value > -1 and value < 0 do
-    "#{format_number(value * 1000)} microliters"
-  end
-
-  def abbreviation(:milliliter, 1), do: "1 #{@singular_names.milliliter}"
-  def abbreviation(:milliliter, -1), do: "-1 #{@singular_names.milliliter}"
-
-  def abbreviation(:milliliter, value) when is_integer(value), do: "#{value} #{@plural_names.milliliter}"
-
-  def abbreviation(:milliliter, value), do: "#{format_number(value)}#{@unit_abbreviations.milliliter}"
-
-  # Piece special cases
   def abbreviation(:piece, 0), do: "no pieces"
-  def abbreviation(:piece, 1), do: "1 #{@singular_names.piece}"
-  def abbreviation(:piece, -1), do: "-1 #{@singular_names.piece}"
-  def abbreviation(:piece, value) when is_integer(value), do: "#{value} #{@plural_names.piece}"
+  def abbreviation(:piece, 1), do: "1 piece"
+  def abbreviation(:piece, -1), do: "-1 piece"
+  def abbreviation(:piece, value) when is_integer(value), do: "#{value} pieces"
+  def abbreviation(:piece, value), do: "#{:erlang.float_to_binary(value, decimals: 0)} pieces"
 
-  def abbreviation(:piece, value), do: "#{:erlang.float_to_binary(value, decimals: 0)} #{@plural_names.piece}"
-
-  # Kcal (kilocalories) - no conversion needed, always displays as kcal
-  def abbreviation(:kcal, value) when is_integer(value), do: "#{value} #{@unit_abbreviations.kcal}"
-
-  def abbreviation(:kcal, value), do: "#{format_number(value)} #{@unit_abbreviations.kcal}"
-
-  # Milligram - no automatic conversion to avoid confusion with gram conversions
-  def abbreviation(:milligram, value) when is_integer(value), do: "#{value} #{@unit_abbreviations.milligram}"
-
-  def abbreviation(:milligram, value), do: "#{format_number(value)} #{@unit_abbreviations.milligram}"
-
-  # Percent - displays with % symbol
-  def abbreviation(:percent, value) when is_integer(value), do: "#{value}#{@unit_abbreviations.percent}"
-
-  def abbreviation(:percent, value), do: "#{format_number(value)}#{@unit_abbreviations.percent}"
-
-  def abbreviation(unit, value) when unit in [:bulb, :seed, :cutting, :division, :specimen] do
-    name = if value == 1, do: @singular_names[unit], else: @plural_names[unit]
-    "#{value} #{name}"
-  end
-
-  def abbreviation(:liter, value) do
-    name = if value == 1, do: @singular_names.liter, else: @plural_names.liter
+  def abbreviation(unit, value) do
+    name = if abs(value) == 1, do: @singular_names[unit], else: @plural_names[unit]
     "#{format_number(value)} #{name}"
   end
 
-  def abbreviation(:kilogram, value) do
-    name = if value == 1, do: @singular_names.kilogram, else: @plural_names.kilogram
-    "#{format_number(value)} #{name}"
-  end
+  @doc "Returns just the short abbreviation for a unit, e.g. `\"kg\"`."
+  def abbreviation(unit), do: @abbreviations[unit]
 
-  def abbreviation(:tonne, value) do
-    name = if value == 1, do: @singular_names.tonne, else: @plural_names.tonne
-    "#{format_number(value)} #{name}"
-  end
-
-  def abbreviation(:cubic_meter, value) do
-    name = if value == 1, do: @singular_names.cubic_meter, else: @plural_names.cubic_meter
-    "#{format_number(value)} #{name}"
-  end
-
-  @doc """
-  Returns just the abbreviation for a unit.
-  """
-  def abbreviation(unit), do: @unit_abbreviations[unit]
-
-  # Helper function to format numbers nicely
   defp format_number(value) when is_integer(value), do: "#{value}"
   defp format_number(value) when value == trunc(value), do: "#{trunc(value)}"
 

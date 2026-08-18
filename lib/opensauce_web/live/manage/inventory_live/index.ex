@@ -3,6 +3,7 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   use OpenSauceWeb, :live_view
 
   alias OpenSauce.Inventory
+  alias OpenSauce.Types.Unit
 
   @impl true
   def render(assigns) do
@@ -178,8 +179,5 @@ defmodule OpenSauceWeb.InventoryLive.Index do
   defp type_label(:plant), do: "Plant"
   defp type_label(_), do: "Supply"
 
-  defp unit_abbr(:gram), do: "g"
-  defp unit_abbr(:milliliter), do: "mL"
-  defp unit_abbr(:piece), do: "pcs"
-  defp unit_abbr(_), do: ""
+  defp unit_abbr(unit), do: Unit.abbreviation(unit)
 end

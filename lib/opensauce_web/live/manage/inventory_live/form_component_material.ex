@@ -7,10 +7,11 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
 
   alias AshPhoenix.Form
   alias OpenSauce.Inventory
+  alias OpenSauce.Types.Unit
 
   @impl true
   def render(assigns) do
-    unit = assigns.form[:unit].value || :gram
+    unit = assigns.form[:unit].value || :piece
 
     assigns = assign(assigns, :unit, unit)
 
@@ -62,11 +63,12 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
       <div>
         <label class="dark-label" for={@form[:unit].id}>Unit</label>
         <select class="dark-select" id={@form[:unit].id} name={@form[:unit].name}>
-          <option value="gram" selected={@form[:unit].value == :gram}>Gram (g)</option>
-          <option value="milliliter" selected={@form[:unit].value == :milliliter}>
-            Milliliter (mL)
+          <option value="piece" selected={@form[:unit].value == :piece}>Piece</option>
+          <option value="kilogram" selected={@form[:unit].value == :kilogram}>Kilogram (kg)</option>
+          <option value="liter" selected={@form[:unit].value == :liter}>Liter (L)</option>
+          <option value="cubic_meter" selected={@form[:unit].value == :cubic_meter}>
+            Cubic meter (m³)
           </option>
-          <option value="piece" selected={@form[:unit].value == :piece}>Piece (pcs)</option>
         </select>
         <span :for={msg <- @form[:unit].errors} class="dark-field-error">{elem(msg, 0)}</span>
       </div>
@@ -202,10 +204,7 @@ defmodule OpenSauceWeb.InventoryLive.FormComponentMaterial do
       form[:price].value not in [nil, ""]
   end
 
-  defp unit_abbr(:gram), do: "g"
-  defp unit_abbr(:milliliter), do: "mL"
-  defp unit_abbr(:piece), do: "pcs"
-  defp unit_abbr(_), do: ""
+  defp unit_abbr(unit), do: Unit.abbreviation(unit)
 
   defp sci_label(%{latin_name: ln, cultivar: cv, supplier_catalog: %{supplier: %{name: sn}}}) when not is_nil(ln) do
     title = [ln, cv] |> Enum.reject(&is_nil/1) |> Enum.join(" ")

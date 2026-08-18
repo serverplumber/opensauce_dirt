@@ -5,6 +5,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   import Ash.Query
 
   alias OpenSauce.Inventory
+  alias OpenSauce.Types.Unit
 
   @impl true
   def render(assigns) do
@@ -361,10 +362,7 @@ defmodule OpenSauceWeb.InventoryLive.Show do
   defp type_label(:plant), do: "Plant"
   defp type_label(_), do: "Supply"
 
-  defp unit_abbr(:gram), do: "g"
-  defp unit_abbr(:milliliter), do: "mL"
-  defp unit_abbr(:piece), do: "pcs"
-  defp unit_abbr(_), do: ""
+  defp unit_abbr(unit), do: Unit.abbreviation(unit)
 
   defp movement_color(qty) do
     case Decimal.compare(qty, Decimal.new(0)) do
